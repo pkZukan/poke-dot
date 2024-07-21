@@ -1,0 +1,6 @@
+.vscode/*
+demo/.godot/*
+src/*.os
+src/model/*.os
+src/middleware/*.os
+
