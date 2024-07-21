@@ -73,18 +73,26 @@ func ParseModel(path:String, file:String):
 	var descCnt = mesh.MeshDescriptors.size()
 	var buffName = mesh.BufferName
 	
-		#Load mats
-	var Materials:Array
+	#Load materials (map mat name to shader instance)
+	var Materials:Dictionary
 	for matFileInd in range(0, mdl.Materials.size()):
 		var material:TRMaterial = ResourceLoader.load(str(path, mdl.Materials[matFileInd]))
 		for mat in material.Materials:
-			var shaders = mat.Shaders
-
 			var sm:ShaderMaterial = ShaderMaterial.new()
-			
 			sm.resource_name = mat.Name
-			sm.shader = ResourceLoader.load("res://test.gdshader")
-			Materials.push_back(sm)
+			sm.shader = ResourceLoader.load("res://test.gdshader") #Use test shader for now
+			#TODO: Create something to manager shaders
+			
+			#Iterate though the textures and map uniform names to image data
+			#TODO: seperate image loading code and optimize it to not load the same bntx twice
+			var textures:Dictionary;
+			for t in mat.Textures:
+				textures[t.Name] = ResourceLoader.load(str(path, t.File))
+			for t in textures:
+				sm.set_shader_parameter(t, ImageTexture.create_from_image(textures[t].ImageData))
+			sm.set_shader_parameter("flipped_uvs", true)
+			
+			Materials[mat.Name] = sm
 	
 	#Load buffer file
 	var buff:TRModelBuffer = ResourceLoader.load(str(path, buffName))
@@ -116,12 +124,13 @@ func ParseModel(path:String, file:String):
 		arr[Mesh.ARRAY_NORMAL] = result.Norm
 		arr[Mesh.ARRAY_TEX_UV] = result.UV
 		arr[Mesh.ARRAY_INDEX] = result.Indicies
-	
-		arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 		
+		var matName = meshShape.Materials[0].MaterialName
+		arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+
 		mi.name = meshShape.MeshName
 		mi.mesh = arrMesh
-		mi.material_override = Materials[0]
+		mi.material_override = Materials[matName]
 		mi.skeleton = NodePath("../" + skl.name)
 		MeshInstances.push_back(mi)
 
