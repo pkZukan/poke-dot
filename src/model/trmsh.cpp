@@ -80,7 +80,7 @@ void TRMesh::LoadFromFile(String file)
         mshape->set_PolygonType(msh->polygon_type());
         mshape->set_MeshName(Utils::toGodotString(msh->mesh_name()));
 
-        //Set attributes
+        //Get attributes
         auto attrib = msh->attributes();
         Array attribs;
         for(int j = 0; j < attrib->size(); j++)
@@ -101,6 +101,7 @@ void TRMesh::LoadFromFile(String file)
             attribs.push_back(attribute);
         }
 
+        //Get Materials
         auto mats = msh->materials();
         Array matInfo;
         for(int j = 0; j < attrib->size(); j++)
@@ -114,6 +115,7 @@ void TRMesh::LoadFromFile(String file)
             minfo->set_unk1(mats->Get(j)->sh_unk4());
             matInfo.push_back(minfo);
         }
+        mshape->set_Materials(matInfo);
         mshape->set_Attributes(attribs);
         MeshDescriptors.push_back(mshape);
     }

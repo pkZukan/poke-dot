@@ -52,6 +52,12 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(IKControl)
 		GDREGISTER_CLASS(LOD)
 		GDREGISTER_CLASS(LodIndex)
+		GDREGISTER_CLASS(ByteExtra)
+		GDREGISTER_CLASS(IntExtra)
+		GDREGISTER_CLASS(FloatParameter)
+		GDREGISTER_CLASS(Float4Parameter)
+		GDREGISTER_CLASS(IntParameter)
+		GDREGISTER_CLASS(RGBA)
 
 		GDREGISTER_CLASS(TRModel)
 		GDREGISTER_CLASS(TRMesh)

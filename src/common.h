@@ -20,4 +20,21 @@ public:
 private:
 	Vector3 Min, Max;
 };
+
+class RGBA : public Resource {
+	GDCLASS(RGBA, Resource)
+protected:
+	static void _bind_methods();
+public:
+	RGBA(){}
+	~RGBA(){}
+	
+	GETTER_SETTER_DEFINE(float, R)
+	GETTER_SETTER_DEFINE(float, G)
+    GETTER_SETTER_DEFINE(float, B)
+	GETTER_SETTER_DEFINE(float, A)
+
+private:
+	float R, G, B, A;
+};
 }

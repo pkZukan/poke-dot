@@ -8,8 +8,59 @@
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "trmtr_generated.h"
 #include <utils.h>
+#include <common.h>
 
 namespace godot {
+
+class ByteExtra : public Resource {
+    GDCLASS(ByteExtra, Resource)
+protected:
+	static void _bind_methods();
+public:
+	ByteExtra(){}
+	~ByteExtra(){}
+
+};
+
+class IntExtra : public Resource {
+    GDCLASS(IntExtra, Resource)
+protected:
+	static void _bind_methods();
+public:
+	IntExtra(){}
+	~IntExtra(){}
+
+};
+
+class FloatParameter : public Resource {
+    GDCLASS(FloatParameter, Resource)
+protected:
+	static void _bind_methods();
+public:
+	FloatParameter(){}
+	~FloatParameter(){}
+
+};
+
+class Float4Parameter : public Resource {
+    GDCLASS(Float4Parameter, Resource)
+protected:
+	static void _bind_methods();
+public:
+	Float4Parameter(){}
+	~Float4Parameter(){}
+
+};
+
+class IntParameter : public Resource {
+    GDCLASS(IntParameter, Resource)
+protected:
+	static void _bind_methods();
+public:
+	IntParameter(){}
+	~IntParameter(){}
+
+};
 
 class ShaderIntParam : public Resource {
     GDCLASS(ShaderIntParam, Resource)
@@ -51,6 +102,34 @@ public:
 	SamplerEntry(){}
 	~SamplerEntry(){}
 
+	GETTER_SETTER_DEFINE(int, SamplerState_0)
+	GETTER_SETTER_DEFINE(int, SamplerState_1)
+	GETTER_SETTER_DEFINE(int, SamplerState_2)
+	GETTER_SETTER_DEFINE(int, SamplerState_3)
+	GETTER_SETTER_DEFINE(int, SamplerState_4)
+	GETTER_SETTER_DEFINE(int, SamplerState_5)
+	GETTER_SETTER_DEFINE(int, SamplerState_6)
+	GETTER_SETTER_DEFINE(int, SamplerState_7)
+	GETTER_SETTER_DEFINE(int, SamplerState_8)
+	GETTER_SETTER_DEFINE(String, RepeatU)
+	GETTER_SETTER_DEFINE(String, RepeatV)
+	GETTER_SETTER_DEFINE(String, RepeatW)
+	GETTER_SETTER_DEFINE(Ref<RGBA>, BorderColor)
+
+private:
+	int SamplerState_0;
+	int SamplerState_1;
+	int SamplerState_2;
+	int SamplerState_3;
+	int SamplerState_4;
+	int SamplerState_5;
+	int SamplerState_6;
+	int SamplerState_7;
+	int SamplerState_8;
+	String RepeatU;
+	String RepeatV;
+	String RepeatW;
+	Ref<RGBA> BorderColor;
 };
 
 class TextureEntry : public Resource {
@@ -100,7 +179,17 @@ public:
 	GETTER_SETTER_DEFINE(Array, Textures)
 	GETTER_SETTER_DEFINE(Array, Samplers)
 	GETTER_SETTER_DEFINE(Array, FloatParams)
-	GETTER_SETTER_DEFINE(String, Unk5)
+	GETTER_SETTER_DEFINE(String, unk_5)
+	GETTER_SETTER_DEFINE(Array, FloatLightParams)
+	GETTER_SETTER_DEFINE(Array, Float4Params)
+	GETTER_SETTER_DEFINE(String, unk_8)
+	GETTER_SETTER_DEFINE(Array, IntParams)
+	GETTER_SETTER_DEFINE(String, unk_10)
+	GETTER_SETTER_DEFINE(String, unk_11)
+	GETTER_SETTER_DEFINE(String, unk_12)
+	GETTER_SETTER_DEFINE(Ref<ByteExtra>, ByteExt)
+	GETTER_SETTER_DEFINE(Ref<IntExtra>, IntExt)
+	GETTER_SETTER_DEFINE(String, AlphaType)
 
 private:
     String Name;
@@ -108,8 +197,17 @@ private:
 	Array Textures;
 	Array Samplers;
 	Array FloatParams;
-	String Unk5;
-
+	String unk_5;
+	Array FloatLightParams;
+	Array Float4Params;
+	String unk_8;
+	Array IntParams;
+	String unk_10;
+	String unk_11;
+	String unk_12;
+	Ref<ByteExtra> ByteExt;
+	Ref<IntExtra> IntExt;
+	String AlphaType;
 };
 
 class TRMaterial : public Resource {
@@ -122,9 +220,11 @@ public:
 
     void LoadFromFile(String file);
 
+	GETTER_SETTER_DEFINE(int, unk0)
 	GETTER_SETTER_DEFINE(Array, Materials)
 
 private:
+	int unk0;
     Array Materials;
 };
 
