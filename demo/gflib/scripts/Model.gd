@@ -119,10 +119,10 @@ func ParseModel(path:String, file:String):
 	
 		arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 		
-		mi.name = meshShape.Name
+		mi.name = meshShape.MeshName
 		mi.mesh = arrMesh
 		mi.material_override = Materials[0]
-		mi.skeleton = NodePath(skl.name)
+		mi.skeleton = NodePath("../" + skl.name)
 		MeshInstances.push_back(mi)
 
 	for m in MeshInstances:
