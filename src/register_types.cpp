@@ -58,6 +58,9 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(Float4Parameter)
 		GDREGISTER_CLASS(IntParameter)
 		GDREGISTER_CLASS(RGBA)
+		GDREGISTER_CLASS(MaterialTable)
+		GDREGISTER_CLASS(MaterialProperty)
+		GDREGISTER_CLASS(MaterialSwitch)
 
 		GDREGISTER_CLASS(TRModel)
 		GDREGISTER_CLASS(TRMesh)
@@ -102,23 +105,22 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 }
 
 void uninitialize_gen_module(ModuleInitializationLevel p_level) {
-	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) 
-	{
-		ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmdl);
-		ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmsh);
-		ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmbf);
-		ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trskl);
-		ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmtr);
-		ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmmt);
-		ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_bntx);
-		resource_loader_trmdl.unref();
-		resource_loader_trmsh.unref();
-		resource_loader_trmbf.unref();
-		resource_loader_trskl.unref();
-		resource_loader_trmtr.unref();
-		resource_loader_trmmt.unref();
-		resource_loader_bntx.unref();
-	}
+	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) return;
+
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmdl);
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmsh);
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmbf);
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trskl);
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmtr);
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmmt);
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_bntx);
+	resource_loader_trmdl.unref();
+	resource_loader_trmsh.unref();
+	resource_loader_trmbf.unref();
+	resource_loader_trskl.unref();
+	resource_loader_trmtr.unref();
+	resource_loader_trmmt.unref();
+	resource_loader_bntx.unref();
 }
 
 extern "C" {

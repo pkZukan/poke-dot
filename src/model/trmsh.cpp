@@ -100,6 +100,7 @@ void TRMesh::LoadFromFile(String file)
             attribute->set_Stride(attSizes->Get(0)->size());
             attribs.push_back(attribute);
         }
+        mshape->set_Attributes(attribs);
 
         //Get Materials
         auto mats = msh->materials();
@@ -116,7 +117,20 @@ void TRMesh::LoadFromFile(String file)
             matInfo.push_back(minfo);
         }
         mshape->set_Materials(matInfo);
-        mshape->set_Attributes(attribs);
+
+        //Get Influences
+        auto influences = msh->influence();
+        Array influence;
+        for(int j = 0; j < influences->size(); j++)
+        {
+            Ref<InfluenceEntry> infEnt;
+            infEnt.instantiate();
+            infEnt->set_Index(influences->Get(j)->index());
+            infEnt->set_Scale(influences->Get(j)->scale());
+            influence.push_back(infEnt);
+        }
+        mshape->set_Influences(influence);
+        
         MeshDescriptors.push_back(mshape);
     }
 }

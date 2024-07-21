@@ -110,19 +110,22 @@ void TRMaterial::LoadFromFile(String file)
         Array shdrs;
         for(int j = 0; j < shaders->size(); j++)
         {
+            Ref<ShaderEntry> shader;
+            shader.instantiate();
+            shader->set_Name(Utils::toGodotString(shaders->Get(j)->shader_name()));
+
             auto vals = shaders->Get(j)->shader_values();
             Array values;
             for(int k = 0; k < shaders->size(); k++)
             {
                 Ref<ShaderStringParam> ssp;
                 ssp.instantiate();
-                ssp->set_name(Utils::toGodotString(vals->Get(k)->string_name()));
+                ssp->set_Name(Utils::toGodotString(vals->Get(k)->string_name()));
+                ssp->set_Value(Utils::toGodotString(vals->Get(k)->string_value()));
                 values.push_back(ssp);
             }
-            Ref<ShaderEntry> shader;
-            shader.instantiate();
-            shader->set_name(Utils::toGodotString(shaders->Get(j)->shader_name()));
             shader->set_StringParams(values);
+
             shdrs.push_back(shader);
         }
 
@@ -133,7 +136,7 @@ void TRMaterial::LoadFromFile(String file)
         {
             Ref<TextureEntry> texEnt;
             texEnt.instantiate();
-            texEnt->set_name(Utils::toGodotString(textures->Get(j)->texture_name()));
+            texEnt->set_Name(Utils::toGodotString(textures->Get(j)->texture_name()));
             texEnt->set_File(Utils::toGodotString(textures->Get(j)->texture_file()));
             texEnt->set_Slot(textures->Get(j)->texture_slot());
             texs.push_back(texEnt);
@@ -170,7 +173,7 @@ void TRMaterial::LoadFromFile(String file)
 
         Ref<MaterialEntry> matEnt;
         matEnt.instantiate();
-        matEnt->set_name(Utils::toGodotString(mats->Get(i)->name()));
+        matEnt->set_Name(Utils::toGodotString(mats->Get(i)->name()));
         matEnt->set_Shaders(shdrs);
         matEnt->set_Textures(texs);
         Materials.push_back(matEnt);

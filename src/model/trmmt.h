@@ -11,6 +11,36 @@
 
 namespace godot {
 
+class MaterialProperty : public Resource {
+    GDCLASS(MaterialProperty, Resource)
+protected:
+	static void _bind_methods();
+public:
+	MaterialProperty(){}
+	~MaterialProperty(){}
+    
+	GETTER_SETTER_DEFINE(String, Name)
+
+private:
+    String Name;
+};
+
+class MaterialSwitch : public Resource {
+    GDCLASS(MaterialSwitch, Resource)
+protected:
+	static void _bind_methods();
+public:
+	MaterialSwitch(){}
+	~MaterialSwitch(){}
+    
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(uint8_t, Flag)
+
+private:
+    String Name;
+    uint8_t Flag;
+};
+
 class MaterialTable : public Resource {
     GDCLASS(MaterialTable, Resource)
 protected:
@@ -21,10 +51,14 @@ public:
     
 	GETTER_SETTER_DEFINE(String, Name)
 	GETTER_SETTER_DEFINE(PackedStringArray, MatNames)
+	GETTER_SETTER_DEFINE(Array, MaterialSwitches)
+	GETTER_SETTER_DEFINE(Array, MaterialProperties)
 
 private:
     String Name;
     PackedStringArray MatNames;
+	Array MaterialSwitches;
+	Array MaterialProperties;
 };
 
 class TRModelMaterialTable : public Resource {

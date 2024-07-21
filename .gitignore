@@ -5,3 +5,4 @@ src/model/*.os
 src/middleware/*.os
 .sconsign.dblite
 demo/gflib/*.so
+demo/pm0004_00_00/*

@@ -103,7 +103,7 @@ public:
 	GETTER_SETTER_DEFINE(int, res2)
 	GETTER_SETTER_DEFINE(int, res3)
 	GETTER_SETTER_DEFINE(Ref<Sphere>, ClipSphere)
-	GETTER_SETTER_DEFINE(Ref<InfluenceEntry>, Influences)
+	GETTER_SETTER_DEFINE(Array, Influences)
 
 private:
 	String Name;
@@ -113,7 +113,7 @@ private:
 	Array Materials;
 	int res0, res1, res2, res3;
 	Ref<Sphere> ClipSphere;
-	Ref<InfluenceEntry> Influences;
+	Array Influences;
 
 	String MeshName;
 };
