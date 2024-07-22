@@ -20,6 +20,10 @@ public:
 	ByteExtra(){}
 	~ByteExtra(){}
 
+	GETTER_SETTER_DEFINE(int8_t, Value)
+
+private:
+    int8_t Value;
 };
 
 class IntExtra : public Resource {
@@ -30,6 +34,12 @@ public:
 	IntExtra(){}
 	~IntExtra(){}
 
+	GETTER_SETTER_DEFINE(int, res0)
+	GETTER_SETTER_DEFINE(int, Value)
+
+private:
+    int res0;
+	int Value;
 };
 
 class FloatParameter : public Resource {
@@ -40,6 +50,12 @@ public:
 	FloatParameter(){}
 	~FloatParameter(){}
 
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(float, Value)
+
+private:
+    String Name;
+	float Value;
 };
 
 class Float4Parameter : public Resource {
@@ -50,16 +66,12 @@ public:
 	Float4Parameter(){}
 	~Float4Parameter(){}
 
-};
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Ref<RGBA>, Value)
 
-class IntParameter : public Resource {
-    GDCLASS(IntParameter, Resource)
-protected:
-	static void _bind_methods();
-public:
-	IntParameter(){}
-	~IntParameter(){}
-
+private:
+    String Name;
+	Ref<RGBA> Value;
 };
 
 class ShaderIntParam : public Resource {

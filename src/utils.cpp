@@ -12,6 +12,11 @@ godot::Vector3 Utils::toGodotVec3(const Titan::Model::Vec3 *vec)
     return Vector3(vec->x(), vec->y(), vec->z());
 }
 
+godot::Vector4 Utils::toGodotVec4(const Titan::Model::Vec4 *vec)
+{
+    return Vector4(vec->x(), vec->y(), vec->z(), vec->w());
+}
+
 godot::String Utils::toGodotString(const flatbuffers::String *str)
 {
     return String(str->c_str());

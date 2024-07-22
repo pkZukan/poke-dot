@@ -11,20 +11,6 @@
 
 namespace godot {
 
-class TransformNode : public Resource {
-	GDCLASS(TransformNode, Resource)
-protected:
-	static void _bind_methods();
-public:
-	TransformNode(){}
-	~TransformNode(){}
-
-	GETTER_SETTER_DEFINE(String, Name)
-
-private:
-	String Name;
-};
-
 class IKControl : public Resource {
 	GDCLASS(IKControl, Resource)
 protected:
@@ -33,6 +19,10 @@ public:
 	IKControl(){}
 	~IKControl(){}
 
+	GETTER_SETTER_DEFINE(String, Name)
+
+private:
+	String Name;
 };
 
 class BoneMatrix : public Resource {
@@ -50,6 +40,28 @@ public:
 
 private:
     Vector3 X, Y, Z, W;
+};
+
+class TransformNode : public Resource {
+	GDCLASS(TransformNode, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TransformNode(){}
+	~TransformNode(){}
+
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Transform3D, Transform)
+	GETTER_SETTER_DEFINE(Vector3, ScalePivot)
+	GETTER_SETTER_DEFINE(Vector3, RotatePivot)
+	GETTER_SETTER_DEFINE(int, ParentIndex)
+
+private:
+	String Name;
+	Transform3D Transform;
+	Vector3 ScalePivot;
+	Vector3 RotatePivot;
+	int ParentIndex;
 };
 
 class BoneEntry : public Resource {

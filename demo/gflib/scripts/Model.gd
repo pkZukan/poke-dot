@@ -7,6 +7,8 @@ static func ParseVertexBuffer(attrib:MeshAttrib, verts:PackedByteArray, inds:Pac
 	var norm:PackedVector3Array
 	var uv:PackedVector2Array
 	var indicies:PackedInt32Array
+	var blendInds:PackedInt32Array
+	var blendWeights:PackedFloat32Array
 	
 	var stride = attrib.Stride
 	var streamVert = StreamPeerBuffer.new()
@@ -38,6 +40,16 @@ static func ParseVertexBuffer(attrib:MeshAttrib, verts:PackedByteArray, inds:Pac
 		y = streamVert.get_float()
 		uv.push_back(Vector2(x,y))
 		
+		streamVert.seek(currPos + attrib.Descriptor["BLEND_INDICES"])
+		blendInds.push_back(streamVert.get_u8())
+		blendInds.push_back(streamVert.get_u8())
+		blendInds.push_back(streamVert.get_u8())
+		blendInds.push_back(streamVert.get_u8())
+		
+		streamVert.seek(currPos + attrib.Descriptor["BLEND_WEIGHTS"])
+		blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
+		blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
+		
 		currPos += stride
 	
 	currPos = 0
@@ -56,7 +68,9 @@ static func ParseVertexBuffer(attrib:MeshAttrib, verts:PackedByteArray, inds:Pac
 		Pos = pos,
 		Norm = norm,
 		UV = uv,
-		Indicies = indicies
+		Indicies = indicies,
+		BlendInds = blendInds,
+		BlendWeights = blendWeights
 	}
 
 func ParseModel(path:String, file:String):
@@ -90,7 +104,6 @@ func ParseModel(path:String, file:String):
 				textures[t.Name] = ResourceLoader.load(str(path, t.File))
 			for t in textures:
 				sm.set_shader_parameter(t, ImageTexture.create_from_image(textures[t].ImageData))
-			sm.set_shader_parameter("flipped_uvs", true)
 			
 			Materials[mat.Name] = sm
 	
@@ -102,11 +115,12 @@ func ParseModel(path:String, file:String):
 	var skel:TRSkeleton = ResourceLoader.load(str(path, mdl.Skeleton))
 	skl.name = "Armature"
 	name = skel.TransformNodes[0].Name
-	for b in range(0, skel.Bones.size()):
-		var bone = skel.Bones[b]
+	for b in range(0, skel.TransformNodes.size()):
 		var transforms = skel.TransformNodes[b]
 		skl.add_bone(transforms.Name)
 		skl.set_bone_name(b, transforms.Name)
+		skl.transform = transforms.Transform
+		skl.set_bone_parent(b, transforms.ParentIndex)
 	add_child(skl)
 		
 	#Iterate through descriptors and buffers
@@ -124,6 +138,8 @@ func ParseModel(path:String, file:String):
 		arr[Mesh.ARRAY_NORMAL] = result.Norm
 		arr[Mesh.ARRAY_TEX_UV] = result.UV
 		arr[Mesh.ARRAY_INDEX] = result.Indicies
+		#arr[Mesh.ARRAY_BONES] = result.BlendInds
+		#arr[Mesh.ARRAY_WEIGHTS] = result.BlendWeights
 		
 		var matName = meshShape.Materials[0].MaterialName
 		arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)

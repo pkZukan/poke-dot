@@ -27,6 +27,7 @@ public:
 	~Utils(){}
 
     static godot::Vector3 toGodotVec3(const Titan::Model::Vec3 *vec);
+	static godot::Vector4 toGodotVec4(const Titan::Model::Vec4 *vec);
     static godot::String toGodotString(const flatbuffers::String *str);
 
     static float half_to_float(uint16_t half);

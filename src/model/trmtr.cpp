@@ -4,27 +4,25 @@ using namespace godot;
 
 void ByteExtra::_bind_methods() 
 {
-    //
+    GETTER_SETTER_BIND(ByteExtra, Value, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 void IntExtra::_bind_methods() 
 {
-    //
+    GETTER_SETTER_BIND(IntExtra, res0, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(IntExtra, Value, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 void FloatParameter::_bind_methods() 
 {
-    //
+    GETTER_SETTER_BIND(FloatParameter, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(FloatParameter, Value, Variant::FLOAT, PROPERTY_HINT_NONE)
 }
 
 void Float4Parameter::_bind_methods() 
 {
-    //
-}
-
-void IntParameter::_bind_methods() 
-{
-    //
+    GETTER_SETTER_BIND(Float4Parameter, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(Float4Parameter, Value, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "RGBA")
 }
 
 void ShaderIntParam::_bind_methods() 
@@ -105,6 +103,10 @@ void TRMaterial::LoadFromFile(String file)
     auto mats = mat->materials();
     for(int i = 0; i < mats->size(); i++)
     {
+        Ref<MaterialEntry> matEnt;
+        matEnt.instantiate();
+        matEnt->set_Name(Utils::toGodotString(mats->Get(i)->name()));
+
         //Parse shaders
         auto shaders = mats->Get(i)->shaders();
         Array shdrs;
@@ -128,11 +130,12 @@ void TRMaterial::LoadFromFile(String file)
 
             shdrs.push_back(shader);
         }
+        matEnt->set_Shaders(shdrs);
 
         //Parse textures
         auto textures = mats->Get(i)->textures();
         Array texs;
-        for(int j = 0; j < shaders->size(); j++)
+        for(int j = 0; j < textures->size(); j++)
         {
             Ref<TextureEntry> texEnt;
             texEnt.instantiate();
@@ -141,6 +144,7 @@ void TRMaterial::LoadFromFile(String file)
             texEnt->set_Slot(textures->Get(j)->texture_slot());
             texs.push_back(texEnt);
         }
+        matEnt->set_Textures(texs);
 
         //Parse samplers
         auto samplers = mats->Get(i)->samplers();
@@ -170,12 +174,95 @@ void TRMaterial::LoadFromFile(String file)
             sampEnt->set_BorderColor(bc);
             samps.push_back(sampEnt);
         }
+        matEnt->set_Samplers(samps);
 
-        Ref<MaterialEntry> matEnt;
-        matEnt.instantiate();
-        matEnt->set_Name(Utils::toGodotString(mats->Get(i)->name()));
-        matEnt->set_Shaders(shdrs);
-        matEnt->set_Textures(texs);
+        //Parse floats
+        auto floatParams = mats->Get(i)->float_parameter();
+        Array floats;
+        for(int j = 0; j < floatParams->size(); j++)
+        {
+            Ref<FloatParameter> fp;
+            fp.instantiate();
+            fp->set_Name(Utils::toGodotString(floatParams->Get(j)->float_name()));
+            fp->set_Value(floatParams->Get(j)->float_value());
+            floats.push_back(fp);
+        }
+        matEnt->set_FloatParams(floats);
+
+        //Parse float4s
+        auto float4Params = mats->Get(i)->float4_parameter();
+        Array float4s;
+        for(int j = 0; j < float4Params->size(); j++)
+        {
+            Ref<Float4Parameter> fp;
+            fp.instantiate();
+            fp->set_Name(Utils::toGodotString(float4Params->Get(j)->color_name()));
+
+            Ref<RGBA> col;
+            col.instantiate();
+            col->set_R(float4Params->Get(j)->color_value()->r());
+            col->set_G(float4Params->Get(j)->color_value()->g());
+            col->set_B(float4Params->Get(j)->color_value()->b());
+            col->set_A(float4Params->Get(j)->color_value()->a());
+
+            fp->set_Value(col);
+            float4s.push_back(fp);
+        }
+        matEnt->set_Float4Params(float4s);
+
+        //Parse light floats
+        auto lightParams = mats->Get(i)->float4_light_parameter();
+        Array lights;
+        for(int j = 0; j < lightParams->size(); j++)
+        {
+            Ref<Float4Parameter> fp;
+            fp.instantiate();
+            fp->set_Name(Utils::toGodotString(lightParams->Get(j)->color_name()));
+
+            Ref<RGBA> col;
+            col.instantiate();
+            col->set_R(lightParams->Get(j)->color_value()->r());
+            col->set_G(lightParams->Get(j)->color_value()->g());
+            col->set_B(lightParams->Get(j)->color_value()->b());
+            col->set_A(lightParams->Get(j)->color_value()->a());
+
+            fp->set_Value(col);
+            lights.push_back(fp);
+        }
+        matEnt->set_FloatLightParams(lights);
+
+        //Parse ints
+        auto intParams = mats->Get(i)->int_parameter();
+        Array ints;
+        for(int j = 0; j < intParams->size(); j++)
+        {
+            Ref<ShaderIntParam> ip;
+            ip.instantiate();
+            ip->set_Name(Utils::toGodotString(intParams->Get(j)->int_name()));
+            ip->set_Value(intParams->Get(j)->int_value());
+            ints.push_back(ip);
+        }
+        matEnt->set_IntParams(ints);
+
+        //Set extras
+        Ref<ByteExtra> be;
+        be.instantiate();
+        be->set_Value(mats->Get(i)->byte_extra()->value());
+        matEnt->set_ByteExt(be);
+
+        Ref<IntExtra> ie;
+        ie.instantiate();
+        ie->set_res0(mats->Get(i)->int_extra()->res_0());
+        ie->set_Value(mats->Get(i)->int_extra()->value());
+        matEnt->set_IntExt(ie);
+
+        matEnt->set_unk_5(Utils::toGodotString(mats->Get(i)->unk_5()));
+        matEnt->set_unk_8(Utils::toGodotString(mats->Get(i)->unk_8()));
+        matEnt->set_unk_10(Utils::toGodotString(mats->Get(i)->unk_10()));
+        matEnt->set_unk_11(Utils::toGodotString(mats->Get(i)->unk_11()));
+        matEnt->set_unk_12(Utils::toGodotString(mats->Get(i)->unk_12()));
+        matEnt->set_AlphaType(Utils::toGodotString(mats->Get(i)->alpha_type()));
+        
         Materials.push_back(matEnt);
     }
 }

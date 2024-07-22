@@ -56,7 +56,6 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(IntExtra)
 		GDREGISTER_CLASS(FloatParameter)
 		GDREGISTER_CLASS(Float4Parameter)
-		GDREGISTER_CLASS(IntParameter)
 		GDREGISTER_CLASS(RGBA)
 		GDREGISTER_CLASS(MaterialTable)
 		GDREGISTER_CLASS(MaterialProperty)

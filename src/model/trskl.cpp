@@ -9,14 +9,19 @@ void BoneMatrix::_bind_methods()
     GETTER_SETTER_BIND(BoneMatrix, Z, Variant::VECTOR3, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(BoneMatrix, W, Variant::VECTOR3, PROPERTY_HINT_NONE)
 }
-void TransformNode::_bind_methods() 
+
+void IKControl::_bind_methods() 
 {
     GETTER_SETTER_BIND(TransformNode, Name, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
-void IKControl::_bind_methods() 
+void TransformNode::_bind_methods() 
 {
-    //
+    GETTER_SETTER_BIND(TransformNode, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, Transform, Variant::TRANSFORM3D, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, ScalePivot, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, RotatePivot, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, ParentIndex, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 void BoneEntry::_bind_methods() 
@@ -65,15 +70,36 @@ void TRSkeleton::LoadFromFile(String file)
     }
 
     //Get transforms
-    for(int i = 0; i < bones->size(); i++)
+    auto transforms = skel->transform_nodes();
+    for(int i = 0; i < transforms->size(); i++)
     {
-        auto tranNodes = skel->transform_nodes();
         Ref<TransformNode> tn;
         tn.instantiate();
+        tn->set_Name(Utils::toGodotString(transforms->Get(i)->name()));
 
-        tn->set_Name(Utils::toGodotString(tranNodes->Get(i)->name()));
+        Transform3D tr;
+        tr.scale(Utils::toGodotVec3(transforms->Get(i)->transform()->VecScale()));
+        tr.basis = Quaternion(Utils::toGodotVec3(transforms->Get(i)->transform()->VecRot()));
+        tr.origin = Utils::toGodotVec3(transforms->Get(i)->transform()->VecTranslate());
+        tn->set_Transform(tr);
+
+        tn->set_ScalePivot(Utils::toGodotVec3(transforms->Get(i)->scalePivot()));
+        tn->set_RotatePivot(Utils::toGodotVec3(transforms->Get(i)->rotatePivot()));
+        tn->set_ParentIndex(transforms->Get(i)->parent_idx());
 
         TransformNodes.push_back(tn);
+    }
+
+    //Get IKs
+    auto ikcontrols = skel->iks();
+    for(int i = 0; i < ikcontrols->size(); i++)
+    {
+        Ref<IKControl> ik;
+        ik.instantiate();
+
+        ik->set_Name(Utils::toGodotString(ikcontrols->Get(i)->ik_name()));
+
+        IKs.push_back(ik);
     }
 }
 
