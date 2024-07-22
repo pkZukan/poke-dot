@@ -12,7 +12,7 @@ void BoneMatrix::_bind_methods()
 
 void IKControl::_bind_methods() 
 {
-    GETTER_SETTER_BIND(TransformNode, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(IKControl, Name, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
 void TransformNode::_bind_methods() 

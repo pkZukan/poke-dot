@@ -22,6 +22,7 @@ static func ParseVertexBuffer(attrib:MeshAttrib, verts:PackedByteArray, inds:Pac
 		var y = 0
 		var z = 0
 		var w = 0
+		
 		streamVert.seek(currPos + attrib.Descriptor["POSITION"])
 		x = streamVert.get_float()
 		y = streamVert.get_float()
@@ -141,8 +142,15 @@ func ParseModel(path:String, file:String):
 		#arr[Mesh.ARRAY_BONES] = result.BlendInds
 		#arr[Mesh.ARRAY_WEIGHTS] = result.BlendWeights
 		
+		var flags = 0
+		flags |= ArrayMesh.ARRAY_FORMAT_VERTEX
+		flags |= ArrayMesh.ARRAY_FORMAT_NORMAL
+		flags |= ArrayMesh.ARRAY_FORMAT_TEX_UV
+		flags |= ArrayMesh.ARRAY_FORMAT_BONES
+		flags |= ArrayMesh.ARRAY_FORMAT_WEIGHTS
+		
 		var matName = meshShape.Materials[0].MaterialName
-		arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr, [], {}, flags)
 
 		mi.name = meshShape.MeshName
 		mi.mesh = arrMesh
