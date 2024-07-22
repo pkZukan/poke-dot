@@ -6,4 +6,5 @@
 script = ExtResource("1_lmem3")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.90901)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.899063, 1.90901)
+visible = false

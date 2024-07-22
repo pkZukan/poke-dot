@@ -79,6 +79,27 @@ static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArr
 		BlendWeights = blendWeights
 	}
 
+func GetShaderMat(shaderMat) -> ShaderMaterial:
+	var sm:ShaderMaterial = ShaderMaterial.new()
+	
+	var shader = shaderMat.Shaders[0]
+	var name = shader.Name
+	var shdr = ResourceLoader.load(str("res://gflib/shaders/", shader.Name, ".gdshader"))
+
+	for v:ShaderStringParam in shader.StringParams:
+		var val = v.Value
+		#Is there a better way to do this crap?
+		if val.is_valid_int():
+			sm.set_shader_parameter(v.Name, int(val))
+		elif val.to_lower() == "true":
+			sm.set_shader_parameter(v.Name, true)
+		elif val.to_lower() == "false":
+			sm.set_shader_parameter(v.Name, false)
+	
+	sm.resource_name = shaderMat.Name
+	sm.shader = shdr
+	return sm
+
 func ParseModel(path:String, file:String):
 	#Create array for meshes
 	var MeshInstances:Array
@@ -98,10 +119,7 @@ func ParseModel(path:String, file:String):
 	for matFileInd in range(0, mdl.Materials.size()):
 		var material:TRMaterial = ResourceLoader.load(str(path, mdl.Materials[matFileInd]))
 		for mat in material.Materials:
-			var sm:ShaderMaterial = ShaderMaterial.new()
-			sm.resource_name = mat.Name
-			sm.shader = ResourceLoader.load("res://test.gdshader") #Use test shader for now
-			#TODO: Create something to manager shaders
+			var shdr = GetShaderMat(mat)
 			
 			#Iterate though the textures and map uniform names to image data
 			#TODO: seperate image loading code and optimize it to not load the same bntx twice
@@ -109,9 +127,10 @@ func ParseModel(path:String, file:String):
 			for t in mat.Textures:
 				textures[t.Name] = ResourceLoader.load(str(path, t.File))
 			for t in textures:
-				sm.set_shader_parameter(t, ImageTexture.create_from_image(textures[t].ImageData))
+				shdr.set_shader_parameter(t, ImageTexture.create_from_image(textures[t].ImageData))
+				
 			
-			Materials[mat.Name] = sm
+			Materials[mat.Name] = shdr
 	
 	#Load buffer file
 	var buff:TRModelBuffer = ResourceLoader.load(str(path, buffName))

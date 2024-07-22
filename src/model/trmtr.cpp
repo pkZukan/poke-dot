@@ -118,7 +118,7 @@ void TRMaterial::LoadFromFile(String file)
 
             auto vals = shaders->Get(j)->shader_values();
             Array values;
-            for(int k = 0; k < shaders->size(); k++)
+            for(int k = 0; k < vals->size(); k++)
             {
                 Ref<ShaderStringParam> ssp;
                 ssp.instantiate();
