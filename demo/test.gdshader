@@ -6,14 +6,16 @@ uniform sampler2D BaseColorMap : source_color;
 uniform sampler2D LayerMaskMap;
 uniform sampler2D NormalMap : hint_normal;
 uniform sampler2D NormalMap1 : hint_normal;
+uniform sampler2D AOMap;
 
 void vertex() {
 	//
 }
 
 void fragment() {
-	vec2 uvs = vec2(1.0 - UV.x, 1.0 - UV.y); //Flip
-	ALBEDO = texture(BaseColorMap, uvs).rgb;
+	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
+	float ao_factor = texture(AOMap, uvs).r; 
+	ALBEDO = texture(BaseColorMap, uvs).rgb * ao_factor;
 	NORMAL_MAP = texture(NormalMap, uvs).rgb;
 }
 
