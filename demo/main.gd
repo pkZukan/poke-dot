@@ -3,7 +3,8 @@ extends Node3D
 
 func _ready():
 	var mdl:TrinityModel = TrinityModel.new()
-	mdl.Load("res://pm0004_00_00/", "pm0004_00_00.trmdl")
+	#mdl.Load("res://pm0004_00_00/", "pm0004_00_00.trmdl")
+	mdl.Load("res://tr0380_musician/", "tr0380_00.trmdl")
 	mdl.position = Vector3.ZERO
 	add_child(mdl)
 

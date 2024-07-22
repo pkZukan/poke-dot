@@ -35,7 +35,9 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 	{
 		GDREGISTER_CLASS(MeshShape)
 		GDREGISTER_CLASS(ModelBuffer)
-		GDREGISTER_CLASS(MeshAttrib)
+		GDREGISTER_CLASS(VertexAccessors)
+		GDREGISTER_CLASS(SizeTable)
+		GDREGISTER_CLASS(Accessors)
 		GDREGISTER_CLASS(BoneMatrix)
 		GDREGISTER_CLASS(BoneEntry)
 		GDREGISTER_CLASS(BoundingBox)

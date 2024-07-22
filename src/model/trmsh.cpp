@@ -25,10 +25,24 @@ void InfluenceEntry::_bind_methods()
     GETTER_SETTER_BIND(InfluenceEntry, Scale, Variant::FLOAT, PROPERTY_HINT_NONE)
 }
 
-void MeshAttrib::_bind_methods()
+void SizeTable::_bind_methods()
 {
-    GETTER_SETTER_BIND(MeshAttrib, Descriptor, Variant::DICTIONARY, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(MeshAttrib, Stride, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(SizeTable, Size, Variant::INT, PROPERTY_HINT_NONE)
+}
+
+void Accessors::_bind_methods()
+{
+    GETTER_SETTER_BIND(Accessors, attr_0, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(Accessors, Attribute, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(Accessors, AttributeLayer, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(Accessors, Type, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(Accessors, Position, Variant::INT, PROPERTY_HINT_NONE)
+}
+
+void VertexAccessors::_bind_methods()
+{
+    GETTER_SETTER_BIND(VertexAccessors, Accessors, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Accessors")
+    GETTER_SETTER_BIND(VertexAccessors, Strides, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "SizeTable")
 }
 
 void MeshShape::_bind_methods() 
@@ -36,7 +50,7 @@ void MeshShape::_bind_methods()
     GETTER_SETTER_BIND(MeshShape, Name, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(MeshShape, BBox, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "BoundingBox")
     GETTER_SETTER_BIND(MeshShape, PolygonType, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(MeshShape, Attributes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "MeshAttrib")
+    GETTER_SETTER_BIND(MeshShape, Attributes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "VertexAccessors")
     GETTER_SETTER_BIND(MeshShape, Materials, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "MaterialInfo")
     GETTER_SETTER_BIND(MeshShape, ClipSphere, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "Sphere")
     GETTER_SETTER_BIND(MeshShape, Influences, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "InfluenceEntry")
@@ -81,31 +95,47 @@ void TRMesh::LoadFromFile(String file)
         mshape->set_MeshName(Utils::toGodotString(msh->mesh_name()));
 
         //Get attributes
-        auto attrib = msh->attributes();
+        auto attributes = msh->attributes();
         Array attribs;
-        for(int j = 0; j < attrib->size(); j++)
+        for(int j = 0; j < attributes->size(); j++)
         {
-            Ref<MeshAttrib> attribute;
-            attribute.instantiate();
+            Ref<VertexAccessors> att;
+            att.instantiate();
 
-            auto atts = attrib->Get(j)->attrs();
-            auto attSizes = attrib->Get(j)->size();
-            Dictionary desc;
+            auto atts = attributes->Get(j)->attrs();
+            Array accessors;
             for(int k = 0; k < atts->size(); k++)
             {
-                String attName = String(Titan::Model::EnumNameVertexAttribute(atts->Get(k)->attribute()));
-                desc[attName] = atts->Get(k)->position();
+                Ref<Accessors> accs;
+                accs.instantiate();
+                accs->set_attr_0(atts->Get(k)->attr_0());
+                accs->set_Attribute(Titan::Model::EnumNameVertexAttribute(atts->Get(k)->attribute()));
+                accs->set_AttributeLayer(atts->Get(k)->attribute_layer());
+                accs->set_Type(Titan::Model::EnumNameType(atts->Get(k)->type()));
+                accs->set_Position(atts->Get(k)->position());
+                accessors.push_back(accs);
             }
-            attribute->set_Descriptor(desc);
-            attribute->set_Stride(attSizes->Get(0)->size());
-            attribs.push_back(attribute);
+            att->set_Accessors(accessors);
+
+            auto attSizes = attributes->Get(j)->size();
+            Array strides;
+            for(int k = 0; k < attSizes->size(); k++)
+            {
+                Ref<SizeTable> st;
+                st.instantiate();
+                st->set_Size(attSizes->Get(k)->size());
+                strides.push_back(st);
+            }
+            att->set_Strides(strides);
+
+            attribs.push_back(att);
         }
         mshape->set_Attributes(attribs);
 
         //Get Materials
         auto mats = msh->materials();
         Array matInfo;
-        for(int j = 0; j < attrib->size(); j++)
+        for(int j = 0; j < mats->size(); j++)
         {
             Ref<MaterialInfo> minfo;
             minfo.instantiate();

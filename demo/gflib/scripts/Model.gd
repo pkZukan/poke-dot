@@ -2,7 +2,7 @@ extends Node3D
 
 class_name TrinityModel
 
-static func ParseVertexBuffer(attrib:MeshAttrib, verts:PackedByteArray, inds:PackedByteArray, polyType):
+static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArray, inds:PackedByteArray, polyType):
 	var pos:PackedVector3Array
 	var norm:PackedVector3Array
 	var uv:PackedVector2Array
@@ -10,12 +10,14 @@ static func ParseVertexBuffer(attrib:MeshAttrib, verts:PackedByteArray, inds:Pac
 	var blendInds:PackedInt32Array
 	var blendWeights:PackedFloat32Array
 	
-	var stride = attrib.Stride
+	var stride = accessorTable.Strides[0].Size
+	
 	var streamVert = StreamPeerBuffer.new()
 	var streamInd = StreamPeerBuffer.new()
 	streamVert.data_array = verts
 	streamInd.data_array = inds
 	
+	#Parse Vertex buffer
 	var currPos = 0
 	while currPos < streamVert.get_size():
 		var x = 0
@@ -23,36 +25,39 @@ static func ParseVertexBuffer(attrib:MeshAttrib, verts:PackedByteArray, inds:Pac
 		var z = 0
 		var w = 0
 		
-		streamVert.seek(currPos + attrib.Descriptor["POSITION"])
-		x = streamVert.get_float()
-		y = streamVert.get_float()
-		z = streamVert.get_float()
-		pos.push_back(Vector3(x,y,z))
+		for attrib:Accessors in accessorTable.Accessors:
+			streamVert.seek(currPos + attrib.Position)
+			if attrib.Attribute == "POSITION":
+				x = streamVert.get_float()
+				y = streamVert.get_float()
+				z = streamVert.get_float()
+				pos.push_back(Vector3(x,y,z))
+
+			if attrib.Attribute == "NORMAL":
+				x = Utils.half_to_float(streamVert.get_u16())
+				y = Utils.half_to_float(streamVert.get_u16())
+				z = Utils.half_to_float(streamVert.get_u16())
+				w = Utils.half_to_float(streamVert.get_u16())
+				norm.push_back(Vector3(x,y,z).normalized())
+			
+			if attrib.Attribute == "TEXCOORD":
+				x = streamVert.get_float()
+				y = streamVert.get_float()
+				uv.push_back(Vector2(x,y))
+			
+			if attrib.Attribute == "BLEND_INDICES":
+				blendInds.push_back(streamVert.get_u8())
+				blendInds.push_back(streamVert.get_u8())
+				blendInds.push_back(streamVert.get_u8())
+				blendInds.push_back(streamVert.get_u8())
 		
-		streamVert.seek(currPos + attrib.Descriptor["NORMAL"])
-		x = Utils.half_to_float(streamVert.get_u16())
-		y = Utils.half_to_float(streamVert.get_u16())
-		z = Utils.half_to_float(streamVert.get_u16())
-		w = Utils.half_to_float(streamVert.get_u16())
-		norm.push_back(Vector3(x,y,z).normalized())
-		
-		streamVert.seek(currPos + attrib.Descriptor["TEXCOORD"])
-		x = streamVert.get_float()
-		y = streamVert.get_float()
-		uv.push_back(Vector2(x,y))
-		
-		streamVert.seek(currPos + attrib.Descriptor["BLEND_INDICES"])
-		blendInds.push_back(streamVert.get_u8())
-		blendInds.push_back(streamVert.get_u8())
-		blendInds.push_back(streamVert.get_u8())
-		blendInds.push_back(streamVert.get_u8())
-		
-		streamVert.seek(currPos + attrib.Descriptor["BLEND_WEIGHTS"])
-		blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
-		blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
+			if attrib.Attribute == "BLEND_WEIGHTS":
+				blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
+				blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
 		
 		currPos += stride
 	
+	#Parse Index buffer
 	currPos = 0
 	while currPos < streamInd.get_size():
 		if polyType == 0:

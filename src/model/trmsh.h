@@ -68,20 +68,56 @@ private:
 	int unk1;
 };
 
-class MeshAttrib : public Resource {
-	GDCLASS(MeshAttrib, Resource)
+class Accessors : public Resource {
+	GDCLASS(Accessors, Resource)
 protected:
 	static void _bind_methods();
 public:
-	MeshAttrib(){}
-	~MeshAttrib(){}
+	Accessors(){}
+	~Accessors(){}
 
-	GETTER_SETTER_DEFINE(Dictionary, Descriptor)
-	GETTER_SETTER_DEFINE(int, Stride)
+	GETTER_SETTER_DEFINE(int, attr_0)
+	GETTER_SETTER_DEFINE(String, Attribute)
+	GETTER_SETTER_DEFINE(int, AttributeLayer)
+	GETTER_SETTER_DEFINE(String, Type)
+	GETTER_SETTER_DEFINE(int, Position)
 
 private:
-	Dictionary Descriptor;
-	int Stride;
+	int attr_0;
+	String Attribute;
+	int AttributeLayer;
+	String Type;
+	int Position;
+};
+
+class SizeTable : public Resource {
+	GDCLASS(SizeTable, Resource)
+protected:
+	static void _bind_methods();
+public:
+	SizeTable(){}
+	~SizeTable(){}
+
+	GETTER_SETTER_DEFINE(int, Size)
+
+private:
+	int Size;
+};
+
+class VertexAccessors : public Resource {
+	GDCLASS(VertexAccessors, Resource)
+protected:
+	static void _bind_methods();
+public:
+	VertexAccessors(){}
+	~VertexAccessors(){}
+
+	GETTER_SETTER_DEFINE(Array, Accessors)
+	GETTER_SETTER_DEFINE(Array, Strides)
+
+private:
+	Array Accessors;
+	Array Strides;
 };
 
 class MeshShape : public Resource {
