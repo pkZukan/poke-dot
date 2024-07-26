@@ -2,13 +2,13 @@ extends Node3D
 
 class_name TrinityModel
 
-static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArray, inds:PackedByteArray, polyType):
-	var pos:PackedVector3Array
-	var norm:PackedVector3Array
-	var uv:PackedVector2Array
-	var indicies:PackedInt32Array
-	var blendInds:PackedInt32Array
-	var blendWeights:PackedFloat32Array
+static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArray, inds:PackedByteArray, polyType, start, count):
+	var pos:PackedVector3Array = []
+	var norm:PackedVector3Array = []
+	var uv:PackedVector2Array = []
+	var indicies:PackedInt32Array = []
+	var blendInds:PackedInt32Array = []
+	var blendWeights:PackedFloat32Array = []
 	
 	var stride = accessorTable.Strides[0].Size
 	
@@ -20,29 +20,24 @@ static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArr
 	#Parse Vertex buffer
 	var currPos = 0
 	while currPos < streamVert.get_size():
-		var x = 0
-		var y = 0
-		var z = 0
-		var w = 0
-		
 		for attrib:Accessors in accessorTable.Accessors:
 			streamVert.seek(currPos + attrib.Position)
 			if attrib.Attribute == "POSITION":
-				x = streamVert.get_float()
-				y = streamVert.get_float()
-				z = streamVert.get_float()
+				var x = streamVert.get_float()
+				var y = streamVert.get_float()
+				var z = streamVert.get_float()
 				pos.push_back(Vector3(x,y,z))
 
 			if attrib.Attribute == "NORMAL":
-				x = Utils.half_to_float(streamVert.get_u16())
-				y = Utils.half_to_float(streamVert.get_u16())
-				z = Utils.half_to_float(streamVert.get_u16())
-				w = Utils.half_to_float(streamVert.get_u16())
+				var x = Utils.half_to_float(streamVert.get_u16())
+				var y = Utils.half_to_float(streamVert.get_u16())
+				var z = Utils.half_to_float(streamVert.get_u16())
+				var w = Utils.half_to_float(streamVert.get_u16())
 				norm.push_back(Vector3(x,y,z).normalized())
 			
 			if attrib.Attribute == "TEXCOORD":
-				x = streamVert.get_float()
-				y = streamVert.get_float()
+				var x = streamVert.get_float()
+				var y = streamVert.get_float()
 				uv.push_back(Vector2(x,y))
 			
 			if attrib.Attribute == "BLEND_INDICES":
@@ -58,8 +53,10 @@ static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArr
 		currPos += stride
 	
 	#Parse Index buffer
-	currPos = 0
-	while currPos < streamInd.get_size():
+	var indsize = (1 << polyType)
+	currPos = start * indsize
+	streamInd.seek(currPos)
+	while currPos < ((start + count) * indsize):
 		if polyType == 0:
 			indicies.push_back(streamInd.get_u8())
 		elif polyType == 1:
@@ -68,7 +65,7 @@ static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArr
 			indicies.push_back(streamInd.get_u32())
 		elif polyType == 3:
 			indicies.push_back(streamInd.get_u64())
-		currPos += (1 << polyType)
+		currPos += indsize
 	
 	return {
 		Pos = pos,
@@ -128,7 +125,6 @@ func ParseModel(path:String, file:String):
 				textures[t.Name] = ResourceLoader.load(str(path, t.File))
 			for t in textures:
 				shdr.set_shader_parameter(t, ImageTexture.create_from_image(textures[t].ImageData))
-				
 			
 			Materials[mat.Name] = shdr
 	
@@ -150,37 +146,39 @@ func ParseModel(path:String, file:String):
 		
 	#Iterate through descriptors and buffers
 	for d in range(0,descCnt):
-		var mi:MeshInstance3D = MeshInstance3D.new()
 		var meshShape:MeshShape = mesh.MeshDescriptors[d]
 		var vertBuf:PackedByteArray = buff.Buffers[d].VertexBuffers[0]
 		var indBuf:PackedByteArray = buff.Buffers[d].IndexBuffers[0]
-		var arrMesh:ArrayMesh = ArrayMesh.new()
 		
-		var result = ParseVertexBuffer(meshShape.Attributes[0], vertBuf, indBuf, meshShape.PolygonType)
-		var arr:Array
-		arr.resize(Mesh.ARRAY_MAX)
-		arr[Mesh.ARRAY_VERTEX] = result.Pos
-		arr[Mesh.ARRAY_NORMAL] = result.Norm
-		arr[Mesh.ARRAY_TEX_UV] = result.UV
-		arr[Mesh.ARRAY_INDEX] = result.Indicies
-		#arr[Mesh.ARRAY_BONES] = result.BlendInds
-		#arr[Mesh.ARRAY_WEIGHTS] = result.BlendWeights
-		
-		var flags = 0
-		flags |= ArrayMesh.ARRAY_FORMAT_VERTEX
-		flags |= ArrayMesh.ARRAY_FORMAT_NORMAL
-		flags |= ArrayMesh.ARRAY_FORMAT_TEX_UV
-		flags |= ArrayMesh.ARRAY_FORMAT_BONES
-		flags |= ArrayMesh.ARRAY_FORMAT_WEIGHTS
-		
-		var matName = meshShape.Materials[0].MaterialName
-		arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr, [], {}, flags)
+		#Create meshes per material info
+		for subMesh in range(0, meshShape.Materials.size()):
+			var arrMesh:ArrayMesh = ArrayMesh.new()
+			var mi:MeshInstance3D = MeshInstance3D.new()
+			var mat = meshShape.Materials[subMesh]
+			var result = ParseVertexBuffer(meshShape.Attributes[0], vertBuf, indBuf, meshShape.PolygonType, mat.PolyOffset, mat.PolyCount)
+			var arr:Array
+			arr.resize(Mesh.ARRAY_MAX)
+			arr[Mesh.ARRAY_VERTEX] = result.Pos
+			arr[Mesh.ARRAY_NORMAL] = result.Norm
+			arr[Mesh.ARRAY_TEX_UV] = result.UV
+			arr[Mesh.ARRAY_INDEX] = result.Indicies
+			#arr[Mesh.ARRAY_BONES] = result.BlendInds
+			#arr[Mesh.ARRAY_WEIGHTS] = result.BlendWeights
+			
+			var flags = 0
+			flags |= ArrayMesh.ARRAY_FORMAT_VERTEX
+			flags |= ArrayMesh.ARRAY_FORMAT_NORMAL
+			flags |= ArrayMesh.ARRAY_FORMAT_TEX_UV
+			flags |= ArrayMesh.ARRAY_FORMAT_BONES
+			flags |= ArrayMesh.ARRAY_FORMAT_WEIGHTS
 
-		mi.name = meshShape.MeshName
-		mi.mesh = arrMesh
-		mi.material_override = Materials[matName]
-		mi.skeleton = NodePath("../" + skl.name)
-		MeshInstances.push_back(mi)
+			arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr, [], {}, flags)
+
+			mi.name = str(meshShape.Name, "_", mat.MaterialName)
+			mi.mesh = arrMesh
+			mi.material_override = Materials[mat.MaterialName]
+			mi.skeleton = NodePath("../" + skl.name)
+			MeshInstances.push_back(mi)
 
 	for m in MeshInstances:
 		add_child(m)
