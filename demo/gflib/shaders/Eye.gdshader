@@ -3,20 +3,23 @@ shader_type spatial;
 render_mode cull_front;
 
 uniform sampler2D BaseColorMap : source_color;
+uniform sampler2D LayerMaskMap;
 uniform sampler2D NormalMap : hint_normal;
-uniform sampler2D RoughnessMap;
+uniform sampler2D NormalMap1 : hint_normal;
 uniform sampler2D AOMap;
-uniform sampler2D SSSMaskMap;
 
-uniform bool EnableBaseColorMap;
 uniform bool EnableNormalMap;
+uniform bool EnableParallaxMap;
+uniform bool EnableMetallicMap;
 uniform bool EnableRoughnessMap;
+uniform bool EnableEmissionColorMap;
 uniform bool EnableAOMap;
-uniform bool EnableSSSMaskMap;
+uniform int EyelidType;
 uniform int NumMaterialLayer;
-uniform bool EnableVertexSubLayer;
-uniform bool EnableCustomLayer;
-uniform int LightReceiveType;
+uniform bool EnableHighlight;
+uniform int UVTransformMode;
+uniform bool EnableOverrideColor;
+uniform bool EnableEyeClearCoat;
 
 void vertex() {
 	//
