@@ -7,7 +7,7 @@
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "trskl_generated.h"
-#include <utils.h>
+#include <common.h>
 
 namespace godot {
 
@@ -51,17 +51,23 @@ public:
 	~TransformNode(){}
 
 	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Transform3D, Transform)
+	GETTER_SETTER_DEFINE(Ref<TRS>, Transform)
 	GETTER_SETTER_DEFINE(Vector3, ScalePivot)
 	GETTER_SETTER_DEFINE(Vector3, RotatePivot)
 	GETTER_SETTER_DEFINE(int, ParentIndex)
+	GETTER_SETTER_DEFINE(int, RigIndex)
+	GETTER_SETTER_DEFINE(String, EffectNode)
+	GETTER_SETTER_DEFINE(String, NodeType)
 
 private:
 	String Name;
-	Transform3D Transform;
+	Ref<TRS> Transform;
 	Vector3 ScalePivot;
 	Vector3 RotatePivot;
 	int ParentIndex;
+	int RigIndex;
+	String EffectNode;
+	String NodeType;
 };
 
 class BoneEntry : public Resource {

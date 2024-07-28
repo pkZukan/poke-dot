@@ -6,6 +6,24 @@
 
 namespace godot {
 
+class TRS : public Resource {
+	GDCLASS(TRS, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRS(){}
+	~TRS(){}
+	
+	GETTER_SETTER_DEFINE(Vector3, Translation)
+	GETTER_SETTER_DEFINE(Vector3, Rotation)
+	GETTER_SETTER_DEFINE(Vector3, Scale)
+
+private:
+	Vector3 Translation;
+	Vector3 Rotation;
+	Vector3 Scale;
+};
+
 class BoundingBox : public Resource {
 	GDCLASS(BoundingBox, Resource)
 protected:
@@ -18,7 +36,8 @@ public:
 	GETTER_SETTER_DEFINE(Vector3, Max)
 
 private:
-	Vector3 Min, Max;
+	Vector3 Min;
+	Vector3 Max;
 };
 
 class RGBA : public Resource {

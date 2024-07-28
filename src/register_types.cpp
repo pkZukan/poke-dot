@@ -62,6 +62,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(MaterialTable)
 		GDREGISTER_CLASS(MaterialProperty)
 		GDREGISTER_CLASS(MaterialSwitch)
+		GDREGISTER_CLASS(TRS)
 
 		GDREGISTER_CLASS(TRModel)
 		GDREGISTER_CLASS(TRMesh)

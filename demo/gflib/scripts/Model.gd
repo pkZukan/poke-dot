@@ -2,7 +2,7 @@ extends Node3D
 
 class_name TrinityModel
 
-static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArray, inds:PackedByteArray, polyType, start, count):
+static func ParseMeshBuffer(accessorTable:VertexAccessors, verts:PackedByteArray, inds:PackedByteArray, polyType, start, count):
 	var pos:PackedVector3Array = []
 	var norm:PackedVector3Array = []
 	var uv:PackedVector2Array = []
@@ -41,14 +41,21 @@ static func ParseVertexBuffer(accessorTable:VertexAccessors, verts:PackedByteArr
 				uv.push_back(Vector2(x,y))
 			
 			if attrib.Attribute == "BLEND_INDICES":
-				blendInds.push_back(streamVert.get_u8())
-				blendInds.push_back(streamVert.get_u8())
-				blendInds.push_back(streamVert.get_u8())
-				blendInds.push_back(streamVert.get_u8())
+				var x = streamVert.get_8()
+				var y = streamVert.get_8()
+				var z = streamVert.get_8()
+				var w = streamVert.get_8()
+				#print(x, ", ", y, ", ", z, ", ", w)
+				blendInds.push_back(x)
+				blendInds.push_back(y)
+				blendInds.push_back(z)
+				blendInds.push_back(w)
 		
 			if attrib.Attribute == "BLEND_WEIGHTS":
 				blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
 				blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
+				blendWeights.push_back(0.0)
+				blendWeights.push_back(0.0)
 		
 		currPos += stride
 	
@@ -138,11 +145,19 @@ func ParseModel(path:String, file:String):
 	name = skel.TransformNodes[0].Name
 	for b in range(0, skel.TransformNodes.size()):
 		var transforms = skel.TransformNodes[b]
+		var rig_id = transforms.RigIndex
+		var parent_id = transforms.ParentIndex
+		#print("Name: ", transforms.Name, ", ID: ", rig_id, ", Parent: ", parent_id)
 		skl.add_bone(transforms.Name)
-		skl.set_bone_name(b, transforms.Name)
-		skl.transform = transforms.Transform
-		skl.set_bone_parent(b, transforms.ParentIndex)
+		skl.set_bone_rest(rig_id, Transform3D(Basis()))
+		skl.set_bone_pose_position(rig_id, transforms.Transform.Translation + skl.get_bone_pose_position(parent_id))
+		skl.set_bone_pose_rotation(rig_id, Quaternion.from_euler(transforms.Transform.Rotation) + skl.get_bone_pose_rotation(parent_id))
+		skl.set_bone_pose_scale(rig_id, transforms.Transform.Scale)
+		if parent_id >= 0:
+			skl.set_bone_parent(rig_id, parent_id)
 	add_child(skl)
+	for b in skl.get_bone_count():
+		print("Name: ", skl.get_bone_name(b), ", ind: ", b, ", parent: ", skl.get_bone_parent(b))
 		
 	#Iterate through descriptors and buffers
 	for d in range(0,descCnt):
@@ -155,15 +170,15 @@ func ParseModel(path:String, file:String):
 			var arrMesh:ArrayMesh = ArrayMesh.new()
 			var mi:MeshInstance3D = MeshInstance3D.new()
 			var mat = meshShape.Materials[subMesh]
-			var result = ParseVertexBuffer(meshShape.Attributes[0], vertBuf, indBuf, meshShape.PolygonType, mat.PolyOffset, mat.PolyCount)
+			var result = ParseMeshBuffer(meshShape.Attributes[0], vertBuf, indBuf, meshShape.PolygonType, mat.PolyOffset, mat.PolyCount)
 			var arr:Array
 			arr.resize(Mesh.ARRAY_MAX)
 			arr[Mesh.ARRAY_VERTEX] = result.Pos
 			arr[Mesh.ARRAY_NORMAL] = result.Norm
 			arr[Mesh.ARRAY_TEX_UV] = result.UV
 			arr[Mesh.ARRAY_INDEX] = result.Indicies
-			#arr[Mesh.ARRAY_BONES] = result.BlendInds
-			#arr[Mesh.ARRAY_WEIGHTS] = result.BlendWeights
+			arr[Mesh.ARRAY_BONES] = result.BlendInds
+			arr[Mesh.ARRAY_WEIGHTS] = result.BlendWeights
 			
 			var flags = 0
 			flags |= ArrayMesh.ARRAY_FORMAT_VERTEX

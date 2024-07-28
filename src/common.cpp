@@ -2,6 +2,13 @@
 
 using namespace godot;
 
+void TRS::_bind_methods()
+{
+    GETTER_SETTER_BIND(TRS, Translation, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRS, Rotation, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRS, Scale, Variant::VECTOR3, PROPERTY_HINT_NONE)
+}
+
 void BoundingBox::_bind_methods()
 {
     GETTER_SETTER_BIND(BoundingBox, Min, Variant::VECTOR3, PROPERTY_HINT_NONE)

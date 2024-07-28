@@ -18,10 +18,13 @@ void IKControl::_bind_methods()
 void TransformNode::_bind_methods() 
 {
     GETTER_SETTER_BIND(TransformNode, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TransformNode, Transform, Variant::TRANSFORM3D, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, Transform, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRS")
     GETTER_SETTER_BIND(TransformNode, ScalePivot, Variant::VECTOR3, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, RotatePivot, Variant::VECTOR3, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, ParentIndex, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, RigIndex, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, EffectNode, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, NodeType, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
 void BoneEntry::_bind_methods() 
@@ -33,9 +36,11 @@ void BoneEntry::_bind_methods()
 
 void TRSkeleton::_bind_methods() 
 {
+    GETTER_SETTER_BIND(TRSkeleton, res0, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRSkeleton, TransformNodes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TransformNode")
     GETTER_SETTER_BIND(TRSkeleton, Bones, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "BoneEntry")
     GETTER_SETTER_BIND(TRSkeleton, IKs, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "IKControl")
+    GETTER_SETTER_BIND(TRSkeleton, RigOffset, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 void TRSkeleton::LoadFromFile(String file)
@@ -77,15 +82,19 @@ void TRSkeleton::LoadFromFile(String file)
         tn.instantiate();
         tn->set_Name(Utils::toGodotString(transforms->Get(i)->name()));
 
-        Transform3D tr;
-        tr.scale(Utils::toGodotVec3(transforms->Get(i)->transform()->VecScale()));
-        tr.basis = Quaternion(Utils::toGodotVec3(transforms->Get(i)->transform()->VecRot()));
-        tr.origin = Utils::toGodotVec3(transforms->Get(i)->transform()->VecTranslate());
-        tn->set_Transform(tr);
+        Ref<TRS> trs;
+        trs.instantiate();
+        trs->set_Scale(Utils::toGodotVec3(transforms->Get(i)->transform()->VecScale()));
+        trs->set_Rotation(Utils::toGodotVec3(transforms->Get(i)->transform()->VecRot()));
+        trs->set_Translation(Utils::toGodotVec3(transforms->Get(i)->transform()->VecTranslate()));
+        tn->set_Transform(trs);
 
         tn->set_ScalePivot(Utils::toGodotVec3(transforms->Get(i)->scalePivot()));
         tn->set_RotatePivot(Utils::toGodotVec3(transforms->Get(i)->rotatePivot()));
         tn->set_ParentIndex(transforms->Get(i)->parent_idx());
+        tn->set_RigIndex(transforms->Get(i)->rig_idx());
+        tn->set_EffectNode(Utils::toGodotString(transforms->Get(i)->effect_node()));
+        tn->set_NodeType(Titan::Model::EnumNameNodeType(transforms->Get(i)->type()));
 
         TransformNodes.push_back(tn);
     }
@@ -101,6 +110,9 @@ void TRSkeleton::LoadFromFile(String file)
 
         IKs.push_back(ik);
     }
+
+    res0 = skel->res_0();
+    RigOffset = skel->rig_offset();
 }
 
 Variant ResourceFormatLoaderTRSKL::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
