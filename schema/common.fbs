@@ -1,0 +1,26 @@
+namespace Titan.Model;
+
+struct Vec3 {
+    x:float;
+    y:float;
+    z:float;
+}
+
+struct Vec4 {
+    w:float;
+    x:float;
+    y:float;
+    z:float;
+}
+
+table BoundingBox {
+    min: Vec3;
+    max: Vec3;
+}
+
+struct RGBA {
+    r: float;
+    g: float;
+    b: float;
+    a: float;
+}

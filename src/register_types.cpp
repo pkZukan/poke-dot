@@ -1,12 +1,11 @@
 #include "register_types.h"
 
-#include "model/trmdl.h"
-#include "model/trmsh.h"
-#include "model/trmbf.h"
-#include "model/trskl.h"
-#include "model/trmtr.h"
-#include "model/trmmt.h"
-#include "common.h"
+#include "model_fbs/trmdl.h"
+#include "model_fbs/trmsh.h"
+#include "model_fbs/trmbf.h"
+#include "model_fbs/trskl.h"
+#include "model_fbs/trmtr.h"
+#include "model_fbs/trmmt.h"
 
 #include "middleware/bntx.h"
 
@@ -33,6 +32,7 @@ Ref<ResourceFormatLoaderBNTX> resource_loader_bntx;
 void initialize_gen_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) 
 	{
+		//model fbs
 		GDREGISTER_CLASS(MeshShape)
 		GDREGISTER_CLASS(ModelBuffer)
 		GDREGISTER_CLASS(VertexAccessors)
@@ -40,7 +40,6 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(Accessors)
 		GDREGISTER_CLASS(BoneMatrix)
 		GDREGISTER_CLASS(BoneEntry)
-		GDREGISTER_CLASS(BoundingBox)
 		GDREGISTER_CLASS(MaterialEntry)
 		GDREGISTER_CLASS(TextureEntry)
 		GDREGISTER_CLASS(ShaderEntry)
@@ -58,11 +57,9 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(IntExtra)
 		GDREGISTER_CLASS(FloatParameter)
 		GDREGISTER_CLASS(Float4Parameter)
-		GDREGISTER_CLASS(RGBA)
 		GDREGISTER_CLASS(MaterialTable)
 		GDREGISTER_CLASS(MaterialProperty)
 		GDREGISTER_CLASS(MaterialSwitch)
-		GDREGISTER_CLASS(TRS)
 
 		GDREGISTER_CLASS(TRModel)
 		GDREGISTER_CLASS(TRMesh)
@@ -71,6 +68,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRModelMaterialTable)
 		GDREGISTER_CLASS(TRMaterial)
 
+		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
 
 		GDREGISTER_CLASS(Utils)

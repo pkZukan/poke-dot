@@ -6,3 +6,4 @@ src/middleware/*.os
 .sconsign.dblite
 demo/gflib/*.so
 demo/Assets/*
+src/generated/*_generated.h

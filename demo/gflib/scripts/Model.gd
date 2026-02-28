@@ -129,10 +129,24 @@ func ParseModel(path:String, file:String):
 			#TODO: seperate image loading code and optimize it to not load the same bntx twice
 			var textures:Dictionary;
 			for t in mat.Textures:
-				textures[t.Name] = ResourceLoader.load(str(path, t.File))
+				print("Loading texture: " + t.File)
+				var res = ResourceLoader.load(str(path, t.File), "", ResourceLoader.CACHE_MODE_IGNORE)
+				if res == null:
+					print("ERROR: failed to load ", t.File)
+					continue
+				if res.ImageData == null:
+					print("ERROR: ImageData is null for ", t.File)
+					continue
+				print("OK: ", t.File, " size=", res.ImageData.get_width(), "x", res.ImageData.get_height())
+				textures[t.Name] = res
+
 			for t in textures:
-				shdr.set_shader_parameter(t, ImageTexture.create_from_image(textures[t].ImageData))
-			
+				print("Setting shader param: '", t, "' from texture")
+				var imgTex = ImageTexture.create_from_image(textures[t].ImageData)
+				if imgTex == null:
+					print("ERROR: create_from_image failed for ", t)
+					continue
+				shdr.set_shader_parameter(t, imgTex)
 			Materials[mat.Name] = shdr
 	
 	#Load buffer file
@@ -147,17 +161,22 @@ func ParseModel(path:String, file:String):
 		var transforms = skel.TransformNodes[b]
 		var rig_id = transforms.RigIndex
 		var parent_id = transforms.ParentIndex
-		#print("Name: ", transforms.Name, ", ID: ", rig_id, ", Parent: ", parent_id)
+		
 		skl.add_bone(transforms.Name)
 		skl.set_bone_rest(rig_id, Transform3D(Basis()))
-		skl.set_bone_pose_position(rig_id, transforms.Transform.Translation + skl.get_bone_pose_position(parent_id))
-		skl.set_bone_pose_rotation(rig_id, Quaternion.from_euler(transforms.Transform.Rotation) + skl.get_bone_pose_rotation(parent_id))
-		skl.set_bone_pose_scale(rig_id, transforms.Transform.Scale)
+		
+		# Get components from Transform3D
+		var pos = transforms.Transform.origin
+		var rot = transforms.Transform.basis.get_euler()
+		var scl = transforms.Transform.basis.get_scale()
+		
+		skl.set_bone_pose_position(rig_id, pos + skl.get_bone_pose_position(parent_id))
+		skl.set_bone_pose_rotation(rig_id, Quaternion.from_euler(rot) + skl.get_bone_pose_rotation(parent_id))
+		skl.set_bone_pose_scale(rig_id, scl)
+		
 		if parent_id >= 0:
 			skl.set_bone_parent(rig_id, parent_id)
-	add_child(skl)
-	for b in skl.get_bone_count():
-		print("Name: ", skl.get_bone_name(b), ", ind: ", b, ", parent: ", skl.get_bone_parent(b))
+		#add_child(skl)
 		
 	#Iterate through descriptors and buffers
 	for d in range(0,descCnt):
@@ -192,7 +211,7 @@ func ParseModel(path:String, file:String):
 			mi.name = str(meshShape.Name, "_", mat.MaterialName)
 			mi.mesh = arrMesh
 			mi.material_override = Materials[mat.MaterialName]
-			mi.skeleton = NodePath("../" + skl.name)
+			#mi.skeleton = NodePath("../" + skl.name)
 			MeshInstances.push_back(mi)
 
 	for m in MeshInstances:

@@ -2,7 +2,7 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/resource.hpp>
-#include "model/common.h"
+#include "generated/common_generated.h"
 
 #define GETTER_SETTER_BIND(c, x, y, ...)  \
 	ClassDB::bind_method(D_METHOD("get_"#x), &c::get_##x); \
