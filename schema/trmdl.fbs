@@ -6,25 +6,25 @@ file_extension "trmdl";
 
 
 table trmeshes {
-  filename: string;
+    filename: string;
 }
 
 table trskeleton {
-  filename: string;
+    filename: string;
 }
 
 table LodIndex {
-  unk0: uint32 = 0;
+    unk0: uint32 = 0;
 }
 
 table Lod {
-  index: [LodIndex];
-  lod_type: string;
+    index: [LodIndex];
+    lod_type: string;
 }
 
 table Bounds {
-  min: Vec3;
-  max: Vec3;
+    min: Vec3;
+    max: Vec3;
 }
 
 table TRMDL {

@@ -66,11 +66,11 @@ public:
 	~Float4Parameter(){}
 
 	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Color, Value)
+	GETTER_SETTER_DEFINE(Vector4, Value)
 
 private:
     String Name;
-	Color Value;
+	Vector4 Value;
 };
 
 class ShaderIntParam : public Resource {

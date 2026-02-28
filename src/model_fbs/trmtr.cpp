@@ -22,7 +22,7 @@ void FloatParameter::_bind_methods()
 void Float4Parameter::_bind_methods() 
 {
     GETTER_SETTER_BIND(Float4Parameter, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(Float4Parameter, Value, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "RGBA")
+    GETTER_SETTER_BIND(Float4Parameter, Value, Variant::VECTOR4, PROPERTY_HINT_NONE)
 }
 
 void ShaderIntParam::_bind_methods() 
@@ -51,7 +51,7 @@ void SamplerEntry::_bind_methods()
     GETTER_SETTER_BIND(SamplerEntry, RepeatU, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(SamplerEntry, RepeatV, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(SamplerEntry, RepeatW, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(SamplerEntry, BorderColor, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "RGBA")
+    GETTER_SETTER_BIND(SamplerEntry, BorderColor, Variant::COLOR, PROPERTY_HINT_NONE)
 }
 
 void TextureEntry::_bind_methods() 
@@ -197,11 +197,11 @@ void TRMaterial::LoadFromFile(String file)
             fp.instantiate();
             fp->set_Name(Utils::toGodotString(float4Params->Get(j)->color_name()));
 
-            Color col;
-            col.r = float4Params->Get(j)->color_value()->r();
-            col.g = float4Params->Get(j)->color_value()->g();
-            col.b = float4Params->Get(j)->color_value()->b();
-            col.a = float4Params->Get(j)->color_value()->a();
+            Vector4 col;
+            col.x = float4Params->Get(j)->color_value()->r();
+            col.y = float4Params->Get(j)->color_value()->g();
+            col.z = float4Params->Get(j)->color_value()->b();
+            col.w = float4Params->Get(j)->color_value()->a();
 
             fp->set_Value(col);
             float4s.push_back(fp);
@@ -217,11 +217,11 @@ void TRMaterial::LoadFromFile(String file)
             fp.instantiate();
             fp->set_Name(Utils::toGodotString(lightParams->Get(j)->color_name()));
 
-            Color col;
-            col.r = lightParams->Get(j)->color_value()->r();
-            col.g = lightParams->Get(j)->color_value()->g();
-            col.b = lightParams->Get(j)->color_value()->b();
-            col.a = lightParams->Get(j)->color_value()->a();
+            Vector4 col;
+            col.x = lightParams->Get(j)->color_value()->r();
+            col.y = lightParams->Get(j)->color_value()->g();
+            col.z = lightParams->Get(j)->color_value()->b();
+            col.w = lightParams->Get(j)->color_value()->a();
 
             fp->set_Value(col);
             lights.push_back(fp);

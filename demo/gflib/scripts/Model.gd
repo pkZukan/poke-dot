@@ -147,6 +147,15 @@ func ParseModel(path:String, file:String):
 					print("ERROR: create_from_image failed for ", t)
 					continue
 				shdr.set_shader_parameter(t, imgTex)
+			#set shader params
+			for p in mat.FloatParams:
+				shdr.set_shader_parameter(p.Name, p.Value)
+			for p in mat.FloatLightParams:
+				shdr.set_shader_parameter(p.Name, p.Value)
+			for p in mat.Float4Params:
+				shdr.set_shader_parameter(p.Name, p.Value)
+			for p in mat.IntParams:
+				shdr.set_shader_parameter(p.Name, p.Value)
 			Materials[mat.Name] = shdr
 	
 	#Load buffer file

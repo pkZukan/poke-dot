@@ -2,56 +2,66 @@ shader_type spatial;
 render_mode cull_front;
 
 uniform sampler2D BaseColorMap  : source_color, hint_default_white;
-uniform sampler2D BaseColorMap1 : source_color, hint_default_white;
 uniform sampler2D NormalMap     : hint_normal;
-uniform sampler2D NormalMap1    : hint_normal;
-uniform sampler2D NormalMap2    : hint_normal;
-uniform sampler2D MetallicMap   : hint_default_black;
-uniform sampler2D RoughnessMap  : hint_default_white;
-uniform sampler2D RoughnessMap1 : hint_default_white;
-uniform sampler2D AOMap         : hint_default_white;
-uniform sampler2D AOMap1        : hint_default_white;
-uniform sampler2D AOMap2        : hint_default_white;
+uniform sampler2D OcclusionMap   : hint_default_black;
+uniform sampler2D SpecularMaskMap  : hint_default_white;
+uniform sampler2D ShadowingColorMap : hint_default_white;
+uniform sampler2D ShadowingColorMaskMap         : hint_default_white;
+uniform sampler2D RimLightMaskMap        : hint_default_white;
+uniform sampler2D LocalReflectionMap        : hint_default_white;
 uniform sampler2D LayerMaskMap  : hint_default_black;
 uniform sampler2D ParallaxMap   : hint_default_black;
-uniform sampler2D EmissionColorMap : source_color, hint_default_black;
-uniform sampler2D LightMap      : hint_default_white;
-uniform sampler2D WindMaskMap   : hint_default_black;
+uniform sampler2D HighlightMaskMap : source_color, hint_default_black;
+uniform sampler2D EyelidShadowMaskMap      : hint_default_white;
 
-uniform bool EnableBaseColorMap  = true;
-uniform bool EnableNormalMap     = false;
-uniform bool EnableParallaxMap   = false;
-uniform bool EnableMetallicMap   = false;
-uniform bool EnableRoughnessMap  = false;
-uniform bool EnableEmissionColorMap = false;
-uniform bool EnableAOMap         = false;
-uniform bool EnableAlphaTest     = false;
-uniform bool EnableLightMap      = false;
-uniform bool EnableWindMaskMap   = false;
-uniform bool EnableBaseColorMap1 = false;
-uniform bool EnableNormalMap1    = false;
-uniform bool EnableNormalMap2    = false;
-uniform bool EnableRoughnessMap1 = false;
-uniform bool EnableAOMap1        = false;
-uniform bool EnableAOMap2        = false;
-uniform bool EnableVertexBaseColor = false;
-uniform bool EnableDepthFade     = false;
-uniform bool ReceiveShadow       = true;
-uniform bool EnableLerpBaseColorEmission = false;
-uniform bool EnableTriplanar     = false;
-uniform bool EnablePackedMap     = false;
-uniform bool EnableDisplacementMap = false;
+//Shader strings (as bool)
+uniform bool EnableBaseColorMap;
+uniform bool EnableNormalMap;
+uniform bool EnableAOMap;
+uniform bool EnableAlphaTest;
+uniform bool BaseColorMultiply;
+uniform bool EnableHairSpecular;
+uniform bool EnableEmissionLayer;
+uniform bool EnableLerpBaseColorEmission;
+uniform bool EnableEyeOptions;
+uniform bool EnableHighlight;
+uniform bool EnableParallaxMap;
+uniform bool RequireEyelidShadowMap;
+uniform bool EnableUVScaleOffsetNormal;
 
-uniform int NumMaterialLayer    = 1;
-uniform int BillboardType       = 0;
-uniform int WindReceiverType    = 0;
-uniform int LayerMaskSource     = 0;
-uniform int LayerMaskSwizzle    = 0;
-uniform int LayerBaseMaskSource = 0;
-uniform int NumDetailLayer      = 0;
-uniform int InstancingType      = 0;
-uniform int NumRequiredUV       = 1;
-uniform int LayerBlendType      = 0;
+//Shader strings (as int)
+uniform int NumMaterialLayer;
+
+uniform bool EnableSSSMaskMap;
+
+//Float params
+uniform float OcclusionStrength;
+
+//Float4 params
+uniform vec4 BaseColor;
+uniform vec4 EmissionColor;
+uniform vec4 UVCenter0;
+uniform vec4 UVScaleOffset;
+uniform vec4 UVScaleOffsetNormal;
+uniform vec4 ShadowingColor;
+uniform vec4 BaseColorLayer1;
+uniform vec4 BaseColorLayer2;
+uniform vec4 BaseColorLayer3;
+uniform vec4 BaseColorLayer4;
+uniform vec4 ShadowingColorLayer1;
+uniform vec4 ShadowingColorLayer2;
+uniform vec4 ShadowingColorLayer3;
+uniform vec4 ShadowingColorLayer4;
+
+//int params
+uniform int CastShadow;
+uniform int ReceiveShadow;
+uniform int CategoryLabel;
+uniform int EnableGlobalWeather;
+uniform int EnableDistanceDither;
+uniform int UVIndexAO;
+uniform int EnableAdditionalLight;
+uniform int UVIndexLayerMask;
 
 void vertex() {
 	//
@@ -59,25 +69,29 @@ void vertex() {
 
 void fragment() {
 	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
+	
+	vec4 layerMask = texture(LayerMaskMap, uvs);
+	layerMask = mix(vec4(0.0), layerMask, vec4(1.0));
 
-	float ao_factor = 1.0;
-	if (EnableAOMap) ao_factor = texture(AOMap, uvs).r;
-
-	vec3 col = vec3(1, 1, 1);
+	vec3 base_col = vec3(1, 1, 1);
 	if (EnableBaseColorMap)
-		col *= texture(BaseColorMap, uvs).rgb;
-	if (EnableBaseColorMap1)
-		col *= texture(BaseColorMap1, uvs).rgb;
-	if (EnableVertexBaseColor)
-		col *= COLOR.rgb;
-	ALBEDO = col * ao_factor;
+	{
+		vec3 baseColMap = texture(BaseColorMap, uvs).rgb;
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer1.rgb * baseColMap, layerMask.r);
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer2.rgb * baseColMap, layerMask.g);
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer3.rgb * baseColMap, layerMask.b);
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer4.rgb * baseColMap, layerMask.a);
+	}
+	
+	float ao = 1.0f;
+	if(EnableAOMap)
+		ao = pow(texture(OcclusionMap, uvs).r, OcclusionStrength);
 
 	vec3 norm = vec3(1, 1, 1);
 	if (EnableNormalMap)
 		norm *= texture(NormalMap, uvs).rgb;
-	if (EnableNormalMap1)
-		norm *= texture(NormalMap1, uvs).rgb;
-	if (EnableNormalMap2)
-		norm *= texture(NormalMap2, uvs).rgb;
+		
+	ALBEDO = base_col;
 	NORMAL_MAP = norm;
+	AO = ao;
 }

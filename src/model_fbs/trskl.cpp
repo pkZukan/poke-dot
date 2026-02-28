@@ -18,7 +18,7 @@ void IKControl::_bind_methods()
 void TransformNode::_bind_methods() 
 {
     GETTER_SETTER_BIND(TransformNode, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TransformNode, Transform, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRS")
+    GETTER_SETTER_BIND(TransformNode, Transform, Variant::TRANSFORM3D, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, ScalePivot, Variant::VECTOR3, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, RotatePivot, Variant::VECTOR3, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, ParentIndex, Variant::INT, PROPERTY_HINT_NONE)
@@ -93,7 +93,7 @@ void TRSkeleton::LoadFromFile(String file)
 
         Transform3D trs(basis, pos);
         tn->set_Transform(trs);
-        
+
         tn->set_ScalePivot(Utils::toGodotVec3(transforms->Get(i)->scalePivot()));
         tn->set_RotatePivot(Utils::toGodotVec3(transforms->Get(i)->rotatePivot()));
         tn->set_ParentIndex(transforms->Get(i)->parent_idx());
