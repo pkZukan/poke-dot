@@ -112,7 +112,7 @@ func _build_skeleton(skel: TRSkeleton) -> Array:
 
 	var boneIdx := 0
 	var node_to_bone_idx: Dictionary[int, int] = {}
-
+	
 	for i in range(skel.TransformNodes.size()):
 		var node: TransformNode = skel.TransformNodes[i]
 
@@ -125,11 +125,14 @@ func _build_skeleton(skel: TRSkeleton) -> Array:
 				skl.set_bone_parent(boneIdx, node_to_bone_idx[node.ParentIndex])
 
 			# set skin bind pose using BoneEntry inverse bind matrix
-			var bone_entry: BoneEntry = skel.Bones[node.RigIndex]
-			
-			if bone_entry.InfluenceSkinning > 0:
-				skin.add_named_bind(node.Name, bone_entry.Matrix)
-
+			if node.RigIndex >= 0:
+				var bone_entry: BoneEntry = skel.Bones[node.RigIndex]
+				
+				if bone_entry.InfluenceSkinning > 0:
+					skin.add_named_bind(node.Name, bone_entry.Matrix)
+			else:
+				skin.add_named_bind(node.Name, Transform3D.IDENTITY)
+				
 			boneIdx += 1
 
 	add_child(skl)

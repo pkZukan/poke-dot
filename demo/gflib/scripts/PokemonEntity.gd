@@ -3,6 +3,8 @@ extends Node
 class_name PokemonEntity
 
 @export var species: int = 2
+
+#private vars
 var _anim_player: AnimationPlayer
 var _model: TrinityModel
 var _skeleton: Skeleton3D
@@ -19,6 +21,9 @@ func _ready():
 	add_child(_model)
 	add_child(_anim_player)
 	_setup_animation(_model)
+	#Play anim
+	_anim_player.play("default")
+	#_anim_player.stop(true)
 
 func _setup_animation(pkmn: Node) -> void:
 	_skeleton = _find_skeleton(pkmn)
@@ -40,9 +45,6 @@ func _setup_animation(pkmn: Node) -> void:
 	var anim_lib := AnimationLibrary.new()
 	anim_lib.add_animation("default", godot_anim)
 	_anim_player.add_animation_library("", anim_lib)
-	
-	#Play anim
-	_anim_player.play("default")
 
 func _find_skeleton(node: Node) -> Skeleton3D:
 	if node is Skeleton3D:

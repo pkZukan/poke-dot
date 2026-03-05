@@ -37,10 +37,10 @@ godot::Transform3D Utils::toGodotTransform(const Titan::Math::Transform *tran)
 
 godot::String Utils::toGodotString(const flatbuffers::String *str)
 {
+    if (str == nullptr) 
+        return String();
     return String(str->c_str());
 }
-
-
 
 float Utils::half_to_float(uint16_t half)
 {

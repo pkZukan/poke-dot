@@ -9,6 +9,8 @@
 
 #include "animation_fbs/tranm.h"
 
+#include "catalog_fbs/trpmcatalog.h"
+
 #include "middleware/bntx.h"
 
 #include "utils.h"
@@ -30,6 +32,8 @@ Ref<ResourceFormatLoaderTRMTR> resource_loader_trmtr;
 Ref<ResourceFormatLoaderTRMMT> resource_loader_trmmt;
 
 Ref<ResourceFormatLoaderTRANM> resource_loader_tranm;
+
+Ref<ResourceFormatLoaderTRPMCATALOG> resource_loader_trpmcatalog;
 
 Ref<ResourceFormatLoaderBNTX> resource_loader_bntx;
 
@@ -87,6 +91,13 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(BoneAnimation)
 		GDREGISTER_CLASS(TRAnimation)
 
+		//catalog
+		GDREGISTER_CLASS(TRPpokemonCatalog)
+		GDREGISTER_CLASS(CatalogEntry)
+		GDREGISTER_CLASS(SpeciesResourceInfo)
+		GDREGISTER_CLASS(AnimationResourceInfo)
+		GDREGISTER_CLASS(LocatorResourceInfo)
+
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
 
@@ -101,6 +112,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRANM)
 
+		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRPMCATALOG)
+
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderBNTX)
 
 		resource_loader_trmdl.instantiate();
@@ -112,6 +125,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		resource_loader_tranm.instantiate();
 
+		resource_loader_trpmcatalog.instantiate();
+
 		resource_loader_bntx.instantiate();
 
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmdl);
@@ -122,6 +137,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmmt);
 
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_tranm);
+
+		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trpmcatalog);
 
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_bntx);
 	}
@@ -146,6 +163,8 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_tranm);
 
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trpmcatalog);
+
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_bntx);
 
 	resource_loader_trmdl.unref();
@@ -156,6 +175,8 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	resource_loader_trmmt.unref();
 
 	resource_loader_tranm.unref();
+
+	resource_loader_trpmcatalog.unref();
 
 	resource_loader_bntx.unref();
 }
