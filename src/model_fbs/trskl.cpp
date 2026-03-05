@@ -2,14 +2,6 @@
 
 using namespace godot;
 
-void BoneMatrix::_bind_methods() 
-{
-    GETTER_SETTER_BIND(BoneMatrix, X, Variant::VECTOR3, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BoneMatrix, Y, Variant::VECTOR3, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BoneMatrix, Z, Variant::VECTOR3, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BoneMatrix, W, Variant::VECTOR3, PROPERTY_HINT_NONE)
-}
-
 void IKControl::_bind_methods() 
 {
     GETTER_SETTER_BIND(IKControl, Name, Variant::STRING, PROPERTY_HINT_NONE)
@@ -23,15 +15,15 @@ void TransformNode::_bind_methods()
     GETTER_SETTER_BIND(TransformNode, RotatePivot, Variant::VECTOR3, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, ParentIndex, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, RigIndex, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TransformNode, EffectNode, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, ParentName, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, NodeType, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
 void BoneEntry::_bind_methods() 
 {
     GETTER_SETTER_BIND(BoneEntry, InheritPosition, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BoneEntry, unk0, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BoneEntry, Matrix, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "BoneMatrix")
+    GETTER_SETTER_BIND(BoneEntry, InfluenceSkinning, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(BoneEntry, Matrix, Variant::TRANSFORM3D, PROPERTY_HINT_NONE)
 }
 
 void TRSkeleton::_bind_methods() 
@@ -62,14 +54,16 @@ void TRSkeleton::LoadFromFile(String file)
         bone->set_InheritPosition(boneEnt->inherit_position());
 
         auto matrix = boneEnt->matrix();
-        Ref<BoneMatrix> bm;
-        bm.instantiate();
-        bm->set_X(Utils::toGodotVec3(matrix->x()));
-        bm->set_Y(Utils::toGodotVec3(matrix->y()));
-        bm->set_Z(Utils::toGodotVec3(matrix->z()));
-        bm->set_W(Utils::toGodotVec3(matrix->w()));
-
-        bone->set_Matrix(bm);        
+        Transform3D boneMatrix(
+            Basis(
+                Utils::toGodotVec3(matrix->x()),
+                Utils::toGodotVec3(matrix->y()),
+                Utils::toGodotVec3(matrix->z())
+            ),
+            Utils::toGodotVec3(matrix->w())
+        );
+        bone->set_InfluenceSkinning(boneEnt->influence_skinning());
+        bone->set_Matrix(boneMatrix);        
 
         Bones.push_back(bone);
     }
@@ -82,23 +76,18 @@ void TRSkeleton::LoadFromFile(String file)
         tn.instantiate();
         tn->set_Name(Utils::toGodotString(transforms->Get(i)->name()));
 
-        Vector3 scale = Utils::toGodotVec3(transforms->Get(i)->transform()->VecScale());
-        Vector3 rot = Utils::toGodotVec3(transforms->Get(i)->transform()->VecRot());
         Vector3 pos = Utils::toGodotVec3(transforms->Get(i)->transform()->VecTranslate());
-
-        // Basis handles rotation + scale
-        Basis basis;
-        basis = Basis().scaled(scale);
-        basis = basis * Basis(Vector3(1,0,0), rot.x) * Basis(Vector3(0,1,0), rot.y) * Basis(Vector3(0,0,1), rot.z);
-
-        Transform3D trs(basis, pos);
-        tn->set_Transform(trs);
+        Vector3 rot = Utils::toGodotVec3(transforms->Get(i)->transform()->VecRot());
+        Vector3 scale = Utils::toGodotVec3(transforms->Get(i)->transform()->VecScale());
+        Basis rot_basis = Basis::from_euler(rot, EulerOrder::EULER_ORDER_ZYX);
+        Basis scale_basis = Basis::from_scale(scale);
+        tn->set_Transform(Transform3D(rot_basis * scale_basis, pos));
 
         tn->set_ScalePivot(Utils::toGodotVec3(transforms->Get(i)->scalePivot()));
         tn->set_RotatePivot(Utils::toGodotVec3(transforms->Get(i)->rotatePivot()));
         tn->set_ParentIndex(transforms->Get(i)->parent_idx());
         tn->set_RigIndex(transforms->Get(i)->rig_idx());
-        tn->set_EffectNode(Utils::toGodotString(transforms->Get(i)->effect_node()));
+        tn->set_ParentName(Utils::toGodotString(transforms->Get(i)->parent_name()));
         tn->set_NodeType(Titan::Model::EnumNameNodeType(transforms->Get(i)->type()));
 
         TransformNodes.push_back(tn);

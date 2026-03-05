@@ -7,14 +7,32 @@ void Utils::_bind_methods()
     ClassDB::bind_static_method("Utils", D_METHOD("half_to_float", "half"), &Utils::half_to_float);
 }
 
-godot::Vector3 Utils::toGodotVec3(const Titan::Model::Vec3 *vec)
+godot::Vector3 Utils::toGodotVec3(const Titan::Math::Vec3 *vec)
 {
     return Vector3(vec->x(), vec->y(), vec->z());
 }
 
-godot::Vector4 Utils::toGodotVec4(const Titan::Model::Vec4 *vec)
+godot::Vector4 Utils::toGodotVec4(const Titan::Math::Vec4 *vec)
 {
     return Vector4(vec->x(), vec->y(), vec->z(), vec->w());
+}
+
+godot::Transform3D Utils::toGodotTransform(const Titan::Math::Transform *tran)
+{
+    Vector3 scale = toGodotVec3(&tran->scale());
+    Vector3 translate = toGodotVec3(&tran->translate());
+
+    Quaternion quat(
+        tran->rotate().x(),
+        tran->rotate().y(),
+        tran->rotate().z(),
+        tran->rotate().w()
+    );
+
+    Basis basis(quat);
+    basis.scale(scale);
+
+    return Transform3D(basis, translate);
 }
 
 godot::String Utils::toGodotString(const flatbuffers::String *str)

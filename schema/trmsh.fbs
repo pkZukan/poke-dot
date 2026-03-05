@@ -39,6 +39,12 @@ enum Type: uint32 {
     RGBA_32_FLOAT = 54,
 }
 
+table BoundingBox 
+{
+    min: Titan.Math.Vec3;
+    max: Titan.Math.Vec3;
+}
+
 enum PolygonType: uint32 {
     UINT8 = 0,
     UINT16,

@@ -1,0 +1,150 @@
+namespace Titan.Animation;
+
+file_extension "tracm";
+
+union TrackFlag {
+  FixedBoolTrack,
+  DynamicBoolTrack,
+  Framed16BoolTrack,
+  Framed8BoolTrack,
+}
+table FixedBoolTrack {
+    value: bool;
+}
+table DynamicBoolTrack {
+    value: [bool];
+}
+table Framed16BoolTrack {
+	frames: [uint16];
+    value: [bool];
+}
+table Framed8BoolTrack {
+	frames: [uint8];
+    value: [bool];
+}
+
+table TrackFlagsInfo {
+    values: TrackFlag;
+}
+
+table VisibilityShapeTimeline {
+    time: float;
+    value: float;
+    info: TrackFlagsInfo;
+}
+
+table TrackMaterialValue {
+    time: float;
+    value: float;
+    config_0: uint32;
+    config_1: uint32;
+    config_2: uint32;
+}
+
+table TrackMaterialValueList {
+    values: [TrackMaterialValue];
+}
+
+table TrackMaterialInit {
+    name: string;
+    list: TrackMaterialValueList;
+}
+
+table TrackMaterialChannels {
+	red: TrackMaterialValueList;
+	green: TrackMaterialValueList;
+	blue: TrackMaterialValueList;
+	alpha: TrackMaterialValueList;
+}
+
+table TrackMaterialAnim {
+    name: string;
+    list: TrackMaterialChannels;
+}
+
+
+table TrackMaterialTimeline {
+    res_0: TrackConfig;
+    res_1: uint32;
+    material_track: [TrackMaterial];
+    unk_3: uint8; //maybe track length related?
+    unk_4: uint8; //maybe track length related?
+}
+
+table TrackMaterial {
+    name: string;
+    init_values: [TrackMaterialInit];
+    anim_values: [TrackMaterialAnim];
+}
+
+table TrackBlendshapeInit {
+    mesh_name: string;
+    blendshape_list: [string];
+}
+
+table FixedBlendTrack {
+    value: float;
+}
+table DynamicBlendTrack {
+    value: [float];
+}
+table Framed16BlendTrack {
+	frames: [uint16];
+    value: [float];
+}
+table Framed8BlendTrack {
+	frames: [uint8];
+    value: [float];
+}
+union BlendTrack { FixedBlendTrack, DynamicBlendTrack, Framed16BlendTrack, Framed8BlendTrack }
+
+
+table TrackBlendshapeAnim {
+    key: uint32;
+	values: [float];
+}
+
+table TrackBlendShape {
+    name: string;
+    init_values: [TrackBlendshapeInit];
+    track: BlendTrack;
+	unk_4: uint32;
+}
+
+table blendtable {
+    name: string;
+}
+
+table BlendShapeTimeline {
+    config: TrackConfig;
+    res_1: uint32;
+	res_2: [TrackBlendShape];
+	res_3: uint32;
+	blend_list: [blendtable];
+}
+
+table Track {
+    track_path: string;
+    res_1: uint32; //Never used
+    res_2: uint32; //Never used
+    res_3: uint32; //Never used
+    material_animation: TrackMaterialTimeline;
+    visibility_animation: VisibilityShapeTimeline;
+	blendshape_animation: BlendShapeTimeline;
+}
+
+table TrackConfig {
+    res_0: uint32;
+    duration: uint32;
+    framerate: uint32;
+}
+
+table TRACM {
+    config: TrackConfig;
+    tracks: [Track];
+    material_frame_multiplier: uint8;
+    visibility_frame_multiplier: uint8;
+	blendshape_frame_multiplier: uint8;
+}
+
+root_type TRACM;

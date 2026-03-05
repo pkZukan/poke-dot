@@ -10,20 +10,20 @@ enum NodeType: uint32 {
     Floating = 2, //Present for eye, mouth and feet bones
 }
 
-table Transform {
-    VecScale: Vec3;
-    VecRot: Vec3;
-    VecTranslate: Vec3;
+table SRT {
+    VecScale: Titan.Math.Vec3;
+    VecRot: Titan.Math.Vec3;
+    VecTranslate: Titan.Math.Vec3;
 }
 
 table TransformNode {
     name: string;
-    transform: Transform;
-    scalePivot: Vec3;
-    rotatePivot: Vec3;
+    transform: SRT;
+    scalePivot: Titan.Math.Vec3;
+    rotatePivot: Titan.Math.Vec3;
     parent_idx: int32 = -1;
     rig_idx: int32 = -1;
-    effect_node: string;
+    parent_name: string;
     type: NodeType;
 }
 
@@ -33,20 +33,20 @@ table IKControl{
     ik_chain_end: string;
     ik_type: string;
     res_4: uint32; //Always 0
-    ik_pos: Vec3;
-    ik_rot: Vec4;
+    ik_pos: Titan.Math.Vec3;
+    ik_rot: Titan.Math.Vec4;
 }
 
 table BoneMatrix{
-    x: Vec3;
-    y: Vec3;
-    z: Vec3;
-    w: Vec3;
+    x: Titan.Math.Vec3;
+    y: Titan.Math.Vec3;
+    z: Titan.Math.Vec3;
+    w: Titan.Math.Vec3;
 }
 
 table Bone {
     inherit_position: uint8; //Value (0,1) Probably SegmentScaleCompensate?
-    unk_bool_2: uint8 = 0; //Always set to 1
+    influence_skinning: uint8 = 0;
     matrix: BoneMatrix;
 }
 

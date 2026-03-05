@@ -1,0 +1,86 @@
+include "common.fbs";
+
+namespace Titan.Animation;
+
+union VectorTrack { FixedVectorTrack, DynamicVectorTrack,  Framed16VectorTrack, Framed8VectorTrack }
+
+table FixedVectorTrack 
+{
+    co: Titan.Math.Vec3;
+}
+
+table DynamicVectorTrack 
+{
+    co: [Titan.Math.Vec3];
+}
+
+table Framed16VectorTrack 
+{
+    frames:[uint16];
+    co: [Titan.Math.Vec3];
+}
+
+table Framed8VectorTrack 
+{
+    frames:[uint8];
+    co:[Titan.Math.Vec3];
+}
+
+union RotationTrack { FixedRotationTrack, DynamicRotationTrack, Framed16RotationTrack, Framed8RotationTrack }
+
+table FixedRotationTrack 
+{
+    co: Titan.Math.sVec3;
+}
+
+table DynamicRotationTrack 
+{
+    co:[Titan.Math.sVec3];
+}
+
+table Framed16RotationTrack 
+{
+    frames:[uint16];
+    co:[Titan.Math.sVec3];
+}
+
+table Framed8RotationTrack {
+
+    frames: [uint8];
+    co: [Titan.Math.sVec3];
+}
+
+table BoneTrack 
+{
+    bone_name: string;
+    scale: VectorTrack;
+    rotate: RotationTrack;
+    translate: VectorTrack;
+}
+
+table AnimationInfo 
+{
+    does_loop: uint32;
+    animation_count: uint32;
+    animation_rate: uint32;
+}
+
+table BoneInit 
+{
+    isInit: uint32;
+    transform: Titan.Math.Transform; 
+}
+
+table BoneAnimation 
+{
+    tracks: [BoneTrack];
+    initData: BoneInit;
+}
+
+table TRANM 
+{
+    info: AnimationInfo;
+    track: BoneAnimation;
+}
+
+root_type TRANM;

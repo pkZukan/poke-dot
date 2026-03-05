@@ -1,234 +1,177 @@
 extends Node3D
-
 class_name TrinityModel
 
-static func ParseMeshBuffer(accessorTable:VertexAccessors, verts:PackedByteArray, inds:PackedByteArray, polyType, start, count):
-	var pos:PackedVector3Array = []
-	var norm:PackedVector3Array = []
-	var uv:PackedVector2Array = []
-	var indicies:PackedInt32Array = []
-	var blendInds:PackedInt32Array = []
-	var blendWeights:PackedFloat32Array = []
-	
-	var stride = accessorTable.Strides[0].Size
-	
-	var streamVert = StreamPeerBuffer.new()
-	var streamInd = StreamPeerBuffer.new()
+static func ParseMeshBuffer(accessorTable:VertexAccessors, verts:PackedByteArray, inds:PackedByteArray, polyType:int, start:int, count:int) -> Dictionary:
+	var pos := PackedVector3Array()
+	var norm := PackedVector3Array()
+	var uv := PackedVector2Array()
+	var indicies := PackedInt32Array()
+	var blendInds := PackedInt32Array()
+	var blendWeights := PackedFloat32Array()
+
+	var stride:int = accessorTable.Strides[0].Size
+	var streamVert := StreamPeerBuffer.new()
+	var streamInd := StreamPeerBuffer.new()
 	streamVert.data_array = verts
 	streamInd.data_array = inds
-	
-	#Parse Vertex buffer
-	var currPos = 0
+
+	var currPos := 0
 	while currPos < streamVert.get_size():
 		for attrib:Accessors in accessorTable.Accessors:
 			streamVert.seek(currPos + attrib.Position)
-			if attrib.Attribute == "POSITION":
-				var x = streamVert.get_float()
-				var y = streamVert.get_float()
-				var z = streamVert.get_float()
-				pos.push_back(Vector3(x,y,z))
-
-			if attrib.Attribute == "NORMAL":
-				var x = Utils.half_to_float(streamVert.get_u16())
-				var y = Utils.half_to_float(streamVert.get_u16())
-				var z = Utils.half_to_float(streamVert.get_u16())
-				var w = Utils.half_to_float(streamVert.get_u16())
-				norm.push_back(Vector3(x,y,z).normalized())
-			
-			if attrib.Attribute == "TEXCOORD":
-				var x = streamVert.get_float()
-				var y = streamVert.get_float()
-				uv.push_back(Vector2(x,y))
-			
-			if attrib.Attribute == "BLEND_INDICES":
-				var x = streamVert.get_8()
-				var y = streamVert.get_8()
-				var z = streamVert.get_8()
-				var w = streamVert.get_8()
-				#print(x, ", ", y, ", ", z, ", ", w)
-				blendInds.push_back(x)
-				blendInds.push_back(y)
-				blendInds.push_back(z)
-				blendInds.push_back(w)
-		
-			if attrib.Attribute == "BLEND_WEIGHTS":
-				blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
-				blendWeights.push_back(Utils.half_to_float(streamVert.get_u16()))
-				blendWeights.push_back(0.0)
-				blendWeights.push_back(0.0)
-		
+			match attrib.Attribute:
+				"POSITION":
+					pos.push_back(Vector3(streamVert.get_float(), streamVert.get_float(), streamVert.get_float()))
+				"NORMAL":
+					var x := Utils.half_to_float(streamVert.get_u16())
+					var y := Utils.half_to_float(streamVert.get_u16())
+					var z := Utils.half_to_float(streamVert.get_u16())
+					streamVert.get_u16()
+					norm.push_back(Vector3(x, y, z).normalized())
+				"TEXCOORD":
+					uv.push_back(Vector2(streamVert.get_float(), streamVert.get_float()))
+				"BLEND_INDICES":
+					blendInds.push_back(streamVert.get_8())
+					blendInds.push_back(streamVert.get_8())
+					blendInds.push_back(streamVert.get_8())
+					blendInds.push_back(streamVert.get_8())
+				"BLEND_WEIGHTS":
+					var w1 = Utils.half_to_float(streamVert.get_u16())
+					var w2 = Utils.half_to_float(streamVert.get_u16())
+					var w3 = Utils.half_to_float(streamVert.get_u16())
+					var w4 = Utils.half_to_float(streamVert.get_u16())
+					var total = w1 + w2 + w3 + w4
+					if total > 0.0:
+						blendWeights.push_back(w1 / total)
+						blendWeights.push_back(w2 / total)
+						blendWeights.push_back(w3 / total)
+						blendWeights.push_back(w4 / total)
+					else:
+						blendWeights.append_array([1.0, 0.0, 0.0, 0.0])
 		currPos += stride
-	
-	#Parse Index buffer
-	var indsize = (1 << polyType)
-	currPos = start * indsize
+
+	var indSize := (1 << polyType)
+	currPos = start * indSize
 	streamInd.seek(currPos)
-	while currPos < ((start + count) * indsize):
-		if polyType == 0:
-			indicies.push_back(streamInd.get_u8())
-		elif polyType == 1:
-			indicies.push_back(streamInd.get_u16())
-		elif polyType == 2:
-			indicies.push_back(streamInd.get_u32())
-		elif polyType == 3:
-			indicies.push_back(streamInd.get_u64())
-		currPos += indsize
-	
-	return {
-		Pos = pos,
-		Norm = norm,
-		UV = uv,
-		Indicies = indicies,
-		BlendInds = blendInds,
-		BlendWeights = blendWeights
-	}
+	while currPos < (start + count) * indSize:
+		match polyType:
+			0: indicies.push_back(streamInd.get_u8())
+			1: indicies.push_back(streamInd.get_u16())
+			2: indicies.push_back(streamInd.get_u32())
+			3: indicies.push_back(streamInd.get_u64())
+		currPos += indSize
 
-func GetShaderMat(shaderMat) -> ShaderMaterial:
-	var sm:ShaderMaterial = ShaderMaterial.new()
-	
-	var shader = shaderMat.Shaders[0]
-	var name = shader.Name
-	var shdr = ResourceLoader.load(str("res://gflib/shaders/", shader.Name, ".gdshader"))
+	return { Pos=pos, Norm=norm, UV=uv, Indicies=indicies, BlendInds=blendInds, BlendWeights=blendWeights }
 
+func _load_materials(path:String, materialFiles:Array) -> Dictionary:
+	var materials := {}
+	for matFile in materialFiles:
+		var material:TRMaterial = ResourceLoader.load(str(path, matFile))
+		for mat in material.Materials:
+			var shdr := _build_shader_material(mat)
+			_apply_textures(path, mat, shdr)
+			_apply_params(mat, shdr)
+			materials[mat.Name] = shdr
+	return materials
+
+func _build_shader_material(mat) -> ShaderMaterial:
+	var sm := ShaderMaterial.new()
+	var shader = mat.Shaders[0]
+	sm.resource_name = mat.Name
+	sm.shader = ResourceLoader.load(str("res://gflib/shaders/", shader.Name, ".gdshader"))
 	for v:ShaderStringParam in shader.StringParams:
-		var val = v.Value
-		#Is there a better way to do this crap?
+		var val:String = v.Value
 		if val.is_valid_int():
 			sm.set_shader_parameter(v.Name, int(val))
 		elif val.to_lower() == "true":
 			sm.set_shader_parameter(v.Name, true)
 		elif val.to_lower() == "false":
 			sm.set_shader_parameter(v.Name, false)
-	
-	sm.resource_name = shaderMat.Name
-	sm.shader = shdr
 	return sm
 
-func ParseModel(path:String, file:String):
-	#Create array for meshes
-	var MeshInstances:Array
-	
-	#Load model file that points to meshes/skel/etc
-	var mdl:TRModel = ResourceLoader.load(str(path, file))
-	
-	var mainMesh = mdl.Meshes[0]; #rest are LODs
-	
-	#Load LOD0 mesh and get its mesh descriptors
-	var mesh:TRMesh = ResourceLoader.load(str(path, mainMesh))
-	var descCnt = mesh.MeshDescriptors.size()
-	var buffName = mesh.BufferName
-	
-	#Load materials (map mat name to shader instance)
-	var Materials:Dictionary
-	for matFileInd in range(0, mdl.Materials.size()):
-		var material:TRMaterial = ResourceLoader.load(str(path, mdl.Materials[matFileInd]))
-		for mat in material.Materials:
-			var shdr = GetShaderMat(mat)
-			
-			#Iterate though the textures and map uniform names to image data
-			#TODO: seperate image loading code and optimize it to not load the same bntx twice
-			var textures:Dictionary;
-			for t in mat.Textures:
-				print("Loading texture: " + t.File)
-				var res = ResourceLoader.load(str(path, t.File), "", ResourceLoader.CACHE_MODE_IGNORE)
-				if res == null:
-					print("ERROR: failed to load ", t.File)
-					continue
-				if res.ImageData == null:
-					print("ERROR: ImageData is null for ", t.File)
-					continue
-				print("OK: ", t.File, " size=", res.ImageData.get_width(), "x", res.ImageData.get_height())
-				textures[t.Name] = res
+func _apply_textures(path:String, mat, shdr:ShaderMaterial) -> void:
+	for t in mat.Textures:
+		var res = ResourceLoader.load(str(path, t.File), "", ResourceLoader.CACHE_MODE_IGNORE)
+		if res == null or res.ImageData == null:
+			continue
+		var imgTex := ImageTexture.create_from_image(res.ImageData)
+		if imgTex:
+			shdr.set_shader_parameter(t.Name, imgTex)
 
-			for t in textures:
-				print("Setting shader param: '", t, "' from texture")
-				var imgTex = ImageTexture.create_from_image(textures[t].ImageData)
-				if imgTex == null:
-					print("ERROR: create_from_image failed for ", t)
-					continue
-				shdr.set_shader_parameter(t, imgTex)
-			#set shader params
-			for p in mat.FloatParams:
-				shdr.set_shader_parameter(p.Name, p.Value)
-			for p in mat.FloatLightParams:
-				shdr.set_shader_parameter(p.Name, p.Value)
-			for p in mat.Float4Params:
-				shdr.set_shader_parameter(p.Name, p.Value)
-			for p in mat.IntParams:
-				shdr.set_shader_parameter(p.Name, p.Value)
-			Materials[mat.Name] = shdr
-	
-	#Load buffer file
-	var buff:TRModelBuffer = ResourceLoader.load(str(path, buffName))
-	
-	#Skeleton
-	var skl:Skeleton3D = Skeleton3D.new()
-	var skel:TRSkeleton = ResourceLoader.load(str(path, mdl.Skeleton))
-	skl.name = "Armature"
+func _apply_params(mat, shdr:ShaderMaterial) -> void:
+	for p in mat.FloatParams:      shdr.set_shader_parameter(p.Name, p.Value)
+	for p in mat.FloatLightParams: shdr.set_shader_parameter(p.Name, p.Value)
+	for p in mat.Float4Params:     shdr.set_shader_parameter(p.Name, p.Value)
+	for p in mat.IntParams:        shdr.set_shader_parameter(p.Name, p.Value)
+
+func _build_skeleton(skel: TRSkeleton) -> Array:
+	var skl := Skeleton3D.new()
+	var skin := Skin.new()
 	name = skel.TransformNodes[0].Name
-	for b in range(0, skel.TransformNodes.size()):
-		var transforms = skel.TransformNodes[b]
-		var rig_id = transforms.RigIndex
-		var parent_id = transforms.ParentIndex
+	skl.name = skel.TransformNodes[0].Name
+
+	var boneIdx := 0
+	var node_to_bone_idx: Dictionary[int, int] = {}
+
+	for i in range(skel.TransformNodes.size()):
+		var node: TransformNode = skel.TransformNodes[i]
+
+		if node.ParentIndex != -1:
+			skl.add_bone(node.Name)
+			skl.set_bone_rest(boneIdx, node.Transform)
+			node_to_bone_idx[i] = boneIdx
+
+			if node_to_bone_idx.has(node.ParentIndex):
+				skl.set_bone_parent(boneIdx, node_to_bone_idx[node.ParentIndex])
+
+			# set skin bind pose using BoneEntry inverse bind matrix
+			var bone_entry: BoneEntry = skel.Bones[node.RigIndex]
+			
+			if bone_entry.InfluenceSkinning > 0:
+				skin.add_named_bind(node.Name, bone_entry.Matrix)
+
+			boneIdx += 1
+
+	add_child(skl)
+	return [skl, skin]
 		
-		skl.add_bone(transforms.Name)
-		skl.set_bone_rest(rig_id, Transform3D(Basis()))
-		
-		# Get components from Transform3D
-		var pos = transforms.Transform.origin
-		var rot = transforms.Transform.basis.get_euler()
-		var scl = transforms.Transform.basis.get_scale()
-		
-		skl.set_bone_pose_position(rig_id, pos + skl.get_bone_pose_position(parent_id))
-		skl.set_bone_pose_rotation(rig_id, Quaternion.from_euler(rot) + skl.get_bone_pose_rotation(parent_id))
-		skl.set_bone_pose_scale(rig_id, scl)
-		
-		if parent_id >= 0:
-			skl.set_bone_parent(rig_id, parent_id)
-		#add_child(skl)
-		
-	#Iterate through descriptors and buffers
-	for d in range(0,descCnt):
+func _build_meshes(path:String, mesh:TRMesh, buff:TRModelBuffer, materials:Dictionary, skl:Skeleton3D, skin:Skin) -> void:
+	for d in range(mesh.MeshDescriptors.size()):
 		var meshShape:MeshShape = mesh.MeshDescriptors[d]
 		var vertBuf:PackedByteArray = buff.Buffers[d].VertexBuffers[0]
 		var indBuf:PackedByteArray = buff.Buffers[d].IndexBuffers[0]
-		
-		#Create meshes per material info
-		for subMesh in range(0, meshShape.Materials.size()):
-			var arrMesh:ArrayMesh = ArrayMesh.new()
-			var mi:MeshInstance3D = MeshInstance3D.new()
+
+		for subMesh in range(meshShape.Materials.size()):
 			var mat = meshShape.Materials[subMesh]
-			var result = ParseMeshBuffer(meshShape.Attributes[0], vertBuf, indBuf, meshShape.PolygonType, mat.PolyOffset, mat.PolyCount)
-			var arr:Array
+			var result := ParseMeshBuffer(meshShape.Attributes[0], vertBuf, indBuf, meshShape.PolygonType, mat.PolyOffset, mat.PolyCount)
+
+			var arr := Array()
 			arr.resize(Mesh.ARRAY_MAX)
-			arr[Mesh.ARRAY_VERTEX] = result.Pos
-			arr[Mesh.ARRAY_NORMAL] = result.Norm
-			arr[Mesh.ARRAY_TEX_UV] = result.UV
-			arr[Mesh.ARRAY_INDEX] = result.Indicies
-			arr[Mesh.ARRAY_BONES] = result.BlendInds
+			arr[Mesh.ARRAY_VERTEX]  = result.Pos
+			arr[Mesh.ARRAY_NORMAL]  = result.Norm
+			arr[Mesh.ARRAY_TEX_UV]  = result.UV
+			arr[Mesh.ARRAY_INDEX]   = result.Indicies
+			arr[Mesh.ARRAY_BONES]   = result.BlendInds
 			arr[Mesh.ARRAY_WEIGHTS] = result.BlendWeights
-			
-			var flags = 0
-			flags |= ArrayMesh.ARRAY_FORMAT_VERTEX
-			flags |= ArrayMesh.ARRAY_FORMAT_NORMAL
-			flags |= ArrayMesh.ARRAY_FORMAT_TEX_UV
-			flags |= ArrayMesh.ARRAY_FORMAT_BONES
-			flags |= ArrayMesh.ARRAY_FORMAT_WEIGHTS
 
-			arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr, [], {}, flags)
+			var arrMesh := ArrayMesh.new()
+			arrMesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 
+			var mi := MeshInstance3D.new()
+			mi.skin = skin
 			mi.name = str(meshShape.Name, "_", mat.MaterialName)
 			mi.mesh = arrMesh
-			mi.material_override = Materials[mat.MaterialName]
-			#mi.skeleton = NodePath("../" + skl.name)
-			MeshInstances.push_back(mi)
-
-	for m in MeshInstances:
-		add_child(m)
+			mi.material_override = materials.get(mat.MaterialName)
+			mi.skeleton = NodePath("../Armature")
+			add_child(mi)
 		
-func ParseAnimations():
-	pass
-
-func Load(path:String, file:String):
-	ParseModel(path, file)
-	ParseAnimations()
+func load_model(path:String, file:String) -> void:
+	var mdl:TRModel = ResourceLoader.load(str(path, file))
+	var mesh:TRMesh = ResourceLoader.load(str(path, mdl.Meshes[0]))
+	var buff:TRModelBuffer = ResourceLoader.load(str(path, mesh.BufferName))
+	var skel:TRSkeleton = ResourceLoader.load(str(path, mdl.Skeleton))
+	var materials := _load_materials(path, mdl.Materials)
+	var skel_result := _build_skeleton(skel)
+	#Debug.print_bone_tree_compact(skel_result[0])
+	#Debug.draw_skeleton(skel_result[0])
+	_build_meshes(path, mesh, buff, materials, skel_result[0], skel_result[1])

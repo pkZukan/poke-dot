@@ -25,12 +25,12 @@ table SamplerState {
     repeat_u: UVWrapMode = WRAP; //0x1, 0x6 or 0x7
     repeat_v: UVWrapMode = WRAP; //0x1, 0x6 or 0x7
     repeat_w: UVWrapMode = WRAP; //Never used
-    border_color: RGBA;
+    border_color: Titan.Math.RGBA;
 }
 
 table Float4Parameter {
     color_name: string;
-    color_value: RGBA; 
+    color_value: Titan.Math.RGBA; 
 }
 
 table FloatParameter {

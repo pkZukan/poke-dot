@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import glob as pyglob
 
 env = SConscript("godot-cpp/SConstruct")
 
@@ -12,7 +13,7 @@ env = SConscript("godot-cpp/SConstruct")
 # - CPPDEFINES are for pre-processor defines
 # - LINKFLAGS are for linking flags
 
-fbs_files = Glob("#schema/*.fbs")
+fbs_files = pyglob.glob("schema/**/*.fbs", recursive=True)
 
 # Generate flatc commands for each schema
 generated_headers = []

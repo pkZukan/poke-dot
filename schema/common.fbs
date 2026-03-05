@@ -1,24 +1,48 @@
-namespace Titan.Model;
+namespace Titan.Math;
 
-struct Vec3 {
-    x:float;
-    y:float;
-    z:float;
+struct sVec2 
+{
+  u: int16;
+  v: int16;
 }
 
-struct Vec4 {
-    w:float;
-    x:float;
-    y:float;
-    z:float;
+struct Vec2 
+{
+  u: float;
+  v: float;
 }
 
-table BoundingBox {
-    min: Vec3;
-    max: Vec3;
+struct Vec3 
+{
+  x: float;
+  y: float;
+  z: float;
 }
 
-struct RGBA {
+struct sVec3 
+{
+  x: uint16;
+  y: uint16;
+  z: uint16;
+}
+
+struct Vec4 
+{
+  x: float;
+  y: float;
+  z: float;
+  w: float;
+}
+
+struct Transform 
+{
+  scale: Vec3;
+  rotate: Vec4;
+  translate: Vec3;
+}
+
+struct RGBA 
+{
     r: float;
     g: float;
     b: float;

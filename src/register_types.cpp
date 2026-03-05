@@ -7,6 +7,8 @@
 #include "model_fbs/trmtr.h"
 #include "model_fbs/trmmt.h"
 
+#include "animation_fbs/tranm.h"
+
 #include "middleware/bntx.h"
 
 #include "utils.h"
@@ -27,6 +29,8 @@ Ref<ResourceFormatLoaderTRSKL> resource_loader_trskl;
 Ref<ResourceFormatLoaderTRMTR> resource_loader_trmtr;
 Ref<ResourceFormatLoaderTRMMT> resource_loader_trmmt;
 
+Ref<ResourceFormatLoaderTRANM> resource_loader_tranm;
+
 Ref<ResourceFormatLoaderBNTX> resource_loader_bntx;
 
 void initialize_gen_module(ModuleInitializationLevel p_level) {
@@ -38,7 +42,6 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(VertexAccessors)
 		GDREGISTER_CLASS(SizeTable)
 		GDREGISTER_CLASS(Accessors)
-		GDREGISTER_CLASS(BoneMatrix)
 		GDREGISTER_CLASS(BoneEntry)
 		GDREGISTER_CLASS(MaterialEntry)
 		GDREGISTER_CLASS(TextureEntry)
@@ -61,12 +64,28 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(MaterialProperty)
 		GDREGISTER_CLASS(MaterialSwitch)
 
+		//Model
 		GDREGISTER_CLASS(TRModel)
 		GDREGISTER_CLASS(TRMesh)
 		GDREGISTER_CLASS(TRModelBuffer)
 		GDREGISTER_CLASS(TRSkeleton)
 		GDREGISTER_CLASS(TRModelMaterialTable)
 		GDREGISTER_CLASS(TRMaterial)
+
+		//Anim
+		GDREGISTER_CLASS(AnimationInfo)
+		GDREGISTER_CLASS(BoneInit)
+		GDREGISTER_CLASS(FixedVectorTrack)
+		GDREGISTER_CLASS(DynamicVectorTrack)
+		GDREGISTER_CLASS(Framed16VectorTrack)
+		GDREGISTER_CLASS(Framed8VectorTrack)
+		GDREGISTER_CLASS(FixedRotationTrack)
+		GDREGISTER_CLASS(DynamicRotationTrack)
+		GDREGISTER_CLASS(Framed16RotationTrack)
+		GDREGISTER_CLASS(Framed8RotationTrack)
+		GDREGISTER_CLASS(BoneTrack)
+		GDREGISTER_CLASS(BoneAnimation)
+		GDREGISTER_CLASS(TRAnimation)
 
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
@@ -79,20 +98,31 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRSKL)
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMTR)
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMMT)
+
+		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRANM)
+
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderBNTX)
+
 		resource_loader_trmdl.instantiate();
 		resource_loader_trmsh.instantiate();
 		resource_loader_trmbf.instantiate();
 		resource_loader_trskl.instantiate();
 		resource_loader_trmtr.instantiate();
 		resource_loader_trmmt.instantiate();
+
+		resource_loader_tranm.instantiate();
+
 		resource_loader_bntx.instantiate();
+
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmdl);
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmsh);
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmbf);
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trskl);
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmtr);
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmmt);
+
+		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_tranm);
+
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_bntx);
 	}
 	
@@ -113,13 +143,20 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trskl);
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmtr);
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmmt);
+
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_tranm);
+
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_bntx);
+
 	resource_loader_trmdl.unref();
 	resource_loader_trmsh.unref();
 	resource_loader_trmbf.unref();
 	resource_loader_trskl.unref();
 	resource_loader_trmtr.unref();
 	resource_loader_trmmt.unref();
+
+	resource_loader_tranm.unref();
+
 	resource_loader_bntx.unref();
 }
 

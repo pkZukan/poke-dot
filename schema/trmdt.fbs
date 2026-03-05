@@ -1,0 +1,8 @@
+namespace Titan.Animation;
+
+table TRMDT 
+{
+    list: [string];
+}
+
+root_type TRMDT;

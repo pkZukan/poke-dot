@@ -25,23 +25,6 @@ private:
 	String Name;
 };
 
-class BoneMatrix : public Resource {
-	GDCLASS(BoneMatrix, Resource)
-protected:
-	static void _bind_methods();
-public:
-	BoneMatrix(){}
-	~BoneMatrix(){}
-
-    GETTER_SETTER_DEFINE(Vector3, X)
-    GETTER_SETTER_DEFINE(Vector3, Y)
-	GETTER_SETTER_DEFINE(Vector3, Z)
-	GETTER_SETTER_DEFINE(Vector3, W)
-
-private:
-    Vector3 X, Y, Z, W;
-};
-
 class TransformNode : public Resource {
 	GDCLASS(TransformNode, Resource)
 protected:
@@ -56,7 +39,7 @@ public:
 	GETTER_SETTER_DEFINE(Vector3, RotatePivot)
 	GETTER_SETTER_DEFINE(int, ParentIndex)
 	GETTER_SETTER_DEFINE(int, RigIndex)
-	GETTER_SETTER_DEFINE(String, EffectNode)
+	GETTER_SETTER_DEFINE(String, ParentName)
 	GETTER_SETTER_DEFINE(String, NodeType)
 
 private:
@@ -66,7 +49,7 @@ private:
 	Vector3 RotatePivot;
 	int ParentIndex;
 	int RigIndex;
-	String EffectNode;
+	String ParentName;
 	String NodeType;
 };
 
@@ -79,13 +62,13 @@ public:
 	~BoneEntry(){}
 
     GETTER_SETTER_DEFINE(uint8_t, InheritPosition)
-    GETTER_SETTER_DEFINE(uint8_t, unk0)
-	GETTER_SETTER_DEFINE(Ref<BoneMatrix>, Matrix)
+    GETTER_SETTER_DEFINE(uint8_t, InfluenceSkinning)
+	GETTER_SETTER_DEFINE(Transform3D, Matrix)
 
 private:
     uint8_t InheritPosition;
-	uint8_t unk0;
-	Ref<BoneMatrix> Matrix;
+	uint8_t InfluenceSkinning;
+	Transform3D Matrix;
 };
 
 class TRSkeleton : public Resource {
