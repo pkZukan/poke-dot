@@ -7,6 +7,7 @@
 #include "model_fbs/trmtr.h"
 #include "model_fbs/trmmt.h"
 
+#include "animation_fbs/tracn.h"
 #include "animation_fbs/tranm.h"
 
 #include "catalog_fbs/trpmcatalog.h"
@@ -31,6 +32,7 @@ Ref<ResourceFormatLoaderTRSKL> resource_loader_trskl;
 Ref<ResourceFormatLoaderTRMTR> resource_loader_trmtr;
 Ref<ResourceFormatLoaderTRMMT> resource_loader_trmmt;
 
+Ref<ResourceFormatLoaderTRACN> resource_loader_tracn;
 Ref<ResourceFormatLoaderTRANM> resource_loader_tranm;
 
 Ref<ResourceFormatLoaderTRPMCATALOG> resource_loader_trpmcatalog;
@@ -76,7 +78,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRModelMaterialTable)
 		GDREGISTER_CLASS(TRMaterial)
 
-		//Anim
+		//tranm
 		GDREGISTER_CLASS(AnimationInfo)
 		GDREGISTER_CLASS(BoneInit)
 		GDREGISTER_CLASS(FixedVectorTrack)
@@ -90,6 +92,10 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(BoneTrack)
 		GDREGISTER_CLASS(BoneAnimation)
 		GDREGISTER_CLASS(TRAnimation)
+
+		//tracn
+		GDREGISTER_CLASS(TRAnimationChannelNames)
+		GDREGISTER_CLASS(AnimationEntry)
 
 		//catalog
 		GDREGISTER_CLASS(TRPpokemonCatalog)
@@ -110,6 +116,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMTR)
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMMT)
 
+		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRACN)
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRANM)
 
 		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRPMCATALOG)
@@ -123,6 +130,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		resource_loader_trmtr.instantiate();
 		resource_loader_trmmt.instantiate();
 
+		resource_loader_tracn.instantiate();
 		resource_loader_tranm.instantiate();
 
 		resource_loader_trpmcatalog.instantiate();
@@ -136,6 +144,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmtr);
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmmt);
 
+		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_tracn);
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_tranm);
 
 		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trpmcatalog);
@@ -161,6 +170,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmtr);
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmmt);
 
+	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_tracn);
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_tranm);
 
 	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trpmcatalog);
@@ -174,6 +184,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	resource_loader_trmtr.unref();
 	resource_loader_trmmt.unref();
 
+	resource_loader_tracn.unref();
 	resource_loader_tranm.unref();
 
 	resource_loader_trpmcatalog.unref();
