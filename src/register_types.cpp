@@ -25,19 +25,19 @@
 
 using namespace godot;
 
-Ref<ResourceFormatLoaderTRMDL> resource_loader_trmdl;
-Ref<ResourceFormatLoaderTRMSH> resource_loader_trmsh;
-Ref<ResourceFormatLoaderTRMBF> resource_loader_trmbf;
-Ref<ResourceFormatLoaderTRSKL> resource_loader_trskl;
-Ref<ResourceFormatLoaderTRMTR> resource_loader_trmtr;
-Ref<ResourceFormatLoaderTRMMT> resource_loader_trmmt;
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
 
-Ref<ResourceFormatLoaderTRACN> resource_loader_tracn;
-Ref<ResourceFormatLoaderTRANM> resource_loader_tranm;
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 
-Ref<ResourceFormatLoaderTRPMCATALOG> resource_loader_trpmcatalog;
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
-Ref<ResourceFormatLoaderBNTX> resource_loader_bntx;
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 
 void initialize_gen_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) 
@@ -109,47 +109,19 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		GDREGISTER_CLASS(Utils)
 
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMDL)
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMSH)
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMBF)
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRSKL)
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMTR)
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRMMT)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
 
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRACN)
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRANM)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderTRPMCATALOG)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
-		GDREGISTER_ABSTRACT_CLASS(ResourceFormatLoaderBNTX)
-
-		resource_loader_trmdl.instantiate();
-		resource_loader_trmsh.instantiate();
-		resource_loader_trmbf.instantiate();
-		resource_loader_trskl.instantiate();
-		resource_loader_trmtr.instantiate();
-		resource_loader_trmmt.instantiate();
-
-		resource_loader_tracn.instantiate();
-		resource_loader_tranm.instantiate();
-
-		resource_loader_trpmcatalog.instantiate();
-
-		resource_loader_bntx.instantiate();
-
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmdl);
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmsh);
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmbf);
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trskl);
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmtr);
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trmmt);
-
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_tracn);
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_tranm);
-
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_trpmcatalog);
-
-		ResourceLoader::get_singleton()->add_resource_format_loader(resource_loader_bntx);
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 	}
 	
 #ifdef TOOLS_ENABLED
@@ -163,33 +135,19 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) return;
 
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmdl);
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmsh);
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmbf);
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trskl);
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmtr);
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trmmt);
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
 
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_tracn);
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_tranm);
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_trpmcatalog);
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
-	ResourceLoader::get_singleton()->remove_resource_format_loader(resource_loader_bntx);
-
-	resource_loader_trmdl.unref();
-	resource_loader_trmsh.unref();
-	resource_loader_trmbf.unref();
-	resource_loader_trskl.unref();
-	resource_loader_trmtr.unref();
-	resource_loader_trmmt.unref();
-
-	resource_loader_tracn.unref();
-	resource_loader_tranm.unref();
-
-	resource_loader_trpmcatalog.unref();
-
-	resource_loader_bntx.unref();
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 }
 
 extern "C" {
