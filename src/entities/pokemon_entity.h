@@ -20,6 +20,9 @@ public:
     ~PokemonEntity() = default;
 
     void _ready() override;
+    void _process(double delta) override;
+
+    void PlayAnim(String name);
 
     GETTER_SETTER_DEFINE(int, species)
 

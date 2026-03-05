@@ -34,19 +34,19 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(String path
         String bone_name = skl->get_bone_name(bone_idx);
 
         // Rest pose fallback
-        Transform3D rest    = skl->get_bone_rest(bone_idx);
-        Vector3     rest_loc   = rest.origin;
-        Quaternion  rest_rot   = rest.basis.get_rotation_quaternion();
-        Vector3     rest_scale = rest.basis.get_scale();
+        Transform3D rest = skl->get_bone_rest(bone_idx);
+        Vector3 rest_loc = rest.origin;
+        Quaternion rest_rot = rest.basis.get_rotation_quaternion();
+        Vector3 rest_scale = rest.basis.get_scale();
 
         NodePath bone_path(skl_path + ":" + bone_name);
 
         // Always create all 3 tracks
-        int pos_track   = godot_anim->add_track(Animation::TYPE_POSITION_3D);
-        int rot_track   = godot_anim->add_track(Animation::TYPE_ROTATION_3D);
+        int pos_track = godot_anim->add_track(Animation::TYPE_POSITION_3D);
+        int rot_track = godot_anim->add_track(Animation::TYPE_ROTATION_3D);
         int scale_track = godot_anim->add_track(Animation::TYPE_SCALE_3D);
-        godot_anim->track_set_path(pos_track,   bone_path);
-        godot_anim->track_set_path(rot_track,   bone_path);
+        godot_anim->track_set_path(pos_track, bone_path);
+        godot_anim->track_set_path(rot_track, bone_path);
         godot_anim->track_set_path(scale_track, bone_path);
 
         Ref<BoneTrack> bt = get_bone_track(anim, bone_name);
@@ -61,7 +61,7 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(String path
 
         // Position
         if (bt->get_translate().is_valid())
-            sample_vector_track(godot_anim, pos_track,   bt->get_translate(), frame_rate, key_frames);
+            sample_vector_track(godot_anim, pos_track, bt->get_translate(), frame_rate, key_frames);
         else
             godot_anim->track_insert_key(pos_track, 0.0, rest_loc);
 

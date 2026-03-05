@@ -351,12 +351,13 @@ void TrinityModel::_build_meshes(
             arr_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arr);
 
             MeshInstance3D* mi = memnew(MeshInstance3D);
+            add_child(mi);
+
             mi->set_skin(skin);
             mi->set_name(mesh_name + "_" + material_name);
             mi->set_mesh(arr_mesh);
             mi->set_material_override(materials.get(material_name, Variant()));
             mi->set_skeleton_path(NodePath("../" + skl->get_name()));
-            add_child(mi);
         }
     }
 }

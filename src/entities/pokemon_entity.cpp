@@ -11,6 +11,8 @@ using namespace godot;
 
 void PokemonEntity::_bind_methods() {
     GETTER_SETTER_BIND(PokemonEntity, species, Variant::INT, PROPERTY_HINT_NONE)
+
+    ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &PokemonEntity::PlayAnim);
 }
 
 void PokemonEntity::_ready() {
@@ -29,7 +31,15 @@ void PokemonEntity::_ready() {
     add_child(_anim_player);
 
     _setup_animation(_model);
-    _anim_player->play("default");
+}
+
+void PokemonEntity::_process(double delta) {
+    //
+}
+
+void PokemonEntity::PlayAnim(String name)
+{
+    _anim_player->play(name);
 }
 
 void PokemonEntity::_setup_animation(Node* pkmn) {
