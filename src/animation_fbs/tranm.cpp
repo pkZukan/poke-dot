@@ -41,7 +41,7 @@ void Framed16VectorTrack::_bind_methods()
 
 void DynamicVectorTrack::_bind_methods()
 {
-    GETTER_SETTER_BIND(DynamicVectorTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Vector3i")
+    GETTER_SETTER_BIND(DynamicVectorTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Vector3")
 }
 
 void FixedVectorTrack::_bind_methods()
@@ -87,38 +87,40 @@ float QuaternionHelper::expand_float(int32_t i) {
 }
 
 Quaternion QuaternionHelper::Unpack(const Vector3i &vec) {
-    int32_t x = vec.x & 0xFFFF;
-    int32_t y = vec.y & 0xFFFF;
-    int32_t z = vec.z & 0xFFFF;
+
+    uint64_t pack = (static_cast<uint64_t>(static_cast<uint16_t>(vec.z)) << 32) 
+                  | (static_cast<uint64_t>(static_cast<uint16_t>(vec.y)) << 16) 
+                  | static_cast<uint16_t>(vec.x);
     
-    int64_t pack = (static_cast<int64_t>(z) << 32) | (y << 16) | x;
-    
-    // Extract components
     float q1 = expand_float(static_cast<int32_t>((pack >> 3) & 0x7FFF));
     float q2 = expand_float(static_cast<int32_t>((pack >> 18) & 0x7FFF));
     float q3 = expand_float(static_cast<int32_t>((pack >> 33) & 0x7FFF));
     
-    float sum = q1 * q1 + q2 * q2 + q3 * q3;
-    float missing = Math::sqrt(Math::max(1.0f - sum, 0.0f));
+    float max_component = Math::sqrt(Math::max(1.0f - (q1 * q1 + q2 * q2 + q3 * q3), 0.0f));
     
-    // Bit 2 (0b0100) is the sign of the missing component
-    if ((pack & 0b0100) != 0) {
-        missing = -missing;
+    int missing_component = pack & 0b0011;
+    
+    float values[4];
+    int idx = 0;
+    for (int i = 0; i < 4; i++) {
+        if (i == missing_component) {
+            values[i] = max_component;
+        } else {
+            values[i] = (idx == 0) ? q1 : (idx == 1) ? q2 : q3;
+            idx++;
+        }
     }
     
-    int32_t m_idx = pack & 0b0011;
+    bool is_negative = (pack & 0b0100) != 0;
+    
     Quaternion q;
-    
-    // Properly map components based on which was dropped
-    switch (m_idx) {
-        case 0: q = Quaternion(missing, q1, q2, q3); break;
-        case 1: q = Quaternion(q1, missing, q2, q3); break;
-        case 2: q = Quaternion(q1, q2, missing, q3); break;
-        case 3: q = Quaternion(q1, q2, q3, missing); break;
-        default: q = Quaternion(); break;
+    if (!is_negative) {
+        q = Quaternion(values[0], values[1], values[2], values[3]); // Godot: (x, y, z, w)
+    } else {
+        q = Quaternion(-values[0], -values[1], -values[2], -values[3]);
     }
     
-    return q.normalized();
+    return q;
 }
 
 Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data)
