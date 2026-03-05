@@ -12,6 +12,7 @@ func _ready():
 	_model = TrinityModel.new()
 	_anim_player = AnimationPlayer.new()
 	_anim_player.name = "AnimationPlayer"
+	_anim_player.root_node = _anim_player.get_path_to(self)
 	_species_path = "res://Assets/ik_pokemon/data/pm%04d/pm%04d_00_00/" % [species, species]
 	
 	_model.load_model(_species_path, "pm%04d_00_00.trmdl" % species)
@@ -27,14 +28,14 @@ func _setup_animation(pkmn: Node) -> void:
 
 	_anim_player.root_node = _anim_player.get_path_to(self)
 
-	var skl_path := str(_anim_player.get_path_to(_skeleton))
-	print("Resolved skeleton path: ", skl_path)
+	var skl_path := str(get_path_to(_skeleton))
 
 	#Load anim track
 	var godot_anim := TrinityAnimationConverter.convert_to_godot_animation(
 		_species_path, "pm%04d_00_00_00000_defaultwait01_loop.tranm" % species ,
 		_skeleton, skl_path
 	)
+
 	#Create library to store track
 	var anim_lib := AnimationLibrary.new()
 	anim_lib.add_animation("default", godot_anim)

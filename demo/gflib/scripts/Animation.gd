@@ -21,8 +21,7 @@ static func convert_to_godot_animation(path: String, animFile: String, skl: Skel
 		if bt == null:
 			continue
 
-		# Path must be relative from the AnimationPlayer's root node to the skeleton
-		var bone_path : String = str(root)
+		var bone_path := NodePath(str(root) + ":" + bone_name)
 
 		if bt.translate != null:
 			var pos_track := godot_anim.add_track(Animation.TYPE_POSITION_3D)

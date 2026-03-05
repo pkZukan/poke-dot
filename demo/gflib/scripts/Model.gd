@@ -162,7 +162,7 @@ func _build_meshes(path:String, mesh:TRMesh, buff:TRModelBuffer, materials:Dicti
 			mi.name = str(meshShape.Name, "_", mat.MaterialName)
 			mi.mesh = arrMesh
 			mi.material_override = materials.get(mat.MaterialName)
-			mi.skeleton = NodePath("../Armature")
+			mi.skeleton = NodePath("../" + skl.name)
 			add_child(mi)
 		
 func load_model(path:String, file:String) -> void:
