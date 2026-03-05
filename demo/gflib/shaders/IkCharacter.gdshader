@@ -1,5 +1,4 @@
 shader_type spatial;
-render_mode cull_front;
 
 uniform sampler2D BaseColorMap  : source_color, hint_default_white;
 uniform sampler2D NormalMap     : hint_normal;
@@ -64,7 +63,7 @@ uniform int EnableAdditionalLight;
 uniform int UVIndexLayerMask;
 
 void vertex() {
-	//
+    //
 }
 
 void fragment() {

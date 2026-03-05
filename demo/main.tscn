@@ -1,15 +1,13 @@
 [gd_scene format=3 uid="uid://catth7mjjf5fi"]
 
 [ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://main.gd" id="1_lmem3"]
-[ext_resource type="Script" uid="uid://bfhi3vjb7mpvn" path="res://gflib/scripts/PokemonEntity.gd" id="2_0xm2m"]
 
 [node name="Scene" type="Node3D" unique_id=1974166111]
 script = ExtResource("1_lmem3")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1417468368]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.899063, 1.90901)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.899063, 2.0893388)
 visible = false
 
-[node name="PokemonEntity" type="Node" parent="." unique_id=480508700]
-script = ExtResource("2_0xm2m")
-metadata/_custom_type_script = "uid://bfhi3vjb7mpvn"
+[node name="PokemonEntity" type="PokemonEntity" parent="." unique_id=69424003]
+species = 2

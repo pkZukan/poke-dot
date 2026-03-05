@@ -12,6 +12,10 @@
 
 #include "catalog_fbs/trpmcatalog.h"
 
+#include "entities/pokemon_entity.h"
+#include "converters/animation_converter.h"
+#include "converters/model_converter.h"
+
 #include "middleware/bntx.h"
 
 #include "utils.h"
@@ -104,11 +108,17 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(AnimationResourceInfo)
 		GDREGISTER_CLASS(LocatorResourceInfo)
 
+		//Entities
+		GDREGISTER_CLASS(PokemonEntity)
+		GDREGISTER_CLASS(TrinityAnimationConverter)
+		GDREGISTER_CLASS(TrinityModel)
+
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
 
 		GDREGISTER_CLASS(Utils)
 
+		//Resource loaders
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)

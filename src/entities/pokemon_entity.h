@@ -1,9 +1,11 @@
 #pragma once
-
-#include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/node.hpp>
-#include <godot_cpp/classes/file_access.hpp>
-#include "generated/trmbf_generated.h"
+#include <godot_cpp/classes/animation_player.hpp>
+#include <godot_cpp/classes/skeleton3d.hpp>
+#include <godot_cpp/classes/animation_library.hpp>
+#include <godot_cpp/classes/animation_player.hpp>
+#include "converters/animation_converter.h"
+#include "converters/model_converter.h"
 #include <utils.h>
 
 namespace godot {
@@ -11,11 +13,26 @@ namespace godot {
 class PokemonEntity : public Node {
     GDCLASS(PokemonEntity, Node)
 protected:
-	static void _bind_methods();
-public:
-	PokemonEntity(){}
-	~PokemonEntity(){}
+    static void _bind_methods();
 
+public:
+    PokemonEntity() = default;
+    ~PokemonEntity() = default;
+
+    void _ready() override;
+
+    GETTER_SETTER_DEFINE(int, species)
+
+private:
+    int species;
+    String _species_str;
+    AnimationPlayer* _anim_player = nullptr;
+    TrinityModel* _model = nullptr;
+    Skeleton3D* _skeleton = nullptr;
+    String _species_path;
+
+    Skeleton3D* _find_skeleton(Node* node);
+    void _setup_animation(Node* pkmn);
 };
 
-}
+} // namespace godot
