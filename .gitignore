@@ -1,8 +1,7 @@
 .vscode/*
 demo/.godot/*
 src/*.os
-src/model_fbs/*.os
-src/middleware/*.os
+src/**/*.os
 .sconsign.dblite
 demo/gflib/*.so
 demo/Assets/*
