@@ -9,73 +9,75 @@ void TrinityAnimationConverter::_bind_methods() {
     );
 }
 
-Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(String path, String anim_file, Skeleton3D* skl, String skl_path)
+Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
+    const String& path, 
+    const String& animFile, 
+    Skeleton3D* skl, 
+    const String& skl_path
+) 
 {
-    Ref<TRAnimation> anim = ResourceLoader::get_singleton()->load(path + anim_file);
-    if (!anim.is_valid()) {
+    Ref<TRAnimation> anim = ResourceLoader::get_singleton()->load(path + animFile);
+    if (!anim.is_valid()) 
+    {
         UtilityFunctions::push_error("Failed to load animation");
         return Ref<Animation>();
     }
 
     Ref<Animation> godot_anim;
     godot_anim.instantiate();
-
+    
     float frame_rate = anim->get_Info()->get_animation_rate();
-    int key_frames   = anim->get_Info()->get_animation_count();
+    int key_frames = anim->get_Info()->get_animation_count();
+    godot_anim->set_length(key_frames / frame_rate);
+    godot_anim->set_loop_mode(anim->get_Info()->get_does_loop() ? Animation::LOOP_LINEAR : Animation::LOOP_NONE);
 
-    godot_anim->set_length((float)key_frames / frame_rate);
-    godot_anim->set_loop_mode(
-        anim->get_Info()->get_does_loop()
-            ? Animation::LOOP_LINEAR
-            : Animation::LOOP_NONE
-    );
-
-    for (int bone_idx = 0; bone_idx < skl->get_bone_count(); bone_idx++) {
+    for (int bone_idx = 0; bone_idx < skl->get_bone_count(); bone_idx++) 
+    {
         String bone_name = skl->get_bone_name(bone_idx);
+        Ref<BoneTrack> bt = get_bone_track(anim, bone_name);
 
-        // Rest pose fallback
+        // Get rest pose
         Transform3D rest = skl->get_bone_rest(bone_idx);
         Vector3 rest_loc = rest.origin;
         Quaternion rest_rot = rest.basis.get_rotation_quaternion();
         Vector3 rest_scale = rest.basis.get_scale();
 
-        NodePath bone_path(skl_path + ":" + bone_name);
+        String bone_path = String(skl_path) + ":" + bone_name;
 
-        // Always create all 3 tracks
+        // Create tracks
         int pos_track = godot_anim->add_track(Animation::TYPE_POSITION_3D);
-        int rot_track = godot_anim->add_track(Animation::TYPE_ROTATION_3D);
-        int scale_track = godot_anim->add_track(Animation::TYPE_SCALE_3D);
         godot_anim->track_set_path(pos_track, bone_path);
+
+        int rot_track = godot_anim->add_track(Animation::TYPE_ROTATION_3D);
         godot_anim->track_set_path(rot_track, bone_path);
+
+        int scale_track = godot_anim->add_track(Animation::TYPE_SCALE_3D);
         godot_anim->track_set_path(scale_track, bone_path);
 
-        Ref<BoneTrack> bt = get_bone_track(anim, bone_name);
-
-        if (!bt.is_valid()) {
-            // No animation data — bake rest pose as single key
-            godot_anim->track_insert_key(pos_track,   0.0, rest_loc);
-            godot_anim->track_insert_key(rot_track,   0.0, rest_rot);
-            godot_anim->track_insert_key(scale_track, 0.0, rest_scale);
+        if (bt == Ref<BoneTrack>()) 
+        {
+            // No animation - use rest pose
+            godot_anim->position_track_insert_key(pos_track, 0.0, rest_loc);
+            godot_anim->rotation_track_insert_key(rot_track, 0.0, rest_rot);
+            godot_anim->scale_track_insert_key(scale_track, 0.0, rest_scale);
             continue;
         }
 
-        // Position
-        if (bt->get_translate().is_valid())
+        // Has animation data
+        if (bt->get_translate() != Ref<Resource>()) 
             sample_vector_track(godot_anim, pos_track, bt->get_translate(), frame_rate, key_frames);
         else
-            godot_anim->track_insert_key(pos_track, 0.0, rest_loc);
+            godot_anim->position_track_insert_key(pos_track, 0.0, rest_loc);
 
-        // Rotation
-        if (bt->get_rotate().is_valid())
+        if (bt->get_rotate() != Ref<Resource>())
             sample_rotation_track(godot_anim, rot_track, bt->get_rotate(), frame_rate, key_frames);
         else
-            godot_anim->track_insert_key(rot_track, 0.0, rest_rot);
+            godot_anim->rotation_track_insert_key(rot_track, 0.0, rest_rot);
 
-        // Scale
-        if (bt->get_scale().is_valid())
+        if (bt->get_scale() != Ref<Resource>())
             sample_vector_track(godot_anim, scale_track, bt->get_scale(), frame_rate, key_frames);
         else
-            godot_anim->track_insert_key(scale_track, 0.0, rest_scale);
+            godot_anim->scale_track_insert_key(scale_track, 0.0, rest_scale);
     }
 
     return godot_anim;
@@ -85,7 +87,8 @@ Ref<BoneTrack> TrinityAnimationConverter::get_bone_track(
     const Ref<TRAnimation>& anim, const String& bone_name)
 {
     Array tracks = anim->get_Track()->get_tracks();
-    for (int i = 0; i < tracks.size(); i++) {
+    for (int i = 0; i < tracks.size(); i++) 
+    {
         Ref<BoneTrack> bt = tracks[i];
         if (bt.is_valid() && bt->get_name() == bone_name)
             return bt;
@@ -100,30 +103,38 @@ void TrinityAnimationConverter::sample_vector_track(
 {
     float end_time = (float)key_frames / frame_rate;
 
-    if (Ref<FixedVectorTrack> fixed = trk; fixed.is_valid()) {
+    if (Ref<FixedVectorTrack> fixed = trk; fixed.is_valid()) 
+    {
         Vector3 value = fixed->get_co();
         anim->track_insert_key(track_idx, 0.0f,    value);
         anim->track_insert_key(track_idx, end_time, value);
 
-    } else if (Ref<DynamicVectorTrack> dynamic = trk; dynamic.is_valid()) {
+    } 
+    else if (Ref<DynamicVectorTrack> dynamic = trk; dynamic.is_valid()) 
+    {
         Array co = dynamic->get_co();
-        for (int frame = 0; frame < co.size(); frame++) {
+        for (int frame = 0; frame < co.size(); frame++) 
+        {
             float time = MIN((float)frame / frame_rate, end_time);
             anim->track_insert_key(track_idx, time, co[frame]);
         }
 
-    } else if (Ref<Framed8VectorTrack> f8 = trk; f8.is_valid()) {
+    } else if (Ref<Framed8VectorTrack> f8 = trk; f8.is_valid()) 
+    {
         Array frames = f8->get_frames();
         Array co     = f8->get_co();
-        for (int i = 0; i < frames.size(); i++) {
+        for (int i = 0; i < frames.size(); i++) 
+        {
             float time = (float)(int)frames[i] / frame_rate;
             anim->track_insert_key(track_idx, time, co[i]);
         }
 
-    } else if (Ref<Framed16VectorTrack> f16 = trk; f16.is_valid()) {
+    } else if (Ref<Framed16VectorTrack> f16 = trk; f16.is_valid()) 
+    {
         Array frames = f16->get_frames();
         Array co     = f16->get_co();
-        for (int i = 0; i < frames.size(); i++) {
+        for (int i = 0; i < frames.size(); i++) 
+        {
             float time = (float)(int)frames[i] / frame_rate;
             anim->track_insert_key(track_idx, time, co[i]);
         }
@@ -137,30 +148,37 @@ void TrinityAnimationConverter::sample_rotation_track(
 {
     float end_time = (float)key_frames / frame_rate;
 
-    if (Ref<FixedRotationTrack> fixed = trk; fixed.is_valid()) {
+    if (Ref<FixedRotationTrack> fixed = trk; fixed.is_valid()) 
+    {
         Quaternion quat = fixed->get_co();
         anim->track_insert_key(track_idx, 0.0f,    quat);
         anim->track_insert_key(track_idx, end_time, quat);
 
-    } else if (Ref<DynamicRotationTrack> dynamic = trk; dynamic.is_valid()) {
+    } else if (Ref<DynamicRotationTrack> dynamic = trk; dynamic.is_valid()) 
+    {
         Array co = dynamic->get_co();
-        for (int frame = 0; frame < co.size(); frame++) {
+        for (int frame = 0; frame < co.size(); frame++) 
+        {
             float time = MIN((float)frame / frame_rate, end_time);
             anim->track_insert_key(track_idx, time, co[frame]);
         }
 
-    } else if (Ref<Framed8RotationTrack> f8 = trk; f8.is_valid()) {
+    } else if (Ref<Framed8RotationTrack> f8 = trk; f8.is_valid()) 
+    {
         Array frames = f8->get_frames();
         Array co     = f8->get_co();
-        for (int i = 0; i < frames.size(); i++) {
+        for (int i = 0; i < frames.size(); i++) 
+        {
             float time = (float)(int)frames[i] / frame_rate;
             anim->track_insert_key(track_idx, time, co[i]);
         }
 
-    } else if (Ref<Framed16RotationTrack> f16 = trk; f16.is_valid()) {
+    } else if (Ref<Framed16RotationTrack> f16 = trk; f16.is_valid()) 
+    {
         Array frames = f16->get_frames();
         Array co     = f16->get_co();
-        for (int i = 0; i < frames.size(); i++) {
+        for (int i = 0; i < frames.size(); i++) 
+        {
             float time = (float)(int)frames[i] / frame_rate;
             anim->track_insert_key(track_idx, time, co[i]);
         }

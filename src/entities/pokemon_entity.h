@@ -2,6 +2,7 @@
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/classes/animation_player.hpp>
 #include <godot_cpp/classes/skeleton3d.hpp>
+#include <godot_cpp/classes/immediate_mesh.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
 #include <godot_cpp/classes/animation_player.hpp>
 #include "converters/animation_converter.h"
@@ -36,6 +37,11 @@ private:
 
     Skeleton3D* _find_skeleton(Node* node);
     void _setup_animation(Node* pkmn);
+
+    //Debug
+    bool debug_skel = true;
+    MeshInstance3D* _debug_mesh = nullptr;
+    Ref<ImmediateMesh> _imm_mesh;
 };
 
 } // namespace godot

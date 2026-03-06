@@ -3,7 +3,7 @@
 #include <godot_cpp/classes/animation.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
 #include <godot_cpp/classes/animation_player.hpp>
-#include <godot_cpp/classes/skeleton3d.hpp>
+#include <godot_cpp/classes/standard_material3d.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -31,12 +31,51 @@ void PokemonEntity::_ready() {
     add_child(_anim_player);
 
     _setup_animation(_model);
+    _anim_player->set_process_callback(AnimationPlayer::ANIMATION_PROCESS_IDLE);
+
+    //Debug skeleton
+    if(debug_skel)
+    {
+        _debug_mesh = memnew(MeshInstance3D);
+        _imm_mesh.instantiate();
+        _debug_mesh->set_mesh(_imm_mesh);
+        add_child(_debug_mesh);
+
+        Ref<StandardMaterial3D> mat;
+        mat.instantiate();
+        mat->set_flag(StandardMaterial3D::FLAG_ALBEDO_FROM_VERTEX_COLOR, true);
+        mat->set_shading_mode(StandardMaterial3D::SHADING_MODE_UNSHADED);
+        _debug_mesh->set_material_override(mat);
+    }
 }
 
 void PokemonEntity::_process(double delta) {
-    //
+    //Debug skeleton
+    if(debug_skel)
+    {
+        if (!_skeleton || !_imm_mesh.is_valid()) return;
+        
+        _imm_mesh->clear_surfaces();
+        _imm_mesh->surface_begin(Mesh::PRIMITIVE_LINES);
+        
+        for (int i = 0; i < _skeleton->get_bone_count(); i++) {
+            int parent = _skeleton->get_bone_parent(i);
+            if (parent < 0) continue;
+            
+            Transform3D bone_global  = _skeleton->get_bone_global_pose(i);
+            Transform3D parent_global = _skeleton->get_bone_global_pose(parent);
+            
+            Vector3 bone_pos   = _skeleton->get_global_transform().xform(bone_global.origin);
+            Vector3 parent_pos = _skeleton->get_global_transform().xform(parent_global.origin);
+            
+            _imm_mesh->surface_set_color(Color(1, 1, 0));
+            _imm_mesh->surface_add_vertex(parent_pos);
+            _imm_mesh->surface_add_vertex(bone_pos);
+        }
+        
+        _imm_mesh->surface_end();
+    }
 }
-
 void PokemonEntity::PlayAnim(String name)
 {
     _anim_player->play(name);
