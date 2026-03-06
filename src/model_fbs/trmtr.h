@@ -117,11 +117,11 @@ public:
 	GETTER_SETTER_DEFINE(int, SamplerState_1)
 	GETTER_SETTER_DEFINE(int, SamplerState_2)
 	GETTER_SETTER_DEFINE(int, SamplerState_3)
-	GETTER_SETTER_DEFINE(int, SamplerState_4)
-	GETTER_SETTER_DEFINE(int, SamplerState_5)
-	GETTER_SETTER_DEFINE(int, SamplerState_6)
-	GETTER_SETTER_DEFINE(int, SamplerState_7)
-	GETTER_SETTER_DEFINE(int, SamplerState_8)
+	GETTER_SETTER_DEFINE(float, SamplerState_4)
+	GETTER_SETTER_DEFINE(float, SamplerState_5)
+	GETTER_SETTER_DEFINE(float, SamplerState_6)
+	GETTER_SETTER_DEFINE(float, SamplerState_7)
+	GETTER_SETTER_DEFINE(float, SamplerState_8)
 	GETTER_SETTER_DEFINE(String, RepeatU)
 	GETTER_SETTER_DEFINE(String, RepeatV)
 	GETTER_SETTER_DEFINE(String, RepeatW)
@@ -132,11 +132,11 @@ private:
 	int SamplerState_1;
 	int SamplerState_2;
 	int SamplerState_3;
-	int SamplerState_4;
-	int SamplerState_5;
-	int SamplerState_6;
-	int SamplerState_7;
-	int SamplerState_8;
+	float SamplerState_4;
+	float SamplerState_5;
+	float SamplerState_6;
+	float SamplerState_7;
+	float SamplerState_8;
 	String RepeatU;
 	String RepeatV;
 	String RepeatW;

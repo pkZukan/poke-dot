@@ -13,15 +13,15 @@ enum UVWrapMode: uint32 {
 }
 
 table SamplerState {
-    SamplerState_0: uint32 = 0x0; //Never used
-    SamplerState_1: uint32 = 0x0; //Never used
-    SamplerState_2: uint32 = 0x0; //Never used
-    SamplerState_3: uint32 = 0x0; //Never used
-    SamplerState_4: uint32 = 0x0; //Never used
-    SamplerState_5: uint32 = 0x0; //Never used
-    SamplerState_6: uint32 = 0x0; //Never used
-    SamplerState_7: uint32 = 0x0; //Never used
-    SamplerState_8: uint32 = 0x0; //Never used
+    SamplerState_0: uint32 = 0x0;
+    SamplerState_1: uint32 = 0x0;
+    SamplerState_2: uint32 = 0x0;
+    SamplerState_3: uint32 = 0x0;
+    SamplerState_4: float;
+    SamplerState_5: float;
+    SamplerState_6: float;
+    SamplerState_7: float;
+    SamplerState_8: float;
     repeat_u: UVWrapMode = WRAP; //0x1, 0x6 or 0x7
     repeat_v: UVWrapMode = WRAP; //0x1, 0x6 or 0x7
     repeat_w: UVWrapMode = WRAP; //Never used

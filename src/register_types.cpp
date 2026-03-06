@@ -12,6 +12,7 @@
 #include "animation_fbs/tracp.h"
 
 #include "catalog_fbs/trpmcatalog.h"
+#include "entities/pokemon_catalog.h"
 
 #include "entities/pokemon_entity.h"
 #include "converters/animation_converter.h"
@@ -143,6 +144,13 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+
+		//Singletons
+		GDREGISTER_CLASS(PokemonCatalog)
+		Engine::get_singleton()->register_singleton("PokemonCatalog", memnew(PokemonCatalog));
+
+		//Init singletons
+		PokemonCatalog::get_singleton()->load_catalog();
 	}
 	
 #ifdef TOOLS_ENABLED
@@ -170,6 +178,14 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+
+	if (Engine::get_singleton()->has_singleton("PokemonCatalog")) {
+        PokemonCatalog* catalog = Object::cast_to<PokemonCatalog>(
+            Engine::get_singleton()->get_singleton("PokemonCatalog")
+        );
+        Engine::get_singleton()->unregister_singleton("PokemonCatalog");
+        memdelete(catalog);
+    }
 }
 
 extern "C" {

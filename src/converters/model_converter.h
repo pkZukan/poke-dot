@@ -37,7 +37,7 @@ private:
     void _apply_params(const Ref<Resource>& mat, Ref<ShaderMaterial> shdr);
     Array _build_skeleton(const Ref<TRSkeleton>& skel);
     PackedInt32Array _flip_faces(const PackedInt32Array& indices);
-    void _build_meshes(const String& path, const Ref<TRMesh>& mesh, const Ref<TRModelBuffer>& buff, const Dictionary& materials, Skeleton3D* skl, const Ref<Skin>& skin);
+    void _build_meshes(const Ref<TRMesh>& mesh, const Ref<TRModelBuffer>& buff, const Dictionary& materials, Skeleton3D* skl, const Ref<Skin>& skin);
 };
 
 } // namespace godot

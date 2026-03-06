@@ -144,7 +144,7 @@ Dictionary TrinityModel::_load_materials(const String& path, const Array& materi
     ResourceLoader* rl = ResourceLoader::get_singleton();
 
     for (int i = 0; i < material_files.size(); i++) {
-        Ref<TRMaterial> material = rl->load(path + (String)material_files[i]);
+        Ref<TRMaterial> material = rl->load(path.path_join((String)material_files[i]));
         Array mats = material->get_Materials();
         for (int m = 0; m < mats.size(); m++) {
             Ref<MaterialEntry> mat = mats[m];
@@ -200,7 +200,7 @@ void TrinityModel::_apply_textures(const String& path, const Ref<Resource>& mat,
         String tex_name = t->get("Name");
 
         Ref<Resource> res = ResourceLoader::get_singleton()->load(
-            path + file, "", ResourceLoader::CACHE_MODE_IGNORE
+            path.path_join(file), "", ResourceLoader::CACHE_MODE_IGNORE
         );
         if (!res.is_valid()) 
             continue;
@@ -312,7 +312,6 @@ PackedInt32Array TrinityModel::_flip_faces(const PackedInt32Array& indices)
 }
 
 void TrinityModel::_build_meshes(
-    const String& path,
     const Ref<TRMesh>& mesh,
     const Ref<TRModelBuffer>& buff,
     const Dictionary& materials,
@@ -374,10 +373,10 @@ void TrinityModel::_build_meshes(
 void TrinityModel::load_model(String path, String file) {
     ResourceLoader* rl = ResourceLoader::get_singleton();
 
-    Ref<TRModel> mdl  = rl->load(path + file);
-    Ref<TRMesh> mesh = rl->load(path + (String)mdl->get_Meshes()[0]);
-    Ref<TRModelBuffer> buff = rl->load(path + (String)mesh->get_BufferName());
-    Ref<TRSkeleton> skel = rl->load(path + (String)mdl->get_Skeleton());
+    Ref<TRModel> mdl  = rl->load(path.path_join(file));
+    Ref<TRMesh> mesh = rl->load(path.path_join((String)mdl->get_Meshes()[0]));
+    Ref<TRModelBuffer> buff = rl->load(path.path_join((String)mesh->get_BufferName()));
+    Ref<TRSkeleton> skel = rl->load(path.path_join((String)mdl->get_Skeleton()));
 
     Dictionary materials = _load_materials(path, mdl->get_Materials());
     Array skel_result = _build_skeleton(skel);
@@ -385,5 +384,5 @@ void TrinityModel::load_model(String path, String file) {
     Skeleton3D* skl = Object::cast_to<Skeleton3D>(skel_result[0]);
     Ref<Skin> skn = skel_result[1];
 
-    _build_meshes(path, mesh, buff, materials, skl, skn);
+    _build_meshes(mesh, buff, materials, skl, skn);
 }

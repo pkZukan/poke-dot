@@ -13,25 +13,26 @@ void PokemonEntity::_bind_methods() {
     GETTER_SETTER_BIND(PokemonEntity, species, Variant::INT, PROPERTY_HINT_NONE)
 
     ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &PokemonEntity::PlayAnim);
+    ClassDB::bind_method(D_METHOD("GetAnimationList"), &PokemonEntity::GetAnimationList);
 }
 
 void PokemonEntity::_ready() {
-    _species_str = String::num_int64(species).pad_zeros(4);
+    Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
 
-    _species_path = vformat("res://Assets/ik_pokemon/data/pm%s/pm%s_00_00/", _species_str, _species_str);
+    String base_path = "res://Assets/ik_pokemon/data";
+    String relMdlPath = catEnt->get_model_path();
+    _species_path = base_path.path_join(relMdlPath.get_base_dir());
+    String _species_mdl = relMdlPath.get_file();
+    _species_str = String::num_int64(species).pad_zeros(4);
 
     //Create and add TrinityModel
     _model = memnew(TrinityModel);
-    _model->load_model(_species_path, vformat("pm%s_00_00.trmdl", _species_str));
+    _model->load_model(_species_path, _species_mdl);
     add_child(_model);
 
-    // Create and add AnimationPlayer
-    _anim_player = memnew(AnimationPlayer);
-    _anim_player->set_name("AnimationPlayer");
-    add_child(_anim_player);
-
-    _setup_animation(_model);
-    _anim_player->set_process_callback(AnimationPlayer::ANIMATION_PROCESS_IDLE);
+    //Create and add AnimationPlayer/AnimationLibrary
+    _setup_animation();
+    _load_animations();
 
     //Debug skeleton
     if(debug_skel)
@@ -76,27 +77,49 @@ void PokemonEntity::_process(double delta) {
         _imm_mesh->surface_end();
     }
 }
+
 void PokemonEntity::PlayAnim(String name)
 {
     _anim_player->play(name);
 }
 
-void PokemonEntity::_setup_animation(Node* pkmn) {
-    _skeleton = _find_skeleton(pkmn);
+TypedArray<StringName> PokemonEntity::GetAnimationList()
+{
+    return _anim_lib->get_animation_list();
+}
+
+void PokemonEntity::_setup_animation() {
+    //Setup animation player
+    _anim_player = memnew(AnimationPlayer);
+    add_child(_anim_player);
+
+    _anim_player->set_name("AnimationPlayer");
+    _anim_player->set_process_callback(AnimationPlayer::ANIMATION_PROCESS_IDLE);
+
+    //init animation library
+    _anim_lib.instantiate();
+
+    _skeleton = _find_skeleton(_model);
     if (!_skeleton) {
         UtilityFunctions::push_error("No Skeleton3D found in model");
         return;
     }
-
     _anim_player->set_root_node(_anim_player->get_path_to(this));
-    String skl_path = String(get_path_to(_skeleton));
 
-    //Build animation filename
+    //Get skeleton path
+    _skl_path = String(get_path_to(_skeleton));
+}
+
+void PokemonEntity::_load_animations()
+{
     String anim_file = vformat("pm%s_00_00_00000_defaultwait01_loop.tranm", _species_str);
+    _add_animation(anim_file);
+}
 
-    //Convert animation files
+void PokemonEntity::_add_animation(String anim_file)
+{
     Ref<Animation> godot_anim = TrinityAnimationConverter::convert_to_godot_animation(
-        _species_path, anim_file, _skeleton, skl_path
+        _species_path, anim_file, _skeleton, _skl_path
     );
 
     if (!godot_anim.is_valid()) {
@@ -104,10 +127,8 @@ void PokemonEntity::_setup_animation(Node* pkmn) {
         return;
     }
 
-    Ref<AnimationLibrary> anim_lib;
-    anim_lib.instantiate();
-    anim_lib->add_animation("default", godot_anim);
-    _anim_player->add_animation_library("", anim_lib);
+    _anim_lib->add_animation("default", godot_anim);
+    _anim_player->add_animation_library("", _anim_lib);
 }
 
 Skeleton3D* PokemonEntity::_find_skeleton(Node* node) {
