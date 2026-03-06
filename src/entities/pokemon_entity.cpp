@@ -32,7 +32,7 @@ void PokemonEntity::_ready() {
 
     //Create and add AnimationPlayer/AnimationLibrary
     _setup_animation();
-    _load_animations();
+    _load_animations(catEnt->get_animations()[0]);
 
     //Debug skeleton
     if(debug_skel)
@@ -110,8 +110,22 @@ void PokemonEntity::_setup_animation() {
     _skl_path = String(get_path_to(_skeleton));
 }
 
-void PokemonEntity::_load_animations()
+void PokemonEntity::_load_animations(Ref<AnimationResourceInfo> animInfo)
 {
+    //Load TRACN
+    String base_path = "res://Assets/ik_pokemon/data";
+    String tracn_file = base_path.path_join(animInfo->get_path());
+    String pokeBase = tracn_file.get_base_dir();
+    Ref<TRAnimationChannelNames> tracn = ResourceLoader::get_singleton()->load(tracn_file);
+
+    //Load channels
+    auto chanList = tracn->get_list();
+    for(int i = 0; i < chanList.size(); i++)
+    {
+        //TODO
+    }
+
+    //TEMP
     String anim_file = vformat("pm%s_00_00_00000_defaultwait01_loop.tranm", _species_str);
     _add_animation(anim_file);
 }

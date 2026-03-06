@@ -7,6 +7,7 @@
 #include <godot_cpp/classes/animation_player.hpp>
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
+#include "animation_fbs/tracn.h"
 #include "pokemon_catalog.h"
 #include <utils.h>
 
@@ -46,7 +47,7 @@ private:
     Skeleton3D* _find_skeleton(Node* node);
     void _setup_animation();
     void _add_animation(String anim_file);
-    void _load_animations();
+    void _load_animations(Ref<AnimationResourceInfo> animInfo);
 
     //Debug
     bool debug_skel = false;
