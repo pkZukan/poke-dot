@@ -99,6 +99,11 @@ void PokemonEntity::_setup_animation(Node* pkmn) {
         _species_path, anim_file, _skeleton, skl_path
     );
 
+    if (!godot_anim.is_valid()) {
+        UtilityFunctions::push_error("Animation conversion failed");
+        return;
+    }
+
     Ref<AnimationLibrary> anim_lib;
     anim_lib.instantiate();
     anim_lib->add_animation("default", godot_anim);

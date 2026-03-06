@@ -1,8 +1,7 @@
 @tool
-extends Node3D
+extends Node
 
-@onready var pkmn: PokemonEntity = $PokemonEntity
-
+@onready var pkmn = $PokemonEntity
 func _ready():
 	await get_tree().process_frame
 	pkmn.PlayAnim("default")

@@ -57,27 +57,27 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
         if (bt == Ref<BoneTrack>()) 
         {
             // No animation - use rest pose
-            godot_anim->position_track_insert_key(pos_track, 0.0, rest_loc);
-            godot_anim->rotation_track_insert_key(rot_track, 0.0, rest_rot);
-            godot_anim->scale_track_insert_key(scale_track, 0.0, rest_scale);
+            godot_anim->track_insert_key(pos_track, 0.0, rest_loc);
+            godot_anim->track_insert_key(rot_track, 0.0, rest_rot);
+            godot_anim->track_insert_key(scale_track, 0.0, rest_scale);
             continue;
         }
 
         // Has animation data
-        if (bt->get_translate() != Ref<Resource>()) 
+        if (!bt->get_translate().is_null()) 
             sample_vector_track(godot_anim, pos_track, bt->get_translate(), frame_rate, key_frames);
         else
-            godot_anim->position_track_insert_key(pos_track, 0.0, rest_loc);
+            godot_anim->track_insert_key(pos_track, 0.0, rest_loc);
 
-        if (bt->get_rotate() != Ref<Resource>())
+        if (!bt->get_rotate().is_null())
             sample_rotation_track(godot_anim, rot_track, bt->get_rotate(), frame_rate, key_frames);
         else
-            godot_anim->rotation_track_insert_key(rot_track, 0.0, rest_rot);
+            godot_anim->track_insert_key(rot_track, 0.0, rest_rot);
 
-        if (bt->get_scale() != Ref<Resource>())
+        if (!bt->get_scale().is_null())
             sample_vector_track(godot_anim, scale_track, bt->get_scale(), frame_rate, key_frames);
         else
-            godot_anim->scale_track_insert_key(scale_track, 0.0, rest_scale);
+            godot_anim->track_insert_key(scale_track, 0.0, rest_scale);
     }
 
     return godot_anim;
@@ -90,7 +90,7 @@ Ref<BoneTrack> TrinityAnimationConverter::get_bone_track(
     for (int i = 0; i < tracks.size(); i++) 
     {
         Ref<BoneTrack> bt = tracks[i];
-        if (bt.is_valid() && bt->get_name() == bone_name)
+        if (bt.is_valid() && bt->get_Name() == bone_name)
             return bt;
     }
     return Ref<BoneTrack>();

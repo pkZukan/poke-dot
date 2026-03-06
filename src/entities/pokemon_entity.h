@@ -28,7 +28,7 @@ public:
     GETTER_SETTER_DEFINE(int, species)
 
 private:
-    int species;
+    int species = 2;
     String _species_str;
     AnimationPlayer* _anim_player = nullptr;
     TrinityModel* _model = nullptr;
@@ -39,7 +39,7 @@ private:
     void _setup_animation(Node* pkmn);
 
     //Debug
-    bool debug_skel = true;
+    bool debug_skel = false;
     MeshInstance3D* _debug_mesh = nullptr;
     Ref<ImmediateMesh> _imm_mesh;
 };
