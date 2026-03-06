@@ -1,22 +1,22 @@
 namespace Titan.Animation;
 
-table Animation 
+table IntParam 
 {
     name: string;
-    res_1: uint32 = 0;
-    unk_2: uint32;
-    unk_3: uint32;
+    min: uint32;
+    max: uint32;
+    default_val: uint32;
 }
 
-table Moves 
+table FloatParam 
 {
     name: string;
-    x: float;
-    y: float;
-    z: float;
+    min: float;
+    max: float;
+    default_val: float;
 }
 
-table Switch 
+table BoolParam 
 {
     name: string;
     val: bool;
@@ -29,15 +29,15 @@ table Trigger
 
 table Entry
 {
-    animations: [Animation];
-    moves: [Moves];
-    switches: [Switch];
+    int_params: [IntParam];
+    float_params: [FloatParam];
+    bool_params: [BoolParam];
     triggers: [Trigger];
 }
 
 table TRACP 
 {
-    root_node: Entry;
+    table: Entry;
 }
 
 root_type TRACP;

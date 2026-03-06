@@ -40,7 +40,7 @@ public:
 	GETTER_SETTER_DEFINE(int, ParentIndex)
 	GETTER_SETTER_DEFINE(int, RigIndex)
 	GETTER_SETTER_DEFINE(String, ParentName)
-	GETTER_SETTER_DEFINE(String, NodeType)
+	GETTER_SETTER_DEFINE(int, NodeType)
 
 private:
 	String Name;
@@ -50,7 +50,7 @@ private:
 	int ParentIndex;
 	int RigIndex;
 	String ParentName;
-	String NodeType;
+	int NodeType;
 };
 
 class BoneEntry : public Resource {
@@ -61,13 +61,13 @@ public:
 	BoneEntry(){}
 	~BoneEntry(){}
 
-    GETTER_SETTER_DEFINE(uint8_t, InheritPosition)
-    GETTER_SETTER_DEFINE(uint8_t, InfluenceSkinning)
+    GETTER_SETTER_DEFINE(bool, InheritPosition)
+    GETTER_SETTER_DEFINE(bool, InfluenceSkinning)
 	GETTER_SETTER_DEFINE(Transform3D, Matrix)
 
 private:
-    uint8_t InheritPosition;
-	uint8_t InfluenceSkinning;
+    bool InheritPosition;
+	bool InfluenceSkinning;
 	Transform3D Matrix;
 };
 

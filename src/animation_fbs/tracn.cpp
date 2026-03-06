@@ -2,15 +2,15 @@
 
 using namespace godot;
 
-void AnimationEntry::_bind_methods()
+void AnimationChannelNameEntry::_bind_methods()
 {
-    GETTER_SETTER_BIND(AnimationEntry, animation_name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(AnimationEntry, filename, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(AnimationChannelNameEntry, animation_name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(AnimationChannelNameEntry, filename, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
 void TRAnimationChannelNames::_bind_methods() 
 {
-    GETTER_SETTER_BIND(TRAnimationChannelNames, list, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "AnimationEntry")
+    GETTER_SETTER_BIND(TRAnimationChannelNames, list, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "AnimationChannelNameEntry")
 }
 
 void TRAnimationChannelNames::LoadFromFile(String file)
@@ -26,7 +26,7 @@ void TRAnimationChannelNames::LoadFromFile(String file)
         for (size_t i = 0; i < list->size(); i++) {
             auto ent = list->Get(i);
 
-            Ref<AnimationEntry> animEnt;
+            Ref<AnimationChannelNameEntry> animEnt;
             animEnt.instantiate();
             animEnt->set_animation_name(Utils::toGodotString(ent->animation_name()));
             animEnt->set_filename(Utils::toGodotString(ent->filename()));

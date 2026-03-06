@@ -5,9 +5,9 @@ namespace Titan.Model;
 file_extension "trskl";
 
 enum NodeType: uint32 {
-    Default = 0,
-    Chained = 1, //Present for finger bones
-    Floating = 2, //Present for eye, mouth and feet bones
+    Normal = 0,
+    Chained = 1, 
+    Leaf = 2
 }
 
 table SRT {
@@ -45,8 +45,8 @@ table BoneMatrix{
 }
 
 table Bone {
-    inherit_position: uint8; //Value (0,1) Probably SegmentScaleCompensate?
-    influence_skinning: uint8 = 0;
+    inherit_position: bool; //Value (0,1) Probably SegmentScaleCompensate?
+    influence_skinning: bool = 0;
     matrix: BoneMatrix;
 }
 

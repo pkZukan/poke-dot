@@ -16,13 +16,13 @@ void TransformNode::_bind_methods()
     GETTER_SETTER_BIND(TransformNode, ParentIndex, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, RigIndex, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, ParentName, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TransformNode, NodeType, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, NodeType, Variant::INT, PROPERTY_HINT_ENUM, "Normal,Chained,Leaf")
 }
 
 void BoneEntry::_bind_methods() 
 {
-    GETTER_SETTER_BIND(BoneEntry, InheritPosition, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BoneEntry, InfluenceSkinning, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(BoneEntry, InheritPosition, Variant::BOOL, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(BoneEntry, InfluenceSkinning, Variant::BOOL, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(BoneEntry, Matrix, Variant::TRANSFORM3D, PROPERTY_HINT_NONE)
 }
 
@@ -79,16 +79,16 @@ void TRSkeleton::LoadFromFile(String file)
         Vector3 pos = Utils::toGodotVec3(transforms->Get(i)->transform()->VecTranslate());
         Vector3 rot = Utils::toGodotVec3(transforms->Get(i)->transform()->VecRot());
         Vector3 scale = Utils::toGodotVec3(transforms->Get(i)->transform()->VecScale());
-        Basis rot_basis = Basis::from_euler(rot, EulerOrder::EULER_ORDER_ZYX);
         Basis scale_basis = Basis::from_scale(scale);
-        tn->set_Transform(Transform3D(rot_basis * scale_basis, pos));
-
+        Basis rot_basis = Basis::from_euler(rot, EulerOrder::EULER_ORDER_ZYX);
+        tn->set_Transform(Transform3D(scale_basis * rot_basis, pos));
+        
         tn->set_ScalePivot(Utils::toGodotVec3(transforms->Get(i)->scalePivot()));
         tn->set_RotatePivot(Utils::toGodotVec3(transforms->Get(i)->rotatePivot()));
         tn->set_ParentIndex(transforms->Get(i)->parent_idx());
         tn->set_RigIndex(transforms->Get(i)->rig_idx());
         tn->set_ParentName(Utils::toGodotString(transforms->Get(i)->parent_name()));
-        tn->set_NodeType(Titan::Model::EnumNameNodeType(transforms->Get(i)->type()));
+        tn->set_NodeType(transforms->Get(i)->type());
 
         TransformNodes.push_back(tn);
     }

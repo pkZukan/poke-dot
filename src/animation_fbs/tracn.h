@@ -10,13 +10,13 @@
 
 namespace godot {
 
-class AnimationEntry : public Resource {
-	GDCLASS(AnimationEntry, Resource)
+class AnimationChannelNameEntry : public Resource {
+	GDCLASS(AnimationChannelNameEntry, Resource)
 protected:
 	static void _bind_methods();
 public:
-	AnimationEntry(){}
-	~AnimationEntry(){}
+	AnimationChannelNameEntry(){}
+	~AnimationChannelNameEntry(){}
 
 	GETTER_SETTER_DEFINE(String, animation_name)
     GETTER_SETTER_DEFINE(String, filename)
