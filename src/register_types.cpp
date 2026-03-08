@@ -13,9 +13,9 @@
 #include "animation_fbs/tracr.h"
 
 #include "catalog_fbs/trpmcatalog.h"
-#include "entities/pokemon_catalog.h"
+#include "actors/pokemon_catalog.h"
 
-#include "entities/pokemon_entity.h"
+#include "actors/pokemon_entity.h"
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
 
@@ -129,6 +129,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(LocatorResourceInfo)
 
 		//Entities
+		GDREGISTER_CLASS(ActorObj)
 		GDREGISTER_CLASS(PokemonEntity)
 		GDREGISTER_CLASS(TrinityAnimationConverter)
 		GDREGISTER_CLASS(TrinityModel)

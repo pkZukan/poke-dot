@@ -14,40 +14,31 @@
 
 namespace godot {
 
-class PokemonEntity : public Node {
-    GDCLASS(PokemonEntity, Node)
+class ActorObj: public Node {
+    GDCLASS(ActorObj, Node)
 protected:
     static void _bind_methods();
 
 public:
-    PokemonEntity() = default;
-    ~PokemonEntity() = default;
+    ActorObj() = default;
+    ~ActorObj() = default;
 
     void _ready() override;
     void _process(double delta) override;
     void _exit_tree() override;
 
-    void Initialize();
+    virtual void Initialize();
+    virtual void LoadActor(String mdlFile, Ref<AnimationResourceInfo> animInfo);
 
-    void PlayAnim(String name);
-    TypedArray<StringName> GetAnimationList();
-
-    GETTER_SETTER_DEFINE(int, species)
-    GETTER_SETTER_DEFINE(uint8_t, form)
-    GETTER_SETTER_DEFINE(uint8_t, gender)
+    virtual void PlayAnim(String name);
+    virtual TypedArray<StringName> GetAnimationList();
 
 private:
-    int species = 0;
-    uint8_t form = 0;
-    uint8_t gender = 0;
-
-    String _species_str;
     AnimationPlayer* _anim_player = nullptr;
     Ref<AnimationLibrary> _anim_lib;
     TrinityModel* _model = nullptr;
     Skeleton3D* _skeleton = nullptr;
     String _skl_path;
-    String _species_path;
 
     void _cleanup();
     Skeleton3D* _find_skeleton(Node* node);

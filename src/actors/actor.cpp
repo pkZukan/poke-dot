@@ -1,4 +1,4 @@
-#include "pokemon_entity.h"
+#include "actor.h"
 
 #include <godot_cpp/classes/animation.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
@@ -9,21 +9,15 @@
 
 using namespace godot;
 
-void PokemonEntity::_bind_methods() {
-    GETTER_SETTER_BIND(PokemonEntity, species, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(PokemonEntity, form, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(PokemonEntity, gender, Variant::INT, PROPERTY_HINT_NONE)
-
-    ClassDB::bind_method(D_METHOD("Initialize"), &PokemonEntity::Initialize);
-    ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &PokemonEntity::PlayAnim);
-    ClassDB::bind_method(D_METHOD("GetAnimationList"), &PokemonEntity::GetAnimationList);
-}
-
-void PokemonEntity::_ready() {
+void ActorObj::_bind_methods() {
     //
 }
 
-void PokemonEntity::_process(double delta) {
+void ActorObj::_ready() {
+    //
+}
+
+void ActorObj::_process(double delta) {
     //Debug skeleton
     if(debug_skel)
     {
@@ -51,32 +45,32 @@ void PokemonEntity::_process(double delta) {
     }
 }
 
-void PokemonEntity::_exit_tree() 
+void ActorObj::_exit_tree() 
 {
     _cleanup();
     Node::_exit_tree();
 }
 
-void PokemonEntity::Initialize()
+void ActorObj::Initialize()
+{
+    //
+}
+
+void ActorObj::LoadActor(String mdlFile, Ref<AnimationResourceInfo> animInfo)
 {
     _cleanup();
 
-    Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
-
-    String base_path = "res://Assets/ik_pokemon/data";
-    String relMdlPath = catEnt->get_model_path();
-    _species_path = base_path.path_join(relMdlPath.get_base_dir());
-    String _species_mdl = relMdlPath.get_file();
-    _species_str = String::num_int64(species).pad_zeros(4);
+    String base_path = mdlFile.get_base_dir();
+    String filename = mdlFile.get_file();  
 
     //Create and add TrinityModel
     _model = memnew(TrinityModel);
-    _model->load_model(_species_path, _species_mdl);
+    _model->load_model(base_path, filename);
     add_child(_model);
 
     //Create and add AnimationPlayer/AnimationLibrary
     _setup_animation();
-    _load_animations(catEnt->get_animations()[0]);
+    _load_animations(animInfo);
 
     //Debug skeleton
     if(debug_skel)
@@ -94,17 +88,17 @@ void PokemonEntity::Initialize()
     }
 }
 
-void PokemonEntity::PlayAnim(String name)
+void ActorObj::PlayAnim(String name)
 {
     _anim_player->play(name);
 }
 
-TypedArray<StringName> PokemonEntity::GetAnimationList()
+TypedArray<StringName> ActorObj::GetAnimationList()
 {
     return _anim_lib->get_animation_list();
 }
 
-void PokemonEntity::_cleanup() 
+void ActorObj::_cleanup() 
 {
     if (_model) {
         _model->queue_free();
@@ -125,7 +119,7 @@ void PokemonEntity::_cleanup()
     _imm_mesh.unref();
 }
 
-void PokemonEntity::_setup_animation() {
+void ActorObj::_setup_animation() {
     //Setup animation player
     _anim_player = memnew(AnimationPlayer);
     add_child(_anim_player);
@@ -148,12 +142,12 @@ void PokemonEntity::_setup_animation() {
     _skl_path = String(get_path_to(_skeleton));
 }
 
-void PokemonEntity::_load_animation_parameter(String filepath)
+void ActorObj::_load_animation_parameter(String filepath)
 {
     //
 }
 
-void PokemonEntity::_load_animation_resource(String filepath)
+void ActorObj::_load_animation_resource(String filepath)
 {
     String base_path = filepath.get_base_dir();
     Ref<TRAnimationChannelResource> tracr = ResourceLoader::get_singleton()->load(filepath);
@@ -185,32 +179,32 @@ void PokemonEntity::_load_animation_resource(String filepath)
     }
 }
 
-void PokemonEntity::_load_animation_layer(String filepath)
+void ActorObj::_load_animation_layer(String filepath)
 {
     //
 }
 
-void PokemonEntity::_load_animation_state(String filepath)
+void ActorObj::_load_animation_state(String filepath)
 {
     //
 }
 
-void PokemonEntity::_load_animation_look_at(String filepath)
+void ActorObj::_load_animation_look_at(String filepath)
 {
     //
 }
 
-void PokemonEntity::_load_animation_slope_orientor(String filepath)
+void ActorObj::_load_animation_slope_orientor(String filepath)
 {
     //
 }
 
-void PokemonEntity::_load_animation_motion_detector(String filepath)
+void ActorObj::_load_animation_motion_detector(String filepath)
 {
     //
 }
 
-void PokemonEntity::_load_animations(Ref<AnimationResourceInfo> animInfo)
+void ActorObj::_load_animations(Ref<AnimationResourceInfo> animInfo)
 {
     //Load TRACN
     String base_path = "res://Assets/ik_pokemon/data";
@@ -257,7 +251,7 @@ void PokemonEntity::_load_animations(Ref<AnimationResourceInfo> animInfo)
     }
 }
 
-void PokemonEntity::_add_animation(String anim_file, String name)
+void ActorObj::_add_animation(String anim_file, String name)
 {
     Ref<Animation> godot_anim = TrinityAnimationConverter::convert_to_godot_animation(anim_file, _skeleton, _skl_path);
     if (!godot_anim.is_valid()) {
@@ -268,7 +262,7 @@ void PokemonEntity::_add_animation(String anim_file, String name)
     _anim_lib->add_animation(name, godot_anim);
 }
 
-Skeleton3D* PokemonEntity::_find_skeleton(Node* node) {
+Skeleton3D* ActorObj::_find_skeleton(Node* node) {
     if (!node) return nullptr;
     if (Skeleton3D* skel = Object::cast_to<Skeleton3D>(node)) {
         return skel;

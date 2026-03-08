@@ -77,8 +77,7 @@ Dictionary TrinityModel::parse_mesh_buffer(
     PackedVector3Array  pos, norm;
     PackedVector2Array  uv;
     PackedInt32Array    indices, blend_inds;
-    PackedFloat32Array  blend_weights;
-    PackedVector4Array  tangents;
+    PackedFloat32Array  blend_weights, tangents;
 
     Array strides = accessor_table->get_Strides();
     Ref<SizeTable> stride_obj = strides[0];
@@ -134,11 +133,10 @@ Dictionary TrinityModel::parse_mesh_buffer(
             }
             else if (attr_name == "TANGENT") 
             {
-                float x = Utils::half_to_float(stream_vert->get_u16());
-                float y = Utils::half_to_float(stream_vert->get_u16());
-                float z = Utils::half_to_float(stream_vert->get_u16());
-                float w = Utils::half_to_float(stream_vert->get_u16());
-                tangents.push_back(Vector4(x, y, z, w));
+                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
+                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
+                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
+                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
             } 
             else if (attr_name == "BLEND_WEIGHTS") 
             {
@@ -422,8 +420,8 @@ void TrinityModel::_build_meshes(
             PackedFloat32Array blend_weights = result["BlendWeights"];
             if(!blend_weights.is_empty()) arr[Mesh::ARRAY_WEIGHTS] = blend_weights;
 
-            //PackedVector4Array tangents = result["Tangents"];
-            //if(!tangents.is_empty()) arr[Mesh::ARRAY_TANGENT] = tangents;
+            PackedFloat32Array tangents = result["Tangents"];
+            if(!tangents.is_empty()) arr[Mesh::ARRAY_TANGENT] = tangents;
 
             Ref<ArrayMesh> arr_mesh;
             arr_mesh.instantiate();

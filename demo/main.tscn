@@ -2,14 +2,23 @@
 
 [ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://main.gd" id="1_ig7tw"]
 
+[sub_resource type="PlaneMesh" id="PlaneMesh_ig7tw"]
+
 [node name="Scene" type="Node3D" unique_id=1974166111]
 script = ExtResource("1_ig7tw")
 
+[node name="Enkei" type="TrinityModel" parent="." unique_id=1040129700]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.57232, 0, 0)
+
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1417468368]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.899063, 2.0893388)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.899063, 3.3993607)
 
 [node name="PokemonEntity" type="PokemonEntity" parent="." unique_id=1402866333]
 species = 5
 
-[node name="TrinityModel" type="TrinityModel" parent="." unique_id=1409228336]
+[node name="Lamp" type="TrinityModel" parent="." unique_id=1409228336]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1992657, 0, 0)
+
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=1425593839]
+transform = Transform3D(29.076944, 0, 0, 0, 1.5977851, 0, 0, 0, 23.550901, 0, 0, 0)
+mesh = SubResource("PlaneMesh_ig7tw")
