@@ -10,6 +10,7 @@
 #include "animation_fbs/tracn.h"
 #include "animation_fbs/tranm.h"
 #include "animation_fbs/tracp.h"
+#include "animation_fbs/tracr.h"
 
 #include "catalog_fbs/trpmcatalog.h"
 #include "entities/pokemon_catalog.h"
@@ -41,6 +42,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
@@ -104,6 +106,13 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRAnimationChannelNames)
 		GDREGISTER_CLASS(AnimationChannelNameEntry)
 
+		//tracr
+		GDREGISTER_CLASS(TRAnimationChannelResource)
+		GDREGISTER_CLASS(TRAnimationTrackListTable)
+		GDREGISTER_CLASS(TRAnimationTrack)
+		GDREGISTER_CLASS(TRAnimationTrackResourceTable)
+		GDREGISTER_CLASS(TRAnimationTrackResource)
+
 		//tracp
 		GDREGISTER_CLASS(TRAnimationChannelParams)
 		GDREGISTER_CLASS(AnimationChannelParamEntry)
@@ -140,6 +149,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
@@ -174,6 +184,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 

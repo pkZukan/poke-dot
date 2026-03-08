@@ -253,7 +253,7 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
     for (int i = 0; i < transform_nodes.size(); i++) 
     {
         Ref<TransformNode> node = transform_nodes[i];
-        int parent_index = (int)node->get_ParentIndex();
+        int parent_index = node->get_ParentIndex();
         if (parent_index == -1) 
             continue;
 
@@ -263,14 +263,11 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
         int nodeType = node->get_NodeType();
 
         skl->add_bone(bone_name);
-        skl->set_bone_rest(bone_idx, xform);
         
         node_to_bone_idx[i] = bone_idx;
 
-        if (node_to_bone_idx.has(parent_index))
-            skl->set_bone_parent(bone_idx, (int)node_to_bone_idx[parent_index]);
-
-        if (rig_index >= 0) {
+        if (rig_index >= 0) 
+        {
             Array bones = skel->get_Bones();
             Ref<BoneEntry> bone_entry = bones[rig_index];
             
@@ -279,11 +276,19 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
                 Transform3D matrix = bone_entry->get_Matrix();
                 skin->add_named_bind(bone_name, matrix);
             }
+
+            if(bone_entry->get_InheritPosition())
+            {
+                if (node_to_bone_idx.has(parent_index))
+                    skl->set_bone_parent(bone_idx, node_to_bone_idx[parent_index]);
+            }
         } 
         else 
         {
             skin->add_named_bind(bone_name, Transform3D());
         }
+        
+        skl->set_bone_rest(bone_idx, xform);
 
         bone_idx++;
     }

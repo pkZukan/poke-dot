@@ -98,6 +98,7 @@ void PokemonEntity::_setup_animation() {
 
     //init animation library
     _anim_lib.instantiate();
+    _anim_player->add_animation_library("", _anim_lib);
 
     _skeleton = _find_skeleton(_model);
     if (!_skeleton) {
@@ -110,11 +111,74 @@ void PokemonEntity::_setup_animation() {
     _skl_path = String(get_path_to(_skeleton));
 }
 
+void PokemonEntity::_load_animation_parameter(String filepath)
+{
+    //
+}
+
+void PokemonEntity::_load_animation_resource(String filepath)
+{
+    String base_path = filepath.get_base_dir();
+    Ref<TRAnimationChannelResource> tracr = ResourceLoader::get_singleton()->load(filepath);
+    Ref<TRAnimationTrackListTable> table = tracr->get_table();
+    auto list = table->get_list();
+    for(int i = 0; i < list.size(); i++)
+    {
+        Ref<TRAnimationTrack> track = list[i];
+        String name = track->get_Name();
+        Ref<TRAnimationTrackResourceTable> res = track->get_Resources();
+        Ref<TRAnimationTrackResource> anim = res->get_animation();
+        if(anim.is_valid())
+        {
+            String file = base_path.path_join(anim->get_FileName());
+            _add_animation(file, name);
+        }
+        Ref<TRAnimationTrackResource> mat = res->get_material();
+        if(mat.is_valid())
+        {
+            String file = base_path.path_join(anim->get_FileName());
+            //TODO
+        }
+        Ref<TRAnimationTrackResource> eff = res->get_effect();
+        if(eff.is_valid())
+        {
+            String file = base_path.path_join(anim->get_FileName());
+            //TODO
+        }
+    }
+}
+
+void PokemonEntity::_load_animation_layer(String filepath)
+{
+    //
+}
+
+void PokemonEntity::_load_animation_state(String filepath)
+{
+    //
+}
+
+void PokemonEntity::_load_animation_look_at(String filepath)
+{
+    //
+}
+
+void PokemonEntity::_load_animation_slope_orientor(String filepath)
+{
+    //
+}
+
+void PokemonEntity::_load_animation_motion_detector(String filepath)
+{
+    //
+}
+
 void PokemonEntity::_load_animations(Ref<AnimationResourceInfo> animInfo)
 {
     //Load TRACN
     String base_path = "res://Assets/ik_pokemon/data";
     String tracn_file = base_path.path_join(animInfo->get_path());
+    tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
     String pokeBase = tracn_file.get_base_dir();
     Ref<TRAnimationChannelNames> tracn = ResourceLoader::get_singleton()->load(tracn_file);
 
@@ -122,27 +186,50 @@ void PokemonEntity::_load_animations(Ref<AnimationResourceInfo> animInfo)
     auto chanList = tracn->get_list();
     for(int i = 0; i < chanList.size(); i++)
     {
-        //TODO
+        Ref<AnimationChannelNameEntry> nameEnt = chanList[i];
+        String aname = nameEnt->get_animation_name();
+        String filepath = pokeBase.path_join(nameEnt->get_filename());
+        if(aname == "parameter")
+        {
+            _load_animation_parameter(filepath);
+        }
+        else if(aname == "resource")
+        {
+            _load_animation_resource(filepath);
+        }
+        else if(aname == "layer")
+        {
+            _load_animation_layer(filepath);
+        }
+        else if(aname == "state")
+        {
+            _load_animation_state(filepath);
+        }
+        else if(aname == "look_at")
+        {
+            _load_animation_look_at(filepath);
+        }
+        else if(aname == "slope_orientor")
+        {
+            _load_animation_slope_orientor(filepath);
+        }
+        else if(aname == "motion_detector")
+        {
+            _load_animation_motion_detector(filepath);
+        }
     }
-
-    //TEMP
-    String anim_file = vformat("pm%s_00_00_00000_defaultwait01_loop.tranm", _species_str);
-    _add_animation(anim_file);
 }
 
-void PokemonEntity::_add_animation(String anim_file)
+void PokemonEntity::_add_animation(String anim_file, String name)
 {
-    Ref<Animation> godot_anim = TrinityAnimationConverter::convert_to_godot_animation(
-        _species_path, anim_file, _skeleton, _skl_path
-    );
+    Ref<Animation> godot_anim = TrinityAnimationConverter::convert_to_godot_animation(anim_file, _skeleton, _skl_path);
 
     if (!godot_anim.is_valid()) {
         UtilityFunctions::push_error("Animation conversion failed");
         return;
     }
 
-    _anim_lib->add_animation("default", godot_anim);
-    _anim_player->add_animation_library("", _anim_lib);
+    _anim_lib->add_animation(name, godot_anim);
 }
 
 Skeleton3D* PokemonEntity::_find_skeleton(Node* node) {

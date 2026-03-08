@@ -8,6 +8,7 @@
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
 #include "animation_fbs/tracn.h"
+#include "animation_fbs/tracr.h"
 #include "pokemon_catalog.h"
 #include <utils.h>
 
@@ -41,12 +42,18 @@ private:
     TrinityModel* _model = nullptr;
     Skeleton3D* _skeleton = nullptr;
     String _skl_path;
-
     String _species_path;
 
     Skeleton3D* _find_skeleton(Node* node);
     void _setup_animation();
-    void _add_animation(String anim_file);
+    void _add_animation(String anim_file, String name);
+    void _load_animation_parameter(String filepath);
+    void _load_animation_resource(String filepath);
+    void _load_animation_layer(String filepath);
+    void _load_animation_state(String filepath);
+    void _load_animation_look_at(String filepath);
+    void _load_animation_slope_orientor(String filepath);
+    void _load_animation_motion_detector(String filepath);
     void _load_animations(Ref<AnimationResourceInfo> animInfo);
 
     //Debug

@@ -10,13 +10,12 @@ void TrinityAnimationConverter::_bind_methods() {
 }
 
 Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
-    const String& path, 
     const String& animFile, 
     Skeleton3D* skl, 
     const String& skl_path
 ) 
 {
-    Ref<TRAnimation> anim = ResourceLoader::get_singleton()->load(path.path_join(animFile));
+    Ref<TRAnimation> anim = ResourceLoader::get_singleton()->load(animFile);
     if (!anim.is_valid()) 
     {
         UtilityFunctions::push_error("Failed to load animation");

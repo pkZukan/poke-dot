@@ -14,7 +14,7 @@ protected:
     static void _bind_methods();
 
 public:
-    static Ref<Animation> convert_to_godot_animation(const String& path, const String& animFile, Skeleton3D* skl, const String& skl_path);
+    static Ref<Animation> convert_to_godot_animation(const String& animFile, Skeleton3D* skl, const String& skl_path);
 
 private:
     static Ref<BoneTrack> get_bone_track(const Ref<TRAnimation>& anim, const String& bone_name);
