@@ -17,6 +17,8 @@ void TransformNode::_bind_methods()
     GETTER_SETTER_BIND(TransformNode, RigIndex, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, ParentName, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, NodeType, Variant::INT, PROPERTY_HINT_ENUM, "Normal,Chained,Leaf")
+    GETTER_SETTER_BIND(TransformNode, unk_0, Variant::BOOL, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TransformNode, ignore_parent_rot, Variant::BOOL, PROPERTY_HINT_NONE)
 }
 
 void BoneEntry::_bind_methods() 
@@ -28,7 +30,7 @@ void BoneEntry::_bind_methods()
 
 void TRSkeleton::_bind_methods() 
 {
-    GETTER_SETTER_BIND(TRSkeleton, res0, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRSkeleton, Version, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRSkeleton, TransformNodes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TransformNode")
     GETTER_SETTER_BIND(TRSkeleton, Bones, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "BoneEntry")
     GETTER_SETTER_BIND(TRSkeleton, IKs, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "IKControl")
@@ -89,6 +91,8 @@ void TRSkeleton::LoadFromFile(String file)
         tn->set_RigIndex(transforms->Get(i)->rig_idx());
         tn->set_ParentName(Utils::toGodotString(transforms->Get(i)->parent_name()));
         tn->set_NodeType(transforms->Get(i)->type());
+        tn->set_unk_0(transforms->Get(i)->unk_0());
+        tn->set_ignore_parent_rot(transforms->Get(i)->ignore_parent_rot());
 
         TransformNodes.push_back(tn);
     }
@@ -105,7 +109,7 @@ void TRSkeleton::LoadFromFile(String file)
         IKs.push_back(ik);
     }
 
-    res0 = skel->res_0();
+    Version = skel->version();
     RigOffset = skel->rig_offset();
 }
 

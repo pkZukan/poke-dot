@@ -25,6 +25,8 @@ table TransformNode {
     rig_idx: int32 = -1;
     parent_name: string;
     type: NodeType;
+    unk_0: bool;
+    ignore_parent_rot: bool;
 }
 
 table IKControl{
@@ -51,7 +53,7 @@ table Bone {
 }
 
 table TRSKL {
-    res_0: uint32;
+    version: uint32;
     transform_nodes: [TransformNode];
     bones: [Bone];
     iks: [IKControl];

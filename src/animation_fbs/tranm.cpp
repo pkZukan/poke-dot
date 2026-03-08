@@ -113,14 +113,13 @@ Quaternion QuaternionHelper::Unpack(const Vector3i &vec) {
     
     bool is_negative = (pack & 0b0100) != 0;
     
-    Quaternion q;
-    if (!is_negative) {
-        q = Quaternion(values[0], values[1], values[2], values[3]); // Godot: (x, y, z, w)
-    } else {
-        q = Quaternion(-values[0], -values[1], -values[2], -values[3]);
+    Quaternion q(values[0], values[1], values[2], values[3]); 
+    
+    if (is_negative) {
+        q = -q;
     }
     
-    return q;
+    return q.normalized();
 }
 
 Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data)

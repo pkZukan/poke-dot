@@ -279,16 +279,29 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
 
             if(bone_entry->get_InheritPosition())
             {
-                if (node_to_bone_idx.has(parent_index))
-                    skl->set_bone_parent(bone_idx, node_to_bone_idx[parent_index]);
+                //
             }
+
+            if (node_to_bone_idx.has(parent_index))
+                skl->set_bone_parent(bone_idx, node_to_bone_idx[parent_index]);
         } 
         else 
         {
             skin->add_named_bind(bone_name, Transform3D());
         }
         
-        skl->set_bone_rest(bone_idx, xform);
+        Vector3 scale_pivot = node->get_ScalePivot();
+        Vector3 rotate_pivot = node->get_RotatePivot();
+
+        Transform3D rotate_pivot_xform;
+        rotate_pivot_xform.origin = rotate_pivot;
+
+        Transform3D scale_pivot_xform;
+        scale_pivot_xform.origin = scale_pivot;
+
+        Transform3D baked = rotate_pivot_xform * xform * rotate_pivot_xform.inverse() * scale_pivot_xform * scale_pivot_xform.inverse();
+
+        skl->set_bone_rest(bone_idx, baked);
 
         bone_idx++;
     }

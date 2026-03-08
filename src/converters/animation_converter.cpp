@@ -46,12 +46,15 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
         // Create tracks
         int pos_track = godot_anim->add_track(Animation::TYPE_POSITION_3D);
         godot_anim->track_set_path(pos_track, bone_path);
+        godot_anim->track_set_interpolation_type(pos_track, Animation::INTERPOLATION_CUBIC);
 
         int rot_track = godot_anim->add_track(Animation::TYPE_ROTATION_3D);
         godot_anim->track_set_path(rot_track, bone_path);
+        godot_anim->track_set_interpolation_type(rot_track, Animation::INTERPOLATION_CUBIC);
 
         int scale_track = godot_anim->add_track(Animation::TYPE_SCALE_3D);
         godot_anim->track_set_path(scale_track, bone_path);
+        godot_anim->track_set_interpolation_type(scale_track, Animation::INTERPOLATION_CUBIC);
 
         if (bt == Ref<BoneTrack>()) 
         {
@@ -98,14 +101,15 @@ Ref<BoneTrack> TrinityAnimationConverter::get_bone_track(
 void TrinityAnimationConverter::sample_vector_track(
     Ref<Animation> anim, int track_idx,
     const Ref<Resource>& trk,
-    float frame_rate, int key_frames)
+    float frame_rate, int key_frames
+)
 {
     float end_time = (float)key_frames / frame_rate;
 
     if (Ref<FixedVectorTrack> fixed = trk; fixed.is_valid()) 
     {
         Vector3 value = fixed->get_co();
-        anim->track_insert_key(track_idx, 0.0f,    value);
+        anim->track_insert_key(track_idx, 0.0f, value);
         anim->track_insert_key(track_idx, end_time, value);
 
     } 
@@ -143,17 +147,19 @@ void TrinityAnimationConverter::sample_vector_track(
 void TrinityAnimationConverter::sample_rotation_track(
     Ref<Animation> anim, int track_idx,
     const Ref<Resource>& trk,
-    float frame_rate, int key_frames)
+    float frame_rate, int key_frames
+)
 {
     float end_time = (float)key_frames / frame_rate;
 
     if (Ref<FixedRotationTrack> fixed = trk; fixed.is_valid()) 
     {
         Quaternion quat = fixed->get_co();
-        anim->track_insert_key(track_idx, 0.0f,    quat);
+        anim->track_insert_key(track_idx, 0.0f, quat);
         anim->track_insert_key(track_idx, end_time, quat);
 
-    } else if (Ref<DynamicRotationTrack> dynamic = trk; dynamic.is_valid()) 
+    } 
+    else if (Ref<DynamicRotationTrack> dynamic = trk; dynamic.is_valid()) 
     {
         Array co = dynamic->get_co();
         for (int frame = 0; frame < co.size(); frame++) 
@@ -162,7 +168,8 @@ void TrinityAnimationConverter::sample_rotation_track(
             anim->track_insert_key(track_idx, time, co[frame]);
         }
 
-    } else if (Ref<Framed8RotationTrack> f8 = trk; f8.is_valid()) 
+    } 
+    else if (Ref<Framed8RotationTrack> f8 = trk; f8.is_valid()) 
     {
         Array frames = f8->get_frames();
         Array co     = f8->get_co();
@@ -172,7 +179,8 @@ void TrinityAnimationConverter::sample_rotation_track(
             anim->track_insert_key(track_idx, time, co[i]);
         }
 
-    } else if (Ref<Framed16RotationTrack> f16 = trk; f16.is_valid()) 
+    } 
+    else if (Ref<Framed16RotationTrack> f16 = trk; f16.is_valid()) 
     {
         Array frames = f16->get_frames();
         Array co     = f16->get_co();

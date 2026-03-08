@@ -41,6 +41,8 @@ public:
 	GETTER_SETTER_DEFINE(int, RigIndex)
 	GETTER_SETTER_DEFINE(String, ParentName)
 	GETTER_SETTER_DEFINE(int, NodeType)
+	GETTER_SETTER_DEFINE(bool, unk_0)
+	GETTER_SETTER_DEFINE(bool, ignore_parent_rot)
 
 private:
 	String Name;
@@ -51,6 +53,8 @@ private:
 	int RigIndex;
 	String ParentName;
 	int NodeType;
+	bool unk_0;
+	bool ignore_parent_rot;
 };
 
 class BoneEntry : public Resource {
@@ -81,14 +85,14 @@ public:
 
     void LoadFromFile(String file);
 
-	GETTER_SETTER_DEFINE(int, res0)
+	GETTER_SETTER_DEFINE(int, Version)
 	GETTER_SETTER_DEFINE(Array, TransformNodes)
 	GETTER_SETTER_DEFINE(Array, Bones)
 	GETTER_SETTER_DEFINE(Array, IKs)
 	GETTER_SETTER_DEFINE(int, RigOffset)
 
 private:
-	int res0;
+	int Version;
 	Array TransformNodes;
 	Array Bones;
 	Array IKs;
