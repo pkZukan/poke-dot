@@ -11,12 +11,56 @@ using namespace godot;
 
 void PokemonEntity::_bind_methods() {
     GETTER_SETTER_BIND(PokemonEntity, species, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(PokemonEntity, form, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(PokemonEntity, gender, Variant::INT, PROPERTY_HINT_NONE)
 
+    ClassDB::bind_method(D_METHOD("Initialize"), &PokemonEntity::Initialize);
     ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &PokemonEntity::PlayAnim);
     ClassDB::bind_method(D_METHOD("GetAnimationList"), &PokemonEntity::GetAnimationList);
 }
 
 void PokemonEntity::_ready() {
+    //
+}
+
+void PokemonEntity::_process(double delta) {
+    //Debug skeleton
+    if(debug_skel)
+    {
+        if (!_skeleton || !_imm_mesh.is_valid()) return;
+        
+        _imm_mesh->clear_surfaces();
+        _imm_mesh->surface_begin(Mesh::PRIMITIVE_LINES);
+        
+        for (int i = 0; i < _skeleton->get_bone_count(); i++) {
+            int parent = _skeleton->get_bone_parent(i);
+            if (parent < 0) continue;
+            
+            Transform3D bone_global  = _skeleton->get_bone_global_pose(i);
+            Transform3D parent_global = _skeleton->get_bone_global_pose(parent);
+            
+            Vector3 bone_pos   = _skeleton->get_global_transform().xform(bone_global.origin);
+            Vector3 parent_pos = _skeleton->get_global_transform().xform(parent_global.origin);
+            
+            _imm_mesh->surface_set_color(Color(1, 1, 0));
+            _imm_mesh->surface_add_vertex(parent_pos);
+            _imm_mesh->surface_add_vertex(bone_pos);
+        }
+        
+        _imm_mesh->surface_end();
+    }
+}
+
+void PokemonEntity::_exit_tree() 
+{
+    _cleanup();
+    Node::_exit_tree();
+}
+
+void PokemonEntity::Initialize()
+{
+    _cleanup();
+
     Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
 
     String base_path = "res://Assets/ik_pokemon/data";
@@ -50,34 +94,6 @@ void PokemonEntity::_ready() {
     }
 }
 
-void PokemonEntity::_process(double delta) {
-    //Debug skeleton
-    if(debug_skel)
-    {
-        if (!_skeleton || !_imm_mesh.is_valid()) return;
-        
-        _imm_mesh->clear_surfaces();
-        _imm_mesh->surface_begin(Mesh::PRIMITIVE_LINES);
-        
-        for (int i = 0; i < _skeleton->get_bone_count(); i++) {
-            int parent = _skeleton->get_bone_parent(i);
-            if (parent < 0) continue;
-            
-            Transform3D bone_global  = _skeleton->get_bone_global_pose(i);
-            Transform3D parent_global = _skeleton->get_bone_global_pose(parent);
-            
-            Vector3 bone_pos   = _skeleton->get_global_transform().xform(bone_global.origin);
-            Vector3 parent_pos = _skeleton->get_global_transform().xform(parent_global.origin);
-            
-            _imm_mesh->surface_set_color(Color(1, 1, 0));
-            _imm_mesh->surface_add_vertex(parent_pos);
-            _imm_mesh->surface_add_vertex(bone_pos);
-        }
-        
-        _imm_mesh->surface_end();
-    }
-}
-
 void PokemonEntity::PlayAnim(String name)
 {
     _anim_player->play(name);
@@ -86,6 +102,27 @@ void PokemonEntity::PlayAnim(String name)
 TypedArray<StringName> PokemonEntity::GetAnimationList()
 {
     return _anim_lib->get_animation_list();
+}
+
+void PokemonEntity::_cleanup() 
+{
+    if (_model) {
+        _model->queue_free();
+        _model = nullptr;
+    }
+    if (_anim_player) {
+        _anim_player->queue_free();
+        _anim_player = nullptr;
+    }
+    if (_debug_mesh) {
+        _debug_mesh->queue_free();
+        _debug_mesh = nullptr;
+    }
+    
+    // 2. Clear your references
+    _anim_lib.unref();
+    _skeleton = nullptr;
+    _imm_mesh.unref();
 }
 
 void PokemonEntity::_setup_animation() {

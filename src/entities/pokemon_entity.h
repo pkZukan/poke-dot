@@ -25,14 +25,19 @@ public:
 
     void _ready() override;
     void _process(double delta) override;
+    void _exit_tree() override;
+
+    void Initialize();
 
     void PlayAnim(String name);
     TypedArray<StringName> GetAnimationList();
 
     GETTER_SETTER_DEFINE(int, species)
+    GETTER_SETTER_DEFINE(uint8_t, form)
+    GETTER_SETTER_DEFINE(uint8_t, gender)
 
 private:
-    int species = 2;
+    int species = 0;
     uint8_t form = 0;
     uint8_t gender = 0;
 
@@ -44,6 +49,7 @@ private:
     String _skl_path;
     String _species_path;
 
+    void _cleanup();
     Skeleton3D* _find_skeleton(Node* node);
     void _setup_animation();
     void _add_animation(String anim_file, String name);

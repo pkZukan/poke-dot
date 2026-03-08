@@ -21,6 +21,51 @@ void TrinityModel::_bind_methods() {
 }
 
 // ---------------------------------------------------------------------------
+// Debug
+// ---------------------------------------------------------------------------
+void TrinityModel::print_bone_tree_compact(Skeleton3D* skeleton) 
+{
+    if (!skeleton) {
+        UtilityFunctions::push_error("print_bone_tree_compact: skeleton is null");
+        return;
+    }
+
+    UtilityFunctions::print_rich("[b]" + skeleton->get_name() + " Bone Hierarchy (" + String::num_int64(skeleton->get_bone_count()) + " bones):[/b]");
+
+    std::vector<int> printed;
+    for (int i = 0; i < skeleton->get_bone_count(); i++) {
+        if (skeleton->get_bone_parent(i) == -1) {
+            _print_compact_recursive(skeleton, i, "", true, printed);
+        }
+    }
+}
+
+void TrinityModel::_print_compact_recursive(Skeleton3D* skeleton, int idx, String prefix, bool is_last, std::vector<int>& printed) 
+{
+    if (std::find(printed.begin(), printed.end(), idx) != printed.end()) return;
+    printed.push_back(idx);
+
+    String connector = is_last ? "`-- " : "|-- ";
+    
+    String line = prefix + connector + skeleton->get_bone_name(idx) + " [" + String::num_int64(idx) + "]";
+    UtilityFunctions::print(line);
+
+    std::vector<int> children;
+    for (int i = 0; i < skeleton->get_bone_count(); i++) 
+    {
+        if (skeleton->get_bone_parent(i) == idx) {
+            children.push_back(i);
+        }
+    }
+
+    for (size_t i = 0; i < children.size(); i++) 
+    {
+        String ext = is_last ? "    " : "|   ";
+        _print_compact_recursive(skeleton, children[i], prefix + ext, i == children.size() - 1, printed);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // parse_mesh_buffer
 // ---------------------------------------------------------------------------
 Dictionary TrinityModel::parse_mesh_buffer(
@@ -254,8 +299,6 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
     {
         Ref<TransformNode> node = transform_nodes[i];
         int parent_index = node->get_ParentIndex();
-        if (parent_index == -1) 
-            continue;
 
         String bone_name = node->get_Name();
         Transform3D xform = node->get_Transform();
@@ -263,8 +306,11 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
         int nodeType = node->get_NodeType();
 
         skl->add_bone(bone_name);
-        
         node_to_bone_idx[i] = bone_idx;
+        skl->set_bone_rest(bone_idx, xform);
+
+        if (parent_index >= 0 && node_to_bone_idx.has(parent_index))
+            skl->set_bone_parent(bone_idx, node_to_bone_idx[parent_index]);
 
         if (rig_index >= 0) 
         {
@@ -281,33 +327,18 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
             {
                 //
             }
-
-            if (node_to_bone_idx.has(parent_index))
-                skl->set_bone_parent(bone_idx, node_to_bone_idx[parent_index]);
         } 
         else 
         {
             skin->add_named_bind(bone_name, Transform3D());
         }
-        
-        Vector3 scale_pivot = node->get_ScalePivot();
-        Vector3 rotate_pivot = node->get_RotatePivot();
-
-        Transform3D rotate_pivot_xform;
-        rotate_pivot_xform.origin = rotate_pivot;
-
-        Transform3D scale_pivot_xform;
-        scale_pivot_xform.origin = scale_pivot;
-
-        Transform3D baked = rotate_pivot_xform * xform * rotate_pivot_xform.inverse() * scale_pivot_xform * scale_pivot_xform.inverse();
-
-        skl->set_bone_rest(bone_idx, baked);
 
         bone_idx++;
     }
 
     add_child(skl);
-
+    skl->reset_bone_poses();
+    
     Array result;
     result.push_back(skl);
     result.push_back(skin);
@@ -402,5 +433,6 @@ void TrinityModel::load_model(String path, String file) {
     Skeleton3D* skl = Object::cast_to<Skeleton3D>(skel_result[0]);
     Ref<Skin> skn = skel_result[1];
 
+    //print_bone_tree_compact(skl);
     _build_meshes(mesh, buff, materials, skl, skn);
 }

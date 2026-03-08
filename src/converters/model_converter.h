@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/skin.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
+#include <godot_cpp/classes/script.hpp>
 #include "model_fbs/trmdl.h"
 #include "model_fbs/trskl.h"
 #include "model_fbs/trmsh.h"
@@ -38,6 +39,9 @@ private:
     Array _build_skeleton(const Ref<TRSkeleton>& skel);
     PackedInt32Array _flip_faces(const PackedInt32Array& indices);
     void _build_meshes(const Ref<TRMesh>& mesh, const Ref<TRModelBuffer>& buff, const Dictionary& materials, Skeleton3D* skl, const Ref<Skin>& skin);
+
+    void print_bone_tree_compact(Skeleton3D* skeleton);
+    void _print_compact_recursive(Skeleton3D* skeleton, int idx, String prefix, bool is_last, std::vector<int>& printed);
 };
 
 } // namespace godot
