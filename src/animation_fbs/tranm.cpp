@@ -46,7 +46,7 @@ void DynamicVectorTrack::_bind_methods()
 
 void FixedVectorTrack::_bind_methods()
 {
-    GETTER_SETTER_BIND(FixedVectorTrack, co, Variant::VECTOR3I, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(FixedVectorTrack, co, Variant::VECTOR3, PROPERTY_HINT_NONE)
 }
 
 void BoneTrack::_bind_methods()
@@ -211,7 +211,8 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
                 Quaternion quat = QuaternionHelper::Unpack(Vector3i(v->x(), v->y(), v->z()));
                 co.append(quat);
             }
-            t->set_frames(frames); t->set_co(co);
+            t->set_frames(frames); 
+            t->set_co(co);
             return t;
         }
         case Titan::Animation::RotationTrack_Framed8RotationTrack: 
@@ -228,7 +229,8 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
                 Quaternion quat = QuaternionHelper::Unpack(Vector3i(v->x(), v->y(), v->z()));
                 co.append(quat);
             }
-            t->set_frames(frames); t->set_co(co);
+            t->set_frames(frames); 
+            t->set_co(co);
             return t;
         }
         default: 
@@ -271,12 +273,14 @@ void TRAnimation::LoadFromFile(String file)
     // Parse BoneTracks
     auto tracks = track->tracks();
     Array trackArray;
-    if (tracks) {
-        for (size_t i = 0; i < tracks->size(); i++) {
+    if (tracks) 
+    {
+        for (size_t i = 0; i < tracks->size(); i++) 
+        {
             auto boneTrack = tracks->Get(i);
             Ref<BoneTrack> bt;
             bt.instantiate();
-            bt->set_Name(boneTrack->bone_name()->c_str());
+            bt->set_Name(Utils::toGodotString(boneTrack->bone_name()));
 
             bt->set_scale(ParseVectorTrack(boneTrack->scale_type(), boneTrack->scale()));
             bt->set_rotate(ParseRotationTrack(boneTrack->rotate_type(), boneTrack->rotate()));

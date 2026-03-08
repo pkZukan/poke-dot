@@ -260,7 +260,6 @@ void PokemonEntity::_load_animations(Ref<AnimationResourceInfo> animInfo)
 void PokemonEntity::_add_animation(String anim_file, String name)
 {
     Ref<Animation> godot_anim = TrinityAnimationConverter::convert_to_godot_animation(anim_file, _skeleton, _skl_path);
-
     if (!godot_anim.is_valid()) {
         UtilityFunctions::push_error("Animation conversion failed");
         return;

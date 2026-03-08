@@ -53,7 +53,7 @@ public:
 	GETTER_SETTER_DEFINE(PackedStringArray, Meshes)
 	GETTER_SETTER_DEFINE(String, Skeleton)
 	GETTER_SETTER_DEFINE(PackedStringArray, Materials)
-	GETTER_SETTER_DEFINE(Array, LODs)
+	GETTER_SETTER_DEFINE(Array, Lods)
 	GETTER_SETTER_DEFINE(AABB, BBox)
 
 private:
@@ -61,7 +61,7 @@ private:
 	PackedStringArray Meshes;
 	String Skeleton;
 	PackedStringArray Materials;
-	Array LODs;
+	Array Lods;
 	AABB BBox;
 };
 

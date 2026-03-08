@@ -9,4 +9,7 @@ script = ExtResource("1_ig7tw")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.899063, 2.0893388)
 
 [node name="PokemonEntity" type="PokemonEntity" parent="." unique_id=1402866333]
-species = 2
+species = 5
+
+[node name="TrinityModel" type="TrinityModel" parent="." unique_id=1409228336]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1992657, 0, 0)

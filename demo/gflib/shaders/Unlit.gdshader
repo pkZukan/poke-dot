@@ -1,7 +1,5 @@
 shader_type spatial;
 
-render_mode cull_front;
-
 uniform sampler2D BaseColorMap : source_color;
 uniform sampler2D LayerMaskMap;
 uniform sampler2D DisplacementMap;

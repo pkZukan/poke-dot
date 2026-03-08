@@ -4,7 +4,7 @@ using namespace godot;
 
 void TrinityAnimationConverter::_bind_methods() {
     ClassDB::bind_static_method("TrinityAnimationConverter",
-        D_METHOD("convert_to_godot_animation", "path", "anim_file", "skl", "skl_path"),
+        D_METHOD("convert_to_godot_animation", "anim_file", "skl", "skl_path"),
         &TrinityAnimationConverter::convert_to_godot_animation
     );
 }
@@ -56,7 +56,7 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
         godot_anim->track_set_path(scale_track, bone_path);
         godot_anim->track_set_interpolation_type(scale_track, Animation::INTERPOLATION_CUBIC);
 
-        if (bt == Ref<BoneTrack>()) 
+        if (!bt.is_valid()) 
         {
             // No animation - use rest pose
             godot_anim->track_insert_key(pos_track, 0.0, rest_loc);
@@ -92,10 +92,11 @@ Ref<BoneTrack> TrinityAnimationConverter::get_bone_track(
     for (int i = 0; i < tracks.size(); i++) 
     {
         Ref<BoneTrack> bt = tracks[i];
-        if (bt.is_valid() && bt->get_Name() == bone_name)
+        if (bt.is_valid() && (bt->get_Name() == bone_name))
             return bt;
     }
-    return Ref<BoneTrack>();
+
+    return nullptr;
 }
 
 void TrinityAnimationConverter::sample_vector_track(

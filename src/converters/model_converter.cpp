@@ -78,6 +78,7 @@ Dictionary TrinityModel::parse_mesh_buffer(
     PackedVector2Array  uv;
     PackedInt32Array    indices, blend_inds;
     PackedFloat32Array  blend_weights;
+    PackedVector4Array  tangents;
 
     Array strides = accessor_table->get_Strides();
     Ref<SizeTable> stride_obj = strides[0];
@@ -130,6 +131,14 @@ Dictionary TrinityModel::parse_mesh_buffer(
                 blend_inds.push_back(stream_vert->get_8());
                 blend_inds.push_back(stream_vert->get_8());
                 blend_inds.push_back(stream_vert->get_8());
+            }
+            else if (attr_name == "TANGENT") 
+            {
+                float x = Utils::half_to_float(stream_vert->get_u16());
+                float y = Utils::half_to_float(stream_vert->get_u16());
+                float z = Utils::half_to_float(stream_vert->get_u16());
+                float w = Utils::half_to_float(stream_vert->get_u16());
+                tangents.push_back(Vector4(x, y, z, w));
             } 
             else if (attr_name == "BLEND_WEIGHTS") 
             {
@@ -178,6 +187,8 @@ Dictionary TrinityModel::parse_mesh_buffer(
     result["Indicies"]     = indices;
     result["BlendInds"]    = blend_inds;
     result["BlendWeights"] = blend_weights;
+    result["Tangents"]     = tangents;
+    
     return result;
 }
 
@@ -338,7 +349,7 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
 
     add_child(skl);
     skl->reset_bone_poses();
-    
+
     Array result;
     result.push_back(skl);
     result.push_back(skin);
@@ -393,12 +404,26 @@ void TrinityModel::_build_meshes(
 
             Array arr;
             arr.resize(Mesh::ARRAY_MAX);
-            arr[Mesh::ARRAY_VERTEX]  = result["Pos"];
-            arr[Mesh::ARRAY_NORMAL]  = result["Norm"];
-            arr[Mesh::ARRAY_TEX_UV]  = result["UV"];
-            arr[Mesh::ARRAY_INDEX]   = result["Indicies"];
-            arr[Mesh::ARRAY_BONES]   = result["BlendInds"];
-            arr[Mesh::ARRAY_WEIGHTS] = result["BlendWeights"];
+            PackedVector3Array pos = result["Pos"];
+            if(!pos.is_empty()) arr[Mesh::ARRAY_VERTEX] = pos;
+
+            PackedVector3Array norm = result["Norm"];
+            if(!norm.is_empty()) arr[Mesh::ARRAY_NORMAL] = norm;
+
+            PackedVector2Array uv = result["UV"];
+            if(!uv.is_empty()) arr[Mesh::ARRAY_TEX_UV] = uv;
+
+            PackedInt32Array indices = result["Indicies"];
+            if(!indices.is_empty()) arr[Mesh::ARRAY_INDEX] = indices;
+
+            PackedInt32Array blend_inds = result["BlendInds"];
+            if(!blend_inds.is_empty()) arr[Mesh::ARRAY_BONES] = blend_inds;
+
+            PackedFloat32Array blend_weights = result["BlendWeights"];
+            if(!blend_weights.is_empty()) arr[Mesh::ARRAY_WEIGHTS] = blend_weights;
+
+            //PackedVector4Array tangents = result["Tangents"];
+            //if(!tangents.is_empty()) arr[Mesh::ARRAY_TANGENT] = tangents;
 
             Ref<ArrayMesh> arr_mesh;
             arr_mesh.instantiate();
@@ -407,11 +432,13 @@ void TrinityModel::_build_meshes(
             MeshInstance3D* mi = memnew(MeshInstance3D);
             add_child(mi);
 
-            mi->set_skin(skin);
             mi->set_name(mesh_name + "_" + material_name);
             mi->set_mesh(arr_mesh);
             mi->set_material_override(materials.get(material_name, Variant()));
-            mi->set_skeleton_path(NodePath("../" + skl->get_name()));
+            if(skin.is_valid())
+                mi->set_skin(skin);
+            if(skl)
+                mi->set_skeleton_path(NodePath("../" + skl->get_name()));
         }
     }
 }
@@ -422,17 +449,41 @@ void TrinityModel::_build_meshes(
 void TrinityModel::load_model(String path, String file) {
     ResourceLoader* rl = ResourceLoader::get_singleton();
 
+    //Model
     Ref<TRModel> mdl  = rl->load(path.path_join(file));
-    Ref<TRMesh> mesh = rl->load(path.path_join((String)mdl->get_Meshes()[0]));
-    Ref<TRModelBuffer> buff = rl->load(path.path_join((String)mesh->get_BufferName()));
-    Ref<TRSkeleton> skel = rl->load(path.path_join((String)mdl->get_Skeleton()));
+
+    //Mesh
+    Ref<TRMesh> mesh;
+    String meshPath = mdl->get_Meshes()[0];
+    if(!meshPath.is_empty())
+        mesh = rl->load(path.path_join(meshPath));
+
+    //Buffer
+    Ref<TRModelBuffer> buff;
+    String buffPath = mesh->get_BufferName();
+    if(!buffPath.is_empty())
+        buff = rl->load(path.path_join(buffPath));
+
+    //Skeleton
+    Ref<TRSkeleton> skel;
+    Array skel_result;
+    String skelPath = mdl->get_Skeleton();
+    if(!skelPath.is_empty())
+    {
+        skel = rl->load(path.path_join(skelPath));
+        skel_result = _build_skeleton(skel);
+    }
 
     Dictionary materials = _load_materials(path, mdl->get_Materials());
-    Array skel_result = _build_skeleton(skel);
 
-    Skeleton3D* skl = Object::cast_to<Skeleton3D>(skel_result[0]);
-    Ref<Skin> skn = skel_result[1];
-
-    //print_bone_tree_compact(skl);
+    Skeleton3D* skl;
+    Ref<Skin> skn;
+    if(skel_result.size() > 0)
+    {
+        skel = Object::cast_to<Skeleton3D>(skel_result[0]);
+        skn = skel_result[1];
+        //print_bone_tree_compact(skl);
+    }
+    
     _build_meshes(mesh, buff, materials, skl, skn);
 }

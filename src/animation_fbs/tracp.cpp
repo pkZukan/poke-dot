@@ -54,64 +54,75 @@ void TRAnimationChannelParams::LoadFromFile(String file)
     auto tbl = tracp->table();
 
     auto anims = tbl->int_params();
-    Array _arr_anim;
-    for (size_t i = 0; i < anims->size(); i++) {
-        auto anim = anims->Get(i);
+    if(anims)
+    {
+        Array _arr_anim;
+        for (size_t i = 0; i < anims->size(); i++) {
+            auto anim = anims->Get(i);
 
-        Ref<AnimationChannelParamInt> obj;
-        obj.instantiate();
-        obj->set_Name(Utils::toGodotString(anim->name()));
-        obj->set_min(anim->min());
-        obj->set_max(anim->max());
-        obj->set_default_val(anim->default_val());
+            Ref<AnimationChannelParamInt> obj;
+            obj.instantiate();
+            obj->set_Name(Utils::toGodotString(anim->name()));
+            obj->set_min(anim->min());
+            obj->set_max(anim->max());
+            obj->set_default_val(anim->default_val());
 
-        _arr_anim.append(obj);
+            _arr_anim.append(obj);
+        }
+        table->set_animations(_arr_anim);
     }
 
     auto moves = tbl->float_params();
-    Array _arr_move;
-    for (size_t i = 0; i < moves->size(); i++) {
-        auto move = moves->Get(i);
+    if(moves)
+    {
+        Array _arr_move;
+        for (size_t i = 0; i < moves->size(); i++) {
+            auto move = moves->Get(i);
 
-        Ref<AnimationChannelParamFloat> obj;
-        obj.instantiate();
-        obj->set_Name(Utils::toGodotString(move->name()));
-        obj->set_min(move->min());
-        obj->set_max(move->max());
-        obj->set_default_val(move->default_val());
+            Ref<AnimationChannelParamFloat> obj;
+            obj.instantiate();
+            obj->set_Name(Utils::toGodotString(move->name()));
+            obj->set_min(move->min());
+            obj->set_max(move->max());
+            obj->set_default_val(move->default_val());
 
-        _arr_move.append(obj);
+            _arr_move.append(obj);
+        }
+        table->set_moves(_arr_move);
     }
 
     auto switches = tbl->bool_params();
-    Array _arr_switch;
-    for (size_t i = 0; i < switches->size(); i++) {
-        auto swit = switches->Get(i);
+    if(switches)
+    {
+        Array _arr_switch;
+        for (size_t i = 0; i < switches->size(); i++) {
+            auto swit = switches->Get(i);
 
-        Ref<AnimationChannelParamBool> obj;
-        obj.instantiate();
-        obj->set_Name(Utils::toGodotString(swit->name()));
-        obj->set_Val(swit->val());
+            Ref<AnimationChannelParamBool> obj;
+            obj.instantiate();
+            obj->set_Name(Utils::toGodotString(swit->name()));
+            obj->set_Val(swit->val());
 
-        _arr_switch.append(obj);
+            _arr_switch.append(obj);
+        }
+        table->set_switches(_arr_switch);
     }
 
     auto trigs = tbl->triggers();
-    Array _arr_trig;
-    for (size_t i = 0; i < trigs->size(); i++) {
-        auto trig = trigs->Get(i);
+    if(trigs)
+    {
+        Array _arr_trig;
+        for (size_t i = 0; i < trigs->size(); i++) {
+            auto trig = trigs->Get(i);
 
-        Ref<AnimationChannelParamTrigger> obj;
-        obj.instantiate();
-        obj->set_Name(Utils::toGodotString(trig->name()));
+            Ref<AnimationChannelParamTrigger> obj;
+            obj.instantiate();
+            obj->set_Name(Utils::toGodotString(trig->name()));
 
-        _arr_trig.append(obj);
+            _arr_trig.append(obj);
+        }
+        table->set_triggers(_arr_trig);
     }
-    
-    table->set_animations(_arr_anim);
-    table->set_moves(_arr_move);
-    table->set_switches(_arr_switch);
-    table->set_triggers(_arr_trig);
 }
 
 Variant ResourceFormatLoaderTRACP::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const

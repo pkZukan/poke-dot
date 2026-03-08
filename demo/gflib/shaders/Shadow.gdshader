@@ -22,13 +22,6 @@ void vertex() {
 
 void fragment() {
 	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
-	float ao_factor = 1.0;
-	if(EnableAOMap) ao_factor = texture(AOMap, uvs).r; 
-	ALBEDO = texture(BaseColorMap, uvs).rgb * ao_factor;
+	ALBEDO = texture(BaseColorMap, uvs).rgb;
 	NORMAL_MAP = texture(NormalMap, uvs).rgb;
 }
-
-//void light() {
-	// Called for every pixel for every light affecting the material.
-	// Uncomment to replace the default light processing function with this one.
-//}
