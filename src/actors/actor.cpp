@@ -56,7 +56,7 @@ void ActorObj::Initialize()
     //
 }
 
-void ActorObj::LoadActor(String mdlFile, Ref<AnimationResourceInfo> animInfo)
+void ActorObj::LoadActor(String mdlFile, String animPath)
 {
     _cleanup();
 
@@ -70,7 +70,7 @@ void ActorObj::LoadActor(String mdlFile, Ref<AnimationResourceInfo> animInfo)
 
     //Create and add AnimationPlayer/AnimationLibrary
     _setup_animation();
-    _load_animations(animInfo);
+    _load_animations(animPath);
 
     //Debug skeleton
     if(debug_skel)
@@ -204,11 +204,13 @@ void ActorObj::_load_animation_motion_detector(String filepath)
     //
 }
 
-void ActorObj::_load_animations(Ref<AnimationResourceInfo> animInfo)
+void ActorObj::_load_animations(String animPath)
 {
+    if(animPath.is_empty()) return;
+    
     //Load TRACN
     String base_path = "res://Assets/ik_pokemon/data";
-    String tracn_file = base_path.path_join(animInfo->get_path());
+    String tracn_file = base_path.path_join(animPath);
     tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
     String pokeBase = tracn_file.get_base_dir();
     Ref<TRAnimationChannelNames> tracn = ResourceLoader::get_singleton()->load(tracn_file);

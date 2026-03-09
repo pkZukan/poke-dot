@@ -27,6 +27,7 @@ void PokemonEntity::Initialize()
     String relMdlPath = catEnt->get_model_path();
     _species_path = base_path.path_join(relMdlPath.get_base_dir());
     String _species_mdl = relMdlPath.get_file();
-
-    LoadActor(_species_path.path_join(_species_mdl), catEnt->get_animations()[0]);
+    Ref<AnimationResourceInfo> animInfo = catEnt->get_animations()[0];
+    
+    LoadActor(_species_path.path_join(_species_mdl), animInfo->get_path());
 }

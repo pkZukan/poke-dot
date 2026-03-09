@@ -14,8 +14,8 @@
 
 namespace godot {
 
-class ActorObj: public Node {
-    GDCLASS(ActorObj, Node)
+class ActorObj: public Node3D {
+    GDCLASS(ActorObj, Node3D)
 protected:
     static void _bind_methods();
 
@@ -28,7 +28,7 @@ public:
     void _exit_tree() override;
 
     virtual void Initialize();
-    virtual void LoadActor(String mdlFile, Ref<AnimationResourceInfo> animInfo);
+    virtual void LoadActor(String mdlFile, String animPath);
 
     virtual void PlayAnim(String name);
     virtual TypedArray<StringName> GetAnimationList();
@@ -51,7 +51,7 @@ private:
     void _load_animation_look_at(String filepath);
     void _load_animation_slope_orientor(String filepath);
     void _load_animation_motion_detector(String filepath);
-    void _load_animations(Ref<AnimationResourceInfo> animInfo);
+    void _load_animations(String animPath);
 
     //Debug
     bool debug_skel = false;

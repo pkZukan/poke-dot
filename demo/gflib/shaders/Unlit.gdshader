@@ -10,17 +10,14 @@ uniform int NumMaterialLayer;
 uniform bool EnableDisplacementMap;
 uniform int NumRequiredUV;
 
-void vertex() {
+void vertex() 
+{
 	//
 }
 
-void fragment() {
+void fragment() 
+{
 	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
 	if(EnableBaseColorMap)
 		ALBEDO = texture(BaseColorMap, uvs).rgb;
 }
-
-//void light() {
-	// Called for every pixel for every light affecting the material.
-	// Uncomment to replace the default light processing function with this one.
-//}
