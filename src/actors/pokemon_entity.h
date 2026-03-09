@@ -21,7 +21,7 @@ protected:
     static void _bind_methods();
 
 public:
-    PokemonEntity() = default;
+    PokemonEntity();
     ~PokemonEntity() = default;
 
     GETTER_SETTER_DEFINE(int, species)

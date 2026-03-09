@@ -15,19 +15,22 @@ void PokemonEntity::_bind_methods() {
     GETTER_SETTER_BIND(PokemonEntity, gender, Variant::INT, PROPERTY_HINT_NONE)
 
     ClassDB::bind_method(D_METHOD("Initialize"), &PokemonEntity::Initialize);
-    ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &ActorObj::PlayAnim);
-    ClassDB::bind_method(D_METHOD("GetAnimationList"), &ActorObj::GetAnimationList);
+}
+
+PokemonEntity::PokemonEntity()
+{
+    base_path = "res://Assets/ik_pokemon/data";
+
 }
 
 void PokemonEntity::Initialize()
 {
     Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
 
-    String base_path = "res://Assets/ik_pokemon/data";
     String relMdlPath = catEnt->get_model_path();
     _species_path = base_path.path_join(relMdlPath.get_base_dir());
     String _species_mdl = relMdlPath.get_file();
     Ref<AnimationResourceInfo> animInfo = catEnt->get_animations()[0];
     
-    LoadActor(_species_path.path_join(_species_mdl), animInfo->get_path());
+    LoadActor(_species_path.path_join(_species_mdl), base_path.path_join(animInfo->get_path()));
 }

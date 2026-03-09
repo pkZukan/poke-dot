@@ -28,10 +28,14 @@ public:
     void _exit_tree() override;
 
     virtual void Initialize();
-    virtual void LoadActor(String mdlFile, String animPath);
+    virtual void LoadActor(String mdlFile, String animFile);
 
     virtual void PlayAnim(String name);
     virtual TypedArray<StringName> GetAnimationList();
+
+protected:
+    bool debug_skel = false;
+    String base_path;
 
 private:
     AnimationPlayer* _anim_player = nullptr;
@@ -51,10 +55,9 @@ private:
     void _load_animation_look_at(String filepath);
     void _load_animation_slope_orientor(String filepath);
     void _load_animation_motion_detector(String filepath);
-    void _load_animations(String animPath);
+    void _load_animations(String tracn_file);
 
     //Debug
-    bool debug_skel = false;
     MeshInstance3D* _debug_mesh = nullptr;
     Ref<ImmediateMesh> _imm_mesh;
 };

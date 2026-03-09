@@ -205,6 +205,7 @@ Dictionary TrinityModel::_load_materials(const String& path, const Array& materi
             Ref<ShaderMaterial> shdr = _build_shader_material(mat);
             _apply_textures(path, mat, shdr);
             _apply_params(mat, shdr);
+            _apply_samplers(mat, shdr);
             materials[mat->get("Name")] = shdr;
         }
     }
@@ -246,8 +247,9 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
 // ---------------------------------------------------------------------------
 // _apply_textures
 // ---------------------------------------------------------------------------
-void TrinityModel::_apply_textures(const String& path, const Ref<Resource>& mat, Ref<ShaderMaterial> shdr) {
-    Array textures = mat->get("Textures");
+void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
+{
+    Array textures = mat->get_Textures();
     for (int i = 0; i < textures.size(); i++) {
         Ref<Resource> t = textures[i];
         String file = t->get("File");
@@ -272,7 +274,8 @@ void TrinityModel::_apply_textures(const String& path, const Ref<Resource>& mat,
 // ---------------------------------------------------------------------------
 // _apply_params
 // ---------------------------------------------------------------------------
-void TrinityModel::_apply_params(const Ref<Resource>& mat, Ref<ShaderMaterial> shdr) {
+void TrinityModel::_apply_params(const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
+{
     auto apply = [&](const String& key) {
         Array params = mat->get(key);
         for (int i = 0; i < params.size(); i++) {
@@ -286,12 +289,30 @@ void TrinityModel::_apply_params(const Ref<Resource>& mat, Ref<ShaderMaterial> s
     apply("IntParams");
 }
 
+void TrinityModel::_apply_samplers(const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
+{
+    //Hacky way to set sampler data because we cant access slots directly
+    Array samps = mat->get_Samplers();
+    int size = samps.size();
+    PackedInt32Array repeat_u, repeat_v;
+    repeat_u.resize(size);
+    repeat_v.resize(size);
+    for(int slot = 0; slot < samps.size(); slot++)
+    {
+        Ref<SamplerEntry> samp = samps[slot];
+        repeat_u[slot] = samp->get_RepeatU();
+        repeat_v[slot] = samp->get_RepeatV();
+    }
+    shdr->set_shader_parameter("sampler_repeat_u", repeat_u);
+    shdr->set_shader_parameter("sampler_repeat_v", repeat_v);
+}
+
 // ---------------------------------------------------------------------------
 // _build_skeleton
 // ---------------------------------------------------------------------------
-Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
-    Skeleton3D* skl = memnew(Skeleton3D);
-    Ref<Skin> skin;
+void TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel, Skeleton3D*& skl, Ref<Skin>& skin) 
+{
+    skl = memnew(Skeleton3D);
     skin.instantiate();
 
     Array transform_nodes = skel->get_TransformNodes();
@@ -337,21 +358,12 @@ Array TrinityModel::_build_skeleton(const Ref<TRSkeleton>& skel) {
                 //
             }
         } 
-        else 
-        {
-            skin->add_named_bind(bone_name, Transform3D());
-        }
 
         bone_idx++;
     }
 
     add_child(skl);
     skl->reset_bone_poses();
-
-    Array result;
-    result.push_back(skl);
-    result.push_back(skin);
-    return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -462,26 +474,21 @@ void TrinityModel::load_model(String path, String file) {
     if(!buffPath.is_empty())
         buff = rl->load(path.path_join(buffPath));
 
+    //Material
+    Dictionary materials = _load_materials(path, mdl->get_Materials());
+
     //Skeleton
     Ref<TRSkeleton> skel;
+    Ref<Skin> skin;
+    Skeleton3D* skl = nullptr;
     Array skel_result;
     String skelPath = mdl->get_Skeleton();
     if(!skelPath.is_empty())
     {
         skel = rl->load(path.path_join(skelPath));
-        skel_result = _build_skeleton(skel);
-    }
-
-    Dictionary materials = _load_materials(path, mdl->get_Materials());
-
-    Skeleton3D* skl;
-    Ref<Skin> skn;
-    if(skel_result.size() > 0)
-    {
-        skel = Object::cast_to<Skeleton3D>(skel_result[0]);
-        skn = skel_result[1];
+        _build_skeleton(skel, skl, skin);
         //print_bone_tree_compact(skl);
     }
     
-    _build_meshes(mesh, buff, materials, skl, skn);
+    _build_meshes(mesh, buff, materials, skl, skin);
 }

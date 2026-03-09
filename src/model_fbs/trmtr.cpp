@@ -48,9 +48,9 @@ void SamplerEntry::_bind_methods()
     GETTER_SETTER_BIND(SamplerEntry, SamplerState_6, Variant::FLOAT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(SamplerEntry, SamplerState_7, Variant::FLOAT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(SamplerEntry, SamplerState_8, Variant::FLOAT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(SamplerEntry, RepeatU, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(SamplerEntry, RepeatV, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(SamplerEntry, RepeatW, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(SamplerEntry, RepeatU, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(SamplerEntry, RepeatV, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(SamplerEntry, RepeatW, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(SamplerEntry, BorderColor, Variant::COLOR, PROPERTY_HINT_NONE)
 }
 
@@ -162,9 +162,9 @@ void TRMaterial::LoadFromFile(String file)
             sampEnt->set_SamplerState_6(samplers->Get(j)->SamplerState_6());
             sampEnt->set_SamplerState_7(samplers->Get(j)->SamplerState_7());
             sampEnt->set_SamplerState_8(samplers->Get(j)->SamplerState_8());
-            sampEnt->set_RepeatU(String(Titan::Model::EnumNameUVWrapMode(samplers->Get(j)->repeat_u())));
-            sampEnt->set_RepeatV(String(Titan::Model::EnumNameUVWrapMode(samplers->Get(j)->repeat_v())));
-            sampEnt->set_RepeatW(String(Titan::Model::EnumNameUVWrapMode(samplers->Get(j)->repeat_w())));
+            sampEnt->set_RepeatU(samplers->Get(j)->repeat_u());
+            sampEnt->set_RepeatV(samplers->Get(j)->repeat_v());
+            sampEnt->set_RepeatW(samplers->Get(j)->repeat_w());
             Color bc;
             bc.r = samplers->Get(j)->border_color()->r();
             bc.g = samplers->Get(j)->border_color()->g();

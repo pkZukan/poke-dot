@@ -9,8 +9,10 @@
 
 using namespace godot;
 
-void ActorObj::_bind_methods() {
-    //
+void ActorObj::_bind_methods() 
+{
+    ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &ActorObj::PlayAnim);
+    ClassDB::bind_method(D_METHOD("GetAnimationList"), &ActorObj::GetAnimationList);
 }
 
 void ActorObj::_ready() {
@@ -56,10 +58,10 @@ void ActorObj::Initialize()
     //
 }
 
-void ActorObj::LoadActor(String mdlFile, String animPath)
+void ActorObj::LoadActor(String mdlFile, String animFile)
 {
     _cleanup();
-
+    
     String base_path = mdlFile.get_base_dir();
     String filename = mdlFile.get_file();  
 
@@ -70,7 +72,7 @@ void ActorObj::LoadActor(String mdlFile, String animPath)
 
     //Create and add AnimationPlayer/AnimationLibrary
     _setup_animation();
-    _load_animations(animPath);
+    _load_animations(animFile);
 
     //Debug skeleton
     if(debug_skel)
@@ -157,6 +159,7 @@ void ActorObj::_load_animation_resource(String filepath)
     {
         Ref<TRAnimationTrack> track = list[i];
         String name = track->get_Name();
+        
         Ref<TRAnimationTrackResourceTable> res = track->get_Resources();
         Ref<TRAnimationTrackResource> anim = res->get_animation();
         if(anim.is_valid())
@@ -204,13 +207,11 @@ void ActorObj::_load_animation_motion_detector(String filepath)
     //
 }
 
-void ActorObj::_load_animations(String animPath)
+void ActorObj::_load_animations(String tracn_file)
 {
-    if(animPath.is_empty()) return;
+    if(tracn_file.is_empty()) return;
     
     //Load TRACN
-    String base_path = "res://Assets/ik_pokemon/data";
-    String tracn_file = base_path.path_join(animPath);
     tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
     String pokeBase = tracn_file.get_base_dir();
     Ref<TRAnimationChannelNames> tracn = ResourceLoader::get_singleton()->load(tracn_file);

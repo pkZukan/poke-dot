@@ -122,9 +122,9 @@ public:
 	GETTER_SETTER_DEFINE(float, SamplerState_6)
 	GETTER_SETTER_DEFINE(float, SamplerState_7)
 	GETTER_SETTER_DEFINE(float, SamplerState_8)
-	GETTER_SETTER_DEFINE(String, RepeatU)
-	GETTER_SETTER_DEFINE(String, RepeatV)
-	GETTER_SETTER_DEFINE(String, RepeatW)
+	GETTER_SETTER_DEFINE(int, RepeatU)
+	GETTER_SETTER_DEFINE(int, RepeatV)
+	GETTER_SETTER_DEFINE(int, RepeatW)
 	GETTER_SETTER_DEFINE(Color, BorderColor)
 
 private:
@@ -137,9 +137,9 @@ private:
 	float SamplerState_6;
 	float SamplerState_7;
 	float SamplerState_8;
-	String RepeatU;
-	String RepeatV;
-	String RepeatW;
+	int RepeatU;
+	int RepeatV;
+	int RepeatW;
 	Color BorderColor;
 };
 

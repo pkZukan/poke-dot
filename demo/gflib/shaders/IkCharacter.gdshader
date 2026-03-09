@@ -14,6 +14,14 @@ uniform sampler2D ParallaxMap   : hint_default_black;
 uniform sampler2D HighlightMaskMap : source_color, hint_default_black;
 uniform sampler2D EyelidShadowMaskMap      : hint_default_white;
 
+//Hacky way to set sampler data because we cant access slots directly
+uniform int sampler_repeat_u[12];
+uniform int sampler_repeat_v[12];
+const int UV_WRAP = 0;
+const int UV_CLAMP = 1;
+const int UV_MIRROR = 6;
+const int UV_MIRROR_ONCE = 7;
+
 //Shader strings (as bool)
 uniform bool EnableBaseColorMap;
 uniform bool EnableNormalMap;
@@ -114,21 +122,31 @@ uniform int UVIndexAO;
 uniform int EnableAdditionalLight;
 uniform int UVIndexLayerMask;
 
-void vertex() {
+void vertex() 
+{
     //
 }
 
-void fragment() {
-	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
+vec2 get_uv(vec2 uvs, int slot) 
+{
+    vec2 result = uvs;
+    
+	//flip
+	result.y = 1.0 - result.y;
 	
-	vec4 layerMask = texture(LayerMaskMap, uvs);
+    return result;
+}
+
+void fragment() 
+{	
+	vec4 layerMask = texture(LayerMaskMap, get_uv(UV, 8));
 	layerMask = mix(vec4(0.0), layerMask, vec4(1.0));
 
 	//Albedo
 	vec3 base_col = vec3(1, 1, 1);
 	if (EnableBaseColorMap)
 	{
-		vec3 baseColMap = texture(BaseColorMap, uvs).rgb;
+		vec3 baseColMap = texture(BaseColorMap, get_uv(UV, 0)).rgb;
 		base_col.rgb = mix(base_col.rgb, BaseColorLayer1.rgb * baseColMap, layerMask.r);
 		base_col.rgb = mix(base_col.rgb, BaseColorLayer2.rgb * baseColMap, layerMask.g);
 		base_col.rgb = mix(base_col.rgb, BaseColorLayer3.rgb * baseColMap, layerMask.b);
@@ -138,24 +156,24 @@ void fragment() {
 	//AO
     float ao = 1.0;
     if (EnableAOMap)
-        ao = pow(texture(OcclusionMap, uvs).r, max(OcclusionStrength, 0.001));
+        ao = pow(texture(OcclusionMap, get_uv(UV, 2)).r, max(OcclusionStrength, 0.001));
 
     //Normal
     vec3 norm = vec3(0.5, 0.5, 1.0); // flat normal default
     if (EnableNormalMap)
-        norm = texture(NormalMap, uvs).rgb;
+        norm = texture(NormalMap, get_uv(UV, 1)).rgb;
 
     //Specular/metallic/roughness
     float specular = 0.5;
     float metallic = 0.0;
     float roughness = 0.8;
     if (EnableHairSpecular) {
-        vec4 spec_mask = texture(SpecularMaskMap, uvs);
+        vec4 spec_mask = texture(SpecularMaskMap, get_uv(UV, 3));
         specular  = spec_mask.r ;
         roughness = 1.0 - spec_mask.g;
         metallic  = spec_mask.b;
     } else {
-        float spec_mask = texture(SpecularMaskMap, uvs).r;
+        float spec_mask = texture(SpecularMaskMap, get_uv(UV, 3)).r;
         specular  = spec_mask;
         roughness = 1.0 - spec_mask;
     }

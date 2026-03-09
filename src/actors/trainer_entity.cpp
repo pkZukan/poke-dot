@@ -13,8 +13,6 @@ void TrainerEntity::_bind_methods() {
     GETTER_SETTER_BIND(TrainerEntity, id, Variant::INT, PROPERTY_HINT_NONE)
 
     ClassDB::bind_method(D_METHOD("Initialize"), &TrainerEntity::Initialize);
-    ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &ActorObj::PlayAnim);
-    ClassDB::bind_method(D_METHOD("GetAnimationList"), &ActorObj::GetAnimationList);
 }
 
 void TrainerEntity::Initialize()

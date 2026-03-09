@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/skeleton3d.hpp>
 #include <godot_cpp/classes/skin.hpp>
 #include <godot_cpp/classes/shader_material.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/script.hpp>
 #include "model_fbs/trmdl.h"
@@ -34,9 +35,10 @@ public:
 private:
     Dictionary _load_materials(const String& path, const Array& material_files);
     Ref<ShaderMaterial> _build_shader_material(const Ref<MaterialEntry>& mat);
-    void _apply_textures(const String& path, const Ref<Resource>& mat, Ref<ShaderMaterial> shdr);
-    void _apply_params(const Ref<Resource>& mat, Ref<ShaderMaterial> shdr);
-    Array _build_skeleton(const Ref<TRSkeleton>& skel);
+    void _apply_textures(const String& path, const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr);
+    void _apply_params(const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr);
+    void _apply_samplers(const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) ;
+    void _build_skeleton(const Ref<TRSkeleton>& skel, Skeleton3D*& skl, Ref<Skin>& skin);
     PackedInt32Array _flip_faces(const PackedInt32Array& indices);
     void _build_meshes(const Ref<TRMesh>& mesh, const Ref<TRModelBuffer>& buff, const Dictionary& materials, Skeleton3D* skl, const Ref<Skin>& skin);
 
