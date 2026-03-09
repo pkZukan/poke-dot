@@ -15,27 +15,22 @@
 
 namespace godot {
 
-class PokemonEntity : public ActorObj {
-    GDCLASS(PokemonEntity, ActorObj)
+class PokemonActor : public ActorObj {
+    GDCLASS(PokemonActor, ActorObj)
 protected:
     static void _bind_methods();
 
 public:
-    PokemonEntity();
-    ~PokemonEntity() = default;
+    PokemonActor();
+    ~PokemonActor() = default;
 
-    GETTER_SETTER_DEFINE(int, species)
-    GETTER_SETTER_DEFINE(uint8_t, form)
-    GETTER_SETTER_DEFINE(uint8_t, gender)
+    void SetInfo(Ref<CatalogEntry> catalog);
 
     void Initialize() override;
 
 private:
-    int species = 0;
-    uint8_t form = 0;
-    uint8_t gender = 0;
-
     String _species_path, _species_str;
+    Ref<CatalogEntry> _catalog;
 };
 
 } // namespace godot

@@ -1,9 +1,8 @@
 @tool
 extends Node
 
-@onready var pkmn = $PokemonEntity
-
 func _ready():	
+	
 	#Load static objects
 	$Lamp.load_model("res://Assets/field/model/t1/t1_ar/t1_ar001", "t1_ar001.trmdl")
 	$Landscape/Enkei.load_model("res://Assets/field/model/env/enkei/enkei1", "enkei_landscape1.trmdl")
@@ -12,7 +11,3 @@ func _ready():
 	$Mountains/Enkei2.load_model("res://Assets/field/model/env/enkei/enkei1", "enkei_mountains2.trmdl")
 	$Mountains/Range.load_model("res://Assets/field/model/env/enkei/enkei1", "enkei_mountain_range.trmdl")
 	$Sky/Sky1.load_model("res://Assets/field/model/env/sky/sky1", "sky1.trmdl")
-	
-	pkmn.species = 5
-	pkmn.Initialize()
-	pkmn.PlayAnim("00300_roar01")

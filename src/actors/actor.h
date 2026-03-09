@@ -23,10 +23,6 @@ public:
     ActorObj() = default;
     ~ActorObj() = default;
 
-    void _ready() override;
-    void _process(double delta) override;
-    void _exit_tree() override;
-
     virtual void Initialize();
     virtual void LoadActor(String mdlFile, String animFile);
 
@@ -36,6 +32,8 @@ public:
 protected:
     bool debug_skel = false;
     String base_path;
+
+    void DebugDrawSkeleton();
 
 private:
     AnimationPlayer* _anim_player = nullptr;

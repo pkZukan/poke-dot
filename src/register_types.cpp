@@ -16,8 +16,9 @@
 #include "actors/pokemon_catalog.h"
 
 #include "actors/actor.h"
-#include "actors/pokemon_entity.h"
+#include "actors/pokemon_actor.h"
 #include "actors/trainer_entity.h"
+#include "characters/pokemon_character.h"
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
 
@@ -132,8 +133,9 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		//Entities
 		GDREGISTER_CLASS(ActorObj)
-		GDREGISTER_CLASS(PokemonEntity)
+		GDREGISTER_CLASS(PokemonActor)
 		GDREGISTER_CLASS(TrainerEntity)
+		GDREGISTER_CLASS(PokemonCharacter)
 		GDREGISTER_CLASS(TrinityAnimationConverter)
 		GDREGISTER_CLASS(TrinityModel)
 

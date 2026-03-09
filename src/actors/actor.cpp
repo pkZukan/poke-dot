@@ -15,44 +15,6 @@ void ActorObj::_bind_methods()
     ClassDB::bind_method(D_METHOD("GetAnimationList"), &ActorObj::GetAnimationList);
 }
 
-void ActorObj::_ready() {
-    //
-}
-
-void ActorObj::_process(double delta) {
-    //Debug skeleton
-    if(debug_skel)
-    {
-        if (!_skeleton || !_imm_mesh.is_valid()) return;
-        
-        _imm_mesh->clear_surfaces();
-        _imm_mesh->surface_begin(Mesh::PRIMITIVE_LINES);
-        
-        for (int i = 0; i < _skeleton->get_bone_count(); i++) {
-            int parent = _skeleton->get_bone_parent(i);
-            if (parent < 0) continue;
-            
-            Transform3D bone_global  = _skeleton->get_bone_global_pose(i);
-            Transform3D parent_global = _skeleton->get_bone_global_pose(parent);
-            
-            Vector3 bone_pos   = _skeleton->get_global_transform().xform(bone_global.origin);
-            Vector3 parent_pos = _skeleton->get_global_transform().xform(parent_global.origin);
-            
-            _imm_mesh->surface_set_color(Color(1, 1, 0));
-            _imm_mesh->surface_add_vertex(parent_pos);
-            _imm_mesh->surface_add_vertex(bone_pos);
-        }
-        
-        _imm_mesh->surface_end();
-    }
-}
-
-void ActorObj::_exit_tree() 
-{
-    _cleanup();
-    Node::_exit_tree();
-}
-
 void ActorObj::Initialize()
 {
     //
@@ -275,4 +237,37 @@ Skeleton3D* ActorObj::_find_skeleton(Node* node) {
         if (result) return result;
     }
     return nullptr;
+}
+
+/*
+*   Debug 
+*/
+
+void ActorObj::DebugDrawSkeleton() 
+{
+    //Debug skeleton
+    if(debug_skel)
+    {
+        if (!_skeleton || !_imm_mesh.is_valid()) return;
+        
+        _imm_mesh->clear_surfaces();
+        _imm_mesh->surface_begin(Mesh::PRIMITIVE_LINES);
+        
+        for (int i = 0; i < _skeleton->get_bone_count(); i++) {
+            int parent = _skeleton->get_bone_parent(i);
+            if (parent < 0) continue;
+            
+            Transform3D bone_global  = _skeleton->get_bone_global_pose(i);
+            Transform3D parent_global = _skeleton->get_bone_global_pose(parent);
+            
+            Vector3 bone_pos   = _skeleton->get_global_transform().xform(bone_global.origin);
+            Vector3 parent_pos = _skeleton->get_global_transform().xform(parent_global.origin);
+            
+            _imm_mesh->surface_set_color(Color(1, 1, 0));
+            _imm_mesh->surface_add_vertex(parent_pos);
+            _imm_mesh->surface_add_vertex(bone_pos);
+        }
+        
+        _imm_mesh->surface_end();
+    }
 }
