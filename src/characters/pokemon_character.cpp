@@ -104,7 +104,13 @@ void PokemonCharacter::Idle()
 void PokemonCharacter::Walk(float dir)
 {
     _travel("00030_walk01_loop");
-    _anim_tree->set("parameters/walk_speed/scale", dir);
+    
+    Ref<AnimationNodeAnimation> anim_node = _anim_sm->get_node("00030_walk01_loop");
+    if (anim_node.is_valid()) {
+        anim_node->set_play_mode(dir >= 0 
+            ? AnimationNodeAnimation::PLAY_MODE_FORWARD 
+            : AnimationNodeAnimation::PLAY_MODE_BACKWARD);
+    }
 }
 
 void PokemonCharacter::Run()

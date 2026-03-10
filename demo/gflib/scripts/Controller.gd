@@ -7,7 +7,6 @@ extends Node
 @export_category("Control sensitivity")
 @export var mouse_sensitivity: float = 0.2
 @export var look_speed: float = 0.1
-@export var move_speed: float = 2.0
 
 func _ready():	
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -24,7 +23,7 @@ func _input(event) -> void:
 func _process(_delta: float) -> void:
 	pass
 	
-func ApplyMovement(delta, input_dir):
+func ApplyMovement(delta):
 	var root_motion = pkmn.GetRootMotionPos()
 	
 	var max_delta = 0.1
@@ -47,15 +46,14 @@ func Idle():
 	
 func Walk(dir):
 	pkmn.Walk(dir.z)
-	move_speed = 2.0
 	
 func Run():
 	pkmn.Run()
-	move_speed = 4.0
 	
 func Jump():
 	if pkmn.is_on_floor():
 		pkmn.velocity.y = 4.5
+		
 func _physics_process(delta) -> void:
 	# Get movement input
 	var input_dir = Vector3.ZERO
@@ -63,14 +61,14 @@ func _physics_process(delta) -> void:
 		input_dir.z = 1
 	if Input.is_action_pressed("move_back"):
 		input_dir.z = -1
-	if Input.is_action_pressed("strafe_left"):
-		input_dir.x = 1
-	if Input.is_action_pressed("strafe_right"):
-		input_dir.x = -1
+	#if Input.is_action_pressed("strafe_left"):
+	#	input_dir.x = 1
+	#if Input.is_action_pressed("strafe_right"):
+	#	input_dir.x = -1
 	if input_dir == Vector3.ZERO:
 		Idle()
 	else:
-		if Input.is_action_pressed("run"):
+		if Input.is_action_pressed("run") && input_dir.z > 0:
 			Run()
 		else:
 			Walk(input_dir)
@@ -81,4 +79,4 @@ func _physics_process(delta) -> void:
 	if Input.is_action_pressed("roar"):
 		pkmn.Roar()	
 	
-	ApplyMovement(delta, -input_dir)
+	ApplyMovement(delta)
