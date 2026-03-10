@@ -15,14 +15,14 @@
 
 namespace godot {
 
-class TrainerEntity : public ActorObj {
-    GDCLASS(TrainerEntity, ActorObj)
+class TrainerActor : public ActorObj {
+    GDCLASS(TrainerActor, ActorObj)
 protected:
     static void _bind_methods();
 
 public:
-    TrainerEntity() = default;
-    ~TrainerEntity() = default;
+    TrainerActor() = default;
+    ~TrainerActor() = default;
 
     GETTER_SETTER_DEFINE(int, id)
 

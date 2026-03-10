@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://catth7mjjf5fi"]
 
 [ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://main.gd" id="1_ig7tw"]
-[ext_resource type="Script" uid="uid://cr44l78deqhtd" path="res://gflib/scripts/Controller.gd" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://feiijofpwsso" path="res://gflib/prefabs/Player.tscn" id="2_0xm2m"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_0xm2m"]
 size = Vector3(60, 0.7977295, 60)
@@ -52,11 +52,4 @@ light_indirect_energy = 2.0
 
 [node name="Sky1" type="TrinityModel" parent="Sky" unique_id=1876240109]
 
-[node name="Mon" type="PokemonCharacter" parent="." unique_id=1749549142]
-species = 5
-script = ExtResource("2_0xm2m")
-
-[node name="CameraPivot" type="Node3D" parent="Mon" unique_id=539189502]
-
-[node name="Camera3D" type="Camera3D" parent="Mon/CameraPivot" unique_id=1417468368]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+[node name="Player" parent="." unique_id=2118575156 instance=ExtResource("2_0xm2m")]

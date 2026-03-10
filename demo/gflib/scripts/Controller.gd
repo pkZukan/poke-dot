@@ -10,20 +10,17 @@ extends Node
 @export var move_speed: float = 2.0
 
 func _ready():	
-	pkmn.Initialize()
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	
 func _input(event) -> void:
 	# Handle mouse movement for looking around
 	if event is InputEventMouseMotion:
 		# Rotate the body left/right (yaw)
 		pkmn.rotate_y(deg_to_rad(-event.relative.x * mouse_sensitivity))
 		
-		# Apply inverted look if enabled
-		var look_direction = -1 
-		var rotX = deg_to_rad(event.relative.y * mouse_sensitivity * look_direction)
+		var rotX = deg_to_rad(event.relative.y * mouse_sensitivity)
 		camera_pivot.rotate_x(rotX)
-		#head_pivot.rotate_x(rotX)
-		camera_pivot.rotation_degrees.x = clamp(camera_pivot.rotation_degrees.x, -90, 90)
+		camera_pivot.rotation_degrees.x = clamp(camera_pivot.rotation_degrees.x, -80, 80)
 func _process(_delta: float) -> void:
 	pass
 	
@@ -45,7 +42,7 @@ func Idle():
 	pkmn.Idle()
 	
 func Walk(dir):
-	pkmn.Walk()
+	pkmn.Walk(dir.z)
 	move_speed = 2.0
 	
 func Run():

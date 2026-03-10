@@ -4,7 +4,12 @@
 #include <godot_cpp/classes/character_body3d.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
 #include <godot_cpp/classes/collision_shape3d.hpp>
-#include <godot_cpp/classes/capsule_shape3d.hpp>
+#include <godot_cpp/classes/box_shape3d.hpp>
+#include <godot_cpp/classes/animation_tree.hpp>
+#include <godot_cpp/classes/animation_node_state_machine.hpp>
+#include <godot_cpp/classes/animation_node_state_machine_playback.hpp>
+#include <godot_cpp/classes/animation_node_animation.hpp>
+#include <godot_cpp/classes/animation_node_time_scale.hpp>
 #include "actors/pokemon_actor.h"
 #include "actors/actor.h"
 #include <utils.h>
@@ -31,7 +36,7 @@ public:
     void Initialize();
 
     void Idle();
-    void Walk();
+    void Walk(float dir);
     void Run();
     void Roar();
 
@@ -41,6 +46,12 @@ private:
     uint8_t gender = 0;
 
     PokemonActor *_actor = nullptr;
+    AnimationTree *_anim_tree = nullptr;
+    Ref<AnimationNodeStateMachine> _anim_sm;
+    CollisionShape3D *_col = nullptr;
+    Ref<BoxShape3D> _col_shape;
+
+    void _travel(const String& state);
 };
 
 } // namespace godot

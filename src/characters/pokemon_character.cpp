@@ -13,23 +13,28 @@ void PokemonCharacter::_bind_methods()
     ClassDB::bind_method(D_METHOD("Initialize"), &PokemonCharacter::Initialize);
 
     ClassDB::bind_method(D_METHOD("Idle"), &PokemonCharacter::Idle);
-    ClassDB::bind_method(D_METHOD("Walk"), &PokemonCharacter::Walk);
+    ClassDB::bind_method(D_METHOD("Walk", "dir"), &PokemonCharacter::Walk);
     ClassDB::bind_method(D_METHOD("Run"), &PokemonCharacter::Run);
     ClassDB::bind_method(D_METHOD("Roar"), &PokemonCharacter::Roar);
 }
 
 void PokemonCharacter::_enter_tree()
 {
-    CollisionShape3D* col = memnew(CollisionShape3D);
-    Ref<CapsuleShape3D> shape;
-    shape.instantiate();
-    shape->set_height(1.8f);
-    shape->set_radius(0.4f);
-    col->set_shape(shape);
-    add_child(col);
-
+    Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
     _actor = memnew(PokemonActor);
-    add_child(_actor);
+    _actor->DisableRootMotion();
+    _actor->SetInfo(catEnt);
+
+    _col = memnew(CollisionShape3D);
+    _col_shape.instantiate();
+    _col->set_shape(_col_shape);
+
+    _anim_tree = memnew(AnimationTree);
+    _anim_sm.instantiate();
+    _anim_tree->set_tree_root(_anim_sm);
+    _anim_tree->set_advance_expression_base_node(NodePath("."));
+    _anim_tree->set_root_motion_track(NodePath(""));
+    _anim_tree->set_root_motion_local(false);
 }
 
 void PokemonCharacter::_ready()
@@ -44,27 +49,55 @@ void PokemonCharacter::_process(double delta)
 
 void PokemonCharacter::Initialize()
 {
-    Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
-    _actor->SetInfo(catEnt);
+    add_child(_actor);
+    add_child(_col);
+    add_child(_anim_tree);
+    
     _actor->Initialize();
+
+    //Going to set the collision box as the bounding box for convenience
+    _col_shape->set_size(_actor->GetBBox().get_size());
+
+    AnimationPlayer *player = _actor->GetAnimationPlayer();
+    _anim_tree->set_animation_player(player->get_path());
+    _anim_tree->set_active(true);
+
+    for (StringName anim_name : player->get_animation_list()) {
+        Ref<AnimationNodeAnimation> anim_node;
+        anim_node.instantiate();
+        anim_node->set_animation(anim_name);
+        _anim_sm->add_node(anim_name, anim_node);
+    }
+}
+
+void PokemonCharacter::_travel(const String& state)
+{
+    Ref<AnimationNodeStateMachine> sm = _anim_tree->get_tree_root();
+    if (sm.is_valid()) {
+        AnimationNodeStateMachinePlayback* pb = Object::cast_to<AnimationNodeStateMachinePlayback>(
+            _anim_tree->get("parameters/playback")
+        );
+        if (pb) pb->travel(state);
+    }
 }
 
 void PokemonCharacter::Idle()
 {
-    _actor->PlayAnim("00010_defaultidle01");
+    _travel("00000_defaultwait01_loop");
 }
 
-void PokemonCharacter::Walk()
+void PokemonCharacter::Walk(float dir)
 {
-    _actor->PlayAnim("00030_walk01_loop");
+    _travel("00030_walk01_loop");
+    _anim_tree->set("parameters/walk_speed/scale", dir);
 }
 
 void PokemonCharacter::Run()
 {
-    _actor->PlayAnim("00100_run01_loop");
+    _travel("00100_run01_loop");
 }
 
 void PokemonCharacter::Roar()
 {
-    _actor->PlayAnim("00300_roar01");
+    _travel("00300_roar01");
 }

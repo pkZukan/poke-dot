@@ -12,7 +12,8 @@ void TrinityAnimationConverter::_bind_methods() {
 Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
     const String& animFile, 
     Skeleton3D* skl, 
-    const String& skl_path
+    const String& skl_path,
+    bool keep_root_motion
 ) 
 {
     Ref<TRAnimation> anim = ResourceLoader::get_singleton()->load(animFile);
@@ -56,6 +57,7 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
         godot_anim->track_set_path(scale_track, bone_path);
         godot_anim->track_set_interpolation_type(scale_track, Animation::INTERPOLATION_CUBIC);
 
+        bool is_root = (bone_idx == 0);
         if (!bt.is_valid()) 
         {
             // No animation - use rest pose
@@ -66,8 +68,14 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
         }
 
         // Has animation data
-        if (!bt->get_translate().is_null()) 
-            sample_vector_track(godot_anim, pos_track, bt->get_translate(), frame_rate, key_frames);
+        if (!bt->get_translate().is_null())
+        {
+            if (is_root && !keep_root_motion) {
+                godot_anim->track_insert_key(pos_track, 0.0, rest_loc);
+            } else {
+                sample_vector_track(godot_anim, pos_track, bt->get_translate(), frame_rate, key_frames);
+            }
+        }
         else
             godot_anim->track_insert_key(pos_track, 0.0, rest_loc);
 

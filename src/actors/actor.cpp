@@ -11,7 +11,7 @@ using namespace godot;
 
 void ActorObj::_bind_methods() 
 {
-    ClassDB::bind_method(D_METHOD("PlayAnim", "name"), &ActorObj::PlayAnim);
+    ClassDB::bind_method(D_METHOD("GetAnimationPlayer"), &ActorObj::GetAnimationPlayer);
     ClassDB::bind_method(D_METHOD("GetAnimationList"), &ActorObj::GetAnimationList);
 }
 
@@ -52,14 +52,14 @@ void ActorObj::LoadActor(String mdlFile, String animFile)
     }
 }
 
-void ActorObj::PlayAnim(String name)
-{
-    _anim_player->play(name);
-}
-
 TypedArray<StringName> ActorObj::GetAnimationList()
 {
     return _anim_lib->get_animation_list();
+}
+
+AABB ActorObj::GetBBox()
+{
+    return _model->BBox;
 }
 
 void ActorObj::_cleanup() 
@@ -218,7 +218,7 @@ void ActorObj::_load_animations(String tracn_file)
 
 void ActorObj::_add_animation(String anim_file, String name)
 {
-    Ref<Animation> godot_anim = TrinityAnimationConverter::convert_to_godot_animation(anim_file, _skeleton, _skl_path);
+    Ref<Animation> godot_anim = TrinityAnimationConverter::convert_to_godot_animation(anim_file, _skeleton, _skl_path, _keep_root_motion);
     if (!godot_anim.is_valid()) {
         UtilityFunctions::push_error("Animation conversion failed");
         return;

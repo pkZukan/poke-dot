@@ -461,6 +461,7 @@ void TrinityModel::load_model(String path, String file) {
 
     //Model
     Ref<TRModel> mdl  = rl->load(path.path_join(file));
+    BBox = mdl->get_BBox();
 
     //Mesh
     Ref<TRMesh> mesh;

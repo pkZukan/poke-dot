@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://feiijofpwsso"]
+
+[ext_resource type="Script" uid="uid://cr44l78deqhtd" path="res://gflib/scripts/Controller.gd" id="1_frlub"]
+
+[sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_frlub"]
+
+[node name="Player" type="PokemonCharacter" unique_id=2118575156 node_paths=PackedStringArray("_anim_tree")]
+species = 5
+animation_blend_tree = SubResource("AnimationNodeBlendTree_frlub")
+_anim_tree = NodePath("@AnimationTree@20962")
+script = ExtResource("1_frlub")
+
+[node name="CameraPivot" type="Node3D" parent="." unique_id=466626644]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=101391186]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4059949, 2.764586)

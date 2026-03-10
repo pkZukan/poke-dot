@@ -26,8 +26,12 @@ public:
     virtual void Initialize();
     virtual void LoadActor(String mdlFile, String animFile);
 
-    virtual void PlayAnim(String name);
+    virtual AnimationPlayer* GetAnimationPlayer() { return _anim_player; }
+
     virtual TypedArray<StringName> GetAnimationList();
+    virtual AABB GetBBox();
+    
+    virtual void DisableRootMotion() { _keep_root_motion = false; }
 
 protected:
     bool debug_skel = false;
@@ -54,6 +58,7 @@ private:
     void _load_animation_slope_orientor(String filepath);
     void _load_animation_motion_detector(String filepath);
     void _load_animations(String tracn_file);
+    bool _keep_root_motion = true;
 
     //Debug
     MeshInstance3D* _debug_mesh = nullptr;

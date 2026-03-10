@@ -31,7 +31,7 @@ public:
         const PackedByteArray& inds,
         int poly_type, int start, int count
     );
-
+    AABB BBox;
 private:
     Dictionary _load_materials(const String& path, const Array& material_files);
     Ref<ShaderMaterial> _build_shader_material(const Ref<MaterialEntry>& mat);

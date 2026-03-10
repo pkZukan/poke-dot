@@ -1,4 +1,4 @@
-#include "trainer_entity.h"
+#include "trainer_actor.h"
 
 #include <godot_cpp/classes/animation.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
@@ -9,13 +9,13 @@
 
 using namespace godot;
 
-void TrainerEntity::_bind_methods() {
-    GETTER_SETTER_BIND(TrainerEntity, id, Variant::INT, PROPERTY_HINT_NONE)
+void TrainerActor::_bind_methods() {
+    GETTER_SETTER_BIND(TrainerActor, id, Variant::INT, PROPERTY_HINT_NONE)
 
-    ClassDB::bind_method(D_METHOD("Initialize"), &TrainerEntity::Initialize);
+    ClassDB::bind_method(D_METHOD("Initialize"), &TrainerActor::Initialize);
 }
 
-void TrainerEntity::Initialize()
+void TrainerActor::Initialize()
 {
     String base_path = "res://Assets/ik_chara";
     

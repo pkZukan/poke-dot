@@ -2,6 +2,7 @@
 extends Node
 
 func _ready():	
+	$Player.Initialize()
 	
 	#Load static objects
 	$Lamp.load_model("res://Assets/field/model/t1/t1_ar/t1_ar001", "t1_ar001.trmdl")
