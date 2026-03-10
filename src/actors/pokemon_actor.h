@@ -24,11 +24,14 @@ public:
     PokemonActor();
     ~PokemonActor() = default;
 
-    void SetInfo(Ref<CatalogEntry> catalog);
+    void SetInfo(Ref<CatalogEntry> catalog, bool isShiny);
 
     void Initialize() override;
 
+    String GetIconPath();
+
 private:
+    bool _isShiny = false;
     String _species_path, _species_str;
     Ref<CatalogEntry> _catalog;
 };

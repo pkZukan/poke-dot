@@ -131,9 +131,29 @@ vec2 get_uv(vec2 uvs, int slot)
 {
     vec2 result = uvs;
     
-	//flip
-	result.y = 1.0 - result.y;
-	
+    // Initial flip (as you had)
+    result.y = 1.0 - result.y;
+
+    // Process U wrap mode
+    int wrap_u = sampler_repeat_u[slot];
+    if (wrap_u == UV_WRAP) {
+        result.x = fract(result.x);
+    } else if (wrap_u == UV_CLAMP) {
+        result.x = clamp(result.x, 0.0, 1.0);
+    } else if (wrap_u == UV_MIRROR) {
+        result.x = abs(mod(result.x, 2.0) - 1.0);
+    }
+
+    // Process V wrap mode
+    int wrap_v = sampler_repeat_v[slot];
+    if (wrap_v == UV_WRAP) {
+        result.y = fract(result.y);
+    } else if (wrap_v == UV_CLAMP) {
+        result.y = clamp(result.y, 0.0, 1.0);
+    } else if (wrap_v == UV_MIRROR) {
+        result.y = abs(mod(result.y, 2.0) - 1.0);
+    }
+    
     return result;
 }
 

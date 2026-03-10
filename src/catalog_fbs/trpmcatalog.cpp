@@ -99,6 +99,8 @@ void TRPpokemonCatalog::LoadFromFile(String file)
         }
         catEnt->set_locators(locArr);
 
+        catEnt->set_icon_path(Utils::toGodotString(ent->icon_path()));
+
         catalog_table.push_back(catEnt);
     }
 }

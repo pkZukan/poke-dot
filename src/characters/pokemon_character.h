@@ -12,6 +12,7 @@
 #include <godot_cpp/classes/animation_node_time_scale.hpp>
 #include "actors/pokemon_actor.h"
 #include "actors/actor.h"
+#include "middleware/bntx.h"
 #include <utils.h>
 
 namespace godot {
@@ -29,9 +30,11 @@ public:
     void _ready() override;
     void _process(double delta) override;
 
+    GETTER_SETTER_DEFINE(Ref<BinaryTexture>, icon)
     GETTER_SETTER_DEFINE(uint16_t, species)
     GETTER_SETTER_DEFINE(uint8_t, form)
     GETTER_SETTER_DEFINE(uint8_t, gender)
+    GETTER_SETTER_DEFINE(bool, is_shiny)
 
     Vector3 GetRootMotionPos();
 
@@ -39,11 +42,15 @@ public:
     void Walk(float dir);
     void Run();
     void Roar();
+    void Attack();
 
 private:
     uint16_t species = 0;
     uint8_t form = 0;
     uint8_t gender = 0;
+    bool is_shiny = false;
+
+    Ref<BinaryTexture> icon;
 
     PokemonActor *_actor = nullptr;
     AnimationTree *_anim_tree = nullptr;

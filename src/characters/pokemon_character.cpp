@@ -6,9 +6,12 @@ using namespace godot;
 
 void PokemonCharacter::_bind_methods() 
 {
+    GETTER_SETTER_BIND(PokemonCharacter, icon, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "BinaryTexture")
+
     GETTER_SETTER_BIND(PokemonCharacter, species, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(PokemonCharacter, form, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(PokemonCharacter, gender, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(PokemonCharacter, is_shiny, Variant::BOOL, PROPERTY_HINT_NONE)
 
     ClassDB::bind_method(D_METHOD("GetRootMotionPos"), &PokemonCharacter::GetRootMotionPos);
 
@@ -16,13 +19,16 @@ void PokemonCharacter::_bind_methods()
     ClassDB::bind_method(D_METHOD("Walk", "dir"), &PokemonCharacter::Walk);
     ClassDB::bind_method(D_METHOD("Run"), &PokemonCharacter::Run);
     ClassDB::bind_method(D_METHOD("Roar"), &PokemonCharacter::Roar);
+    ClassDB::bind_method(D_METHOD("Attack"), &PokemonCharacter::Attack);
 }
 
 void PokemonCharacter::_enter_tree()
 {
     Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
+
     _actor = memnew(PokemonActor);
-    _actor->SetInfo(catEnt);
+    _actor->SetInfo(catEnt, is_shiny);
+    icon = ResourceLoader::get_singleton()->load(_actor->GetIconPath());
 
     _col = memnew(CollisionShape3D);
     _col_shape.instantiate();
@@ -121,4 +127,9 @@ void PokemonCharacter::Run()
 void PokemonCharacter::Roar()
 {
     _travel("00300_roar01");
+}
+
+void PokemonCharacter::Attack()
+{
+    _travel("10400_attack01");
 }

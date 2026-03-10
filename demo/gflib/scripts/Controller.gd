@@ -79,4 +79,7 @@ func _physics_process(delta) -> void:
 	if Input.is_action_pressed("roar"):
 		pkmn.Roar()	
 	
+	if Input.is_action_pressed("attack"):
+		pkmn.Attack()	
+	
 	ApplyMovement(delta)
