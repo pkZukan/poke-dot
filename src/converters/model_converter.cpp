@@ -251,21 +251,15 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
 {
     Array textures = mat->get_Textures();
     for (int i = 0; i < textures.size(); i++) {
-        Ref<Resource> t = textures[i];
-        String file = t->get("File");
-        String tex_name = t->get("Name");
+        Ref<TextureEntry> t = textures[i];
+        String file = t->get_File();
+        String tex_name = t->get_Name();
 
-        Ref<Resource> res = ResourceLoader::get_singleton()->load(
-            path.path_join(file), "", ResourceLoader::CACHE_MODE_IGNORE
-        );
-        if (!res.is_valid()) 
+        Ref<Image> img = ResourceLoader::get_singleton()->load(path.path_join(file), "", ResourceLoader::CACHE_MODE_IGNORE);
+        if (!img.is_valid()) 
             continue;
 
-        Ref<Image> img_data = res->get("ImageData");
-        if (!img_data.is_valid()) 
-            continue;
-
-        Ref<ImageTexture> img_tex = ImageTexture::create_from_image(img_data);
+        Ref<ImageTexture> img_tex = ImageTexture::create_from_image(img);
         if (img_tex.is_valid())
             shdr->set_shader_parameter(tex_name, img_tex);
     }

@@ -146,8 +146,8 @@ struct BRTData
 	}
 };
 
-class BinaryTexture : public Resource {
-    GDCLASS(BinaryTexture, Resource)
+class BinaryTexture : public Image {
+    GDCLASS(BinaryTexture, Image)
 
 	typedef struct
 	{
@@ -165,23 +165,10 @@ public:
 
     void LoadFromFile(String file);
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(int, Width)
-	GETTER_SETTER_DEFINE(int, Height)
-	GETTER_SETTER_DEFINE(int, Depth)
-	GETTER_SETTER_DEFINE(int, MipsCount)
-	GETTER_SETTER_DEFINE(Ref<Image>, ImageData)
-
 private:
 	Image::Format GetGodotImageFormat(int bntx_format);
 	PackedByteArray Swizzle(uint32_t width, uint32_t height, BRTInfo info, PackedByteArray data, bool toSwizzle);
 	uint32_t getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t image_width, uint32_t bytes_per_pixel, uint32_t base_address, uint32_t block_height);
-
-	String Name;
-	int Width, Height;
-	int Depth;
-	int MipsCount;
-	Ref<Image> ImageData;
 };
 
 class ResourceFormatLoaderBNTX : public ResourceFormatLoader {

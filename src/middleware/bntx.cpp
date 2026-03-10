@@ -4,11 +4,7 @@ using namespace godot;
 
 void BinaryTexture::_bind_methods() 
 {
-    GETTER_SETTER_BIND(BinaryTexture, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BinaryTexture, Width, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BinaryTexture, Height, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BinaryTexture, MipsCount, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(BinaryTexture, ImageData, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "Image")
+    //
 }
 
 std::pair<int, int> bpps[] = {
@@ -226,15 +222,15 @@ void BinaryTexture::LoadFromFile(String file)
         // BRTInfo
         BRTInfo brti_hdr(sp);
         ERR_FAIL_COND(brti_hdr.Magic != "BRTI");
-        Width     = brti_hdr.Width;
-        Height    = brti_hdr.Height;
-        Depth     = brti_hdr.Depth;
-        MipsCount = brti_hdr.MipsCount;
+        int Width     = brti_hdr.Width;
+        int Height    = brti_hdr.Height;
+        int Depth     = brti_hdr.Depth;
+        int MipsCount = brti_hdr.MipsCount;
 
         // Get image name
         sp->seek(brti_hdr.NameOffset);
         uint16_t nameLen = sp->get_16();
-        Name = sp->get_string(nameLen);
+        set_name(sp->get_string(nameLen));
 
         // Get mipmap pointers
         sp->seek(brti_hdr.MipMapArrayPtr);
@@ -261,14 +257,10 @@ void BinaryTexture::LoadFromFile(String file)
         PackedByteArray buffer = PackedByteArray(data[1]);
 
         Image::Format fmt = GetGodotImageFormat(brti_hdr.Format);
-
+        
         PackedByteArray unswizzled = Swizzle(Width, Height, brti_hdr, buffer, false);
 
-        Ref<Image> img;
-        img.instantiate();
-        img->set_data(Width, Height, false, fmt, unswizzled);
-
-        set_ImageData(img);
+        set_data(Width, Height, false, fmt, unswizzled);
     }
 }
 
