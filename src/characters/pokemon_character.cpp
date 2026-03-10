@@ -131,5 +131,5 @@ void PokemonCharacter::Roar()
 
 void PokemonCharacter::Attack()
 {
-    _travel("10400_attack01");
+    _travel("00400_attack01");
 }

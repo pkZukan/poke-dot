@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode cull_back, depth_draw_opaque, diffuse_lambert_wrap;
+render_mode cull_back;
 
 uniform sampler2D BaseColorMap  : source_color, hint_default_white;
 uniform sampler2D NormalMap     : hint_normal;
@@ -127,12 +127,18 @@ void vertex()
     //
 }
 
+vec2 xform_uvs(vec2 uvs, vec4 scale_off, vec2 center)
+{
+	vec2 v = scale_off.xy * (uvs - scale_off.zw - center) + center;
+	return vec2(v.x, 1.0 - v.y);
+}
+
 vec2 get_uv(vec2 uvs, int slot) 
 {
     vec2 result = uvs;
     
-    // Initial flip (as you had)
-    result.y = 1.0 - result.y;
+    //Scale and flip
+	result = xform_uvs(result, ((slot == 1 && EnableUVScaleOffsetNormal) ? UVScaleOffsetNormal : UVScaleOffset), UVCenter0.xy);
 
     // Process U wrap mode
     int wrap_u = sampler_repeat_u[slot];
@@ -141,7 +147,7 @@ vec2 get_uv(vec2 uvs, int slot)
     } else if (wrap_u == UV_CLAMP) {
         result.x = clamp(result.x, 0.0, 1.0);
     } else if (wrap_u == UV_MIRROR) {
-        result.x = abs(mod(result.x, 2.0) - 1.0);
+        result.x = 1.0 - abs(mod(result.x, 2.0) - 1.0);
     }
 
     // Process V wrap mode
@@ -151,7 +157,7 @@ vec2 get_uv(vec2 uvs, int slot)
     } else if (wrap_v == UV_CLAMP) {
         result.y = clamp(result.y, 0.0, 1.0);
     } else if (wrap_v == UV_MIRROR) {
-        result.y = abs(mod(result.y, 2.0) - 1.0);
+        result.y = 1.0 - abs(mod(result.y, 2.0) - 1.0);
     }
     
     return result;
@@ -163,14 +169,14 @@ void fragment()
 	layerMask = mix(vec4(0.0), layerMask, vec4(1.0));
 
 	//Albedo
-	vec3 base_col = vec3(1, 1, 1);
+	vec4 base_col = vec4(1, 1, 1, 1);
 	if (EnableBaseColorMap)
 	{
-		vec3 baseColMap = texture(BaseColorMap, get_uv(UV, 0)).rgb;
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer1.rgb * baseColMap, layerMask.r);
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer2.rgb * baseColMap, layerMask.g);
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer3.rgb * baseColMap, layerMask.b);
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer4.rgb * baseColMap, layerMask.a);
+		vec4 baseColMap = texture(BaseColorMap, get_uv(UV, 0));
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer1.rgb * baseColMap.rgb, layerMask.r);
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer2.rgb * baseColMap.rgb, layerMask.g);
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer3.rgb * baseColMap.rgb, layerMask.b);
+		base_col.rgb = mix(base_col.rgb, BaseColorLayer4.rgb * baseColMap.rgb, layerMask.a);
 	}
 	
 	//AO
@@ -198,7 +204,7 @@ void fragment()
         roughness = 1.0 - spec_mask;
     }
 		
-	ALBEDO = base_col;
+	ALBEDO = base_col.rgb * COLOR.rgb;
 	NORMAL_MAP = norm;
     ROUGHNESS = roughness;
     SPECULAR = specular;
