@@ -10,7 +10,7 @@ void PokemonCharacter::_bind_methods()
     GETTER_SETTER_BIND(PokemonCharacter, form, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(PokemonCharacter, gender, Variant::INT, PROPERTY_HINT_NONE)
 
-    ClassDB::bind_method(D_METHOD("Initialize"), &PokemonCharacter::Initialize);
+    ClassDB::bind_method(D_METHOD("GetRootMotionPos"), &PokemonCharacter::GetRootMotionPos);
 
     ClassDB::bind_method(D_METHOD("Idle"), &PokemonCharacter::Idle);
     ClassDB::bind_method(D_METHOD("Walk", "dir"), &PokemonCharacter::Walk);
@@ -22,7 +22,6 @@ void PokemonCharacter::_enter_tree()
 {
     Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
     _actor = memnew(PokemonActor);
-    _actor->DisableRootMotion();
     _actor->SetInfo(catEnt);
 
     _col = memnew(CollisionShape3D);
@@ -33,8 +32,42 @@ void PokemonCharacter::_enter_tree()
     _anim_sm.instantiate();
     _anim_tree->set_tree_root(_anim_sm);
     _anim_tree->set_advance_expression_base_node(NodePath("."));
-    _anim_tree->set_root_motion_track(NodePath(""));
-    _anim_tree->set_root_motion_local(false);
+
+    add_child(_actor);
+    add_child(_col);
+    add_child(_anim_tree);
+
+    _actor->Initialize();
+
+    //Going to set the collision box as the bounding box for convenience
+    _col_shape->set_size(_actor->GetBBox().get_size());
+
+    Skeleton3D *_skel = _actor->GetSkeleton();
+
+    String origin_bone = _skel->get_bone_name(1);
+    String bone0 = _skel->get_bone_name(0);
+    NodePath rm_path = NodePath(bone0 + "/" + bone0 + ":" + origin_bone);
+    _anim_tree->set_root_motion_local(true);
+    _anim_tree->set_root_motion_track(rm_path);
+    _anim_tree->set_process_callback(AnimationTree::ANIMATION_PROCESS_PHYSICS);
+
+    AnimationPlayer *player = _actor->GetAnimationPlayer();
+    if(!player)
+    {
+        UtilityFunctions::printerr("AnimationPlayer null!");
+        return;
+    }
+
+    _anim_tree->set_animation_player(player->get_path());
+    _anim_tree->set_active(true);
+
+    for (StringName anim_name : player->get_animation_list()) 
+    {
+        Ref<AnimationNodeAnimation> anim_node;
+        anim_node.instantiate();
+        anim_node->set_animation(anim_name);
+        _anim_sm->add_node(anim_name, anim_node);
+    }
 }
 
 void PokemonCharacter::_ready()
@@ -47,29 +80,6 @@ void PokemonCharacter::_process(double delta)
     //
 }
 
-void PokemonCharacter::Initialize()
-{
-    add_child(_actor);
-    add_child(_col);
-    add_child(_anim_tree);
-    
-    _actor->Initialize();
-
-    //Going to set the collision box as the bounding box for convenience
-    _col_shape->set_size(_actor->GetBBox().get_size());
-
-    AnimationPlayer *player = _actor->GetAnimationPlayer();
-    _anim_tree->set_animation_player(player->get_path());
-    _anim_tree->set_active(true);
-
-    for (StringName anim_name : player->get_animation_list()) {
-        Ref<AnimationNodeAnimation> anim_node;
-        anim_node.instantiate();
-        anim_node->set_animation(anim_name);
-        _anim_sm->add_node(anim_name, anim_node);
-    }
-}
-
 void PokemonCharacter::_travel(const String& state)
 {
     Ref<AnimationNodeStateMachine> sm = _anim_tree->get_tree_root();
@@ -79,6 +89,11 @@ void PokemonCharacter::_travel(const String& state)
         );
         if (pb) pb->travel(state);
     }
+}
+
+Vector3 PokemonCharacter::GetRootMotionPos()
+{
+    return _anim_tree->get_root_motion_position();
 }
 
 void PokemonCharacter::Idle()

@@ -25,19 +25,23 @@ func _process(_delta: float) -> void:
 	pass
 	
 func ApplyMovement(delta, input_dir):
-	var forward_vec = -pkmn.global_transform.basis.z
-	var left_vec = -pkmn.global_transform.basis.x
+	var root_motion = pkmn.GetRootMotionPos()
 	
-	var move_dir = (forward_vec * input_dir.z) + (left_vec * input_dir.x)
-	move_dir = move_dir.normalized() if move_dir.length() > 0 else Vector3.ZERO
+	var max_delta = 0.1
+	if root_motion.length() > max_delta:
+		root_motion = Vector3.ZERO
+	
 	if pkmn.is_on_floor():
-		pkmn.velocity.x = move_dir.x * move_speed
-		pkmn.velocity.z = move_dir.z * move_speed
-	
-	# gravity always applies, separate from floor check
-	if not pkmn.is_on_floor():
+		var motion = pkmn.global_transform.basis * root_motion
+		pkmn.velocity.x = motion.x / delta
+		pkmn.velocity.z = motion.z / delta
+		if pkmn.velocity.y < 0:
+			pkmn.velocity.y = 0
+	else:
 		pkmn.velocity.y -= 9.8 * delta
+
 	pkmn.move_and_slide()
+	
 func Idle():
 	pkmn.Idle()
 	

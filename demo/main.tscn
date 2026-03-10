@@ -8,6 +8,12 @@ size = Vector3(60, 0.7977295, 60)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_0xm2m"]
 
+[sub_resource type="Environment" id="Environment_0xm2m"]
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_0xm2m"]
+
+[sub_resource type="Compositor" id="Compositor_h2yge"]
+
 [node name="Scene" type="Node3D" unique_id=1974166111]
 script = ExtResource("1_ig7tw")
 
@@ -53,3 +59,8 @@ light_indirect_energy = 2.0
 [node name="Sky1" type="TrinityModel" parent="Sky" unique_id=1876240109]
 
 [node name="Player" parent="." unique_id=2118575156 instance=ExtResource("2_0xm2m")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1923990555]
+environment = SubResource("Environment_0xm2m")
+camera_attributes = SubResource("CameraAttributesPractical_0xm2m")
+compositor = SubResource("Compositor_h2yge")

@@ -33,7 +33,7 @@ public:
     GETTER_SETTER_DEFINE(uint8_t, form)
     GETTER_SETTER_DEFINE(uint8_t, gender)
 
-    void Initialize();
+    Vector3 GetRootMotionPos();
 
     void Idle();
     void Walk(float dir);

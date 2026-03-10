@@ -17,8 +17,7 @@ public:
     static Ref<Animation> convert_to_godot_animation(
         const String& animFile, 
         Skeleton3D* skl, 
-        const String& skl_path,
-        bool keep_root_motion = true
+        const String& skl_path
     );
 
 private:
