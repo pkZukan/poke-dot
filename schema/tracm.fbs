@@ -125,7 +125,7 @@ table BlendShapeTimeline {
 	blend_list: [blendtable];
 }
 
-table MaterialAnimTrack {
+table MeshAnimeTrack {
     track_path: string;
     res_1: uint32; //Never used
     res_2: uint32; //Never used
@@ -137,7 +137,7 @@ table MaterialAnimTrack {
 
 table TRACM {
     info: AnimationInfo;
-    tracks: [MaterialAnimTrack];
+    tracks: [MeshAnimeTrack];
     material_frame_multiplier: uint8;
     visibility_frame_multiplier: uint8;
 	blendshape_frame_multiplier: uint8;

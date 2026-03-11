@@ -106,6 +106,24 @@ private:
 	Array blend_list;
 };
 
+class TRTrackMaterial : public Resource {
+    GDCLASS(TRTrackMaterial, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackMaterial(){}
+	~TRTrackMaterial(){}
+
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Array, init_values)
+	GETTER_SETTER_DEFINE(Array, anim_values)
+	
+private:
+	String Name;
+	Array init_values;
+	Array anim_values;
+};
+
 class TRVisibilityShapeTimeline : public Resource {
     GDCLASS(TRVisibilityShapeTimeline, Resource)
 protected:
@@ -146,13 +164,13 @@ private:
 	uint8_t unk4;
 };
 
-class TRMaterialAnimTrack : public Resource {
-    GDCLASS(TRMaterialAnimTrack, Resource)
+class TRMeshAnimeTrack : public Resource {
+    GDCLASS(TRMeshAnimeTrack, Resource)
 protected:
 	static void _bind_methods();
 public:
-	TRMaterialAnimTrack(){}
-	~TRMaterialAnimTrack(){}
+	TRMeshAnimeTrack(){}
+	~TRMeshAnimeTrack(){}
 	
     GETTER_SETTER_DEFINE(String, path)
 	GETTER_SETTER_DEFINE(int, res_1)
@@ -172,13 +190,13 @@ private:
 	Ref<TRBlendShapeTimeline> blendshape_anim;
 };
 
-class TRAnimationChannelMaterials : public Resource {
-    GDCLASS(TRAnimationChannelMaterials, Resource)
+class TRAnimationChannelMeshes : public Resource {
+    GDCLASS(TRAnimationChannelMeshes, Resource)
 protected:
 	static void _bind_methods();
 public:
-	TRAnimationChannelMaterials(){}
-	~TRAnimationChannelMaterials(){}
+	TRAnimationChannelMeshes(){}
+	~TRAnimationChannelMeshes(){}
 
     void LoadFromFile(String file);
 	

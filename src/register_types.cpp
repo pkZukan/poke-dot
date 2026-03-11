@@ -48,6 +48,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
@@ -114,7 +115,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(AnimationChannelNameEntry)
 
 		//tracm
-		GDREGISTER_CLASS(TRAnimationChannelMaterials)
+		GDREGISTER_CLASS(TRAnimationChannelMeshes)
+		GDREGISTER_CLASS(TRMeshAnimeTrack)
 		GDREGISTER_CLASS(Framed8BoolTrack)
 		GDREGISTER_CLASS(Framed16BoolTrack)
 		GDREGISTER_CLASS(DynamicBoolTrack)
@@ -171,6 +173,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
@@ -206,6 +209,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 
