@@ -24,6 +24,7 @@ public:
     ~ActorObj() = default;
 
     virtual void Initialize();
+    void _cleanup();
     virtual void LoadActor(String mdlFile, String animFile);
 
     virtual AnimationPlayer* GetAnimationPlayer() { return _anim_player; }
@@ -45,7 +46,6 @@ private:
     Skeleton3D* _skeleton = nullptr;
     String _skl_path;
 
-    void _cleanup();
     Skeleton3D* _find_skeleton(Node* node);
     void _setup_animation();
     void _add_animation(String anim_file, String name);

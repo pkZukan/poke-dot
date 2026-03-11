@@ -24,17 +24,22 @@ protected:
 
 public:
     PokemonCharacter() = default;
-    ~PokemonCharacter() = default;
+    ~PokemonCharacter();
 
     void _enter_tree() override;
     void _ready() override;
     void _process(double delta) override;
 
     GETTER_SETTER_DEFINE(Ref<BinaryTexture>, icon)
-    GETTER_SETTER_DEFINE(uint16_t, species)
-    GETTER_SETTER_DEFINE(uint8_t, form)
-    GETTER_SETTER_DEFINE(uint8_t, gender)
-    GETTER_SETTER_DEFINE(bool, is_shiny)
+    GETTER_SETTER_CALLBACK_DEFINE(uint16_t, species)
+    GETTER_SETTER_CALLBACK_DEFINE(uint8_t, form)
+    GETTER_SETTER_CALLBACK_DEFINE(uint8_t, gender)
+    GETTER_SETTER_CALLBACK_DEFINE(bool, is_shiny)
+
+    void setterCallback(String setterName)
+    {
+        _initialize();
+    }
 
     Vector3 GetRootMotionPos();
 
@@ -55,10 +60,13 @@ private:
     PokemonActor *_actor = nullptr;
     AnimationTree *_anim_tree = nullptr;
     Ref<AnimationNodeStateMachine> _anim_sm;
+    
     CollisionShape3D *_col = nullptr;
     Ref<BoxShape3D> _col_shape;
 
     void _travel(const String& state);
+    void _initialize();
+    void _cleanup();
 };
 
 } // namespace godot

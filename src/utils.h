@@ -13,6 +13,15 @@
 	x get_##y() { return y; } \
 	void set_##y(x val) { y = val; }
 
+#define GETTER_SETTER_CALLBACK_DEFINE(x, y) \
+	x get_##y() { return y; } 	\
+	void set_##y(x val) { 		\
+		if(y != val){			\
+			y = val; 			\
+			setterCallback(#y); \
+		}						\
+	}
+
 #define Bit(n)  ((uint32_t) 1 << (n))
 #define Mask(n) (Bit(n) - 1)
 

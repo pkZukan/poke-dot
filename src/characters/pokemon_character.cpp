@@ -22,9 +22,47 @@ void PokemonCharacter::_bind_methods()
     ClassDB::bind_method(D_METHOD("Attack"), &PokemonCharacter::Attack);
 }
 
+PokemonCharacter::~PokemonCharacter()
+{
+    _cleanup();
+}
+
 void PokemonCharacter::_enter_tree()
 {
+    _initialize();
+}
+
+void PokemonCharacter::_ready()
+{
+    //
+}
+
+void PokemonCharacter::_process(double delta)
+{
+    //
+}
+
+void PokemonCharacter::_travel(const String& state)
+{
+    Ref<AnimationNodeStateMachine> sm = _anim_tree->get_tree_root();
+    if (sm.is_valid()) {
+        AnimationNodeStateMachinePlayback* pb = Object::cast_to<AnimationNodeStateMachinePlayback>(
+            _anim_tree->get("parameters/playback")
+        );
+        if (pb) pb->travel(state);
+    }
+}
+
+void PokemonCharacter::_initialize()
+{
+    _cleanup();
+    
     Ref<CatalogEntry> catEnt = PokemonCatalog::get_singleton()->GetCatalogEntry(species, form, gender);
+    if (!catEnt.is_valid())
+    {
+        UtilityFunctions::printerr("Failed to get CatalogEntry for species ", species);
+        return;
+    }
 
     _actor = memnew(PokemonActor);
     _actor->SetInfo(catEnt, is_shiny);
@@ -76,24 +114,19 @@ void PokemonCharacter::_enter_tree()
     }
 }
 
-void PokemonCharacter::_ready()
+void PokemonCharacter::_cleanup()
 {
-    //
-}
+    if (_actor)
+    {
+        _actor->_cleanup();
+        _actor->queue_free();
+        _actor = nullptr;
+    }
 
-void PokemonCharacter::_process(double delta)
-{
-    //
-}
-
-void PokemonCharacter::_travel(const String& state)
-{
-    Ref<AnimationNodeStateMachine> sm = _anim_tree->get_tree_root();
-    if (sm.is_valid()) {
-        AnimationNodeStateMachinePlayback* pb = Object::cast_to<AnimationNodeStateMachinePlayback>(
-            _anim_tree->get("parameters/playback")
-        );
-        if (pb) pb->travel(state);
+    if(_anim_tree)
+    {
+        _anim_tree->queue_free();
+        _anim_tree = nullptr;
     }
 }
 
