@@ -7,10 +7,12 @@
 #include "model_fbs/trmtr.h"
 #include "model_fbs/trmmt.h"
 
+#include "animation_fbs/anim_common.h"
 #include "animation_fbs/tracn.h"
 #include "animation_fbs/tranm.h"
 #include "animation_fbs/tracp.h"
 #include "animation_fbs/tracr.h"
+#include "animation_fbs/tracm.h"
 
 #include "catalog_fbs/trpmcatalog.h"
 #include "actors/pokemon_catalog.h"
@@ -90,8 +92,10 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRModelMaterialTable)
 		GDREGISTER_CLASS(TRMaterial)
 
+		//anim_common
+		GDREGISTER_CLASS(TRAnimationInfo)
+
 		//tranm
-		GDREGISTER_CLASS(AnimationInfo)
 		GDREGISTER_CLASS(BoneInit)
 		GDREGISTER_CLASS(FixedVectorTrack)
 		GDREGISTER_CLASS(DynamicVectorTrack)
@@ -108,6 +112,17 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//tracn
 		GDREGISTER_CLASS(TRAnimationChannelNames)
 		GDREGISTER_CLASS(AnimationChannelNameEntry)
+
+		//tracm
+		GDREGISTER_CLASS(TRAnimationChannelMaterials)
+		GDREGISTER_CLASS(Framed8BoolTrack)
+		GDREGISTER_CLASS(Framed16BoolTrack)
+		GDREGISTER_CLASS(DynamicBoolTrack)
+		GDREGISTER_CLASS(FixedBoolTrack)
+		GDREGISTER_CLASS(TRTrackFlagsInfo)
+		GDREGISTER_CLASS(TRBlendShapeTimeline)
+		GDREGISTER_CLASS(TRVisibilityShapeTimeline)
+		GDREGISTER_CLASS(TRTrackMaterialTimeline)
 
 		//tracr
 		GDREGISTER_CLASS(TRAnimationChannelResource)

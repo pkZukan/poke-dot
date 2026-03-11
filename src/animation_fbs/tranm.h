@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
+#include "animation_fbs/anim_common.h"
 #include "generated/tranm_generated.h"
 #include <utils.h>
 
@@ -195,24 +196,6 @@ private:
     Ref<BoneInit> initData;
 };
 
-class AnimationInfo : public Resource {
-	GDCLASS(AnimationInfo, Resource)
-protected:
-	static void _bind_methods();
-public:
-	AnimationInfo(){}
-	~AnimationInfo(){}
-
-	GETTER_SETTER_DEFINE(uint32_t, does_loop)
-    GETTER_SETTER_DEFINE(uint32_t, animation_count)
-    GETTER_SETTER_DEFINE(uint32_t, animation_rate)
-
-private:
-	uint32_t does_loop;
-    uint32_t animation_count;
-    uint32_t animation_rate;
-};
-
 class TRAnimation : public Resource {
     GDCLASS(TRAnimation, Resource)
 protected:
@@ -223,14 +206,14 @@ public:
 
     void LoadFromFile(String file);
 	
-    GETTER_SETTER_DEFINE(Ref<AnimationInfo>, Info)
+    GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, Info)
     GETTER_SETTER_DEFINE(Ref<BoneAnimation>, Track)
 
 private:
 	Ref<Resource> ParseRotationTrack(Titan::Animation::RotationTrack type, const void* data);
 	Ref<Resource> ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data);
 
-    Ref<AnimationInfo> Info;
+    Ref<TRAnimationInfo> Info;
     Ref<BoneAnimation> Track;
 };
 

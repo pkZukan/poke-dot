@@ -69,13 +69,6 @@ void BoneAnimation::_bind_methods()
     GETTER_SETTER_BIND(BoneAnimation, initData, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "BoneInit")
 }
 
-void AnimationInfo::_bind_methods()
-{
-    GETTER_SETTER_BIND(AnimationInfo, does_loop, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(AnimationInfo, animation_count, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(AnimationInfo, animation_rate, Variant::INT, PROPERTY_HINT_NONE)
-}
-
 void TRAnimation::_bind_methods() 
 {
     GETTER_SETTER_BIND(TRAnimation, Info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "AnimationInfo")
@@ -247,7 +240,7 @@ void TRAnimation::LoadFromFile(String file)
 
     // Get Info
     auto info = anim->info();
-    Ref<AnimationInfo> animInfo;
+    Ref<TRAnimationInfo> animInfo;
     animInfo.instantiate();
     animInfo->set_does_loop(info->does_loop());
     animInfo->set_animation_count(info->animation_count());

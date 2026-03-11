@@ -1,0 +1,8 @@
+namespace Titan.Animation;
+
+table AnimationInfo 
+{
+    does_loop: uint32;
+    animation_count: uint32;
+    animation_rate: uint32;
+}
