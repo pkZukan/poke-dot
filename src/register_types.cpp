@@ -125,6 +125,10 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRBlendShapeTimeline)
 		GDREGISTER_CLASS(TRVisibilityShapeTimeline)
 		GDREGISTER_CLASS(TRTrackMaterialTimeline)
+		GDREGISTER_CLASS(TRTrackFlagsInfo)
+		GDREGISTER_CLASS(TRTrackBlendShape)
+		GDREGISTER_CLASS(TRBlendTable)
+		GDREGISTER_CLASS(TRTrackMaterial)
 
 		//tracr
 		GDREGISTER_CLASS(TRAnimationChannelResource)

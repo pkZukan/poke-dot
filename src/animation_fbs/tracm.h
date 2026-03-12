@@ -71,6 +71,33 @@ private:
 	bool values;
 };
 
+class TRBlendTable : public Resource {
+    GDCLASS(TRBlendTable, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRBlendTable(){}
+	~TRBlendTable(){}
+	
+	GETTER_SETTER_DEFINE(String, Name)
+
+private:
+	String Name;
+};
+
+class TRTrackBlendShape : public Resource {
+    GDCLASS(TRTrackBlendShape, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackBlendShape(){}
+	~TRTrackBlendShape(){}
+	
+	GETTER_SETTER_DEFINE(String, Name)
+
+private:
+	String Name;
+};
 
 class TRTrackFlagsInfo : public Resource {
     GDCLASS(TRTrackFlagsInfo, Resource)
@@ -80,6 +107,8 @@ public:
 	TRTrackFlagsInfo(){}
 	~TRTrackFlagsInfo(){}
 	
+	GETTER_SETTER_DEFINE(Ref<Resource>, values)
+
 private:
 	Ref<Resource> values; //TRTrackFlag
 };
@@ -95,14 +124,14 @@ public:
 	GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, info)
 	GETTER_SETTER_DEFINE(uint32_t, res_1)
 	GETTER_SETTER_DEFINE(Array, blendshape_tracks)
-	GETTER_SETTER_DEFINE(uint8_t, unk3)
+	GETTER_SETTER_DEFINE(uint8_t, res_3)
 	GETTER_SETTER_DEFINE(Array, blend_list)
 	
 private:
 	Ref<TRAnimationInfo> info;
 	uint32_t res_1;
 	Array blendshape_tracks;
-	uint8_t unk3;
+	uint8_t res_3;
 	Array blend_list;
 };
 
@@ -204,6 +233,10 @@ public:
 	GETTER_SETTER_DEFINE(Array, tracks)
 
 private:
+	Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim);
+	Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline *visAnim);
+	Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline *blendAnim);
+
 	Ref<TRAnimationInfo> info;
     Array tracks;
 };

@@ -118,9 +118,9 @@ table blendtable {
 }
 
 table BlendShapeTimeline {
-    config: AnimationInfo;
+    info: AnimationInfo;
     res_1: uint32;
-	res_2: [TrackBlendShape];
+	blendshape_tracks: [TrackBlendShape];
 	res_3: uint32;
 	blend_list: [blendtable];
 }

@@ -27,6 +27,21 @@ void TRTrackFlagsInfo::_bind_methods()
     //
 }
 
+void TRTrackBlendShape::_bind_methods()
+{
+    //
+}
+
+void TRTrackMaterial::_bind_methods()
+{
+    //
+}
+
+void TRBlendTable::_bind_methods()
+{
+    GETTER_SETTER_BIND(TRBlendTable, Name, Variant::STRING, PROPERTY_HINT_NONE)
+}
+
 void TRBlendShapeTimeline::_bind_methods()
 {
     //
@@ -39,18 +54,144 @@ void TRVisibilityShapeTimeline::_bind_methods()
 
 void TRTrackMaterialTimeline::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(TRTrackMaterialTimeline, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationInfo")
+    GETTER_SETTER_BIND(TRTrackMaterialTimeline, res_1, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialTimeline, material_tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackMaterial")
+    GETTER_SETTER_BIND(TRTrackMaterialTimeline, unk3, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialTimeline, unk4, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 void TRMeshAnimeTrack::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, path, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, res_1, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, res_2, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, res_3, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, mat_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialTimeline")
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, vis_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRVisibilityShapeTimeline")
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, blendshape_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRBlendShapeTimeline")
 }
 
 void TRAnimationChannelMeshes::_bind_methods() 
 {
     GETTER_SETTER_BIND(TRAnimationChannelMeshes, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationInfo")
-    GETTER_SETTER_BIND(TRAnimationChannelMeshes, tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRMaterialAnimTrack")
+    GETTER_SETTER_BIND(TRAnimationChannelMeshes, tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRMeshAnimeTrack")
+}
+
+Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim)
+{
+    Ref<TRTrackMaterialTimeline> anim;
+    anim.instantiate();
+
+    if(matAnim)
+    {
+        auto m_inf = matAnim->res_0();
+        if(m_inf)
+        {
+            Ref<TRAnimationInfo> _info;
+            _info.instantiate();
+            _info->set_does_loop(m_inf->does_loop());
+            _info->set_animation_count(m_inf->animation_count());
+            _info->set_animation_rate(m_inf->animation_rate());
+            anim->set_info(_info);
+        }
+        anim->set_res_1(matAnim->res_1());
+
+        auto m_tracks = matAnim->material_track();
+        if(m_tracks)
+        {
+            Array trkArr;
+            for(int j = 0; j < m_tracks->size(); j++)
+            {
+                auto m_trk = m_tracks->Get(j);
+                Ref<TRTrackMaterial> trk;
+                trk.instantiate();
+                trk->set_Name(Utils::toGodotString(m_trk->name()));
+                //trk->set_init_values();
+                //trk->set_anim_values();
+                trkArr.push_back(trk);
+            }
+            anim->set_material_tracks(trkArr);
+        }
+        anim->set_unk3(matAnim->unk_3());
+        anim->set_unk4(matAnim->unk_4());
+    }
+
+    return anim;
+}
+
+Ref<TRVisibilityShapeTimeline> TRAnimationChannelMeshes::_LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline *visAnim)
+{
+    Ref<TRVisibilityShapeTimeline> anim;
+    anim.instantiate();
+
+    if(visAnim)
+    {
+        anim->set_time(visAnim->time());
+        anim->set_value(visAnim->value());
+        
+        auto _v_info = visAnim->info();
+        if(_v_info)
+        {
+            Ref<TRTrackFlagsInfo> vis_flag;
+            vis_flag.instantiate();
+            //TODO
+            anim->set_info(vis_flag);
+        }
+    }
+
+    return anim;
+}
+
+Ref<TRBlendShapeTimeline> TRAnimationChannelMeshes::_LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline *blendAnim)
+{
+    Ref<TRBlendShapeTimeline> anim;
+    anim.instantiate();
+
+    auto _inf = blendAnim->info();
+    if(_inf)
+    {
+        Ref<TRAnimationInfo> _info;
+        _info.instantiate();
+        _info->set_does_loop(_inf->does_loop());
+        _info->set_animation_count(_inf->animation_count());
+        _info->set_animation_rate(_inf->animation_rate());
+
+        anim->set_info(_info);
+    }
+    anim->set_res_1(blendAnim->res_1());
+    auto blendTracks = blendAnim->blendshape_tracks();
+    if(blendTracks)
+    {
+        Array bshapeArr;
+        for(int i = 0; i < blendTracks->size(); i++)
+        {
+            auto trk = blendTracks->Get(i);
+            Ref<TRTrackBlendShape> bshape;
+            bshape.instantiate();
+            //TODO
+            bshapeArr.push_back(bshape);
+        }
+        anim->set_blendshape_tracks(bshapeArr);
+    }
+    anim->set_res_3(blendAnim->res_3());
+
+    auto blist = blendAnim->blend_list();
+    if(blist)
+    {
+        Array bshapeArr;
+        for(int i = 0; i < blist->size(); i++)
+        {
+            auto trk = blist->Get(i);
+            Ref<TRBlendTable> bshape;
+            bshape.instantiate();
+            bshape->set_Name(Utils::toGodotString(trk->name()));
+            bshapeArr.push_back(bshape);
+        }
+        anim->set_blend_list(bshapeArr);
+    }
+
+    return anim;
 }
 
 void TRAnimationChannelMeshes::LoadFromFile(String file)
@@ -85,51 +226,16 @@ void TRAnimationChannelMeshes::LoadFromFile(String file)
         anim->set_res_2(track->res_2());
         anim->set_res_3(track->res_3());
 
-        Ref<TRTrackMaterialTimeline> _mat_anim;
-        _mat_anim.instantiate();
+        //Material anims
+        Ref<TRTrackMaterialTimeline> _mat_anim = _LoadMaterialAnims(track->material_animation());
+        anim->set_mat_anim(_mat_anim);
 
-        auto mat_anime = track->material_animation();
-        if(mat_anime)
-        {
-            auto m_inf = mat_anime->res_0();
-            if(m_inf)
-            {
-                Ref<TRAnimationInfo> _m_info;
-                _m_info.instantiate();
-                _m_info->set_does_loop(m_inf->does_loop());
-                _m_info->set_animation_count(m_inf->animation_count());
-                _m_info->set_animation_rate(m_inf->animation_rate());
-                _mat_anim->set_info(_m_info);
-            }
-            _mat_anim->set_res_1(mat_anime->res_1());
-
-            auto m_tracks = mat_anime->material_track();
-            if(m_tracks)
-            {
-                Array trkArr;
-                for(int j = 0; j < m_tracks->size(); j++)
-                {
-                    auto m_trk = m_tracks->Get(j);
-                    Ref<TRTrackMaterial> trk;
-                    trk.instantiate();
-                    trk->set_Name(Utils::toGodotString(m_trk->name()));
-                    //trk->set_init_values();
-                    //trk->set_anim_values();
-                    trkArr.push_back(trk);
-                }
-                _mat_anim->set_material_tracks(trkArr);
-            }
-            _mat_anim->set_unk3(mat_anime->unk_3());
-            _mat_anim->set_unk4(mat_anime->unk_4());
-            anim->set_mat_anim(_mat_anim);
-        }
-
-        Ref<TRVisibilityShapeTimeline> _vis_anim;
-        _vis_anim.instantiate();
+        //Visibility anims
+        Ref<TRVisibilityShapeTimeline> _vis_anim = _LoadVisibilityAnims(track->visibility_animation());
         anim->set_vis_anim(_vis_anim);
 
-        Ref<TRBlendShapeTimeline> _blendshape_anim;
-        _blendshape_anim.instantiate();
+        //Blendshape anims
+        Ref<TRBlendShapeTimeline> _blendshape_anim = _LoadBlendshapeAnims(track->blendshape_animation());
         anim->set_blendshape_anim(_blendshape_anim);
 
         trackArr.push_back(anim);
