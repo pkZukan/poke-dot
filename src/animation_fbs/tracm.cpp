@@ -4,37 +4,69 @@ using namespace godot;
 
 void Framed8BoolTrack::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(Framed8BoolTrack, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
+    GETTER_SETTER_BIND(Framed8BoolTrack, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "bool")
 }
 
 void Framed16BoolTrack::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(Framed16BoolTrack, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
+    GETTER_SETTER_BIND(Framed16BoolTrack, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "bool")
 }
 
 void DynamicBoolTrack::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(DynamicBoolTrack, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "bool")
 }
 
 void FixedBoolTrack::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(FixedBoolTrack, value, Variant::BOOL, PROPERTY_HINT_NONE)
 }
 
 void TRTrackFlagsInfo::_bind_methods()
 {
-    //
+    //Ref<Resource> values; //TRTrackFlag
+}
+
+void TRTrackMaterialValue::_bind_methods()
+{
+    //Ref<Resource> values; //TRTrackFlag
+}
+
+
+void TRTrackMaterialValueList::_bind_methods()
+{
+    GETTER_SETTER_BIND(TRTrackMaterialValueList, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackMaterialValue")
+}
+
+void TRTrackMaterialChannels::_bind_methods()
+{
+    GETTER_SETTER_BIND(TRTrackMaterialChannels, Name, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
 void TRTrackBlendShape::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(TRTrackBlendShape, Name, Variant::STRING, PROPERTY_HINT_NONE)
+}
+
+void TRTrackMaterialInit::_bind_methods()
+{
+    GETTER_SETTER_BIND(TRTrackMaterialInit, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialInit, list, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
+}
+
+void TRTrackMaterialAnim::_bind_methods()
+{
+    GETTER_SETTER_BIND(TRTrackMaterialAnim, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialAnim, list, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannels")
 }
 
 void TRTrackMaterial::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(TRTrackMaterial, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterial, init_values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackMaterialInit")
+    GETTER_SETTER_BIND(TRTrackMaterial, anim_values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackMaterialAnim")
 }
 
 void TRBlendTable::_bind_methods()
@@ -101,14 +133,66 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
         if(m_tracks)
         {
             Array trkArr;
-            for(int j = 0; j < m_tracks->size(); j++)
+            for(int i = 0; i < m_tracks->size(); i++)
             {
-                auto m_trk = m_tracks->Get(j);
+                auto m_trk = m_tracks->Get(i);
                 Ref<TRTrackMaterial> trk;
                 trk.instantiate();
                 trk->set_Name(Utils::toGodotString(m_trk->name()));
-                //trk->set_init_values();
-                //trk->set_anim_values();
+
+                auto init_vals = m_trk->init_values();
+                if(init_vals)
+                {
+                    Array ivs;
+                    for(int j = 0; j < init_vals->size(); j++)
+                    {
+                        auto iv = init_vals->Get(j);
+                        Ref<TRTrackMaterialInit> initVal;
+                        initVal.instantiate();
+                        initVal->set_Name(Utils::toGodotString(iv->name()));
+                        auto v = iv->list()->values();
+                        if(v)
+                        {
+                            Array vs;
+                            Ref<TRTrackMaterialValueList> initValList;
+                            initValList.instantiate();
+                            for(int k = 0; k < v->size(); k++)
+                            {
+                                auto val = v->Get(k);
+                                Ref<TRTrackMaterialValue> mval;
+                                mval.instantiate();
+                                mval->set_Time(val->time());
+                                mval->set_Value(val->value());
+                                mval->set_config_0(val->config_0());
+                                mval->set_config_1(val->config_1());
+                                mval->set_config_2(val->config_2());
+                                vs.push_back(mval);
+                            }
+                            initValList->set_values(vs);
+                            initVal->set_list(initValList);
+                        }
+                        ivs.push_back(initVal);
+                    }
+                    trk->set_init_values(ivs);
+                }
+
+                auto anim_vals = m_trk->anim_values();
+                if(anim_vals)
+                {
+                    Array avs;
+                    for(int j = 0; j < anim_vals->size(); j++)
+                    {
+                        auto av = anim_vals->Get(j);
+                        Ref<TRTrackMaterialAnim> animVal;
+                        animVal.instantiate();
+                        animVal->set_Name(Utils::toGodotString(av->name()));
+
+                        //
+                        avs.push_back(animVal);
+                    }
+                    trk->set_anim_values(avs);
+                }
+
                 trkArr.push_back(trk);
             }
             anim->set_material_tracks(trkArr);
@@ -148,47 +232,50 @@ Ref<TRBlendShapeTimeline> TRAnimationChannelMeshes::_LoadBlendshapeAnims(const T
     Ref<TRBlendShapeTimeline> anim;
     anim.instantiate();
 
-    auto _inf = blendAnim->info();
-    if(_inf)
+    if(blendAnim)
     {
-        Ref<TRAnimationInfo> _info;
-        _info.instantiate();
-        _info->set_does_loop(_inf->does_loop());
-        _info->set_animation_count(_inf->animation_count());
-        _info->set_animation_rate(_inf->animation_rate());
-
-        anim->set_info(_info);
-    }
-    anim->set_res_1(blendAnim->res_1());
-    auto blendTracks = blendAnim->blendshape_tracks();
-    if(blendTracks)
-    {
-        Array bshapeArr;
-        for(int i = 0; i < blendTracks->size(); i++)
+        auto _inf = blendAnim->info();
+        if(_inf)
         {
-            auto trk = blendTracks->Get(i);
-            Ref<TRTrackBlendShape> bshape;
-            bshape.instantiate();
-            //TODO
-            bshapeArr.push_back(bshape);
-        }
-        anim->set_blendshape_tracks(bshapeArr);
-    }
-    anim->set_res_3(blendAnim->res_3());
+            Ref<TRAnimationInfo> _info;
+            _info.instantiate();
+            _info->set_does_loop(_inf->does_loop());
+            _info->set_animation_count(_inf->animation_count());
+            _info->set_animation_rate(_inf->animation_rate());
 
-    auto blist = blendAnim->blend_list();
-    if(blist)
-    {
-        Array bshapeArr;
-        for(int i = 0; i < blist->size(); i++)
-        {
-            auto trk = blist->Get(i);
-            Ref<TRBlendTable> bshape;
-            bshape.instantiate();
-            bshape->set_Name(Utils::toGodotString(trk->name()));
-            bshapeArr.push_back(bshape);
+            anim->set_info(_info);
         }
-        anim->set_blend_list(bshapeArr);
+        anim->set_res_1(blendAnim->res_1());
+        auto blendTracks = blendAnim->blendshape_tracks();
+        if(blendTracks)
+        {
+            Array bshapeArr;
+            for(int i = 0; i < blendTracks->size(); i++)
+            {
+                auto trk = blendTracks->Get(i);
+                Ref<TRTrackBlendShape> bshape;
+                bshape.instantiate();
+                //TODO
+                bshapeArr.push_back(bshape);
+            }
+            anim->set_blendshape_tracks(bshapeArr);
+        }
+        anim->set_res_3(blendAnim->res_3());
+
+        auto blist = blendAnim->blend_list();
+        if(blist)
+        {
+            Array bshapeArr;
+            for(int i = 0; i < blist->size(); i++)
+            {
+                auto trk = blist->Get(i);
+                Ref<TRBlendTable> bshape;
+                bshape.instantiate();
+                bshape->set_Name(Utils::toGodotString(trk->name()));
+                bshapeArr.push_back(bshape);
+            }
+            anim->set_blend_list(bshapeArr);
+        }
     }
 
     return anim;

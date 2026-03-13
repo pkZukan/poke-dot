@@ -65,10 +65,10 @@ public:
 	FixedBoolTrack(){}
 	~FixedBoolTrack(){}
 
-	GETTER_SETTER_DEFINE(bool, values)
+	GETTER_SETTER_DEFINE(bool, value)
 
 private:
-	bool values;
+	bool value;
 };
 
 class TRBlendTable : public Resource {
@@ -78,6 +78,34 @@ protected:
 public:
 	TRBlendTable(){}
 	~TRBlendTable(){}
+	
+	GETTER_SETTER_DEFINE(String, Name)
+
+private:
+	String Name;
+};
+
+class TRTrackMaterialValueList : public Resource {
+    GDCLASS(TRTrackMaterialValueList, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackMaterialValueList(){}
+	~TRTrackMaterialValueList(){}
+	
+	GETTER_SETTER_DEFINE(Array, values)
+
+private:
+	Array values;
+};
+
+class TRTrackMaterialChannels : public Resource {
+    GDCLASS(TRTrackMaterialChannels, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackMaterialChannels(){}
+	~TRTrackMaterialChannels(){}
 	
 	GETTER_SETTER_DEFINE(String, Name)
 
@@ -133,6 +161,60 @@ private:
 	Array blendshape_tracks;
 	uint8_t res_3;
 	Array blend_list;
+};
+
+class TRTrackMaterialValue : public Resource {
+    GDCLASS(TRTrackMaterialValue, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackMaterialValue(){}
+	~TRTrackMaterialValue(){}
+
+	GETTER_SETTER_DEFINE(float, Time)
+	GETTER_SETTER_DEFINE(float, Value)
+	GETTER_SETTER_DEFINE(uint32_t, config_0)
+	GETTER_SETTER_DEFINE(uint32_t, config_1)
+	GETTER_SETTER_DEFINE(uint32_t, config_2)
+	
+private:
+	float Time;
+	float Value;
+	uint32_t config_0;
+	uint32_t config_1;
+	uint32_t config_2;
+};
+
+class TRTrackMaterialInit : public Resource {
+    GDCLASS(TRTrackMaterialInit, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackMaterialInit(){}
+	~TRTrackMaterialInit(){}
+
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, list)
+	
+private:
+	String Name;
+	Ref<TRTrackMaterialValueList> list;
+};
+
+class TRTrackMaterialAnim : public Resource {
+    GDCLASS(TRTrackMaterialAnim, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackMaterialAnim(){}
+	~TRTrackMaterialAnim(){}
+
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Array, list)
+	
+private:
+	String Name;
+	Array list;
 };
 
 class TRTrackMaterial : public Resource {
