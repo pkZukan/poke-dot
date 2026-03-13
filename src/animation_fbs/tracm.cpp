@@ -31,7 +31,11 @@ void TRTrackFlagsInfo::_bind_methods()
 
 void TRTrackMaterialValue::_bind_methods()
 {
-    //Ref<Resource> values; //TRTrackFlag
+    GETTER_SETTER_BIND(TRTrackMaterialValue, Time, Variant::FLOAT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialValue, Value, Variant::FLOAT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialValue, config_0, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialValue, config_1, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialValue, config_2, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 
@@ -42,7 +46,10 @@ void TRTrackMaterialValueList::_bind_methods()
 
 void TRTrackMaterialChannels::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRTrackMaterialChannels, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackMaterialChannels, red, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
+    GETTER_SETTER_BIND(TRTrackMaterialChannels, green, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
+    GETTER_SETTER_BIND(TRTrackMaterialChannels, blue, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
+    GETTER_SETTER_BIND(TRTrackMaterialChannels, alpha, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
 }
 
 void TRTrackBlendShape::_bind_methods()
@@ -187,7 +194,30 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
                         animVal.instantiate();
                         animVal->set_Name(Utils::toGodotString(av->name()));
 
+                        auto tma = av->list();
+                        Ref<TRTrackMaterialChannels> trkMatChan;
+                        trkMatChan.instantiate();
+
+                        Ref<TRTrackMaterialValueList> r;
+                        r.instantiate();
+                        Array rArr;
                         //
+                        r->set_values(rArr);
+                        trkMatChan->set_red(r);
+
+                        Ref<TRTrackMaterialValueList> g;
+                        g.instantiate();
+                        trkMatChan->set_green(g);
+
+                        Ref<TRTrackMaterialValueList> b;
+                        b.instantiate();
+                        trkMatChan->set_blue(b);
+
+                        Ref<TRTrackMaterialValueList> a;
+                        a.instantiate();
+                        trkMatChan->set_alpha(a);
+
+                        animVal->set_list(trkMatChan);
                         avs.push_back(animVal);
                     }
                     trk->set_anim_values(avs);

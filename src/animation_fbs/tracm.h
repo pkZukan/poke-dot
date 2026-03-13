@@ -107,10 +107,16 @@ public:
 	TRTrackMaterialChannels(){}
 	~TRTrackMaterialChannels(){}
 	
-	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, red)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, green)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, blue)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, alpha)
 
 private:
-	String Name;
+	Ref<TRTrackMaterialValueList> red;
+	Ref<TRTrackMaterialValueList> green;
+	Ref<TRTrackMaterialValueList> blue;
+	Ref<TRTrackMaterialValueList> alpha;
 };
 
 class TRTrackBlendShape : public Resource {
@@ -210,11 +216,11 @@ public:
 	~TRTrackMaterialAnim(){}
 
 	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Array, list)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannels>, list)
 	
 private:
 	String Name;
-	Array list;
+	Ref<TRTrackMaterialChannels> list;
 };
 
 class TRTrackMaterial : public Resource {
