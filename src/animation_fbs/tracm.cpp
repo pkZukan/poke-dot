@@ -117,6 +117,32 @@ void TRAnimationChannelMeshes::_bind_methods()
     GETTER_SETTER_BIND(TRAnimationChannelMeshes, tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRMeshAnimeTrack")
 }
 
+Ref<TRTrackMaterialValueList> TRAnimationChannelMeshes::_LoadTrackMaterialValueList(const Titan::Animation::TrackMaterialValueList *matValList)
+{
+    Array vs;
+    Ref<TRTrackMaterialValueList> trkMatValList;
+    trkMatValList.instantiate();
+    auto vals = matValList->values();
+    if(matValList)
+    {
+        for(int k = 0; k < vals->size(); k++)
+        {
+            auto val = vals->Get(k);
+            Ref<TRTrackMaterialValue> mval;
+            mval.instantiate();
+            mval->set_Time(val->time());
+            mval->set_Value(val->value());
+            mval->set_config_0(val->config_0());
+            mval->set_config_1(val->config_1());
+            mval->set_config_2(val->config_2());
+            vs.push_back(mval);
+        }
+        trkMatValList->set_values(vs);
+    }
+
+    return trkMatValList;
+}
+
 Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim)
 {
     Ref<TRTrackMaterialTimeline> anim;
@@ -157,25 +183,10 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
                         Ref<TRTrackMaterialInit> initVal;
                         initVal.instantiate();
                         initVal->set_Name(Utils::toGodotString(iv->name()));
-                        auto v = iv->list()->values();
-                        if(v)
+                        auto list = iv->list();
+                        if(list)
                         {
-                            Array vs;
-                            Ref<TRTrackMaterialValueList> initValList;
-                            initValList.instantiate();
-                            for(int k = 0; k < v->size(); k++)
-                            {
-                                auto val = v->Get(k);
-                                Ref<TRTrackMaterialValue> mval;
-                                mval.instantiate();
-                                mval->set_Time(val->time());
-                                mval->set_Value(val->value());
-                                mval->set_config_0(val->config_0());
-                                mval->set_config_1(val->config_1());
-                                mval->set_config_2(val->config_2());
-                                vs.push_back(mval);
-                            }
-                            initValList->set_values(vs);
+                            Ref<TRTrackMaterialValueList> initValList = _LoadTrackMaterialValueList(list);
                             initVal->set_list(initValList);
                         }
                         ivs.push_back(initVal);
@@ -198,24 +209,17 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
                         Ref<TRTrackMaterialChannels> trkMatChan;
                         trkMatChan.instantiate();
 
-                        Ref<TRTrackMaterialValueList> r;
-                        r.instantiate();
-                        Array rArr;
-                        //
-                        r->set_values(rArr);
+                        Ref<TRTrackMaterialValueList> r = _LoadTrackMaterialValueList(tma->red());
                         trkMatChan->set_red(r);
 
-                        Ref<TRTrackMaterialValueList> g;
-                        g.instantiate();
-                        trkMatChan->set_green(g);
+                        Ref<TRTrackMaterialValueList> g = _LoadTrackMaterialValueList(tma->green());
+                        trkMatChan->set_red(g);
 
-                        Ref<TRTrackMaterialValueList> b;
-                        b.instantiate();
-                        trkMatChan->set_blue(b);
+                        Ref<TRTrackMaterialValueList> b = _LoadTrackMaterialValueList(tma->blue());
+                        trkMatChan->set_red(b);
 
-                        Ref<TRTrackMaterialValueList> a;
-                        a.instantiate();
-                        trkMatChan->set_alpha(a);
+                        Ref<TRTrackMaterialValueList> a = _LoadTrackMaterialValueList(tma->alpha());
+                        trkMatChan->set_red(a);
 
                         animVal->set_list(trkMatChan);
                         avs.push_back(animVal);

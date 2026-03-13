@@ -321,6 +321,7 @@ public:
 	GETTER_SETTER_DEFINE(Array, tracks)
 
 private:
+	Ref<TRTrackMaterialValueList> _LoadTrackMaterialValueList(const Titan::Animation::TrackMaterialValueList *matValList);
 	Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim);
 	Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline *visAnim);
 	Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline *blendAnim);
