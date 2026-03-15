@@ -135,8 +135,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRTrackMaterial)
 		GDREGISTER_CLASS(TRTrackMaterialAnim)
 		GDREGISTER_CLASS(TRTrackMaterialInit)
-		GDREGISTER_CLASS(TRTrackMaterialChannels)
-		GDREGISTER_CLASS(TRTrackMaterialValueList)
+		GDREGISTER_CLASS(TRTrackMaterialChannel)
+		GDREGISTER_CLASS(TRTrackMaterialChannelVec4)
 		GDREGISTER_CLASS(TRTrackMaterialValue)
 		GDREGISTER_CLASS(TRTrackBlendshapeInit)
 

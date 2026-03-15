@@ -25,13 +25,13 @@ private:
 	String Name;
 };
 
-class TRTrackMaterialValueList : public Resource {
-    GDCLASS(TRTrackMaterialValueList, Resource)
+class TRTrackMaterialChannel : public Resource {
+    GDCLASS(TRTrackMaterialChannel, Resource)
 protected:
 	static void _bind_methods();
 public:
-	TRTrackMaterialValueList(){}
-	~TRTrackMaterialValueList(){}
+	TRTrackMaterialChannel(){}
+	~TRTrackMaterialChannel(){}
 	
 	GETTER_SETTER_DEFINE(Array, values)
 
@@ -39,24 +39,24 @@ private:
 	Array values;
 };
 
-class TRTrackMaterialChannels : public Resource {
-    GDCLASS(TRTrackMaterialChannels, Resource)
+class TRTrackMaterialChannelVec4 : public Resource {
+    GDCLASS(TRTrackMaterialChannelVec4, Resource)
 protected:
 	static void _bind_methods();
 public:
-	TRTrackMaterialChannels(){}
-	~TRTrackMaterialChannels(){}
+	TRTrackMaterialChannelVec4(){}
+	~TRTrackMaterialChannelVec4(){}
 	
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, red)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, green)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, blue)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, alpha)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, x)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, y)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, z)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, w)
 
 private:
-	Ref<TRTrackMaterialValueList> red;
-	Ref<TRTrackMaterialValueList> green;
-	Ref<TRTrackMaterialValueList> blue;
-	Ref<TRTrackMaterialValueList> alpha;
+	Ref<TRTrackMaterialChannel> x;
+	Ref<TRTrackMaterialChannel> y;
+	Ref<TRTrackMaterialChannel> z;
+	Ref<TRTrackMaterialChannel> w;
 };
 
 class TRTrackBlendshapeInit : public Resource {
@@ -86,13 +86,13 @@ public:
 	GETTER_SETTER_DEFINE(String, Name)
 	GETTER_SETTER_DEFINE(Array, init_values)
 	GETTER_SETTER_DEFINE(Ref<Resource>, track)
-	GETTER_SETTER_DEFINE(uint32_t, unk_4)
+	GETTER_SETTER_DEFINE(uint32_t, blend_list_idx)
 
 private:
 	String Name;
 	Array init_values;
 	Ref<Resource> track;	//BlendTrack
-	uint32_t unk_4;
+	uint32_t blend_list_idx;
 };
 
 class TRTrackFlagsInfo : public Resource {
@@ -162,11 +162,11 @@ public:
 	~TRTrackMaterialInit(){}
 
 	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialValueList>, list)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, list)
 	
 private:
 	String Name;
-	Ref<TRTrackMaterialValueList> list;
+	Ref<TRTrackMaterialChannel> list;
 };
 
 class TRTrackMaterialAnim : public Resource {
@@ -178,11 +178,11 @@ public:
 	~TRTrackMaterialAnim(){}
 
 	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannels>, list)
+	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannelVec4>, list)
 	
 private:
 	String Name;
-	Ref<TRTrackMaterialChannels> list;
+	Ref<TRTrackMaterialChannelVec4> list;
 };
 
 class TRTrackMaterial : public Resource {
@@ -283,7 +283,7 @@ public:
 	GETTER_SETTER_DEFINE(Array, tracks)
 
 private:
-	Ref<TRTrackMaterialValueList> _LoadTrackMaterialValueList(const Titan::Animation::TrackMaterialValueList *matValList);
+	Ref<TRTrackMaterialChannel> _LoadTrackMaterialChannel(const Titan::Animation::TrackMaterialValueList *matValList);
 	Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim);
 	Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline *visAnim);
 	Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline *blendAnim);

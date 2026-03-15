@@ -19,17 +19,17 @@ void TRTrackMaterialValue::_bind_methods()
     GETTER_SETTER_BIND(TRTrackMaterialValue, config_2, Variant::INT, PROPERTY_HINT_NONE)
 }
 
-void TRTrackMaterialValueList::_bind_methods()
+void TRTrackMaterialChannel::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRTrackMaterialValueList, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackMaterialValue")
+    GETTER_SETTER_BIND(TRTrackMaterialChannel, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackMaterialValue")
 }
 
-void TRTrackMaterialChannels::_bind_methods()
+void TRTrackMaterialChannelVec4::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRTrackMaterialChannels, red, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
-    GETTER_SETTER_BIND(TRTrackMaterialChannels, green, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
-    GETTER_SETTER_BIND(TRTrackMaterialChannels, blue, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
-    GETTER_SETTER_BIND(TRTrackMaterialChannels, alpha, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, x, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, y, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, z, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, w, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
 }
 
 void TRTrackBlendshapeInit::_bind_methods()
@@ -43,7 +43,7 @@ void TRTrackBlendShape::_bind_methods()
     GETTER_SETTER_BIND(TRTrackBlendShape, Name, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRTrackBlendShape, init_values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackBlendshapeInit")
     GETTER_SETTER_BIND(TRTrackBlendShape, track, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, BLEND_TRACK)
-    GETTER_SETTER_BIND(TRTrackBlendShape, unk_4, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRTrackBlendShape, blend_list_idx, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 void TRTrackMaterialInit::_bind_methods()
@@ -72,12 +72,18 @@ void TRBlendTable::_bind_methods()
 
 void TRBlendShapeTimeline::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(TRBlendShapeTimeline, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationInfo")
+    GETTER_SETTER_BIND(TRBlendShapeTimeline, res_1, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRBlendShapeTimeline, blendshape_tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackBlendShape")
+    GETTER_SETTER_BIND(TRBlendShapeTimeline, res_3, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRBlendShapeTimeline, blend_list, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRBlendTable")
 }
 
 void TRVisibilityShapeTimeline::_bind_methods()
 {
-    //
+    GETTER_SETTER_BIND(TRVisibilityShapeTimeline, time, Variant::FLOAT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRVisibilityShapeTimeline, value, Variant::FLOAT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRVisibilityShapeTimeline, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackFlagsInfo")
 }
 
 void TRTrackMaterialTimeline::_bind_methods()
@@ -106,10 +112,10 @@ void TRAnimationChannelMeshes::_bind_methods()
     GETTER_SETTER_BIND(TRAnimationChannelMeshes, tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRMeshAnimeTrack")
 }
 
-Ref<TRTrackMaterialValueList> TRAnimationChannelMeshes::_LoadTrackMaterialValueList(const Titan::Animation::TrackMaterialValueList *matValList)
+Ref<TRTrackMaterialChannel> TRAnimationChannelMeshes::_LoadTrackMaterialChannel(const Titan::Animation::TrackMaterialValueList *matValList)
 {
     Array vs;
-    Ref<TRTrackMaterialValueList> trkMatValList;
+    Ref<TRTrackMaterialChannel> trkMatValList;
     trkMatValList.instantiate();
     if(matValList)
     {
@@ -175,7 +181,7 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
                         auto list = iv->list();
                         if(list)
                         {
-                            Ref<TRTrackMaterialValueList> initValList = _LoadTrackMaterialValueList(list);
+                            Ref<TRTrackMaterialChannel> initValList = _LoadTrackMaterialChannel(list);
                             initVal->set_list(initValList);
                         }
                         ivs.push_back(initVal);
@@ -195,20 +201,20 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
                         animVal->set_Name(Utils::toGodotString(av->name()));
 
                         auto tma = av->list();
-                        Ref<TRTrackMaterialChannels> trkMatChan;
+                        Ref<TRTrackMaterialChannelVec4> trkMatChan;
                         trkMatChan.instantiate();
 
-                        Ref<TRTrackMaterialValueList> r = _LoadTrackMaterialValueList(tma->red());
-                        trkMatChan->set_red(r);
+                        Ref<TRTrackMaterialChannel> x = _LoadTrackMaterialChannel(tma->x());
+                        trkMatChan->set_x(x);
 
-                        Ref<TRTrackMaterialValueList> g = _LoadTrackMaterialValueList(tma->green());
-                        trkMatChan->set_green(g);
+                        Ref<TRTrackMaterialChannel> y = _LoadTrackMaterialChannel(tma->y());
+                        trkMatChan->set_y(y);
 
-                        Ref<TRTrackMaterialValueList> b = _LoadTrackMaterialValueList(tma->blue());
-                        trkMatChan->set_blue(b);
+                        Ref<TRTrackMaterialChannel> z = _LoadTrackMaterialChannel(tma->z());
+                        trkMatChan->set_z(z);
 
-                        Ref<TRTrackMaterialValueList> a = _LoadTrackMaterialValueList(tma->alpha());
-                        trkMatChan->set_alpha(a);
+                        Ref<TRTrackMaterialChannel> w = _LoadTrackMaterialChannel(tma->w());
+                        trkMatChan->set_w(w);
 
                         animVal->set_list(trkMatChan);
                         avs.push_back(animVal);
@@ -422,7 +428,7 @@ Ref<TRBlendShapeTimeline> TRAnimationChannelMeshes::_LoadBlendshapeAnims(const T
                 Ref<Resource> btrack = _LoadBlendTracks(trk->track_type(), trk->track());
                 bshape->set_track(btrack);
 
-                bshape->set_unk_4(trk->unk_4());
+                bshape->set_blend_list_idx(trk->blend_list_idx());
                 bshapeArr.push_back(bshape);
             }
             anim->set_blendshape_tracks(bshapeArr);

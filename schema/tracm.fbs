@@ -53,10 +53,10 @@ table TrackMaterialInit {
 }
 
 table TrackMaterialChannels {
-	red: TrackMaterialValueList;
-	green: TrackMaterialValueList;
-	blue: TrackMaterialValueList;
-	alpha: TrackMaterialValueList;
+	x: TrackMaterialValueList;
+	y: TrackMaterialValueList;
+	z: TrackMaterialValueList;
+	w: TrackMaterialValueList;
 }
 
 table TrackMaterialAnim {
@@ -110,7 +110,7 @@ table TrackBlendShape {
     name: string;
     init_values: [TrackBlendshapeInit];
     track: BlendTrack;
-	unk_4: uint32;
+	blend_list_idx: uint32;
 }
 
 table blendtable {
