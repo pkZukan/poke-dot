@@ -95,17 +95,25 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		//anim_common
 		GDREGISTER_CLASS(TRAnimationInfo)
+		GDREGISTER_CLASS(FixedVectorTrack)
+		GDREGISTER_CLASS(DynamicVectorTrack)
+		GDREGISTER_CLASS(Framed8VectorTrack)
+		GDREGISTER_CLASS(Framed16VectorTrack)
+		GDREGISTER_CLASS(FixedRotationTrack)
+		GDREGISTER_CLASS(DynamicRotationTrack)
+		GDREGISTER_CLASS(Framed8RotationTrack)
+		GDREGISTER_CLASS(Framed16RotationTrack)
+		GDREGISTER_CLASS(FixedBoolTrack)
+		GDREGISTER_CLASS(DynamicBoolTrack)
+		GDREGISTER_CLASS(Framed8BoolTrack)
+		GDREGISTER_CLASS(Framed16BoolTrack)
+		GDREGISTER_CLASS(FixedFloatTrack)
+		GDREGISTER_CLASS(DynamicFloatTrack)
+		GDREGISTER_CLASS(Framed8FloatTrack)
+		GDREGISTER_CLASS(Framed16FloatTrack)
 
 		//tranm
 		GDREGISTER_CLASS(BoneInit)
-		GDREGISTER_CLASS(FixedVectorTrack)
-		GDREGISTER_CLASS(DynamicVectorTrack)
-		GDREGISTER_CLASS(Framed16VectorTrack)
-		GDREGISTER_CLASS(Framed8VectorTrack)
-		GDREGISTER_CLASS(FixedRotationTrack)
-		GDREGISTER_CLASS(DynamicRotationTrack)
-		GDREGISTER_CLASS(Framed16RotationTrack)
-		GDREGISTER_CLASS(Framed8RotationTrack)
 		GDREGISTER_CLASS(BoneTrack)
 		GDREGISTER_CLASS(BoneAnimation)
 		GDREGISTER_CLASS(TRAnimation)
@@ -117,10 +125,6 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//tracm
 		GDREGISTER_CLASS(TRAnimationChannelMeshes)
 		GDREGISTER_CLASS(TRMeshAnimeTrack)
-		GDREGISTER_CLASS(Framed8BoolTrack)
-		GDREGISTER_CLASS(Framed16BoolTrack)
-		GDREGISTER_CLASS(DynamicBoolTrack)
-		GDREGISTER_CLASS(FixedBoolTrack)
 		GDREGISTER_CLASS(TRTrackFlagsInfo)
 		GDREGISTER_CLASS(TRBlendShapeTimeline)
 		GDREGISTER_CLASS(TRVisibilityShapeTimeline)
@@ -134,6 +138,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRTrackMaterialChannels)
 		GDREGISTER_CLASS(TRTrackMaterialValueList)
 		GDREGISTER_CLASS(TRTrackMaterialValue)
+		GDREGISTER_CLASS(TRTrackBlendshapeInit)
 
 		//tracr
 		GDREGISTER_CLASS(TRAnimationChannelResource)

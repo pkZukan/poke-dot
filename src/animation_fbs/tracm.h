@@ -9,68 +9,8 @@
 #include "generated/tracm_generated.h"
 #include <utils.h>
 
-namespace godot {
-
-class Framed8BoolTrack : public Resource {
-	GDCLASS(Framed8BoolTrack, Resource)
-protected:
-	static void _bind_methods();
-public:
-	Framed8BoolTrack(){}
-	~Framed8BoolTrack(){}
-
-    GETTER_SETTER_DEFINE(Array, frames)
-	GETTER_SETTER_DEFINE(Array, values)
-
-private:
-    Array frames;
-	Array values;
-};
-
-class Framed16BoolTrack : public Resource {
-	GDCLASS(Framed16BoolTrack, Resource)
-protected:
-	static void _bind_methods();
-public:
-	Framed16BoolTrack(){}
-	~Framed16BoolTrack(){}
-
-    GETTER_SETTER_DEFINE(Array, frames)
-	GETTER_SETTER_DEFINE(Array, values)
-
-private:
-    Array frames;
-	Array values;
-};
-
-class DynamicBoolTrack : public Resource {
-	GDCLASS(DynamicBoolTrack, Resource)
-protected:
-	static void _bind_methods();
-public:
-	DynamicBoolTrack(){}
-	~DynamicBoolTrack(){}
-
-	GETTER_SETTER_DEFINE(Array, values)
-
-private:
-	Array values;
-};
-
-class FixedBoolTrack : public Resource {
-	GDCLASS(FixedBoolTrack, Resource)
-protected:
-	static void _bind_methods();
-public:
-	FixedBoolTrack(){}
-	~FixedBoolTrack(){}
-
-	GETTER_SETTER_DEFINE(bool, value)
-
-private:
-	bool value;
-};
-
+namespace godot 
+{
 class TRBlendTable : public Resource {
     GDCLASS(TRBlendTable, Resource)
 protected:
@@ -119,6 +59,22 @@ private:
 	Ref<TRTrackMaterialValueList> alpha;
 };
 
+class TRTrackBlendshapeInit : public Resource {
+    GDCLASS(TRTrackBlendshapeInit, Resource)
+protected:
+	static void _bind_methods();
+public:
+	TRTrackBlendshapeInit(){}
+	~TRTrackBlendshapeInit(){}
+	
+	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Array, blendshape_list)
+
+private:
+	String Name;
+	Array blendshape_list;
+};
+
 class TRTrackBlendShape : public Resource {
     GDCLASS(TRTrackBlendShape, Resource)
 protected:
@@ -128,9 +84,15 @@ public:
 	~TRTrackBlendShape(){}
 	
 	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(Array, init_values)
+	GETTER_SETTER_DEFINE(Ref<Resource>, track)
+	GETTER_SETTER_DEFINE(uint32_t, unk_4)
 
 private:
 	String Name;
+	Array init_values;
+	Ref<Resource> track;	//BlendTrack
+	uint32_t unk_4;
 };
 
 class TRTrackFlagsInfo : public Resource {
@@ -325,6 +287,8 @@ private:
 	Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim);
 	Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline *visAnim);
 	Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline *blendAnim);
+	Ref<Resource> _LoadTrackFlag(Titan::Animation::TrackFlag type, const void* data);
+	Ref<Resource> _LoadBlendTracks(Titan::Animation::BlendTrack type, const void* data);
 
 	Ref<TRAnimationInfo> info;
     Array tracks;

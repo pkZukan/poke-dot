@@ -109,14 +109,14 @@ void TrinityAnimationConverter::sample_vector_track(
 
     if (Ref<FixedVectorTrack> fixed = trk; fixed.is_valid()) 
     {
-        Vector3 value = fixed->get_co();
+        Vector3 value = fixed->get_value();
         anim->track_insert_key(track_idx, 0.0f, value);
         anim->track_insert_key(track_idx, end_time, value);
 
     } 
     else if (Ref<DynamicVectorTrack> dynamic = trk; dynamic.is_valid()) 
     {
-        Array co = dynamic->get_co();
+        Array co = dynamic->get_values();
         for (int frame = 0; frame < co.size(); frame++) 
         {
             float time = MIN((float)frame / frame_rate, end_time);
@@ -126,7 +126,7 @@ void TrinityAnimationConverter::sample_vector_track(
     } else if (Ref<Framed8VectorTrack> f8 = trk; f8.is_valid()) 
     {
         Array frames = f8->get_frames();
-        Array co     = f8->get_co();
+        Array co     = f8->get_values();
         for (int i = 0; i < frames.size(); i++) 
         {
             float time = (float)(int)frames[i] / frame_rate;
@@ -136,7 +136,7 @@ void TrinityAnimationConverter::sample_vector_track(
     } else if (Ref<Framed16VectorTrack> f16 = trk; f16.is_valid()) 
     {
         Array frames = f16->get_frames();
-        Array co     = f16->get_co();
+        Array co     = f16->get_values();
         for (int i = 0; i < frames.size(); i++) 
         {
             float time = (float)(int)frames[i] / frame_rate;
@@ -155,14 +155,14 @@ void TrinityAnimationConverter::sample_rotation_track(
 
     if (Ref<FixedRotationTrack> fixed = trk; fixed.is_valid()) 
     {
-        Quaternion quat = fixed->get_co();
+        Quaternion quat = fixed->get_value();
         anim->track_insert_key(track_idx, 0.0f, quat);
         anim->track_insert_key(track_idx, end_time, quat);
 
     } 
     else if (Ref<DynamicRotationTrack> dynamic = trk; dynamic.is_valid()) 
     {
-        Array co = dynamic->get_co();
+        Array co = dynamic->get_values();
         for (int frame = 0; frame < co.size(); frame++) 
         {
             float time = MIN((float)frame / frame_rate, end_time);
@@ -173,7 +173,7 @@ void TrinityAnimationConverter::sample_rotation_track(
     else if (Ref<Framed8RotationTrack> f8 = trk; f8.is_valid()) 
     {
         Array frames = f8->get_frames();
-        Array co     = f8->get_co();
+        Array co     = f8->get_values();
         for (int i = 0; i < frames.size(); i++) 
         {
             float time = (float)(int)frames[i] / frame_rate;
@@ -184,7 +184,7 @@ void TrinityAnimationConverter::sample_rotation_track(
     else if (Ref<Framed16RotationTrack> f16 = trk; f16.is_valid()) 
     {
         Array frames = f16->get_frames();
-        Array co     = f16->get_co();
+        Array co     = f16->get_values();
         for (int i = 0; i < frames.size(); i++) 
         {
             float time = (float)(int)frames[i] / frame_rate;

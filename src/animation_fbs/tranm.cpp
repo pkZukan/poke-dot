@@ -5,50 +5,6 @@
 
 using namespace godot;
 
-void Framed8RotationTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(Framed8RotationTrack, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
-    GETTER_SETTER_BIND(Framed8RotationTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Quaternion")
-}
-
-void Framed16RotationTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(Framed16RotationTrack, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
-    GETTER_SETTER_BIND(Framed16RotationTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Quaternion")
-}
-
-void DynamicRotationTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(DynamicRotationTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Quaternion")
-}
-
-void FixedRotationTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(FixedRotationTrack, co, Variant::QUATERNION, PROPERTY_HINT_NONE)
-}
-
-void Framed8VectorTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(Framed8VectorTrack, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
-    GETTER_SETTER_BIND(Framed8VectorTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Vector3")
-}
-
-void Framed16VectorTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(Framed16VectorTrack, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
-    GETTER_SETTER_BIND(Framed16VectorTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Vector3")
-}
-
-void DynamicVectorTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(DynamicVectorTrack, co, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "Vector3")
-}
-
-void FixedVectorTrack::_bind_methods()
-{
-    GETTER_SETTER_BIND(FixedVectorTrack, co, Variant::VECTOR3, PROPERTY_HINT_NONE)
-}
-
 void BoneTrack::_bind_methods()
 {
     GETTER_SETTER_BIND(BoneTrack, Name, Variant::STRING, PROPERTY_HINT_NONE)
@@ -122,7 +78,7 @@ Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, 
             auto src = static_cast<const Titan::Animation::FixedVectorTrack*>(data);
             Ref<FixedVectorTrack> t; 
             t.instantiate();
-            t->set_co(Utils::toGodotVec3(src->co()));
+            t->set_value(Utils::toGodotVec3(src->co()));
             return t;
         }
         case Titan::Animation::VectorTrack_DynamicVectorTrack: {
@@ -132,7 +88,7 @@ Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, 
             Array co;
             for (size_t i = 0; i < src->co()->size(); i++)
                 co.append(Utils::toGodotVec3(src->co()->Get(i)));
-            t->set_co(co);
+            t->set_values(co);
             return t;
         }
         case Titan::Animation::VectorTrack_Framed16VectorTrack: {
@@ -144,7 +100,7 @@ Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, 
                 frames.append(src->frames()->Get(i));
             for (size_t i = 0; i < src->co()->size(); i++)
                 co.append(Utils::toGodotVec3(src->co()->Get(i)));
-            t->set_frames(frames); t->set_co(co);
+            t->set_frames(frames); t->set_values(co);
             return t;
         }
         case Titan::Animation::VectorTrack_Framed8VectorTrack: {
@@ -156,7 +112,7 @@ Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, 
                 frames.append(src->frames()->Get(i));
             for (size_t i = 0; i < src->co()->size(); i++)
                 co.append(Utils::toGodotVec3(src->co()->Get(i)));
-            t->set_frames(frames); t->set_co(co);
+            t->set_frames(frames); t->set_values(co);
             return t;
         }
         default: return Ref<Resource>();
@@ -172,7 +128,7 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
             Ref<FixedRotationTrack> t; 
             t.instantiate();
             Quaternion quat = QuaternionHelper::Unpack(Vector3i(src->co()->x(), src->co()->y(), src->co()->z()));
-            t->set_co(quat);
+            t->set_value(quat);
             return t;
         }
         case Titan::Animation::RotationTrack_DynamicRotationTrack: 
@@ -187,7 +143,7 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
                 Quaternion quat = QuaternionHelper::Unpack(Vector3i(v->x(), v->y(), v->z()));
                 co.append(quat);
             }
-            t->set_co(co);
+            t->set_values(co);
             return t;
         }
         case Titan::Animation::RotationTrack_Framed16RotationTrack: 
@@ -205,7 +161,7 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
                 co.append(quat);
             }
             t->set_frames(frames); 
-            t->set_co(co);
+            t->set_values(co);
             return t;
         }
         case Titan::Animation::RotationTrack_Framed8RotationTrack: 
@@ -223,7 +179,7 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
                 co.append(quat);
             }
             t->set_frames(frames); 
-            t->set_co(co);
+            t->set_values(co);
             return t;
         }
         default: 
