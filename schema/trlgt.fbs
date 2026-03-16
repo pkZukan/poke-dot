@@ -1,0 +1,40 @@
+include "common.fbs";
+
+namespace Titan.gfx2;
+
+table BoundMatrix {
+    x: Titan.Math.Vec4;
+    y: Titan.Math.Vec4;
+    z: Titan.Math.Vec4;
+}
+
+table Vec4Parameter {
+    param_name: string;
+    value: Titan.Math.Vec4;
+}
+
+table FloatParameter {
+    param_name: string;
+    param_val: float; 
+}
+
+table StringParameter {
+    map_name: string;
+    map_file: string;
+}
+
+table Light {
+    name: string;
+    type: string;
+    matrix: BoundMatrix;
+    float_params: [FloatParameter];
+    vec4_params: [Vec4Parameter];
+    string_params: [StringParameter];
+}
+
+table TRLGT{
+    version: uint32;
+    lights: [Light];
+}
+
+root_type TRLGT;
