@@ -16,6 +16,7 @@
 
 #include "catalog_fbs/trpmcatalog.h"
 #include "actors/pokemon_catalog.h"
+#include "pml_fbs/personal_array.h"
 
 #include "actors/actor.h"
 #include "actors/pokemon_actor.h"
@@ -51,6 +52,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 
@@ -162,6 +164,17 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(AnimationResourceInfo)
 		GDREGISTER_CLASS(LocatorResourceInfo)
 
+		//personal
+		GDREGISTER_CLASS(TRPersonalArray)
+		GDREGISTER_CLASS(TRPersonalData)
+		GDREGISTER_CLASS(TRSpeciesInfo)
+		GDREGISTER_CLASS(TRMove)
+		GDREGISTER_CLASS(TRZukanData)
+		GDREGISTER_CLASS(TRHatch)
+		GDREGISTER_CLASS(TREvoData)
+		GDREGISTER_CLASS(TRGenderData)
+		GDREGISTER_CLASS(TRStatInfo)
+
 		//Entities
 		GDREGISTER_CLASS(ActorObj)
 		GDREGISTER_CLASS(PokemonActor)
@@ -190,6 +203,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 
@@ -226,6 +240,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 
