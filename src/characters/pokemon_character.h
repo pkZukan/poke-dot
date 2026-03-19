@@ -48,6 +48,7 @@ public:
     void Run();
     void Roar();
     void Attack();
+    void apply_movement(double delta);
 
 private:
     uint16_t species = 0;

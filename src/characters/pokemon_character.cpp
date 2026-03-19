@@ -20,6 +20,7 @@ void PokemonCharacter::_bind_methods()
     ClassDB::bind_method(D_METHOD("Run"), &PokemonCharacter::Run);
     ClassDB::bind_method(D_METHOD("Roar"), &PokemonCharacter::Roar);
     ClassDB::bind_method(D_METHOD("Attack"), &PokemonCharacter::Attack);
+    ClassDB::bind_method(D_METHOD("apply_movement", "delta"), &PokemonCharacter::apply_movement);
 }
 
 PokemonCharacter::~PokemonCharacter()
@@ -165,4 +166,33 @@ void PokemonCharacter::Roar()
 void PokemonCharacter::Attack()
 {
     _travel("00400_attack01");
+}
+
+void PokemonCharacter::apply_movement(double delta)
+{
+    Vector3 root_motion = GetRootMotionPos();
+
+    float max_delta = 0.1f;
+    if (root_motion.length() > max_delta)
+    {
+        root_motion = Vector3();
+    }
+
+    Vector3 vel = get_velocity();
+    if (is_on_floor())
+    {
+        Vector3 motion = get_global_transform().basis.xform(root_motion);
+        vel.x = motion.x / delta;
+        vel.z = motion.z / delta;
+        if (vel.y < 0)
+        {
+            vel.y = 0;
+        }
+    }
+    else
+    {
+        vel.y -= 9.8 * delta;
+    }
+    set_velocity(vel);
+    move_and_slide();
 }

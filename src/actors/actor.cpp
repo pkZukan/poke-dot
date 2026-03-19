@@ -131,7 +131,7 @@ void ActorObj::_load_animation_resource(String filepath)
         if(mat.is_valid())
         {
             String file = base_path.path_join(anim->get_FileName());
-            //TODO
+            //TODO: TRACM
         }
         Ref<TRAnimationTrackResource> eff = res->get_effect();
         if(eff.is_valid())

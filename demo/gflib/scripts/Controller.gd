@@ -23,23 +23,6 @@ func _input(event) -> void:
 func _process(_delta: float) -> void:
 	pass
 	
-func ApplyMovement(delta):
-	var root_motion = pkmn.GetRootMotionPos()
-	
-	var max_delta = 0.1
-	if root_motion.length() > max_delta:
-		root_motion = Vector3.ZERO
-	
-	if pkmn.is_on_floor():
-		var motion = pkmn.global_transform.basis * root_motion
-		pkmn.velocity.x = motion.x / delta
-		pkmn.velocity.z = motion.z / delta
-		if pkmn.velocity.y < 0:
-			pkmn.velocity.y = 0
-	else:
-		pkmn.velocity.y -= 9.8 * delta
-
-	pkmn.move_and_slide()
 	
 func Idle():
 	pkmn.Idle()
@@ -82,4 +65,4 @@ func _physics_process(delta) -> void:
 	if Input.is_action_pressed("attack"):
 		pkmn.Attack()	
 	
-	ApplyMovement(delta)
+	pkmn.apply_movement(delta)
