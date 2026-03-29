@@ -130,13 +130,13 @@ void ActorObj::_load_animation_resource(String filepath)
         Ref<TRAnimationTrackResource> mat = res->get_material();
         if(mat.is_valid())
         {
-            String file = base_path.path_join(anim->get_FileName());
-            //TODO: TRACM
+            String file = base_path.path_join(mat->get_FileName());
+            _add_mesh_animation(file, name);
         }
         Ref<TRAnimationTrackResource> eff = res->get_effect();
         if(eff.is_valid())
         {
-            String file = base_path.path_join(anim->get_FileName());
+            String file = base_path.path_join(eff->get_FileName());
             //TODO
         }
     }
@@ -223,6 +223,22 @@ void ActorObj::_add_animation(String anim_file, String name)
     }
 
     _anim_lib->add_animation(name, godot_anim);
+}
+
+void ActorObj::_add_mesh_animation(String tracm_file, String name)
+{
+    Ref<Animation> godot_anim;
+    if (_anim_lib->has_animation(name)) 
+    {
+        godot_anim = _anim_lib->get_animation(name);
+    } 
+    else 
+    {
+        godot_anim.instantiate();
+        _anim_lib->add_animation(name, godot_anim);
+    }
+
+    TrinityAnimationConverter::convert_tracm_to_godot_animation(tracm_file, godot_anim);
 }
 
 Skeleton3D* ActorObj::_find_skeleton(Node* node) {

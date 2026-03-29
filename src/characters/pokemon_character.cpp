@@ -82,6 +82,9 @@ void PokemonCharacter::_initialize()
     add_child(_col);
     add_child(_anim_tree);
 
+    // AnimationTree must resolve track paths from the same root as AnimationPlayer
+    _anim_tree->set_root_node(_anim_tree->get_path_to(_actor));
+
     _actor->Initialize();
 
     //Going to set the collision box as the bounding box for convenience
@@ -122,6 +125,12 @@ void PokemonCharacter::_cleanup()
         _actor->_cleanup();
         _actor->queue_free();
         _actor = nullptr;
+    }
+
+    if (_col)
+    {
+        _col->queue_free();
+        _col = nullptr;
     }
 
     if(_anim_tree)
