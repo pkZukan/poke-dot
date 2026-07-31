@@ -18,11 +18,13 @@ public:
 	~TRScene(){}
 
     GETTER_SETTER_DEFINE(String, Name)
-    GETTER_SETTER_DEFINE(String, Type)
+	GETTER_SETTER_DEFINE(Array, nested_type)
+	GETTER_SETTER_DEFINE(Array, sub_objects)
 
 private:
     String Name;
-    String Type;
+	Array nested_type;
+	Array sub_objects;
 };
 
 class TRSCN : public Resource {
@@ -37,12 +39,22 @@ public:
 	
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(String, Extra)
-    GETTER_SETTER_DEFINE(Array, scenes)
+	GETTER_SETTER_DEFINE(uint32_t, res_2)
+	GETTER_SETTER_DEFINE(uint32_t, res_3)
+	GETTER_SETTER_DEFINE(Array, scenes)
+	GETTER_SETTER_DEFINE(Array, res_4)
+	GETTER_SETTER_DEFINE(uint8_t, unk_6)
+
+	static Ref<Resource> Parse(String typeName, PackedByteArray buffer);
 
 private:
     String Name;
     String Extra;
+	uint32_t res_2;
+	uint32_t res_3;
     Array scenes;
+	Array res_4;
+	uint8_t unk_6;
 };
 
 class ResourceFormatLoaderTRSCN : public ResourceFormatLoader {
