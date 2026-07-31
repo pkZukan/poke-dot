@@ -1,0 +1,19 @@
+namespace Titan.TrinityScene;
+
+table SceneEntry {
+    type_name: string;
+    nested_type: [uint8];
+    sub_objects: [SceneEntry];
+}
+
+table TRSCN {
+    scene_name: string;
+    scene_extra: string;
+    res_2: uint32;
+    res_3: uint32;
+    scene_object_list: [SceneEntry];
+    res_4: [uint32];
+    unk_6: uint8;
+}
+
+root_type TRSCN;
