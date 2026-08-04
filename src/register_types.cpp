@@ -31,6 +31,8 @@
 
 #include "middleware/bntx.h"
 
+#include "field/trcol.h"
+
 #include "utils.h"
 
 #include <gdextension_interface.h>
@@ -63,6 +65,8 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 
 void initialize_gen_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) 
@@ -205,6 +209,9 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
 
+		//Field
+		GDREGISTER_CLASS(TRCOL)
+
 		GDREGISTER_CLASS(Utils)
 
 		//Resource loaders
@@ -229,6 +236,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 
 		//Singletons
 		GDREGISTER_CLASS(PokemonCatalog)
@@ -270,6 +279,8 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 
 	if (Engine::get_singleton()->has_singleton("PokemonCatalog")) {
         PokemonCatalog* catalog = Object::cast_to<PokemonCatalog>(

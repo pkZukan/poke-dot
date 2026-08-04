@@ -25,6 +25,7 @@ background_mode = 2
 sky = SubResource("Sky_1bvp3")
 ambient_light_source = 3
 tonemap_mode = 3
+ssil_enabled = true
 
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_0xm2m"]
 
@@ -32,9 +33,6 @@ tonemap_mode = 3
 
 [node name="Scene" type="Node3D" unique_id=1974166111]
 script = ExtResource("1_ig7tw")
-
-[node name="Lamp" type="TrinityModel" parent="." unique_id=1409228336]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1992657, -0.31323612, 0)
 
 [node name="Ground" type="StaticBody3D" parent="." unique_id=555337595]
 
@@ -48,25 +46,12 @@ mesh = SubResource("PlaneMesh_0xm2m")
 
 [node name="Landscape" type="Node3D" parent="." unique_id=1671349600]
 
-[node name="Enkei" type="TrinityModel" parent="Landscape" unique_id=1040129700]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.57232, 0, 0)
-
-[node name="Enkei2" type="TrinityModel" parent="Landscape" unique_id=820338583]
-transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, 0, 0, 1.3745658e-07)
-
 [node name="Mountains" type="Node3D" parent="." unique_id=648921028]
-
-[node name="Enkei" type="TrinityModel" parent="Mountains" unique_id=1965360238]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.57232, 0, 0)
-
-[node name="Enkei2" type="TrinityModel" parent="Mountains" unique_id=1053330271]
-transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, 0, 0, 1.3745658e-07)
-
-[node name="Range" type="TrinityModel" parent="Mountains" unique_id=119191241]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.14464, 0, 0)
 
 [node name="City" type="Node3D" parent="." unique_id=1880891057]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -500, 0, -500)
+
+[node name="Tower" type="Node3D" parent="." unique_id=120966878]
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=661450487]
 transform = Transform3D(1, 0, 0, 0, -0.12356678, 0.99233633, 0, -0.99233633, -0.12356678, 0, 401.68225, -727.2737)
@@ -76,6 +61,7 @@ shadow_blur = 2.656
 
 [node name="Player" parent="." unique_id=2118575156 instance=ExtResource("2_0xm2m")]
 icon = ExtResource("4_1bvp3")
+transform = Transform3D(-0.6893362, 0, -0.7244416, 0, 1, 0, 0.7244416, 0, -0.6893362, -46.43489, 0, -51.82914)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1923990555]
 environment = SubResource("Environment_0xm2m")
