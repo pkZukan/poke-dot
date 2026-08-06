@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dq7vgmnowlx6g"]
+[gd_scene format=3 uid="uid://catth7mjjf5fi"]
 
 [ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://Scripts/main.gd" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://feiijofpwsso" path="res://gflib/prefabs/Player.tscn" id="2_0xm2m"]
@@ -100,54 +100,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -500, 0, -500)
 [node name="t1_b23_1" type="TrinityModel" parent="City/Buildings" unique_id=1267969711]
 
 [node name="t1_b24_1" type="TrinityModel" parent="City/Buildings" unique_id=1683889728]
-
-[node name="@TrinityModel@36164" type="TrinityModel" parent="City/Buildings" unique_id=194219253]
-
-[node name="@TrinityModel@36210" type="TrinityModel" parent="City/Buildings" unique_id=1090487350]
-
-[node name="@TrinityModel@36245" type="TrinityModel" parent="City/Buildings" unique_id=1270890753]
-
-[node name="@TrinityModel@36291" type="TrinityModel" parent="City/Buildings" unique_id=1695558139]
-
-[node name="@TrinityModel@36332" type="TrinityModel" parent="City/Buildings" unique_id=258628652]
-
-[node name="@TrinityModel@36371" type="TrinityModel" parent="City/Buildings" unique_id=18392985]
-
-[node name="@TrinityModel@36420" type="TrinityModel" parent="City/Buildings" unique_id=588476373]
-
-[node name="@TrinityModel@36461" type="TrinityModel" parent="City/Buildings" unique_id=1622976699]
-
-[node name="@TrinityModel@36508" type="TrinityModel" parent="City/Buildings" unique_id=2090157922]
-
-[node name="@TrinityModel@36523" type="TrinityModel" parent="City/Buildings" unique_id=279540954]
-
-[node name="@TrinityModel@36575" type="TrinityModel" parent="City/Buildings" unique_id=1337217388]
-
-[node name="@TrinityModel@36617" type="TrinityModel" parent="City/Buildings" unique_id=1163650079]
-
-[node name="@TrinityModel@36641" type="TrinityModel" parent="City/Buildings" unique_id=127581503]
-
-[node name="@TrinityModel@36678" type="TrinityModel" parent="City/Buildings" unique_id=1896882962]
-
-[node name="@TrinityModel@36718" type="TrinityModel" parent="City/Buildings" unique_id=829554685]
-
-[node name="@TrinityModel@36771" type="TrinityModel" parent="City/Buildings" unique_id=1438006498]
-
-[node name="@TrinityModel@36822" type="TrinityModel" parent="City/Buildings" unique_id=1607353327]
-
-[node name="@TrinityModel@36866" type="TrinityModel" parent="City/Buildings" unique_id=1071430439]
-
-[node name="@TrinityModel@36879" type="TrinityModel" parent="City/Buildings" unique_id=798612707]
-
-[node name="@TrinityModel@36919" type="TrinityModel" parent="City/Buildings" unique_id=114115581]
-
-[node name="@TrinityModel@36965" type="TrinityModel" parent="City/Buildings" unique_id=233661008]
-
-[node name="@TrinityModel@36973" type="TrinityModel" parent="City/Buildings" unique_id=1219352008]
-
-[node name="@TrinityModel@37022" type="TrinityModel" parent="City/Buildings" unique_id=225732173]
-
-[node name="@TrinityModel@37063" type="TrinityModel" parent="City/Buildings" unique_id=1643633056]
 
 [node name="Ground" type="Node3D" parent="City" unique_id=1270364001]
 
@@ -258,110 +210,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -500, 0, -500)
 [node name="t1_rose_water" type="TrinityModel" parent="City/Ground" unique_id=1377037971]
 
 [node name="t1_veil_water" type="TrinityModel" parent="City/Ground" unique_id=321440468]
-
-[node name="@TrinityModel@37073" type="TrinityModel" parent="City/Ground" unique_id=1735865761]
-
-[node name="@TrinityModel@37102" type="TrinityModel" parent="City/Ground" unique_id=1265183863]
-
-[node name="@TrinityModel@37134" type="TrinityModel" parent="City/Ground" unique_id=2078697122]
-
-[node name="@TrinityModel@37136" type="TrinityModel" parent="City/Ground" unique_id=1986341429]
-
-[node name="@TrinityModel@37142" type="TrinityModel" parent="City/Ground" unique_id=1236436982]
-
-[node name="@TrinityModel@37145" type="TrinityModel" parent="City/Ground" unique_id=1212300352]
-
-[node name="@TrinityModel@37170" type="TrinityModel" parent="City/Ground" unique_id=1430113127]
-
-[node name="@TrinityModel@37197" type="TrinityModel" parent="City/Ground" unique_id=1265183291]
-
-[node name="@TrinityModel@37231" type="TrinityModel" parent="City/Ground" unique_id=1206111382]
-
-[node name="@TrinityModel@37265" type="TrinityModel" parent="City/Ground" unique_id=394963757]
-
-[node name="@TrinityModel@37308" type="TrinityModel" parent="City/Ground" unique_id=575753789]
-
-[node name="@TrinityModel@37324" type="TrinityModel" parent="City/Ground" unique_id=1396484429]
-
-[node name="@TrinityModel@37350" type="TrinityModel" parent="City/Ground" unique_id=54533994]
-
-[node name="@TrinityModel@37363" type="TrinityModel" parent="City/Ground" unique_id=1136403798]
-
-[node name="@TrinityModel@37394" type="TrinityModel" parent="City/Ground" unique_id=1286096521]
-
-[node name="@TrinityModel@37395" type="TrinityModel" parent="City/Ground" unique_id=1931083420]
-
-[node name="@TrinityModel@37426" type="TrinityModel" parent="City/Ground" unique_id=784235442]
-
-[node name="@TrinityModel@37447" type="TrinityModel" parent="City/Ground" unique_id=1453696782]
-
-[node name="@TrinityModel@37448" type="TrinityModel" parent="City/Ground" unique_id=1607999360]
-
-[node name="@TrinityModel@37495" type="TrinityModel" parent="City/Ground" unique_id=530763896]
-
-[node name="@TrinityModel@37496" type="TrinityModel" parent="City/Ground" unique_id=144187453]
-
-[node name="@TrinityModel@37542" type="TrinityModel" parent="City/Ground" unique_id=1151312407]
-
-[node name="@TrinityModel@37571" type="TrinityModel" parent="City/Ground" unique_id=1848090920]
-
-[node name="@TrinityModel@37594" type="TrinityModel" parent="City/Ground" unique_id=921911409]
-
-[node name="@TrinityModel@37626" type="TrinityModel" parent="City/Ground" unique_id=1931605529]
-
-[node name="@TrinityModel@37649" type="TrinityModel" parent="City/Ground" unique_id=1532195522]
-
-[node name="@TrinityModel@37669" type="TrinityModel" parent="City/Ground" unique_id=1460654906]
-
-[node name="@TrinityModel@37681" type="TrinityModel" parent="City/Ground" unique_id=352665074]
-
-[node name="@TrinityModel@37692" type="TrinityModel" parent="City/Ground" unique_id=1689653468]
-
-[node name="@TrinityModel@37701" type="TrinityModel" parent="City/Ground" unique_id=1500971843]
-
-[node name="@TrinityModel@37730" type="TrinityModel" parent="City/Ground" unique_id=1581609859]
-
-[node name="@TrinityModel@37737" type="TrinityModel" parent="City/Ground" unique_id=1499249577]
-
-[node name="@TrinityModel@37745" type="TrinityModel" parent="City/Ground" unique_id=587526294]
-
-[node name="@TrinityModel@37760" type="TrinityModel" parent="City/Ground" unique_id=85069088]
-
-[node name="@TrinityModel@37761" type="TrinityModel" parent="City/Ground" unique_id=1934166891]
-
-[node name="@TrinityModel@37798" type="TrinityModel" parent="City/Ground" unique_id=471398889]
-
-[node name="@TrinityModel@37831" type="TrinityModel" parent="City/Ground" unique_id=1216778339]
-
-[node name="@TrinityModel@37859" type="TrinityModel" parent="City/Ground" unique_id=1902051223]
-
-[node name="@TrinityModel@37872" type="TrinityModel" parent="City/Ground" unique_id=1050575873]
-
-[node name="@TrinityModel@37892" type="TrinityModel" parent="City/Ground" unique_id=1471020772]
-
-[node name="@TrinityModel@37905" type="TrinityModel" parent="City/Ground" unique_id=512649144]
-
-[node name="@TrinityModel@37927" type="TrinityModel" parent="City/Ground" unique_id=531459595]
-
-[node name="@TrinityModel@37951" type="TrinityModel" parent="City/Ground" unique_id=1903062716]
-
-[node name="@TrinityModel@37968" type="TrinityModel" parent="City/Ground" unique_id=11140088]
-
-[node name="@TrinityModel@37982" type="TrinityModel" parent="City/Ground" unique_id=1999829702]
-
-[node name="@TrinityModel@38004" type="TrinityModel" parent="City/Ground" unique_id=1652230717]
-
-[node name="@TrinityModel@38031" type="TrinityModel" parent="City/Ground" unique_id=694227504]
-
-[node name="@TrinityModel@38047" type="TrinityModel" parent="City/Ground" unique_id=1317943545]
-
-[node name="@TrinityModel@38061" type="TrinityModel" parent="City/Ground" unique_id=136216479]
-
-[node name="@TrinityModel@38074" type="TrinityModel" parent="City/Ground" unique_id=1661904723]
-
-[node name="@TrinityModel@38076" type="TrinityModel" parent="City/Ground" unique_id=1390719978]
-
-[node name="@TrinityModel@38095" type="TrinityModel" parent="City/Ground" unique_id=1848744436]
 
 [node name="Tower" type="Node3D" parent="." unique_id=120966878]
 

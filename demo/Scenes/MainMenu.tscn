@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://bwlive2etjeq2"]
+
+[ext_resource type="Script" uid="uid://b2m7cx2nnkhrg" path="res://Scripts/UI/main_menu.gd" id="1_tt5f1"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_bnhvo"]
+font_size = 64
+
+[node name="MainMenu" type="Control" unique_id=1844400793]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_tt5f1")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1870110747]
+layout_mode = 1
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0, 0, 0, 1)
+
+[node name="Label" type="Label" parent="Backdrop" unique_id=1258655618]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 151.0
+grow_horizontal = 2
+text = "Pokemon Demo"
+label_settings = SubResource("LabelSettings_bnhvo")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuContainer" type="VBoxContainer" parent="Backdrop" unique_id=607738738]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -177.0
+offset_top = -96.0
+offset_right = 145.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="NewGame" type="Button" parent="Backdrop/MenuContainer" unique_id=1252544909]
+layout_mode = 2
+text = "New Game"
+
+[connection signal="pressed" from="Backdrop/MenuContainer/NewGame" to="." method="NewGame"]

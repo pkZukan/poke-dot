@@ -64,7 +64,7 @@ func _ready():
 	for path in get_trmdl_files_recursive("res://Assets/field/model/t1/t1_g"):
 		var dir_path: String = path.get_base_dir() 
 		var file_name: String = path.get_file()
-		if file_name == "t1_g13_5_replace01":
+		if file_name.contains("t1_g13_5_replace01"):
 			continue
 		var ground = TrinityModel.new()
 		ground.load_model(dir_path, file_name)
