@@ -52,8 +52,7 @@ void fragment() {
 		norm *= texture(NormalMap1, uvs).rgb;
 	
 	//Packed map
-	vec3 packed = vec3(1,1,1);
-	packed *= texture(PackedMap, uvs).rgb;
+	vec3 packed = texture(PackedMap, uvs).rgb;
 		
 	//Emission
 	vec3 emission = texture(EmissionMaskMap, uvs).rgb;

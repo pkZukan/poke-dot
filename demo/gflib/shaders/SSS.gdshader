@@ -27,8 +27,3 @@ void fragment() {
 	ALBEDO = texture(BaseColorMap, uvs).rgb * ao_factor;
 	NORMAL_MAP = texture(NormalMap, uvs).rgb;
 }
-
-//void light() {
-	// Called for every pixel for every light affecting the material.
-	// Uncomment to replace the default light processing function with this one.
-//}

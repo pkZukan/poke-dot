@@ -16,7 +16,6 @@ uniform bool EnableMetallicMap;
 uniform bool EnableRoughnessMap;
 uniform bool EnableEmissionColorMap;
 uniform bool EnableAOMap;
-uniform bool EnableAlphaTest;
 uniform bool EnablePackedMap;
 uniform bool EnableVertexBaseColor;
 
@@ -79,10 +78,6 @@ void fragment() {
 	if(EnableEmissionColorMap)
 		emission *= (texture(EmissionColorMap, uvs).rgb * EmissionIntensity);
 
-	// Window gradient acts as an emission mask, faking randomly-lit windows on a building facade
-	float window_mask = texture(WindowGradientMap, uvs).r;
-	emission *= window_mask * EmissionColor.rgb;
-
 	//Metallic
 	float metallic = 0.0;
     if (EnableMetallicMap) {
@@ -100,23 +95,19 @@ void fragment() {
 		roughness = texture(RoughnessMap, uvs).r;
 
 	float specular = 0.5;
-	
+
 	ALBEDO = base_col.rgb;
 	if (EnableVertexBaseColor)
 		ALBEDO *= COLOR.rgb * VertexColorIntensity;
 
+
 	NORMAL_MAP = norm.rgb;
-	SPECULAR = specular;
-	EMISSION = emission;
+	//SPECULAR = specular;
+	//EMISSION = emission;
 	METALLIC = metallic;
 	ROUGHNESS = roughness;
 	AO = ao;
 
-	//Alpha test / distance dither
-	if (EnableAlphaTest) {
-		ALPHA = base_col.a;
-		ALPHA_SCISSOR_THRESHOLD = 0.5;
-	}
 	if (EnableDistanceDither > 0) {
 		float dither = fract(sin(dot(FRAGCOORD.xy, vec2(12.9898, 78.233))) * 43758.5453);
 		ALPHA = base_col.a;

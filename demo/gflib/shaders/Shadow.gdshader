@@ -23,5 +23,6 @@ void vertex() {
 void fragment() {
 	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
 	ALBEDO = texture(BaseColorMap, uvs).rgb;
+	ALPHA = 0.0f;
 	NORMAL_MAP = texture(NormalMap, uvs).rgb;
 }

@@ -51,6 +51,10 @@ mesh = SubResource("PlaneMesh_0xm2m")
 [node name="City" type="Node3D" parent="." unique_id=1880891057]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -500, 0, -500)
 
+[node name="Buildings" type="Node3D" parent="City" unique_id=432116249]
+
+[node name="Ground" type="Node3D" parent="City" unique_id=1270364001]
+
 [node name="Tower" type="Node3D" parent="." unique_id=120966878]
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=661450487]
