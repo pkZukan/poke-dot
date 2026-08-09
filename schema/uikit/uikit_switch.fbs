@@ -1,0 +1,8 @@
+namespace Titan.pe.UIKit;
+
+table UIKitSwitch {
+    name: string;
+    controlName: string;
+}
+
+root_type UIKitSwitch;

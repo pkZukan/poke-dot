@@ -48,3 +48,9 @@ struct RGBA
     b: float;
     a: float;
 }
+
+table SRT {
+    VecScale: Vec3;
+    VecRot: Vec3;
+    VecTranslate: Vec3;
+}

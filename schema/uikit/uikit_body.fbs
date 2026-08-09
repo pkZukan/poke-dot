@@ -1,0 +1,13 @@
+namespace Titan.pe.UIKit;
+
+table UIKitBody {
+    name: string;
+    control_name: string;
+    control_index: int;
+    in_sfx: string;
+    out_sfx: string;
+    in_sfx_apply: bool;
+    out_sfx_apply: bool;
+}
+
+root_type UIKitBody;

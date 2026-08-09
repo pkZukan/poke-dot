@@ -3,6 +3,12 @@ extends Node
 
 signal loading_progress(current: int, total: int)
 
+@export var run_in_editor: bool = false:
+	set(value):
+		if value:
+			run_in_editor = false
+			load_models_async()
+
 func get_trmdl_files_recursive(path: String) -> Array[String]:
 	var results: Array[String] = []
 	var dir := DirAccess.open(path)
@@ -31,9 +37,7 @@ func get_trmdl_files_recursive(path: String) -> Array[String]:
 	return results
 
 func _ready() -> void:
-	# Don't run procedural loading while actively working in the Godot Editor
-	if Engine.is_editor_hint():
-		return
+	pass
 
 func load_models_async() -> void:
 	var load_queue: Array[Dictionary] = []

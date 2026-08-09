@@ -1,0 +1,16 @@
+namespace Titan.pe.UIKit;
+
+table UIKitButton {
+    name: string;
+    control_name: string;
+    control_index: int;
+    action: string;
+    shortcut_key: int;
+    repeat: bool;
+    decide_sfx: string;
+    shortcut_sfx: string;
+    release_sfx: string;
+    
+}
+
+root_type UIKitButton;

@@ -1,0 +1,25 @@
+include "../common.fbs";
+
+namespace Titan.TrinityScene;
+
+table ObjectLayer
+{
+    priority: int;
+    name: string;
+    srt: Titan.Math.Transform;
+}
+
+table TrinitySceneObject
+{
+    name: string;
+    srt: Titan.Math.SRT;
+    keep_world_srt: bool;
+	attach_xform: bool;
+	attach_joint: string;
+    scriptable: bool;
+    priority: byte;
+    layers: [ObjectLayer];
+    tag_list: [string];
+}
+
+root_type TrinitySceneObject;

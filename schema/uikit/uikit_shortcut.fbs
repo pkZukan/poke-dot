@@ -1,0 +1,12 @@
+namespace Titan.pe.UIKit;
+
+table UIKitShortcut {
+    name: string;
+    shortcutKey: int;
+    repeat: bool;
+    action: string;
+    sfx: string;
+    sfx_apply: bool;
+}
+
+root_type UIKitShortcut;

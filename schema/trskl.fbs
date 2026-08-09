@@ -10,15 +10,9 @@ enum NodeType: uint32 {
     Leaf = 2
 }
 
-table SRT {
-    VecScale: Titan.Math.Vec3;
-    VecRot: Titan.Math.Vec3;
-    VecTranslate: Titan.Math.Vec3;
-}
-
 table TransformNode {
     name: string;
-    transform: SRT;
+    transform: Titan.Math.SRT;
     scalePivot: Titan.Math.Vec3;
     rotatePivot: Titan.Math.Vec3;
     parent_idx: int32 = -1;

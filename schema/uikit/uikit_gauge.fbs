@@ -1,0 +1,10 @@
+namespace Titan.pe.UIKit;
+
+table UIKitGauge {
+    name: string;
+    control_name: string;
+    control_index: int;
+    type: int;
+}
+
+root_type UIKitGauge;

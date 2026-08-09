@@ -93,72 +93,80 @@ Dictionary TrinityModel::parse_mesh_buffer(
 
     Array accessors = accessor_table->get("Accessors");
 
-    int curr_pos = 0;
-    while (curr_pos < stream_vert->get_size()) 
-    {
-        for (int a = 0; a < accessors.size(); a++) 
-        {
-            Ref<Resource> attrib = accessors[a];
-            int attr_pos = attrib->get("Position");
-            String attr_name = attrib->get("Attribute");
-            stream_vert->seek(curr_pos + attr_pos);
+    int pos_attr = -1, norm_attr = -1, uv_attr = -1;
+    int blend_inds_attr = -1, blend_weights_attr = -1, tangent_attr = -1;
 
-            if (attr_name == "POSITION") 
+    for (int a = 0; a < accessors.size(); a++) {
+        Ref<Resource> attrib = accessors[a];
+        int attr_pos = attrib->get("Position");
+        String attr_name = attrib->get("Attribute");
+
+        if (attr_name == "POSITION" && pos_attr == -1) pos_attr = attr_pos;
+        else if (attr_name == "NORMAL" && norm_attr == -1) norm_attr = attr_pos;
+        else if (attr_name == "TEXCOORD" && uv_attr == -1) uv_attr = attr_pos;
+        else if (attr_name == "BLEND_INDICES" && blend_inds_attr == -1) blend_inds_attr = attr_pos;
+        else if (attr_name == "TANGENT" && tangent_attr == -1) tangent_attr = attr_pos;
+        else if (attr_name == "BLEND_WEIGHTS" && blend_weights_attr == -1) blend_weights_attr = attr_pos;
+    }
+
+    int curr_pos = 0;
+    while (curr_pos + stride <= stream_vert->get_size()) 
+    {
+        if (pos_attr != -1) {
+            stream_vert->seek(curr_pos + pos_attr);
+            float x = stream_vert->get_float();
+            float y = stream_vert->get_float();
+            float z = stream_vert->get_float();
+            pos.push_back(Vector3(x, y, z));
+        }
+        if (norm_attr != -1) {
+            stream_vert->seek(curr_pos + norm_attr);
+            float x = Utils::half_to_float(stream_vert->get_u16());
+            float y = Utils::half_to_float(stream_vert->get_u16());
+            float z = Utils::half_to_float(stream_vert->get_u16());
+            stream_vert->get_u16();
+            norm.push_back(Vector3(x, y, z).normalized());
+        }
+        if (uv_attr != -1) {
+            stream_vert->seek(curr_pos + uv_attr);
+            float u = stream_vert->get_float();
+            float v = stream_vert->get_float();
+            uv.push_back(Vector2(u, v));
+        }
+        if (blend_inds_attr != -1) {
+            stream_vert->seek(curr_pos + blend_inds_attr);
+            blend_inds.push_back(stream_vert->get_8());
+            blend_inds.push_back(stream_vert->get_8());
+            blend_inds.push_back(stream_vert->get_8());
+            blend_inds.push_back(stream_vert->get_8());
+        }
+        if (tangent_attr != -1) {
+            stream_vert->seek(curr_pos + tangent_attr);
+            tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
+            tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
+            tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
+            tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
+        }
+        if (blend_weights_attr != -1) {
+            stream_vert->seek(curr_pos + blend_weights_attr);
+            float w1 = Utils::half_to_float(stream_vert->get_u16());
+            float w2 = Utils::half_to_float(stream_vert->get_u16());
+            float w3 = Utils::half_to_float(stream_vert->get_u16());
+            float w4 = Utils::half_to_float(stream_vert->get_u16());
+            float total = w1 + w2 + w3 + w4;
+            if (total > 0.0f) 
             {
-                float x = stream_vert->get_float();
-                float y = stream_vert->get_float();
-                float z = stream_vert->get_float();
-                pos.push_back(Vector3(x, y, z));
+                blend_weights.push_back(w1 / total);
+                blend_weights.push_back(w2 / total);
+                blend_weights.push_back(w3 / total);
+                blend_weights.push_back(w4 / total);
             } 
-            else if (attr_name == "NORMAL") 
+            else 
             {
-                float x = Utils::half_to_float(stream_vert->get_u16());
-                float y = Utils::half_to_float(stream_vert->get_u16());
-                float z = Utils::half_to_float(stream_vert->get_u16());
-                stream_vert->get_u16();
-                norm.push_back(Vector3(x, y, z).normalized());
-            } 
-            else if (attr_name == "TEXCOORD") 
-            {
-                float u = stream_vert->get_float();
-                float v = stream_vert->get_float();
-                uv.push_back(Vector2(u, v));
-            } 
-            else if (attr_name == "BLEND_INDICES") 
-            {
-                blend_inds.push_back(stream_vert->get_8());
-                blend_inds.push_back(stream_vert->get_8());
-                blend_inds.push_back(stream_vert->get_8());
-                blend_inds.push_back(stream_vert->get_8());
-            }
-            else if (attr_name == "TANGENT") 
-            {
-                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
-                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
-                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
-                tangents.push_back(Utils::half_to_float(stream_vert->get_u16()));
-            } 
-            else if (attr_name == "BLEND_WEIGHTS") 
-            {
-                float w1 = Utils::half_to_float(stream_vert->get_u16());
-                float w2 = Utils::half_to_float(stream_vert->get_u16());
-                float w3 = Utils::half_to_float(stream_vert->get_u16());
-                float w4 = Utils::half_to_float(stream_vert->get_u16());
-                float total = w1 + w2 + w3 + w4;
-                if (total > 0.0f) 
-                {
-                    blend_weights.push_back(w1 / total);
-                    blend_weights.push_back(w2 / total);
-                    blend_weights.push_back(w3 / total);
-                    blend_weights.push_back(w4 / total);
-                } 
-                else 
-                {
-                    blend_weights.push_back(1.0f);
-                    blend_weights.push_back(0.0f);
-                    blend_weights.push_back(0.0f);
-                    blend_weights.push_back(0.0f);
-                }
+                blend_weights.push_back(1.0f);
+                blend_weights.push_back(0.0f);
+                blend_weights.push_back(0.0f);
+                blend_weights.push_back(0.0f);
             }
         }
         curr_pos += stride;

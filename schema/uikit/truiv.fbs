@@ -1,0 +1,15 @@
+namespace Titan.TrinityUI;
+
+file_extension "truiv";
+
+table ViewChunk {
+    type: string;
+    data: [ubyte];
+    children: [ViewChunk];
+}
+
+table TRUIV {
+    chunks: [ViewChunk];
+}
+
+root_type TRUIV;

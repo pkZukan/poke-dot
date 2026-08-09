@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "generated/trscn_generated.h"
+#include "scene_fbs/components/trinity_sceneObject.h"
 #include <utils.h>
 
 namespace godot {
@@ -18,12 +19,14 @@ public:
 	~TRScene(){}
 
     GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Array, nested_type)
+	GETTER_SETTER_DEFINE(Ref<Resource>, nested_type)
 	GETTER_SETTER_DEFINE(Array, sub_objects)
+
+	Ref<Resource> ParseData(String type, const void* data);
 
 private:
     String Name;
-	Array nested_type;
+	Ref<Resource> nested_type;
 	Array sub_objects;
 };
 
@@ -41,18 +44,16 @@ public:
     GETTER_SETTER_DEFINE(String, Extra)
 	GETTER_SETTER_DEFINE(uint32_t, res_2)
 	GETTER_SETTER_DEFINE(uint32_t, res_3)
-	GETTER_SETTER_DEFINE(Array, scenes)
+	GETTER_SETTER_DEFINE(Array, chunks)
 	GETTER_SETTER_DEFINE(Array, res_4)
 	GETTER_SETTER_DEFINE(uint8_t, unk_6)
-
-	static Ref<Resource> Parse(String typeName, PackedByteArray buffer);
 
 private:
     String Name;
     String Extra;
 	uint32_t res_2;
 	uint32_t res_3;
-    Array scenes;
+    Array chunks;
 	Array res_4;
 	uint8_t unk_6;
 };

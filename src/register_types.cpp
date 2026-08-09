@@ -21,6 +21,7 @@
 #include "pml_fbs/personal_array.h"
 
 #include "scene_fbs/trscn.h"
+#include "scene_fbs/components/trinity_sceneObject.h"
 
 #include "actors/actor.h"
 #include "actors/pokemon_actor.h"
@@ -32,6 +33,13 @@
 #include "middleware/bntx.h"
 
 #include "field/trcol.h"
+
+#include "ui_fbs/truiv.h"
+#include "ui_fbs/uikit/uikit_gauge.h"
+#include "ui_fbs/uikit/uikit_body.h"
+#include "ui_fbs/uikit/uikit_shortcut.h"
+#include "ui_fbs/uikit/uikit_switch.h"
+#include "ui_fbs/uikit/uikit_button.h"
 
 #include "utils.h"
 
@@ -67,6 +75,8 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
 void initialize_gen_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) 
@@ -186,6 +196,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//scene
 		GDREGISTER_CLASS(TRSCN)
 		GDREGISTER_CLASS(TRScene)
+		GDREGISTER_CLASS(TrinitySceneObject)
+		GDREGISTER_CLASS(TrinityObjectLayer)
 
 		//personal
 		GDREGISTER_CLASS(TRPersonalArray)
@@ -211,6 +223,15 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)
+
+		//UIkit
+		GDREGISTER_CLASS(TRUIV)
+		GDREGISTER_CLASS(TRUIViewChunk)
+		GDREGISTER_CLASS(UIKitGauge)
+		GDREGISTER_CLASS(UIKitBody)
+		GDREGISTER_CLASS(UIKitShortcut)
+		GDREGISTER_CLASS(UIKitButton)
+		GDREGISTER_CLASS(UIKitSwitch)
 
 		GDREGISTER_CLASS(Utils)
 
@@ -238,6 +259,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
 		//Singletons
 		GDREGISTER_CLASS(PokemonCatalog)
@@ -281,6 +304,8 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 
 	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+
+	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
 	if (Engine::get_singleton()->has_singleton("PokemonCatalog")) {
         PokemonCatalog* catalog = Object::cast_to<PokemonCatalog>(

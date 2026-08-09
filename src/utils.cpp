@@ -35,6 +35,18 @@ godot::Transform3D Utils::toGodotTransform(const Titan::Math::Transform *tran)
     return Transform3D(basis, translate);
 }
 
+godot::Transform3D Utils::toGodotTransform(const Titan::Math::SRT *srt)
+{
+    Vector3 scale = toGodotVec3(srt->VecScale());
+    Vector3 translate = toGodotVec3(srt->VecTranslate());
+    Vector3 euler_rot = toGodotVec3(srt->VecRot());
+
+    Basis basis = Basis::from_euler(euler_rot);
+    basis.scale(scale);
+
+    return Transform3D(basis, translate);
+}
+
 godot::String Utils::toGodotString(const flatbuffers::String *str)
 {
     if (str == nullptr) 

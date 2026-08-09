@@ -38,6 +38,7 @@ public:
     static godot::Vector3 toGodotVec3(const Titan::Math::Vec3 *vec);
 	static godot::Vector4 toGodotVec4(const Titan::Math::Vec4 *vec);
 	static godot::Transform3D toGodotTransform(const Titan::Math::Transform *tran);
+	static godot::Transform3D toGodotTransform(const Titan::Math::SRT *srt);
     static godot::String toGodotString(const flatbuffers::String *str);
 
     static float half_to_float(uint16_t half);
