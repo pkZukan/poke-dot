@@ -8,6 +8,7 @@
 #include "scene_fbs/subscene.h"
 #include "scene_fbs/components/trinity_sceneObject.h"
 #include "scene_fbs/components/trinity_ScenePoint.h"
+#include "scene_fbs/components/trinity_ObjectTemplate.h"
 #include <utils.h>
 
 namespace godot {

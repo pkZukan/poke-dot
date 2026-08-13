@@ -36,6 +36,13 @@ Ref<Resource> TRScene::ParseData(String type, const void* data)
         res->LoadFromBuffer(data);
         return res;
     }
+    else if( type == "trinity_ObjectTemplate")
+    {
+        Ref<TrinityObjectTemplate> res;
+        res.instantiate();
+        res->LoadFromBuffer(data);
+        return res;
+    }
     else if( type == "trinity_ScenePoint")
     {
         Ref<TrinityScenePoint> res;

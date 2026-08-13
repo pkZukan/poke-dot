@@ -1,0 +1,13 @@
+namespace Titan.TrinityScene;
+
+table ObjectTemplate
+{
+    name: string;
+    scope: string;
+    file_path: string;
+    is_expanded: bool;
+    entity_type: string;
+    entity_data: [uint8]; 
+}
+
+root_type ObjectTemplate;
