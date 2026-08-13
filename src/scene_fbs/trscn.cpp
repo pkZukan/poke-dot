@@ -22,12 +22,26 @@ void TRSCN::_bind_methods()
 
 Ref<Resource> TRScene::ParseData(String type, const void* data)
 {
-    if( type == "trinity_SceneObject" )
+    if( type == "SubScene" )
     {
-        Ref<TrinitySceneObject> trsceneobject;
-        trsceneobject.instantiate();
-        trsceneobject->LoadFromBuffer(data);
-        return trsceneobject;
+        Ref<TRSubScene> res;
+        res.instantiate();
+        res->LoadFromBuffer(data);
+        return res;
+    }
+    else if( type == "trinity_SceneObject" )
+    {
+        Ref<TrinitySceneObject> res;
+        res.instantiate();
+        res->LoadFromBuffer(data);
+        return res;
+    }
+    else if( type == "trinity_ScenePoint")
+    {
+        Ref<TrinityScenePoint> res;
+        res.instantiate();
+        res->LoadFromBuffer(data);
+        return res;
     }
     else return Ref<Resource>();
 } 

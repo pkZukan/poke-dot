@@ -5,7 +5,9 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "generated/trscn_generated.h"
+#include "scene_fbs/subscene.h"
 #include "scene_fbs/components/trinity_sceneObject.h"
+#include "scene_fbs/components/trinity_ScenePoint.h"
 #include <utils.h>
 
 namespace godot {

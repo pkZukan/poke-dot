@@ -1,0 +1,9 @@
+namespace Titan.TrinityScene;
+
+table SubScene
+{
+    filename: string;
+    unk_1: int;
+}
+
+root_type SubScene;

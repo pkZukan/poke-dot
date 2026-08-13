@@ -1,0 +1,12 @@
+include "../common.fbs";
+
+namespace Titan.TrinityScene;
+
+table ScenePoint
+{
+    name: string;
+    point: Titan.Math.Vec3;
+    attach_parent: bool;
+}
+
+root_type ScenePoint;

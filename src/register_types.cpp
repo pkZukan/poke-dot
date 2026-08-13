@@ -21,7 +21,9 @@
 #include "pml_fbs/personal_array.h"
 
 #include "scene_fbs/trscn.h"
+#include "scene_fbs/subscene.h"
 #include "scene_fbs/components/trinity_sceneObject.h"
+#include "scene_fbs/components/trinity_ScenePoint.h"
 
 #include "actors/actor.h"
 #include "actors/pokemon_actor.h"
@@ -196,8 +198,10 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//scene
 		GDREGISTER_CLASS(TRSCN)
 		GDREGISTER_CLASS(TRScene)
+		GDREGISTER_CLASS(TRSubScene)
 		GDREGISTER_CLASS(TrinitySceneObject)
 		GDREGISTER_CLASS(TrinityObjectLayer)
+		GDREGISTER_CLASS(TrinityScenePoint)
 
 		//personal
 		GDREGISTER_CLASS(TRPersonalArray)
