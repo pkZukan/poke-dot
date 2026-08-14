@@ -9,33 +9,23 @@ void TrinitySceneParser::_bind_methods()
 
 Ref<Resource> TrinitySceneParser::FromData(String type, const void* data)
 {
-    if( type == "SubScene" )
+    using FactoryFunc = Ref<Resource>(*)(const void*);
+    
+    // Initialize once using a lambda
+    static const HashMap<String, FactoryFunc> factories = []() {
+        HashMap<String, FactoryFunc> map;
+        map["SubScene"]                = &CreateFromData<TRSubScene>;
+        map["trinity_SceneObject"]     = &CreateFromData<TrinitySceneObject>;
+        map["trinity_ObjectTemplate"]   = &CreateFromData<TrinityObjectTemplate>;
+        map["trinity_ScenePoint"]      = &CreateFromData<TrinityScenePoint>;
+        map["trinity_ModelComponent"] = &CreateFromData<TrinityModelComponent>;
+        return map;
+    }();
+
+    if (const FactoryFunc* func = factories.getptr(type)) 
     {
-        Ref<TRSubScene> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
+        return (*func)(data);
     }
-    else if( type == "trinity_SceneObject" )
-    {
-        Ref<TrinitySceneObject> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
-    }
-    else if( type == "trinity_ObjectTemplate")
-    {
-        Ref<TrinityObjectTemplate> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
-    }
-    else if( type == "trinity_ScenePoint")
-    {
-        Ref<TrinityScenePoint> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
-    }
-    else return Ref<Resource>();
-} 
+
+    return Ref<Resource>();
+}

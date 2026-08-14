@@ -7,6 +7,7 @@
 #include "scene_fbs/components/trinity_sceneObject.h"
 #include "scene_fbs/components/trinity_ScenePoint.h"
 #include "scene_fbs/components/trinity_ObjectTemplate.h"
+#include "scene_fbs/components/trinity_ModelComponent.h"
 #include "utils.h"
 
 namespace godot {
@@ -19,7 +20,16 @@ public:
 	TrinitySceneParser(){}
 	~TrinitySceneParser(){}
 
-	static Ref<Resource> FromData(String type, const void* data);
+    template <typename T>
+    static Ref<Resource> CreateFromData(const void* data) 
+    {
+        Ref<T> res;
+        res.instantiate();
+        res->LoadFromBuffer(data);
+        return res;
+    }
+
+    static Ref<Resource> FromData(String type, const void* data);
 };
 
 }
