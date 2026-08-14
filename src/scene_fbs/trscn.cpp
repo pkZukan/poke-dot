@@ -20,6 +20,30 @@ void TRSCN::_bind_methods()
     GETTER_SETTER_BIND(TRSCN, unk_6, Variant::INT, PROPERTY_HINT_NONE)
 }
 
+Ref<TRScene> TRSCN::_createTRScene(const Titan::TrinityScene::SceneEntry* chunk)
+{
+    Ref<TRScene> trscene;
+    trscene.instantiate();
+
+    String typeName = Utils::toGodotString(chunk->type_name());
+    trscene->set_Name(typeName);
+    
+    if (auto data = chunk->nested_type()) 
+    {
+        auto parsedData = TrinitySceneParser::FromData(typeName, data->data());
+        trscene->set_nested_type(parsedData);
+    }
+
+    Array subObjects;
+    for (int j = 0; j < chunk->sub_objects()->size(); j++) {
+        auto subScene = _createTRScene(chunk->sub_objects()->Get(j));
+        subObjects.push_back(subScene);
+    }
+    trscene->set_sub_objects(subObjects);
+
+    return trscene;
+}
+
 void TRSCN::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
@@ -45,30 +69,8 @@ void TRSCN::LoadFromFile(String file)
 
     for (int i = 0; i < trscn->chunks()->size(); i++) {
         auto chunk = trscn->chunks()->Get(i);
-        Ref<TRScene> trscene;
-        trscene.instantiate();
-
-        String typeName = Utils::toGodotString(chunk->type_name());
-        trscene->set_Name(typeName);
-        
-        if (auto data = chunk->nested_type()) 
-        {
-            auto parsedData = TrinitySceneParser::FromData(typeName, data->data());
-            trscene->set_nested_type(parsedData);
-        }
-
-        Array subObjects;
-		for (int j = 0; j < chunk->sub_objects()->size(); j++) {
-            Ref<Resource> res;
-            res.instantiate();
-
-			//TODO
-
-            subObjects.push_back(res);
-		}
-        trscene->set_sub_objects(subObjects);
-
-        chunks.push_back(trscene);
+        auto scene = _createTRScene(chunk);
+        chunks.push_back(scene);
     }
     set_chunks(chunks);
 }

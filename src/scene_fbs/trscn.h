@@ -47,6 +47,7 @@ public:
 	GETTER_SETTER_DEFINE(uint8_t, unk_6)
 
 private:
+	Ref<TRScene> _createTRScene(const Titan::TrinityScene::SceneEntry* chunk);
     String Name;
     String Extra;
 	uint32_t res_2;
