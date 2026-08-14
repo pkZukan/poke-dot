@@ -45,6 +45,7 @@
 #include "ui_fbs/uikit/uikit_button.h"
 
 #include "utils.h"
+#include "scene_fbs/trinity_scene_parser.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -239,6 +240,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(UIKitButton)
 		GDREGISTER_CLASS(UIKitSwitch)
 
+		//Helpers
+		GDREGISTER_CLASS(TrinitySceneParser)
 		GDREGISTER_CLASS(Utils)
 
 		//Resource loaders

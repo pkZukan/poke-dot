@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "generated/trinity_ObjectTemplate_generated.h"
+#include <scene_fbs/trinity_scene_parser.h>
 #include <utils.h>
 
 namespace godot {
@@ -24,7 +25,7 @@ public:
     GETTER_SETTER_DEFINE(String, FilePath)
     GETTER_SETTER_DEFINE(bool, IsExpanded)
     GETTER_SETTER_DEFINE(String, EntityType)
-    GETTER_SETTER_DEFINE(PackedByteArray, EntityData)
+    GETTER_SETTER_DEFINE(Ref<Resource>, EntityData)
 
 private:
     String Name;
@@ -32,7 +33,7 @@ private:
     String FilePath;
     bool IsExpanded;
     String EntityType;
-    PackedByteArray EntityData;
+    Ref<Resource> EntityData;
 };
 
 }

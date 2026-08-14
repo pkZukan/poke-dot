@@ -5,10 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "generated/trscn_generated.h"
-#include "scene_fbs/subscene.h"
-#include "scene_fbs/components/trinity_sceneObject.h"
-#include "scene_fbs/components/trinity_ScenePoint.h"
-#include "scene_fbs/components/trinity_ObjectTemplate.h"
+#include "trinity_scene_parser.h"
 #include <utils.h>
 
 namespace godot {
@@ -24,8 +21,6 @@ public:
     GETTER_SETTER_DEFINE(String, Name)
 	GETTER_SETTER_DEFINE(Ref<Resource>, nested_type)
 	GETTER_SETTER_DEFINE(Array, sub_objects)
-
-	Ref<Resource> ParseData(String type, const void* data);
 
 private:
     String Name;

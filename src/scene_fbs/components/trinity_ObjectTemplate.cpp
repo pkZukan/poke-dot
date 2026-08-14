@@ -9,7 +9,7 @@ void TrinityObjectTemplate::_bind_methods()
 	GETTER_SETTER_BIND(TrinityObjectTemplate, FilePath, Variant::STRING, PROPERTY_HINT_NONE)
 	GETTER_SETTER_BIND(TrinityObjectTemplate, IsExpanded, Variant::BOOL, PROPERTY_HINT_NONE)
 	GETTER_SETTER_BIND(TrinityObjectTemplate, EntityType, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityObjectTemplate, EntityData, Variant::PACKED_BYTE_ARRAY, PROPERTY_HINT_NONE)
+	GETTER_SETTER_BIND(TrinityObjectTemplate, EntityData, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "Resource")
 }
 
 void TrinityObjectTemplate::LoadFromBuffer(const void* buffer)
@@ -19,14 +19,11 @@ void TrinityObjectTemplate::LoadFromBuffer(const void* buffer)
     set_Scope(Utils::toGodotString(object_template->scope()));
     set_FilePath(Utils::toGodotString(object_template->file_path()));
     set_IsExpanded(object_template->is_expanded());
-    set_EntityType(Utils::toGodotString(object_template->entity_type()));
+
+    String entityType = Utils::toGodotString(object_template->entity_type());
+    set_EntityType(entityType);
 
     auto entity_data_vec = object_template->entity_data();
-    PackedByteArray entity_data_packed_byte_array;
-    if (entity_data_vec)
-    {
-        entity_data_packed_byte_array.resize(entity_data_vec->size());
-        memcpy(entity_data_packed_byte_array.ptrw(), entity_data_vec->data(), entity_data_vec->size());
-    }
-    set_EntityData(entity_data_packed_byte_array);
+    Ref<Resource> entityData = TrinitySceneParser::FromData(entityType, entity_data_vec->data());
+    set_EntityData(entityData);
 }

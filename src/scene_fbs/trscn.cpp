@@ -20,39 +20,6 @@ void TRSCN::_bind_methods()
     GETTER_SETTER_BIND(TRSCN, unk_6, Variant::INT, PROPERTY_HINT_NONE)
 }
 
-Ref<Resource> TRScene::ParseData(String type, const void* data)
-{
-    if( type == "SubScene" )
-    {
-        Ref<TRSubScene> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
-    }
-    else if( type == "trinity_SceneObject" )
-    {
-        Ref<TrinitySceneObject> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
-    }
-    else if( type == "trinity_ObjectTemplate")
-    {
-        Ref<TrinityObjectTemplate> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
-    }
-    else if( type == "trinity_ScenePoint")
-    {
-        Ref<TrinityScenePoint> res;
-        res.instantiate();
-        res->LoadFromBuffer(data);
-        return res;
-    }
-    else return Ref<Resource>();
-} 
-
 void TRSCN::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
@@ -86,7 +53,7 @@ void TRSCN::LoadFromFile(String file)
         
         if (auto data = chunk->nested_type()) 
         {
-            auto parsedData = trscene->ParseData(typeName, data->data());
+            auto parsedData = TrinitySceneParser::FromData(typeName, data->data());
             trscene->set_nested_type(parsedData);
         }
 
