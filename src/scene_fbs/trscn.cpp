@@ -20,7 +20,7 @@ void TRSCN::_bind_methods()
     GETTER_SETTER_BIND(TRSCN, unk_6, Variant::INT, PROPERTY_HINT_NONE)
 }
 
-Ref<TRScene> TRSCN::_createTRScene(const Titan::TrinityScene::SceneEntry* chunk)
+Ref<TRScene> TRSCN::ParseSceneEntry(const Titan::TrinityScene::SceneEntry* chunk)
 {
     Ref<TRScene> trscene;
     trscene.instantiate();
@@ -36,7 +36,7 @@ Ref<TRScene> TRSCN::_createTRScene(const Titan::TrinityScene::SceneEntry* chunk)
 
     Array subObjects;
     for (int j = 0; j < chunk->sub_objects()->size(); j++) {
-        auto subScene = _createTRScene(chunk->sub_objects()->Get(j));
+        auto subScene = ParseSceneEntry(chunk->sub_objects()->Get(j));
         subObjects.push_back(subScene);
     }
     trscene->set_sub_objects(subObjects);
@@ -69,7 +69,7 @@ void TRSCN::LoadFromFile(String file)
 
     for (int i = 0; i < trscn->chunks()->size(); i++) {
         auto chunk = trscn->chunks()->Get(i);
-        auto scene = _createTRScene(chunk);
+        auto scene = ParseSceneEntry(chunk);
         chunks.push_back(scene);
     }
     set_chunks(chunks);
@@ -87,6 +87,7 @@ PackedStringArray ResourceFormatLoaderTRSCN::_get_recognized_extensions() const
 {
     PackedStringArray exts;
     exts.push_back("trscn");
+    exts.push_back("trsot");
 
     return exts;
 }

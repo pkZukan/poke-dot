@@ -1,0 +1,13 @@
+namespace Titan.TrinityScene;
+
+table Collision
+{
+
+}
+
+table TrinityCollisionComponent
+{
+    collision: Collision;
+}
+
+root_type TrinityCollisionComponent;
