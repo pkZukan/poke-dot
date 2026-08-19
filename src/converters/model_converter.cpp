@@ -468,13 +468,13 @@ void TrinityModel::load_model(String path, String file) {
     //Mesh
     Ref<TRMesh> mesh;
     String meshPath = mdl->get_Meshes()[0];
-    if(!meshPath.is_empty())
+    if(!meshPath.is_empty() && FileAccess::file_exists(path.path_join(meshPath)))
         mesh = rl->load(path.path_join(meshPath));
 
     //Buffer
     Ref<TRModelBuffer> buff;
     String buffPath = mesh->get_BufferName();
-    if(!buffPath.is_empty())
+    if(!buffPath.is_empty() && FileAccess::file_exists(path.path_join(buffPath)))
         buff = rl->load(path.path_join(buffPath));
 
     //Material
@@ -486,7 +486,7 @@ void TrinityModel::load_model(String path, String file) {
     Skeleton3D* skl = nullptr;
     Array skel_result;
     String skelPath = mdl->get_Skeleton();
-    if(!skelPath.is_empty())
+    if(!skelPath.is_empty() && FileAccess::file_exists(path.path_join(skelPath)))
     {
         skel = rl->load(path.path_join(skelPath));
         _build_skeleton(skel, skl, skin);

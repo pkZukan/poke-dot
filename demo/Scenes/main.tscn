@@ -31,7 +31,7 @@ ssil_enabled = true
 
 [sub_resource type="Compositor" id="Compositor_h2yge"]
 
-[node name="Scene" type="Node3D" unique_id=1974166111]
+[node name="WorldContainer" type="Node3D" unique_id=1974166111]
 script = ExtResource("1_ig7tw")
 
 [node name="Ground" type="StaticBody3D" parent="." unique_id=555337595]
