@@ -63,6 +63,7 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 
 			var obj_node := Node3D.new()
 			obj_node.name = scn_obj.Name if scn_obj and scn_obj.Name != "" else "SceneObject"
+			obj_node.transform = scn_obj.transform
 			parent_node.add_child(obj_node)
 			parent_node = obj_node
 
@@ -103,7 +104,7 @@ func load_scene_file(scene_file: String, parent_node: Node3D, load_queue: Array[
 func load_models_async() -> void:
 	var load_queue: Array[Dictionary] = []
 
-	var root_scene_node: Node3D = $WorldContainer if has_node("WorldContainer") else self
+	var root_scene_node: Node3D = $Field
 
 	load_scene_file(
 		"res://Assets/world/ik_scene/field/area/t1/sub_scene/field_/field_0.trscn",

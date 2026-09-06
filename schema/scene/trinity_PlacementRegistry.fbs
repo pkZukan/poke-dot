@@ -1,0 +1,45 @@
+include "../common.fbs";
+
+namespace Titan.TrinityScene;
+
+union PlacementItem
+{
+    PlacementPositions,
+    PlacementObjects,
+    PlacementObjectTemplates,
+    PlacementSpawners,
+}
+
+table PlacementPosition
+{
+    id: string;
+    pos: Titan.Math.Vec3;
+    rot: Titan.Math.Vec3;
+}
+
+table PlacementPositions
+{
+    positions: [PlacementPosition];
+}
+
+table PlacementObjects
+{
+    
+}
+
+table PlacementObjectTemplates
+{
+    
+}
+
+table PlacementSpawners
+{
+    
+}
+
+table TrinityPlacementRegistry
+{
+    item: PlacementItem;
+}
+
+root_type TrinityPlacementRegistry;

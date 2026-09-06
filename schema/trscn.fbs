@@ -12,7 +12,7 @@ table TRSCN {
     res_2: uint32;
     res_3: uint32;
     chunks: [SceneEntry];
-    res_4: [uint32];
+    sub_scenes: [string];
     unk_6: uint8;
 }
 

@@ -21,6 +21,7 @@ Ref<Resource> TrinitySceneParser::FromData(String type, const void* data)
         map["trinity_ModelComponent"] = &CreateFromData<TrinityModelComponent>;
         map["trinity_AnimationComponent"] = &CreateFromData<TrinityAnimationComponent>;
         map["trinity_CollisionComponent"] = &CreateFromData<TrinityCollisionComponent>;
+        map["trinity_PlacementRegistry"] = &CreateFromData<TrinityPlacementRegistry>;
         return map;
     }();
 

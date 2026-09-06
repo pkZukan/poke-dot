@@ -4,12 +4,13 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include "scene_fbs/subscene.h"
-#include "scene_fbs/components/trinity_sceneObject.h"
+#include "scene_fbs/components/trinity_SceneObject.h"
 #include "scene_fbs/components/trinity_ScenePoint.h"
 #include "scene_fbs/components/trinity_ObjectTemplate.h"
 #include "scene_fbs/components/trinity_ModelComponent.h"
 #include "scene_fbs/components/trinity_AnimationComponent.h"
 #include "scene_fbs/components/trinity_CollisionComponent.h"
+#include "scene_fbs/components/trinity_PlacementRegistry.h"
 #include "utils.h"
 
 namespace godot {

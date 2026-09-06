@@ -3,7 +3,10 @@ namespace Titan.TrinityScene;
 table SubScene
 {
     filename: string;
+    group: string;
+    unk_0: int;
     unk_1: int;
+    data: [ubyte];
 }
 
 root_type SubScene;

@@ -1,4 +1,4 @@
-#include "trinity_sceneObject.h"
+#include "trinity_SceneObject.h"
 
 using namespace godot;
 

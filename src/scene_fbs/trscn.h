@@ -43,7 +43,7 @@ public:
 	GETTER_SETTER_DEFINE(uint32_t, res_2)
 	GETTER_SETTER_DEFINE(uint32_t, res_3)
 	GETTER_SETTER_DEFINE(Array, chunks)
-	GETTER_SETTER_DEFINE(Array, res_4)
+	GETTER_SETTER_DEFINE(Array, subScenes)
 	GETTER_SETTER_DEFINE(uint8_t, unk_6)
 
 private:
@@ -53,7 +53,7 @@ private:
 	uint32_t res_2;
 	uint32_t res_3;
     Array chunks;
-	Array res_4;
+	Array subScenes;
 	uint8_t unk_6;
 };
 

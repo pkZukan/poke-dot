@@ -22,12 +22,13 @@
 
 #include "scene_fbs/trscn.h"
 #include "scene_fbs/subscene.h"
-#include "scene_fbs/components/trinity_sceneObject.h"
+#include "scene_fbs/components/trinity_SceneObject.h"
 #include "scene_fbs/components/trinity_ScenePoint.h"
 #include "scene_fbs/components/trinity_ObjectTemplate.h"
 #include "scene_fbs/components/trinity_ModelComponent.h"
 #include "scene_fbs/components/trinity_AnimationComponent.h"
 #include "scene_fbs/components/trinity_CollisionComponent.h"
+#include "scene_fbs/components/trinity_PlacementRegistry.h"
 
 #include "actors/actor.h"
 #include "actors/pokemon_actor.h"
@@ -211,6 +212,11 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TrinityModelComponent)
 		GDREGISTER_CLASS(TrinityAnimationComponent)
 		GDREGISTER_CLASS(TrinityCollisionComponent)
+		GDREGISTER_CLASS(TrinityPlacementRegistry)
+		GDREGISTER_CLASS(TrinityPlacementPosition)
+		GDREGISTER_CLASS(TrinityPlacementObjects)
+		GDREGISTER_CLASS(TrinityPlacementObjectTemplates)
+		GDREGISTER_CLASS(TrinityPlacementSpawners)
 
 		//personal
 		GDREGISTER_CLASS(TRPersonalArray)

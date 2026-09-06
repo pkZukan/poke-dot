@@ -16,7 +16,7 @@ void TRSCN::_bind_methods()
     GETTER_SETTER_BIND(TRSCN, res_2, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRSCN, res_3, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRSCN, chunks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRScene")
-    GETTER_SETTER_BIND(TRSCN, res_4, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
+    GETTER_SETTER_BIND(TRSCN, subScenes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "String")
     GETTER_SETTER_BIND(TRSCN, unk_6, Variant::INT, PROPERTY_HINT_NONE)
 }
 
@@ -56,13 +56,13 @@ void TRSCN::LoadFromFile(String file)
     set_res_2(trscn->res_2());
     set_res_3(trscn->res_3());
 
-    auto res4 = trscn->res_4();
-    if(res4)
+    auto subs = trscn->sub_scenes();
+    if(subs)
     {
-        for(int i = 0; i < res4->size(); i++)
-            res_4.push_back(res4->Get(i));
+        for(int i = 0; i < subs->size(); i++)
+            subScenes.push_back(Utils::toGodotString(subs->Get(i)));
     }
-    set_res_4(res_4);
+    set_subScenes(subScenes);
 
     set_unk_6(trscn->unk_6());
 

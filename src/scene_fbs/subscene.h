@@ -18,12 +18,14 @@ public:
 	~TRSubScene(){}
 
     GETTER_SETTER_DEFINE(String, FileName)
-	GETTER_SETTER_DEFINE(int, unk1)
+	GETTER_SETTER_DEFINE(String, group)
+	GETTER_SETTER_DEFINE(PackedByteArray, subdata)
 
 	void LoadFromBuffer(const void* data);
 
 private:
     String FileName;
-	int unk1;
+	String group;
+	PackedByteArray subdata;
 };
 }   
