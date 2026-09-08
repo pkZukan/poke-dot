@@ -20,31 +20,26 @@ void SeadArchive::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "file_list", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_file_list");
 }
 
-void SarcInspectorControl::_on_item_mouse_selected(
-    Vector2 position,
-    MouseButton mouse_button
-) {
-    if (mouse_button != MOUSE_BUTTON_LEFT) {
+void SarcInspectorControl::_on_item_mouse_selected(Vector2 position, MouseButton mouse_button) 
+{
+    if (mouse_button != MOUSE_BUTTON_LEFT) 
         return;
-    }
 
     TreeItem *item = file_tree->get_selected();
 
-    if (!item) {
+    if (!item)
         return;
-    }
 
     // Ignore directories/root.
-    if (item->get_child_count() > 0) {
+    if (item->get_child_count() > 0)
         return;
-    }
 
-    String file_name = item->get_text(0);
+    Dictionary file = item->get_metadata(0);
+    String file_name = file["path"];
+    uint32_t offset = file["offset"];
+    uint32_t size = file["size"];
 
-    UtilityFunctions::print(
-        "Clicked SARC file: ",
-        file_name
-    );
+    UtilityFunctions::print("Clicked SARC file: ", file_name, " | Off=", offset, " | size=", size);
 }
 
 void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
@@ -54,11 +49,10 @@ void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
 
     // Create Tree Widget
     file_tree = memnew(Tree);
-    file_tree->set_columns(3);
+    file_tree->set_columns(2);
     file_tree->set_column_titles_visible(true);
-    file_tree->set_column_title(0, "Name");
-    file_tree->set_column_title(1, "Offset");
-    file_tree->set_column_title(2, "Size");
+    file_tree->set_column_title(0, "FileName");
+    file_tree->set_column_title(1, "Size");
     file_tree->set_custom_minimum_size(Vector2(0, 250));
     file_tree->connect(
         "item_mouse_selected",
@@ -88,8 +82,14 @@ void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
                 // Leaf Node (File)
                 TreeItem *file_item = file_tree->create_item(current_parent);
                 file_item->set_text(0, part);
-                file_item->set_text(1, vformat("0x%X", archive->get_file_offset(path)));
-                file_item->set_text(2, vformat("%d bytes", archive->get_file_size(path)));
+                file_item->set_text(1, vformat("%d bytes", archive->get_file_size(path)));
+
+                //Set metadata
+                Dictionary meta;
+                meta["path"] = path;
+                meta["offset"] = archive->get_file_offset(path);
+                meta["size"] = archive->get_file_size(path);
+                file_item->set_metadata(0, meta);
             } else {
                 // Directory Node
                 if (!dir_nodes.has(current_path)) {
