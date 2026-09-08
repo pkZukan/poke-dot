@@ -38,6 +38,7 @@
 #include "converters/model_converter.h"
 
 #include "middleware/bntx.h"
+#include "middleware/sarc.h"
 
 #include "field/trcol.h"
 
@@ -57,6 +58,7 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/editor_plugin.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
+#include <godot_cpp/classes/editor_interface.hpp>
 
 using namespace godot;
 
@@ -81,6 +83,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 
@@ -239,6 +242,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
+		GDREGISTER_CLASS(SeadArchive)
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)
@@ -278,6 +282,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 
@@ -291,50 +296,59 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		PokemonCatalog::get_singleton()->load_catalog();
 	}
 	
-#ifdef TOOLS_ENABLED
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) 
 	{
-		//
+		ClassDB::register_internal_class<SarcInspectorControl>();
+        ClassDB::register_internal_class<EditorInspectorPluginSARC>();
+		ClassDB::register_internal_class<SARCEditorPlugin>();
+		EditorPlugins::add_by_type<SARCEditorPlugin>();
 	}
-#endif
 }
 
 void uninitialize_gen_module(ModuleInitializationLevel p_level) {
-	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) return;
 
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
-
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
-
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
-
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
-
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
-
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
-
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
-
-	FINI_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
-
-	if (Engine::get_singleton()->has_singleton("PokemonCatalog")) {
-        PokemonCatalog* catalog = Object::cast_to<PokemonCatalog>(
-            Engine::get_singleton()->get_singleton("PokemonCatalog")
-        );
-        Engine::get_singleton()->unregister_singleton("PokemonCatalog");
-        memdelete(catalog);
+    if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
+    {
+        EditorPlugins::remove_by_type<SARCEditorPlugin>();
     }
+
+	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
+	{
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
+
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
+
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
+
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
+
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
+
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderSARC)
+
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
+
+		if (Engine::get_singleton()->has_singleton("PokemonCatalog")) {
+			PokemonCatalog* catalog = Object::cast_to<PokemonCatalog>(
+				Engine::get_singleton()->get_singleton("PokemonCatalog")
+			);
+			Engine::get_singleton()->unregister_singleton("PokemonCatalog");
+			memdelete(catalog);
+		}
+	}
 }
 
 extern "C" {

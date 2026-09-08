@@ -49,7 +49,6 @@ func add_suffix_num(path: String, num: int = 0) -> String:
 
 
 func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", load_queue: Array[Dictionary] = []) -> void:
-	print(scene.Name)
 	match scene.Name:
 		"SubScene":
 			var subscn: TRSubScene = scene.nested_type
