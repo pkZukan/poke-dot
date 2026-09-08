@@ -198,7 +198,11 @@ void BinaryTexture::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load BNTX file: %s", file));
+    LoadFromBuffer(buf);
+}
 
+void BinaryTexture::LoadFromBuffer(PackedByteArray buf)
+{
     Ref<StreamPeerBuffer> sp;
     sp.instantiate();
     sp->set_data_array(buf);

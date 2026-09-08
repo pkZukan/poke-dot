@@ -164,6 +164,7 @@ public:
 	~BinaryTexture(){}
 
     void LoadFromFile(String file);
+	void LoadFromBuffer(PackedByteArray buf);
 
 private:
 	Image::Format GetGodotImageFormat(int bntx_format);

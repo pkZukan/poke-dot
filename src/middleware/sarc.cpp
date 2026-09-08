@@ -53,11 +53,12 @@ void SarcInspectorControl::_on_item_activated()
         return;
 
     String file_name = item->get_metadata(0);
-    uint32_t offset = m_archive->get_file_offset(file_name);
     uint32_t size = m_archive->get_file_size(file_name);
     PackedByteArray data = m_archive->get_file_data(file_name);
 
-    UtilityFunctions::print("Double-Clicked SARC file: ", file_name, " | Off=", offset, " | size=", size);
+    //TODO: load asset and display in inspector
+
+    UtilityFunctions::print("Double-Clicked SARC file: ", file_name, " | size=", size);
 }
 
 void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
