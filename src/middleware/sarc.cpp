@@ -5,6 +5,7 @@ using namespace godot;
 void SarcInspectorControl::_bind_methods() 
 {
     ClassDB::bind_method(D_METHOD("_on_item_mouse_selected", "position", "mouse_button"), &SarcInspectorControl::_on_item_mouse_selected);
+    ClassDB::bind_method(D_METHOD("_on_item_activated"), &SarcInspectorControl::_on_item_activated);
 }
 
 void SeadArchive::_bind_methods() 
@@ -34,15 +35,34 @@ void SarcInspectorControl::_on_item_mouse_selected(Vector2 position, MouseButton
     if (item->get_child_count() > 0)
         return;
 
-    Dictionary file = item->get_metadata(0);
-    String file_name = file["path"];
-    uint32_t offset = file["offset"];
-    uint32_t size = file["size"];
+    String file_name = item->get_metadata(0);
 
-    UtilityFunctions::print("Clicked SARC file: ", file_name, " | Off=", offset, " | size=", size);
+    UtilityFunctions::print("Clicked SARC file: ", file_name);
+}
+
+void SarcInspectorControl::_on_item_activated() 
+{
+    TreeItem *item = file_tree->get_selected();
+    if (!item)
+        return;
+
+    if (item->get_child_count() > 0)
+        return;
+
+    if (m_archive.is_null())
+        return;
+
+    String file_name = item->get_metadata(0);
+    uint32_t offset = m_archive->get_file_offset(file_name);
+    uint32_t size = m_archive->get_file_size(file_name);
+    PackedByteArray data = m_archive->get_file_data(file_name);
+
+    UtilityFunctions::print("Double-Clicked SARC file: ", file_name, " | Off=", offset, " | size=", size);
 }
 
 void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
+    m_archive = archive;
+
     if (file_tree) {
         file_tree->queue_free();
     }
@@ -57,6 +77,10 @@ void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
     file_tree->connect(
         "item_mouse_selected",
         Callable(this, "_on_item_mouse_selected")
+    );
+    file_tree->connect(
+        "item_activated",
+        Callable(this, "_on_item_activated")
     );
     add_child(file_tree);
 
@@ -85,11 +109,7 @@ void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
                 file_item->set_text(1, vformat("%d bytes", archive->get_file_size(path)));
 
                 //Set metadata
-                Dictionary meta;
-                meta["path"] = path;
-                meta["offset"] = archive->get_file_offset(path);
-                meta["size"] = archive->get_file_size(path);
-                file_item->set_metadata(0, meta);
+                file_item->set_metadata(0, path);
             } else {
                 // Directory Node
                 if (!dir_nodes.has(current_path)) {

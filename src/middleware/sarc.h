@@ -128,8 +128,10 @@ class SarcInspectorControl : public VBoxContainer {
 
 private:
     Tree *file_tree = nullptr;
+	Ref<SeadArchive> m_archive;
     void _on_item_mouse_selected(Vector2 position, MouseButton mouse_button);
-
+	void _on_item_activated();
+	
 protected:
     static void _bind_methods();
 
