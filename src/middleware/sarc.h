@@ -13,6 +13,10 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/classes/editor_inspector_plugin.hpp>
 #include <godot_cpp/classes/editor_plugin.hpp>
+#include <godot_cpp/classes/editor_interface.hpp>
+#include <godot_cpp/classes/editor_inspector.hpp>
+#include <godot_cpp/classes/engine.hpp>
+#include "middleware/bntx.h"
 #include "utils.h"
 
 namespace godot {
@@ -129,9 +133,10 @@ class SarcInspectorControl : public VBoxContainer {
 private:
     Tree *file_tree = nullptr;
 	Ref<SeadArchive> m_archive;
+	Ref<Resource> m_active_resource;
     void _on_item_mouse_selected(Vector2 position, MouseButton mouse_button);
 	void _on_item_activated();
-	
+
 protected:
     static void _bind_methods();
 

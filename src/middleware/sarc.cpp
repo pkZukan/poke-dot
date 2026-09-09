@@ -43,22 +43,33 @@ void SarcInspectorControl::_on_item_mouse_selected(Vector2 position, MouseButton
 void SarcInspectorControl::_on_item_activated() 
 {
     TreeItem *item = file_tree->get_selected();
-    if (!item)
+    if (!item || item->get_child_count() > 0 || m_archive.is_null()) {
         return;
-
-    if (item->get_child_count() > 0)
-        return;
-
-    if (m_archive.is_null())
-        return;
+    }
 
     String file_name = item->get_metadata(0);
-    uint32_t size = m_archive->get_file_size(file_name);
     PackedByteArray data = m_archive->get_file_data(file_name);
 
-    //TODO: load asset and display in inspector
+    //Set current resource as bntx
+    if (file_name.ends_with("bntx")) 
+    {
+        Ref<BinaryTexture> bntx;
+        bntx.instantiate();
+        bntx->LoadFromBuffer(data);
 
-    UtilityFunctions::print("Double-Clicked SARC file: ", file_name, " | size=", size);
+        m_active_resource = bntx;
+    }
+
+    //Deffered call to render in inspector
+    if (m_active_resource.is_valid())
+    {
+        if (Engine::get_singleton()->is_editor_hint()) 
+        {
+            EditorInterface *editor_interface = EditorInterface::get_singleton();
+            if (editor_interface)
+                Callable(editor_interface, "edit_resource").call_deferred(m_active_resource);
+        }
+    }
 }
 
 void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
