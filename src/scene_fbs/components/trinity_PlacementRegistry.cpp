@@ -75,7 +75,7 @@ void TrinityPlacementRegistry::LoadFromBuffer(const void* buffer)
 {
     auto reg = Titan::TrinityScene::GetTrinityPlacementRegistry(buffer);
 
-    Ref<Resource> res = _LoadPlacementItem(Titan::TrinityScene::PlacementItem::PlacementItem_PlacementPositions, reg->item());
+    Ref<Resource> res = _LoadPlacementItem(reg->item_type(), reg->item());
     
     set_item(res);
 }

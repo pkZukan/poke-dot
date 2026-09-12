@@ -1,8 +1,69 @@
+include "../common.fbs";
+
 namespace Titan.TrinityScene;
 
-table Collision
+union ColShapeType
 {
+    SphereShape,
+    BoxShape,
+    CapsuleShape,
+    ModelShape,
+    PencilShape,
+}
 
+union Collision
+{
+    BodyCollision,
+    CharCollision
+}
+
+table SphereShape 
+{
+    pos: Titan.Math.Vec3;
+    radius: float;
+}
+
+table BoxShape 
+{
+    pos: Titan.Math.Vec3;
+    size: Titan.Math.Vec3;
+    rot: Titan.Math.Vec3;
+}
+
+table CapsuleShape 
+{
+    pos: Titan.Math.Vec3;
+    radius: float;
+    height: float;
+    rot: Titan.Math.Vec3;
+}
+
+table ModelShape 
+{
+    file_path: string;
+    pos: Titan.Math.Vec3;
+    rot: Titan.Math.Vec3;
+    scale: Titan.Math.Vec3;
+}
+
+table PencilShape 
+{
+    pos: Titan.Math.Vec3;
+    radius: float;
+    cyl_height: float;
+    tip_height:float;
+    slice_count:int;
+    rot: Titan.Math.Vec3;
+}
+
+table BodyCollision
+{
+    shape: ColShapeType;
+}
+
+table CharCollision
+{
+    shape: ColShapeType;
 }
 
 table TrinityCollisionComponent
