@@ -30,7 +30,7 @@ godot::Transform3D Utils::toGodotTransform(const Titan::Math::Transform *tran)
     );
 
     Basis basis(quat);
-    basis.scale(scale);
+    basis.scale_local(scale);
 
     return Transform3D(basis, translate);
 }
@@ -42,7 +42,7 @@ godot::Transform3D Utils::toGodotTransform(const Titan::Math::SRT *srt)
     Vector3 euler_rot = toGodotVec3(srt->VecRot());
 
     Basis basis = Basis::from_euler(euler_rot);
-    basis.scale(scale);
+    basis.scale_local(scale);
 
     return Transform3D(basis, translate);
 }

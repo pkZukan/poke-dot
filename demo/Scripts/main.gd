@@ -52,17 +52,37 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 	match scene.Name:
 		"SubScene":
 			var subscn: TRSubScene = scene.nested_type
-			var sub_path: String = base_path.path_join(subscn.FileName)
+			var sub_path: String = base_path.path_join(subscn.FileName).simplify_path()
 			sub_path = add_suffix_num(sub_path)
 			load_scene_file(sub_path, parent_node, load_queue)
 			return
-			
+
+		"trinity_ObjectTemplate":
+			var obj_template: TrinityObjectTemplate = scene.nested_type as TrinityObjectTemplate
+			if obj_template and obj_template.EntityData is TrinitySceneObject:
+				var scn_obj: TrinitySceneObject = obj_template.EntityData as TrinitySceneObject
+				var template_node := Node3D.new()
+				template_node.name = obj_template.Name if obj_template.Name != "" else scn_obj.Name
+				template_node.transform = scn_obj.transform
+				
+				if scn_obj.keep_world_srt or not scn_obj.attach_xform:
+					template_node.top_level = true
+				
+				parent_node.add_child(template_node)
+				parent_node = template_node
+				
+				if Engine.is_editor_hint():
+					template_node.owner = get_tree().edited_scene_root
+
 		"trinity_SceneObject":
 			var scn_obj: TrinitySceneObject = scene.nested_type as TrinitySceneObject
-
 			var obj_node := Node3D.new()
 			obj_node.name = scn_obj.Name if scn_obj and scn_obj.Name != "" else "SceneObject"
 			obj_node.transform = scn_obj.transform
+			
+			if scn_obj.keep_world_srt or not scn_obj.attach_xform:
+				obj_node.top_level = true
+
 			parent_node.add_child(obj_node)
 			parent_node = obj_node
 
@@ -79,7 +99,7 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 				"file": model_path.get_file()
 			})
 
-	# sub_objects are SceneEntry/TRScene just like chunks — recurse the same way
+	# Recurse into sub_objects with the updated parent_node
 	var sub_objs: Array[TRScene] = []
 	sub_objs.assign(scene.sub_objects)
 	for sub in sub_objs:
@@ -88,17 +108,21 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 
 func load_scene_file(scene_file: String, parent_node: Node3D, load_queue: Array[Dictionary]) -> void:
 	var scene: TRSCN = ResourceLoader.load(scene_file)
-
 	if not scene:
 		push_error("Failed to load scene file: " + scene_file)
 		return
 
-	print("Scene: " + scene.Name)
+	# Optional: Create a container Node3D for the subscene to prevent name collisions
+	var subscene_container := Node3D.new()
+	subscene_container.name = scene.Name if scene.Name != "" else scene_file.get_file().get_basename()
+	parent_node.add_child(subscene_container)
+	if Engine.is_editor_hint():
+		subscene_container.owner = get_tree().edited_scene_root
 
 	var chunks: Array[TRScene] = []
 	chunks.assign(scene.chunks)
 	for c in chunks:
-		load_scene(c, parent_node, scene_file.get_base_dir(), load_queue)
+		load_scene(c, subscene_container, scene_file.get_base_dir(), load_queue)
 				
 func load_models_async() -> void:
 	var load_queue: Array[Dictionary] = []
@@ -110,10 +134,6 @@ func load_models_async() -> void:
 		root_scene_node,
 		load_queue
 	)
-
-	if has_node("Landscape"):
-		load_queue.append({"parent": $Landscape, "dir": "res://Assets/field/model/env/enkei/enkei1", "file": "enkei_landscape1.trmdl"})
-		load_queue.append({"parent": $Landscape, "dir": "res://Assets/field/model/env/enkei/enkei1", "file": "enkei_landscape2.trmdl"})
 
 	var total_items: int = load_queue.size()
 	if total_items == 0:

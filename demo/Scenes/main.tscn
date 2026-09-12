@@ -44,10 +44,6 @@ shape = SubResource("BoxShape3D_0xm2m")
 transform = Transform3D(48.626465, 0, 0, 0, 1, 0, 0, 0, 54.386, 0, 0, 0)
 mesh = SubResource("PlaneMesh_0xm2m")
 
-[node name="Landscape" type="Node3D" parent="." unique_id=1671349600]
-
-[node name="Mountains" type="Node3D" parent="." unique_id=648921028]
-
 [node name="Tower" type="Node3D" parent="." unique_id=120966878]
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=661450487]
