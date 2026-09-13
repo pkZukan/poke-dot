@@ -60,5 +60,3 @@ transform = Transform3D(-0.6893362, 0, -0.7244416, 0, 1, 0, 0.7244416, 0, -0.689
 environment = SubResource("Environment_0xm2m")
 camera_attributes = SubResource("CameraAttributesPractical_0xm2m")
 compositor = SubResource("Compositor_h2yge")
-
-[node name="Field" type="Node3D" parent="." unique_id=814395199]
