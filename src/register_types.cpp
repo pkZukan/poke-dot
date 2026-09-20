@@ -39,6 +39,7 @@
 
 #include "middleware/bntx.h"
 #include "middleware/sarc.h"
+#include "middleware/havok_tag.h"
 
 #include "field/trcol.h"
 
@@ -250,6 +251,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
 		GDREGISTER_CLASS(SeadArchive)
+		GDREGISTER_CLASS(HavokTag)
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)

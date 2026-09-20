@@ -3,6 +3,8 @@ extends Node
 
 signal loading_progress(current: int, total: int)
 
+const player_prefab = preload("res://gflib/prefabs/Player.tscn")
+
 @export var run_in_editor: bool = false:
 	set(value):
 		if value:
@@ -35,7 +37,9 @@ func get_trmdl_files_recursive(path: String) -> Array[String]:
 	return results
 
 func _ready() -> void:
-	pass
+	var player = player_prefab.instantiate()
+	player.transform = $Spawn.transform
+	add_child(player)
 
 func add_suffix_num(path: String, num: int = 0) -> String:
 	var file_basename: String = path.get_file().get_basename()
@@ -98,6 +102,62 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 				"dir": model_path.get_base_dir(),
 				"file": model_path.get_file()
 			})
+		"trinity_CollisionComponent":
+			var col_comp: TrinityCollisionComponent = scene.nested_type as TrinityCollisionComponent
+
+			if col_comp.collision is TrinityBodyCollision:
+				var col_body: TrinityBodyCollision = col_comp.collision
+
+				if col_body.shape is ModelShape:
+					var model_shape: ModelShape = col_body.shape
+					var col_path: String = "res://Assets/".path_join(model_shape.path)
+
+					if not FileAccess.file_exists(col_path):
+						push_warning("TRCOL file not found: " + col_path)
+						return
+
+					var trcol: TRCOL = ResourceLoader.load(col_path)
+
+					if trcol == null:
+						push_warning("Failed to load TRCOL: " + col_path)
+						return
+
+					var faces: PackedVector3Array = trcol.get_faces()
+
+					var static_body := StaticBody3D.new()
+					static_body.name = col_path.get_file().get_basename()
+
+					# Apply ModelShape transform to the collision body.
+					var s: Vector3 = model_shape.scale
+					var r: Vector3 = model_shape.rot
+					var p: Vector3 = model_shape.pos
+
+					var xform := Transform3D()
+					xform = xform.scaled(s if s != Vector3.ZERO else Vector3.ONE)
+
+					if r != Vector3.ZERO:
+						xform = Transform3D(
+							Basis.from_euler(r),
+							Vector3.ZERO
+						) * xform
+
+					xform.origin = p
+					static_body.transform = xform
+
+					parent_node.add_child(static_body)
+					if Engine.is_editor_hint():
+						static_body.owner = get_tree().edited_scene_root
+
+					var concave := ConcavePolygonShape3D.new()
+					concave.set_faces(faces)
+
+					var col_node := CollisionShape3D.new()
+					col_node.name = "CollisionMesh"
+					col_node.shape = concave
+
+					static_body.add_child(col_node)
+					if Engine.is_editor_hint():
+						col_node.owner = get_tree().edited_scene_root
 
 	# Recurse into sub_objects with the updated parent_node
 	var sub_objs: Array[TRScene] = []
@@ -123,7 +183,7 @@ func load_scene_file(scene_file: String, parent_node: Node3D, load_queue: Array[
 	chunks.assign(scene.chunks)
 	for c in chunks:
 		load_scene(c, subscene_container, scene_file.get_base_dir(), load_queue)
-				
+	
 func load_models_async() -> void:
 	var load_queue: Array[Dictionary] = []
 
@@ -139,6 +199,7 @@ func load_models_async() -> void:
 	if total_items == 0:
 		return
 
+	# Load all models async
 	for i in range(total_items):
 		var job: Dictionary = load_queue[i]
 		

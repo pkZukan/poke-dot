@@ -5,6 +5,9 @@ using namespace godot;
 void ModelShape::_bind_methods()
 {
     GETTER_SETTER_BIND(ModelShape, path, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(ModelShape, pos, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(ModelShape, rot, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(ModelShape, scale, Variant::VECTOR3, PROPERTY_HINT_NONE)
 }
 
 void SphereShape::_bind_methods()
@@ -91,6 +94,9 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
             Ref<ModelShape> model_shape;
             model_shape.instantiate();
             model_shape->set_path(Utils::toGodotString(src->file_path()));
+            if (src->pos()) model_shape->set_pos(Utils::toGodotVec3(src->pos()));
+            if (src->rot()) model_shape->set_rot(Utils::toGodotVec3(src->rot()));
+            if (src->scale()) model_shape->set_scale(Utils::toGodotVec3(src->scale()));
             return model_shape;
         }
         case Titan::TrinityScene::ColShapeType::ColShapeType_PencilShape:

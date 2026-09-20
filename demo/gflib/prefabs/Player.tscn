@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://feiijofpwsso"]
 
+[ext_resource type="BinaryTexture" uid="uid://ca2se1kb1layc" path="res://Assets/ik_pokemon/data/pm0005/pm0005_00_00/icon/pm0005_00_00_00_0.bntx" id="1_0tg4y"]
 [ext_resource type="Script" uid="uid://cr44l78deqhtd" path="res://gflib/scripts/Controller.gd" id="1_frlub"]
 
 [node name="Player" type="PokemonCharacter" unique_id=2118575156]
+icon = ExtResource("1_0tg4y")
 species = 5
 script = ExtResource("1_frlub")
 

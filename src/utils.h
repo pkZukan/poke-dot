@@ -2,6 +2,7 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/resource.hpp>
+#include <godot_cpp/classes/stream_peer_buffer.hpp>
 #include "generated/common_generated.h"
 
 #define GETTER_SETTER_BIND(c, x, y, ...)  \
@@ -42,5 +43,6 @@ public:
     static godot::String toGodotString(const flatbuffers::String *str);
 
     static float half_to_float(uint16_t half);
+	static String read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end_pos = UINT64_MAX);
 };
 }

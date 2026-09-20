@@ -89,3 +89,28 @@ float Utils::half_to_float(uint16_t half)
 
     return s << 31 | e << 23 | f;
 }
+
+String Utils::read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end_pos)
+{
+    if (sp.is_null())
+        return String();
+
+    const PackedByteArray data = sp->get_data_array();
+    const uint8_t *bytes = data.ptr();
+
+    uint64_t pos = sp->get_position();
+    uint64_t limit = MIN(end_pos, (uint64_t)data.size());
+
+    if (pos >= limit)
+        return String();
+
+    uint64_t end = pos;
+    while (end < limit && bytes[end] != 0x00)
+        end++;
+
+    String result = String::utf8((const char *)bytes + pos, end - pos);
+
+    sp->seek(end < limit ? end + 1 : end);
+
+    return result;
+}

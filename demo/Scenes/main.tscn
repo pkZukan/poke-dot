@@ -1,15 +1,6 @@
 [gd_scene format=3 uid="uid://catth7mjjf5fi"]
 
 [ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://Scripts/main.gd" id="1_ig7tw"]
-[ext_resource type="PackedScene" uid="uid://feiijofpwsso" path="res://gflib/prefabs/Player.tscn" id="2_0xm2m"]
-[ext_resource type="Material" uid="uid://dno737q2nfy4e" path="res://gflib/Materials/asphalt.tres" id="2_h2yge"]
-[ext_resource type="BinaryTexture" uid="uid://ca2se1kb1layc" path="res://Assets/ik_pokemon/data/pm0005/pm0005_00_00/icon/pm0005_00_00_00_0.bntx" id="4_1bvp3"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_0xm2m"]
-size = Vector3(94.34479, 0.7977295, 106.104675)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_0xm2m"]
-material = ExtResource("2_h2yge")
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1bvp3"]
 sky_energy_multiplier = 0.36
@@ -34,29 +25,16 @@ ssil_enabled = true
 [node name="WorldContainer" type="Node3D" unique_id=1974166111]
 script = ExtResource("1_ig7tw")
 
-[node name="Ground" type="StaticBody3D" parent="." unique_id=555337595]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=1476031999]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33291626, -0.38886517, -0.14785767)
-shape = SubResource("BoxShape3D_0xm2m")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=1843892966]
-transform = Transform3D(48.626465, 0, 0, 0, 1, 0, 0, 0, 54.386, 0, 0, 0)
-mesh = SubResource("PlaneMesh_0xm2m")
-
-[node name="Tower" type="Node3D" parent="." unique_id=120966878]
-
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=661450487]
 transform = Transform3D(1, 0, 0, 0, -0.12356678, 0.99233633, 0, -0.99233633, -0.12356678, 0, 401.68225, -727.2737)
 light_energy = 0.348
 shadow_enabled = true
 shadow_blur = 2.656
 
-[node name="Player" parent="." unique_id=2118575156 instance=ExtResource("2_0xm2m")]
-icon = ExtResource("4_1bvp3")
-transform = Transform3D(-0.6893362, 0, -0.7244416, 0, 1, 0, 0.7244416, 0, -0.6893362, -46.43489, 0, -51.82914)
-
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1923990555]
 environment = SubResource("Environment_0xm2m")
 camera_attributes = SubResource("CameraAttributesPractical_0xm2m")
 compositor = SubResource("Compositor_h2yge")
+
+[node name="Spawn" type="Node3D" parent="." unique_id=536453065]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -786.89557, 0.90738964, -889.58246)

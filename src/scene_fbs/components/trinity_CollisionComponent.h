@@ -18,9 +18,15 @@ public:
 	~ModelShape(){}
 
 	GETTER_SETTER_DEFINE(String, path)
+	GETTER_SETTER_DEFINE(Vector3, pos)
+	GETTER_SETTER_DEFINE(Vector3, rot)
+	GETTER_SETTER_DEFINE(Vector3, scale)
 
 private:
     String path;
+	Vector3 pos;
+	Vector3 rot;
+	Vector3 scale = Vector3(1, 1, 1);
 };
 
 class SphereShape : public Resource {
