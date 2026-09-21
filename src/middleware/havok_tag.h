@@ -12,6 +12,7 @@
 #include <godot_cpp/classes/tree.hpp>
 #include <godot_cpp/classes/tree_item.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
+#include <godot_cpp/templates/vector.hpp>
 #include "utils.h"
 
 #include <vector>
@@ -23,7 +24,7 @@
 
 #define FOUR_CC(a, b, c, d) (((a) << 24) | ((b) << 16) | ((c) << 8) | ((d) << 0))
 
-#define HAVOK_TAG_TAG0 FOUR_CC('T', 'A', 'G', '0')
+#define HAVOK_TAG_TAG0   FOUR_CC('T', 'A', 'G', '0')
 #define HAVOK_TAG_SDKV   FOUR_CC('S', 'D', 'K', 'V')
 
 #define HAVOK_TAG_DATA   FOUR_CC('D', 'A', 'T', 'A')
@@ -52,23 +53,56 @@ public:
 	String Version;
 };
 
-class HavokTypeStrings : public Resource {
-	GDCLASS(HavokTypeStrings, Resource)
+class HavokStrings : public Resource {
+	GDCLASS(HavokStrings, Resource)
 
 protected:
 	static void _bind_methods();
 
 public:
-	HavokTypeStrings() {}
-	~HavokTypeStrings() {}
+	HavokStrings() {}
+	~HavokStrings() {}
 
-	PackedStringArray TypeStrings;
+	PackedStringArray Strings;
 };
 
 enum HavokSectionType : uint32_t
 {	
 	BRANCH = 0,
 	LEAF = 1,
+};
+
+struct HavokItemEntry
+{
+	uint32_t typeIndex;
+	uint32_t kind;
+	uint32_t offset;
+    uint32_t count;
+
+    HavokItemEntry(){}
+	HavokItemEntry(Ref<StreamPeerBuffer> sp)
+	{
+		uint32_t typeIndex_and_kind = sp->get_u32();
+		
+		typeIndex = typeIndex_and_kind & 0xFFFFFF;
+		kind = typeIndex_and_kind >> 24;
+		
+		offset = sp->get_u32();
+		count = sp->get_u32();
+	}
+};
+
+class HavokItem : public Resource {
+	GDCLASS(HavokItem, Resource)
+
+protected:
+	static void _bind_methods();
+
+public:
+	HavokItem() {}
+    ~HavokItem() {}
+
+	Vector<HavokItemEntry> Entries;
 };
 
 struct HavokSection
@@ -131,5 +165,8 @@ private:
 	TreeItem* parse_fst1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 	TreeItem* parse_tbdy(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 	TreeItem* parse_item(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
+
+	Ref<HavokStrings> ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size);
+    static std::pair<int, uint32_t> read_var32(Ref<StreamPeerBuffer> sp, uint32_t size);
 };
 }

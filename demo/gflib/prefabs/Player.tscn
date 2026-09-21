@@ -12,5 +12,5 @@ script = ExtResource("1_frlub")
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=101391186]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4059949, 2.764586)
+transform = Transform3D(-0.8594099, -0.046783675, -0.50914234, 0, 0.9958049, -0.09150175, 0.5112872, -0.07863752, -0.8558046, -1.4936087, 1.1375674, -2.266662)
 far = 10000.0

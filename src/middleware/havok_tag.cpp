@@ -2,6 +2,16 @@
 
 using namespace godot;
 
+void HavokSdkVer::_bind_methods() 
+{
+	
+}
+
+void HavokItem::_bind_methods() 
+{
+	
+}
+
 void HavokTag::_bind_methods() 
 {
 	ClassDB::bind_method(D_METHOD("LoadFromFile", "file"), &HavokTag::LoadFromFile);
@@ -144,28 +154,8 @@ TreeItem* HavokTag::parse_tst1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing TST1 section");
-	Ref<HavokTypeStrings> tst;
-	tst.instantiate();
-
-	uint64_t start_pos = sp->get_position();
-    uint64_t end_pos = start_pos + size;
-
-	while(sp->get_position() < end_pos)
-	{
-		uint64_t currPos = sp->get_position();
-		uint8_t first = sp->get_u8();
-
-		if(first == 0xFF)
-		{
-			sp->get_u8();
-			continue;
-		}
-		sp->seek(currPos);
-
-		String str = Utils::read_null_terminated_string(sp);
-		if (!str.is_empty()) 
-			tst->TypeStrings.push_back(str);
-	}
+	
+    Ref<HavokStrings> tst = HavokTag::ReadStrings(sp, size);
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "TST1");
@@ -180,7 +170,8 @@ TreeItem* HavokTag::parse_tna1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing TNA1 section");
-	//TODO: Implement
+	
+    auto [ofs, count] = HavokTag::read_var32(sp, size);
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "TNA1");
@@ -194,10 +185,12 @@ TreeItem* HavokTag::parse_fst1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing FST1 section");
-	//TODO: Implement
+	
+    Ref<HavokStrings> fst = HavokTag::ReadStrings(sp, size);
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "FST1");
+	node->set_metadata(0, fst);
 
 	return node;
 }
@@ -222,10 +215,98 @@ TreeItem* HavokTag::parse_item(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing ITEM section");
-	//TODO: Implement
+	
+    Ref<HavokItem> item;
+    item.instantiate();
+    while(sp->get_position() < size)
+    {
+        HavokItemEntry entry(sp);
+        item->Entries.push_back(entry);
+    }
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "ITEM");
+    node->set_metadata(0, item);
 
 	return node;
+}
+
+Ref<HavokStrings> HavokTag::ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size) 
+{
+	Ref<HavokStrings> str;
+	str.instantiate();
+
+	uint64_t start_pos = sp->get_position();
+    uint64_t end_pos = start_pos + size;
+
+	while(sp->get_position() < end_pos)
+	{
+		uint64_t currPos = sp->get_position();
+		uint8_t first = sp->get_u8();
+
+		if(first == 0xFF)
+		{
+			sp->get_u8();
+			continue;
+		}
+		sp->seek(currPos);
+
+		String s = Utils::read_null_terminated_string(sp);
+		if (!s.is_empty()) 
+			str->Strings.push_back(s);
+	}
+
+	return str;
+}
+
+std::pair<int, uint32_t> HavokTag::read_var32(Ref<StreamPeerBuffer> sp, uint32_t size) 
+{
+	uint64_t val = 0;
+
+	const uint32_t count = MIN<uint32_t>(8, size);
+	for (uint32_t i = 0; i < count; i++) {
+		val = (val << 8) | static_cast<uint8_t>(sp->get_u8());
+	}
+
+	auto extract = [](uint64_t value, int start, int end) -> uint64_t {
+		const int width = end - start + 1;
+		return (value >> start) & ((1ULL << width) - 1ULL);
+	};
+
+	auto reverse_extract = [&](uint64_t value, int start, int end) -> uint64_t {
+		return extract(value, 63 - end, 63 - start);
+	};
+
+	const uint64_t msb = reverse_extract(val, 0, 7);
+	const uint64_t mode = msb >> 3;
+
+	if (mode <= 15)
+		return {1, static_cast<uint32_t>(msb)};
+
+	if (mode <= 23)
+		return {2, static_cast<uint32_t>(
+			reverse_extract(val, 2, 15)
+		)};
+
+	if (mode <= 27)
+		return {3, static_cast<uint32_t>(
+			reverse_extract(val, 3, 23)
+		)};
+
+	if (mode == 28)
+		return {4, static_cast<uint32_t>(
+			reverse_extract(val, 5, 31)
+		)};
+
+	if (mode == 29)
+		return {5, static_cast<uint32_t>(
+			reverse_extract(val, 5, 39)
+		)};
+
+	if (mode == 30)
+		return {8, static_cast<uint32_t>(
+			reverse_extract(val, 5, 63)
+		)};
+
+	return {0, 0};
 }
