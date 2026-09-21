@@ -12,10 +12,21 @@ void HavokItem::_bind_methods()
 	
 }
 
+void HavokStrings::_bind_methods()
+{
+
+}
+
+void HavokData::_bind_methods()
+{
+
+}
+
 void HavokTag::_bind_methods() 
 {
 	ClassDB::bind_method(D_METHOD("LoadFromFile", "file"), &HavokTag::LoadFromFile);
 	ClassDB::bind_method(D_METHOD("get_tree_item"), &HavokTag::get_tree_item);
+	ClassDB::bind_method(D_METHOD("GetObject", "idx"), &HavokTag::GetObject);
 }
 
 void HavokTag::LoadFromFile(String file)
@@ -112,10 +123,14 @@ TreeItem* HavokTag::parse_data(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing DATA section");
-	//TODO: Implement
+	
+	Ref<HavokData> data;
+	data.instantiate();
+	data->Buffer = sp->get_data_array();
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "DATA");
+	node->set_metadata(0, data);
 
 	return node;
 }
@@ -126,7 +141,6 @@ TreeItem* HavokTag::parse_type(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing TYPE section");
-	//TODO: Implement
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "TYPE");
@@ -140,7 +154,6 @@ TreeItem* HavokTag::parse_indx(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing INDX section");
-	//TODO: Implement
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "INDX");
@@ -170,11 +183,21 @@ TreeItem* HavokTag::parse_tna1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing TNA1 section");
-	
-    auto [ofs, count] = HavokTag::read_var32(sp, size);
+
+	Ref<HavokTypeNameDescriptor> tna;
+	tna.instantiate();
+
+	//Get entries cnt
+	auto [ofs, count] = HavokTag::read_var32(sp, size);
+	for(int i = 0; i < count; i++)
+	{
+		HavokTypeNameEntry name_ent(sp);
+		//
+	}
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "TNA1");
+	node->set_metadata(0, tna);
 
 	return node;
 }
@@ -201,10 +224,15 @@ TreeItem* HavokTag::parse_tbdy(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 		return nullptr;
 
 	UtilityFunctions::print("Parsing TBODY section");
-	//TODO: Implement
+	
+	Ref<HavokTypeBodyDescriptor> tbod;
+	tbod.instantiate();
+
+	//TODO: impl
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "TBODY");
+	node->set_metadata(0, tbod);
 
 	return node;
 }
@@ -229,6 +257,36 @@ TreeItem* HavokTag::parse_item(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
     node->set_metadata(0, item);
 
 	return node;
+}
+
+void HavokTag::GetObject(uint32_t idx)
+{
+    TreeItem *root = get_tree_item();
+    ERR_FAIL_NULL_MSG(root, "Tree root is null");
+
+    TreeItem *item_obj = Utils::FindTreeItemByName(root, "ITEM");
+    ERR_FAIL_NULL_MSG(item_obj, "Couldn't find ITEM");
+
+	Ref<HavokItem> item = item_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(item.is_null(), "ITEM metadata is not a HavokItem");
+
+	TreeItem *tst_obj = Utils::FindTreeItemByName(root, "TST1");
+    ERR_FAIL_NULL_MSG(tst_obj, "Couldn't find ITEM");
+
+	Ref<HavokStrings> tst = tst_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(tst.is_null(), "TST1 metadata is not a HavokItem");
+
+	TreeItem *tna_obj = Utils::FindTreeItemByName(root, "TNA1");
+    ERR_FAIL_NULL_MSG(tna_obj, "Couldn't find TNA1");
+
+	Ref<HavokStrings> tna = tna_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(tna.is_null(), "TNA1 metadata is not a HavokItem");
+
+    const auto &item_ent = item->Entries[idx];
+    for(auto &str : tst->Strings)
+	{
+		UtilityFunctions::print(str);
+	}
 }
 
 Ref<HavokStrings> HavokTag::ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size) 

@@ -252,6 +252,12 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(BinaryTexture)
 		GDREGISTER_CLASS(SeadArchive)
 		GDREGISTER_CLASS(HavokTag)
+		GDREGISTER_CLASS(HavokSdkVer)
+		GDREGISTER_CLASS(HavokItem)
+		GDREGISTER_CLASS(HavokStrings)
+		GDREGISTER_CLASS(HavokTypeNameDescriptor)
+		GDREGISTER_CLASS(HavokTypeBodyDescriptor)
+		GDREGISTER_CLASS(HavokData)
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)

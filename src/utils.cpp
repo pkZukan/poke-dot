@@ -114,3 +114,24 @@ String Utils::read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end
 
     return result;
 }
+
+TreeItem* Utils::FindTreeItemByName(TreeItem* current, const String& target_name) 
+{
+    if (current == nullptr)
+        return nullptr;
+
+    if (current->get_text(0) == target_name)
+        return current;
+
+    TreeItem* child = current->get_first_child();
+    while (child != nullptr) 
+    {
+        TreeItem* result = FindTreeItemByName(child, target_name);
+        if (result != nullptr)
+            return result;
+            
+        child = child->get_next();
+    }
+
+    return nullptr;
+}

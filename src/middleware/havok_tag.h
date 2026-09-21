@@ -92,7 +92,8 @@ struct HavokItemEntry
 	}
 };
 
-class HavokItem : public Resource {
+class HavokItem : public Resource 
+{
 	GDCLASS(HavokItem, Resource)
 
 protected:
@@ -101,6 +102,62 @@ protected:
 public:
 	HavokItem() {}
     ~HavokItem() {}
+
+	Vector<HavokItemEntry> Entries;
+};
+
+class HavokData : public Resource
+{
+	GDCLASS(HavokData, Resource)
+protected:
+	static void _bind_methods();
+
+public:
+	HavokData() {}
+    ~HavokData() {}
+
+	PackedByteArray Buffer;
+};
+
+struct HavokTypeNameEntry
+{
+	HavokTypeNameEntry(Ref<StreamPeerBuffer> sp)
+	{
+		//TODO
+	}
+};
+
+class HavokTypeNameDescriptor : public Resource 
+{
+	GDCLASS(HavokTypeNameDescriptor, Resource)
+
+protected:
+	static void _bind_methods();
+
+public:
+	HavokTypeNameDescriptor() {}
+    ~HavokTypeNameDescriptor() {}
+
+	Vector<HavokTypeNameEntry> Entries;
+};
+
+struct HavokTypeBodyEntry
+{
+	HavokTypeBodyEntry(Ref<StreamPeerBuffer> sp)
+	{
+		//
+	}
+};
+
+class HavokTypeBodyDescriptor : public Resource {
+	GDCLASS(HavokTypeBodyDescriptor, Resource)
+
+protected:
+	static void _bind_methods();
+
+public:
+	HavokTypeBodyDescriptor() {}
+    ~HavokTypeBodyDescriptor() {}
 
 	Vector<HavokItemEntry> Entries;
 };
@@ -150,6 +207,7 @@ public:
 	void LoadFromFile(String file);
 
 	TreeItem* get_tree_item() { return tree->get_root(); }
+	void GetObject(uint32_t idx);
 
 private:
 	Tree* tree;
