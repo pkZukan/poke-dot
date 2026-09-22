@@ -40,9 +40,12 @@
 
 namespace godot {
 
+class HavokStrings;
+
 namespace HavokUtils
 {
 	static uint32_t read_var32(Ref<StreamPeerBuffer> sp, uint32_t *bytes_read = nullptr);
+	static Ref<HavokStrings> ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size);
 }
 
 class HavokSdkVer : public Resource {
@@ -236,6 +239,7 @@ public:
 
 	TreeItem* get_tree_item() { return tree->get_root(); }
 	void GetObject(uint32_t idx);
+	uint32_t GetObjectCount();
 
 private:
 	Tree* tree;
@@ -251,7 +255,5 @@ private:
 	TreeItem* parse_fst1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 	TreeItem* parse_tbdy(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 	TreeItem* parse_item(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
-
-	Ref<HavokStrings> ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size);
 };
 }

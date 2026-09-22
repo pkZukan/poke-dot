@@ -6,7 +6,9 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	#loadButton.disabled()
 	var trcol : TRCOL = ResourceLoader.load("res://Assets/field/model/t1/t1_b/t1_b_bank/t1_b_bank_col.trcol")
-	trcol.get_tag().GetObject(1)
+	var cnt = trcol.get_tag().GetObjectCount()
+	for i in range(0, cnt):
+		trcol.get_tag().GetObject(i)
 
 func _process(_delta):
 	pass
