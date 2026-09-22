@@ -22,6 +22,16 @@ void HavokData::_bind_methods()
 
 }
 
+void HavokTypeNameDescriptor::_bind_methods()
+{
+
+}
+
+void HavokTypeBodyDescriptor::_bind_methods()
+{
+
+}
+
 void HavokTag::_bind_methods() 
 {
 	ClassDB::bind_method(D_METHOD("LoadFromFile", "file"), &HavokTag::LoadFromFile);
@@ -188,11 +198,15 @@ TreeItem* HavokTag::parse_tna1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 	tna.instantiate();
 
 	//Get entries cnt
-	auto [ofs, count] = HavokTag::read_var32(sp, size);
+	uint32_t count = HavokUtils::read_var32(sp);
+	UtilityFunctions::print(vformat("Count: %d", count));
 	for(int i = 0; i < count; i++)
 	{
 		HavokTypeNameEntry name_ent(sp);
-		//
+		UtilityFunctions::print(vformat("Nameidx: %d", name_ent.nameIdx));
+		for(int j = 0; j < name_ent.params.size(); j++)
+			UtilityFunctions::print(vformat("Param: %d", name_ent.params[j].nameIdx));
+		tna->Entries.push_back(name_ent);
 	}
 
 	TreeItem *node = tree->create_item(parent);
@@ -279,13 +293,18 @@ void HavokTag::GetObject(uint32_t idx)
 	TreeItem *tna_obj = Utils::FindTreeItemByName(root, "TNA1");
     ERR_FAIL_NULL_MSG(tna_obj, "Couldn't find TNA1");
 
-	Ref<HavokStrings> tna = tna_obj->get_metadata(0);
+	Ref<HavokTypeNameDescriptor> tna = tna_obj->get_metadata(0);
     ERR_FAIL_COND_MSG(tna.is_null(), "TNA1 metadata is not a HavokItem");
 
     const auto &item_ent = item->Entries[idx];
-    for(auto &str : tst->Strings)
+	uint32_t typeIdx = item_ent.typeIndex;
+	auto tna_ent = tna->Entries[typeIdx];
+	String name = tst->Strings[tna_ent.nameIdx];
+	for(int i = 0; i < tna_ent.params.size(); i++)
 	{
-		UtilityFunctions::print(str);
+		auto p_ent = tna_ent.params[i];
+		String paramName = tst->Strings[p_ent.nameIdx];
+		//TODO
 	}
 }
 
@@ -317,54 +336,65 @@ Ref<HavokStrings> HavokTag::ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size)
 	return str;
 }
 
-std::pair<int, uint32_t> HavokTag::read_var32(Ref<StreamPeerBuffer> sp, uint32_t size) 
+uint32_t HavokUtils::read_var32(Ref<StreamPeerBuffer> sp, uint32_t *bytes_read) 
 {
-	uint64_t val = 0;
+    uint64_t val = 0;
 
-	const uint32_t count = MIN<uint32_t>(8, size);
-	for (uint32_t i = 0; i < count; i++) {
-		val = (val << 8) | static_cast<uint8_t>(sp->get_u8());
-	}
+    const int64_t start_pos = sp->get_position();
+    const uint32_t count = MIN<uint32_t>(8, sp->get_size() - start_pos);
+    for (uint32_t i = 0; i < count; i++) {
+        val = (val << 8) | static_cast<uint8_t>(sp->get_u8());
+    }
 
-	auto extract = [](uint64_t value, int start, int end) -> uint64_t {
-		const int width = end - start + 1;
-		return (value >> start) & ((1ULL << width) - 1ULL);
-	};
+    auto extract = [](uint64_t value, int start, int end) -> uint64_t {
+        const int width = end - start + 1;
+        return (value >> start) & ((1ULL << width) - 1ULL);
+    };
 
-	auto reverse_extract = [&](uint64_t value, int start, int end) -> uint64_t {
-		return extract(value, 63 - end, 63 - start);
-	};
+    auto reverse_extract = [&](uint64_t value, int start, int end) -> uint64_t {
+        return extract(value, 63 - end, 63 - start);
+    };
 
-	const uint64_t msb = reverse_extract(val, 0, 7);
-	const uint64_t mode = msb >> 3;
+    const uint64_t msb = reverse_extract(val, 0, 7);
+    const uint64_t mode = msb >> 3;
 
-	if (mode <= 15)
-		return {1, static_cast<uint32_t>(msb)};
+    uint32_t local_bytes_read = 0;
+    uint32_t result = 0;
 
-	if (mode <= 23)
-		return {2, static_cast<uint32_t>(
-			reverse_extract(val, 2, 15)
-		)};
+    if (mode <= 15) 
+	{
+        local_bytes_read = 1;
+        result = static_cast<uint32_t>(msb);
+    } else if (mode <= 23) 
+	{
+        local_bytes_read = 2;
+        result = static_cast<uint32_t>(reverse_extract(val, 2, 15));
+    } else if (mode <= 27) 
+	{
+        local_bytes_read = 3;
+        result = static_cast<uint32_t>(reverse_extract(val, 3, 23));
+    } else if (mode == 28) 
+	{
+        local_bytes_read = 4;
+        result = static_cast<uint32_t>(reverse_extract(val, 5, 31));
+    } else if (mode == 29) 
+	{
+        local_bytes_read = 5;
+        result = static_cast<uint32_t>(reverse_extract(val, 5, 39));
+    } else if (mode == 30) 
+	{
+        local_bytes_read = 8;
+        result = static_cast<uint32_t>(reverse_extract(val, 5, 63));
+    } else 
+	{
+        local_bytes_read = 0;
+        result = 0;
+    }
 
-	if (mode <= 27)
-		return {3, static_cast<uint32_t>(
-			reverse_extract(val, 3, 23)
-		)};
+    sp->seek(start_pos + local_bytes_read); // only "consume" what the varint actually used
 
-	if (mode == 28)
-		return {4, static_cast<uint32_t>(
-			reverse_extract(val, 5, 31)
-		)};
+    if (bytes_read)
+        *bytes_read = local_bytes_read;
 
-	if (mode == 29)
-		return {5, static_cast<uint32_t>(
-			reverse_extract(val, 5, 39)
-		)};
-
-	if (mode == 30)
-		return {8, static_cast<uint32_t>(
-			reverse_extract(val, 5, 63)
-		)};
-
-	return {0, 0};
+    return result;
 }

@@ -40,6 +40,11 @@
 
 namespace godot {
 
+namespace HavokUtils
+{
+	static uint32_t read_var32(Ref<StreamPeerBuffer> sp, uint32_t *bytes_read = nullptr);
+}
+
 class HavokSdkVer : public Resource {
 	GDCLASS(HavokSdkVer, Resource)
 
@@ -119,11 +124,34 @@ public:
 	PackedByteArray Buffer;
 };
 
+struct HavokTypeNameParamEntry
+{
+	uint32_t nameIdx;
+	uint32_t val;
+
+	HavokTypeNameParamEntry(){}
+	HavokTypeNameParamEntry(Ref<StreamPeerBuffer> sp)
+	{
+		nameIdx = HavokUtils::read_var32(sp);
+		val = HavokUtils::read_var32(sp);
+	}
+};
+
 struct HavokTypeNameEntry
 {
+	uint32_t nameIdx;
+	Vector<HavokTypeNameParamEntry> params;
+
+	HavokTypeNameEntry(){}
 	HavokTypeNameEntry(Ref<StreamPeerBuffer> sp)
 	{
-		//TODO
+		nameIdx = HavokUtils::read_var32(sp);
+		uint32_t paramCnt = HavokUtils::read_var32(sp);
+		for(int i = 0; i < paramCnt; i++)
+		{
+			HavokTypeNameParamEntry paramEnt(sp);
+			params.push_back(paramEnt);
+		}
 	}
 };
 
@@ -225,6 +253,5 @@ private:
 	TreeItem* parse_item(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 
 	Ref<HavokStrings> ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size);
-    static std::pair<int, uint32_t> read_var32(Ref<StreamPeerBuffer> sp, uint32_t size);
 };
 }
