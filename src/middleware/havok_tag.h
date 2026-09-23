@@ -37,6 +37,7 @@
 #define HAVOK_TAG_TBDY   FOUR_CC('T', 'B', 'D', 'Y')
 
 #define HAVOK_TAG_ITEM   FOUR_CC('I', 'T', 'E', 'M')
+#define HAVOK_TAG_TPAD   FOUR_CC('T', 'P', 'A', 'D')
 
 namespace godot {
 
@@ -145,6 +146,8 @@ struct HavokTypeNameEntry
 	uint32_t nameIdx;
 	Vector<HavokTypeNameParamEntry> params;
 
+	int32_t bodyIndex = -1;
+
 	HavokTypeNameEntry(){}
 	HavokTypeNameEntry(Ref<StreamPeerBuffer> sp)
 	{
@@ -172,11 +175,104 @@ public:
 	Vector<HavokTypeNameEntry> Entries;
 };
 
+struct HavokTypeBodyInterfaceEntry
+{
+    uint32_t typeIndex;
+    uint32_t offset;
+
+	HavokTypeBodyInterfaceEntry(){}
+    HavokTypeBodyInterfaceEntry(Ref<StreamPeerBuffer> sp)
+    {
+        typeIndex = HavokUtils::read_var32(sp);
+        offset = HavokUtils::read_var32(sp);
+    }
+};
+
+struct HavokTypeBodyMemberEntry
+{
+	uint32_t nameIndex;
+	uint32_t flags;
+	uint32_t offset;
+	uint32_t typeIndex;
+
+	HavokTypeBodyMemberEntry(){}
+	HavokTypeBodyMemberEntry(Ref<StreamPeerBuffer> sp)
+	{
+		nameIndex = HavokUtils::read_var32(sp);
+		flags = HavokUtils::read_var32(sp);
+		offset = HavokUtils::read_var32(sp);
+		typeIndex = HavokUtils::read_var32(sp);
+	}
+};
+
 struct HavokTypeBodyEntry
 {
+	uint32_t typeIndex;
+	uint32_t parentIndex;
+	uint32_t format;
+	uint32_t subtype;
+	uint32_t version;
+	uint32_t size;
+	uint32_t alignment;
+	uint32_t flags;
+	Vector<HavokTypeBodyMemberEntry> members;
+	Vector<HavokTypeBodyInterfaceEntry> interfaces;
+	uint32_t attribs;
+
+	enum OptionalFlags
+	{
+		HAS_FORMAT =	 (1 << 0),
+		HAS_SUBTYPE =	 (1 << 1),
+		HAS_VERSION =	 (1 << 2),
+		HAS_SIZE_ALIGN = (1 << 3),
+		HAS_FLAGS = 	 (1 << 4),
+		HAS_MEMBERS = 	 (1 << 5),
+		HAS_INTERFACES = (1 << 6),
+		HAS_ATTRIBUTES = (1 << 7),
+	};
+
+	HavokTypeBodyEntry(){}
 	HavokTypeBodyEntry(Ref<StreamPeerBuffer> sp)
 	{
-		//
+		typeIndex = HavokUtils::read_var32(sp);
+		if(typeIndex != 0)
+		{
+			parentIndex = HavokUtils::read_var32(sp);
+			uint32_t opts = HavokUtils::read_var32(sp);
+			if(opts & OptionalFlags::HAS_FORMAT)
+				format = HavokUtils::read_var32(sp);
+			if(opts & OptionalFlags::HAS_SUBTYPE)
+				subtype = HavokUtils::read_var32(sp);
+			if(opts & OptionalFlags::HAS_VERSION)
+				version = HavokUtils::read_var32(sp);
+			if(opts & OptionalFlags::HAS_SIZE_ALIGN)
+			{
+				size = HavokUtils::read_var32(sp);
+				alignment = HavokUtils::read_var32(sp);
+			}
+			if(opts & OptionalFlags::HAS_FLAGS)
+				flags = HavokUtils::read_var32(sp);
+			if(opts & OptionalFlags::HAS_MEMBERS)
+			{
+				uint32_t num = HavokUtils::read_var32(sp);
+				uint16_t fieldCnt = num & 0xFFFF;
+				uint16_t properties = (num >> 16) & 0xFFFF;
+				for(int i = 0; i < fieldCnt; i++)
+				{
+					HavokTypeBodyMemberEntry ent(sp);
+					members.push_back(ent);
+				}
+			}
+			if (opts & OptionalFlags::HAS_INTERFACES)
+			{
+				uint32_t num = HavokUtils::read_var32(sp);
+
+				for (uint32_t i = 0; i < num; i++)
+					interfaces.push_back(HavokTypeBodyInterfaceEntry(sp));
+			}
+			//if(opts & OptionalFlags::HAS_ATTRIBUTES)
+			//	attribs = HavokUtils::read_var32(sp);
+		}
 	}
 };
 
@@ -190,7 +286,7 @@ public:
 	HavokTypeBodyDescriptor() {}
     ~HavokTypeBodyDescriptor() {}
 
-	Vector<HavokItemEntry> Entries;
+	Vector<HavokTypeBodyEntry> Entries;
 };
 
 struct HavokSection
@@ -255,5 +351,6 @@ private:
 	TreeItem* parse_fst1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 	TreeItem* parse_tbdy(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 	TreeItem* parse_item(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
+	TreeItem* parse_tpad(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
 };
 }

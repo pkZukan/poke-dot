@@ -23,7 +23,6 @@ func _input(event) -> void:
 func _process(_delta: float) -> void:
 	pass
 	
-	
 func Idle():
 	pkmn.Idle()
 	
