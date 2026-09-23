@@ -252,16 +252,14 @@ TreeItem* HavokTag::parse_tbdy(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 	tbod.instantiate();
 	
 	int i = 0;
-	while(sp->get_position() < size)
+	while (sp->get_position() < size) 
 	{
 		HavokTypeBodyEntry bod_ent(sp);
-		if (bod_ent.typeIndex < tna->Entries.size())
-			tna->Entries.ptrw()[i].bodyIndex = i;
-
+		if (bod_ent.typeIndex != 0 && bod_ent.typeIndex - 1 < (uint32_t)tna->Entries.size())
+			tna->Entries.ptrw()[bod_ent.typeIndex - 1].bodyIndex = i;
 		tbod->Entries.push_back(bod_ent);
 		i++;
 	}
-
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "TBDY");
@@ -309,6 +307,18 @@ TreeItem* HavokTag::parse_tpad(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 	return node;
 }
 
+String HavokUtils::ResolveTemplateParam(Ref<HavokStrings> tst, Ref<HavokTypeNameDescriptor> tna, const HavokTypeNameParamEntry &p)
+{
+    String pname = tst->Strings[p.nameIdx];
+    if (pname.begins_with("t")) 
+	{
+        if (p.val == 0 || p.val - 1 >= (uint32_t)tna->Entries.size())
+            return "?";
+        return tst->Strings[tna->Entries[p.val - 1].nameIdx];
+    }
+    return String::num_uint64(p.val);
+}
+
 void HavokTag::GetObject(uint32_t idx)
 {
     TreeItem *root = get_tree_item();
@@ -347,25 +357,28 @@ void HavokTag::GetObject(uint32_t idx)
 	Ref<HavokTypeBodyDescriptor> tbdy = tbdy_obj->get_metadata(0);
     ERR_FAIL_COND_MSG(tbdy.is_null(), "TBDY metadata is not a HavokItem");
 
-    const auto &item_ent = item->Entries[idx];
+	const auto &item_ent = item->Entries[idx];
 	uint32_t typeIdx = item_ent.typeIndex;
-	HavokTypeNameEntry tna_ent = tna->Entries[typeIdx];
+
+	if (typeIdx == 0 || typeIdx - 1 >= (uint32_t)tna->Entries.size())
+    	return;
+
+	HavokTypeNameEntry tna_ent = tna->Entries[typeIdx - 1];
 	HavokTypeBodyEntry tbdy_ent;
-	if(tna_ent.bodyIndex >= 0)
+	if (tna_ent.bodyIndex >= 0)
 		tbdy_ent = tbdy->Entries[tna_ent.bodyIndex];
+
 	String name = tst->Strings[tna_ent.nameIdx];
 	PackedStringArray params;
-	for(int i = 0; i < tna_ent.params.size(); i++)
-	{
-		auto p_ent = tna_ent.params[i];
-		String paramName = tst->Strings[p_ent.nameIdx];
-		params.append(paramName);
-	}
+	for (int i = 0; i < tna_ent.params.size(); i++)
+		params.append(HavokUtils::ResolveTemplateParam(tst, tna, tna_ent.params[i]));
 
-	UtilityFunctions::print(vformat("%s(%s)", name, String(", ").join(params)));
-	if(tna_ent.bodyIndex >= 0)
-		for(int j = 0; j < tbdy_ent.members.size(); j++)
-			UtilityFunctions::print(fst->Strings[tbdy_ent.members[j].nameIndex]);
+	UtilityFunctions::print(vformat("%s<%s>", name, String(", ").join(params)));
+	if (tna_ent.bodyIndex >= 0)
+		for (int j = 0; j < tbdy_ent.members.size(); j++)
+			UtilityFunctions::print(vformat("  +0x%X %s",
+				tbdy_ent.members[j].offset,
+				fst->Strings[tbdy_ent.members[j].nameIndex]));
 	
 }
 

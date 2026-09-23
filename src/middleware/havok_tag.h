@@ -42,11 +42,14 @@
 namespace godot {
 
 class HavokStrings;
+class HavokTypeNameDescriptor;
+class HavokTypeNameParamEntry;
 
 namespace HavokUtils
 {
 	static uint32_t read_var32(Ref<StreamPeerBuffer> sp, uint32_t *bytes_read = nullptr);
 	static Ref<HavokStrings> ReadStrings(Ref<StreamPeerBuffer> sp, uint32_t size);
+	String ResolveTemplateParam(Ref<HavokStrings> tst, Ref<HavokTypeNameDescriptor> tna, const HavokTypeNameParamEntry &p);
 }
 
 class HavokSdkVer : public Resource {
