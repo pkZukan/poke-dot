@@ -86,8 +86,15 @@ enum HavokSectionType : uint32_t
 
 struct HavokItemEntry
 {
+	enum Kind
+	{
+		NONE = 0,
+		POINTER = 1,
+		ARRAY = 2
+	};
+
 	uint32_t typeIndex;
-	uint32_t kind;
+	Kind kind;
 	uint32_t offset;
     uint32_t count;
 
@@ -97,7 +104,7 @@ struct HavokItemEntry
 		uint32_t typeIndex_and_kind = sp->get_u32();
 		
 		typeIndex = typeIndex_and_kind & 0xFFFFFF;
-		kind = typeIndex_and_kind >> 24;
+		kind = (Kind)(typeIndex_and_kind >> 24);
 		
 		offset = sp->get_u32();
 		count = sp->get_u32();
@@ -128,7 +135,7 @@ public:
 	HavokData() {}
     ~HavokData() {}
 
-	PackedByteArray Buffer;
+	Ref<StreamPeerBuffer> Buffer;
 };
 
 struct HavokTypeNameParamEntry
@@ -210,9 +217,23 @@ struct HavokTypeBodyMemberEntry
 
 struct HavokTypeBodyEntry
 {
+	enum Kind
+	{
+		VOID = 0,
+    	OPAQUE = 1,
+    	BOOL = 2,
+    	STRING = 3,
+    	INT = 4,
+    	FLOAT = 5,
+    	POINTER = 6,
+    	RECORD = 7,
+    	ARRAY = 8
+	};
+
 	uint32_t typeIndex;
 	uint32_t parentIndex;
 	uint32_t format;
+	Kind kind;
 	uint32_t subtype;
 	uint32_t version;
 	uint32_t size;
@@ -243,7 +264,10 @@ struct HavokTypeBodyEntry
 			parentIndex = HavokUtils::read_var32(sp);
 			uint32_t opts = HavokUtils::read_var32(sp);
 			if(opts & OptionalFlags::HAS_FORMAT)
+			{
 				format = HavokUtils::read_var32(sp);
+				kind = (Kind)(format & 0xF);
+			}
 			if(opts & OptionalFlags::HAS_SUBTYPE)
 				subtype = HavokUtils::read_var32(sp);
 			if(opts & OptionalFlags::HAS_VERSION)

@@ -140,7 +140,7 @@ TreeItem* HavokTag::parse_data(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 	
 	Ref<HavokData> data;
 	data.instantiate();
-	data->Buffer = sp->get_data_array();
+	data->Buffer = sp;
 
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "DATA");
@@ -357,6 +357,12 @@ void HavokTag::GetObject(uint32_t idx)
 	Ref<HavokTypeBodyDescriptor> tbdy = tbdy_obj->get_metadata(0);
     ERR_FAIL_COND_MSG(tbdy.is_null(), "TBDY metadata is not a HavokItem");
 
+	TreeItem *data_obj = Utils::FindTreeItemByName(root, "DATA");
+    ERR_FAIL_NULL_MSG(data_obj, "Couldn't find DATA");
+
+	Ref<HavokData> data = data_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(data.is_null(), "DATA metadata is not a HavokItem");
+
 	const auto &item_ent = item->Entries[idx];
 	uint32_t typeIdx = item_ent.typeIndex;
 
@@ -375,11 +381,71 @@ void HavokTag::GetObject(uint32_t idx)
 
 	UtilityFunctions::print(vformat("%s<%s>", name, String(", ").join(params)));
 	if (tna_ent.bodyIndex >= 0)
+	{
 		for (int j = 0; j < tbdy_ent.members.size(); j++)
-			UtilityFunctions::print(vformat("  +0x%X %s",
-				tbdy_ent.members[j].offset,
-				fst->Strings[tbdy_ent.members[j].nameIndex]));
-	
+		{
+			HavokTypeBodyMemberEntry memb = tbdy_ent.members[j];
+			uint32_t field_off = item_ent.offset + memb.offset;
+
+			HavokTypeBodyEntry::Kind kind = HavokTypeBodyEntry::Kind::VOID;
+			HavokTypeBodyEntry field_body;
+			if (memb.typeIndex != 0 && memb.typeIndex - 1 < (uint32_t)tna->Entries.size())
+			{
+				int32_t fbidx = tna->Entries[memb.typeIndex - 1].bodyIndex;
+				if (fbidx >= 0)
+				{
+					field_body = tbdy->Entries[fbidx];
+					kind = (HavokTypeBodyEntry::Kind)(field_body.format & 0x0f);
+				}
+			}
+
+			data->Buffer->seek(field_off);
+			String val;
+			switch (kind)
+			{
+				case HavokTypeBodyEntry::Kind::VOID:
+					val = "void";
+					break;
+				case HavokTypeBodyEntry::Kind::OPAQUE:
+					val = "opaque";
+					//TODO
+					break;
+				case HavokTypeBodyEntry::Kind::BOOL:
+					val = data->Buffer->get_u8() == 1 ? "true" : "false";
+					break;
+				case HavokTypeBodyEntry::Kind::STRING:
+					val = "String: \"" + Utils::read_null_terminated_string(data->Buffer) + "\"";
+					break;
+				case HavokTypeBodyEntry::Kind::INT:
+				{
+					val = "int";
+					//TODO
+					break;
+				}
+				case HavokTypeBodyEntry::Kind::FLOAT:
+					val = vformat("%f", field_body.size == 8 ? data->Buffer->get_double() : data->Buffer->get_float());
+					break;
+				case HavokTypeBodyEntry::Kind::POINTER:
+				{
+					uint32_t item_idx = data->Buffer->get_u32();
+					val = (item_idx == 0 || item_idx >= (uint32_t)item->Entries.size()) ? "null" : vformat("-> item[%d]", item_idx);
+					break;
+				}
+				case HavokTypeBodyEntry::Kind::ARRAY:
+				{
+					uint32_t item_idx = data->Buffer->get_u32();
+					val = (item_idx == 0 || item_idx >= (uint32_t)item->Entries.size()) ? "[]" : vformat("-> item[%d] count=%d", item_idx, item->Entries[item_idx].count);
+					break;
+				}
+				case HavokTypeBodyEntry::Kind::RECORD:
+					val = "{struct}";
+					break;
+				default:
+					val = "?";
+			}
+			UtilityFunctions::print(vformat("  +0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
+		}
+	}
 }
 
 uint32_t HavokTag::GetObjectCount()
