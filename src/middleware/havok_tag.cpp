@@ -414,8 +414,12 @@ void HavokTag::GetObject(uint32_t idx)
 					val = data->Buffer->get_u8() == 1 ? "true" : "false";
 					break;
 				case HavokTypeBodyEntry::Kind::STRING:
+				{
+					uint32_t ptr = data->Buffer->get_u32();
+					data->Buffer->seek(item->Entries[ptr].offset);
 					val = "String: \"" + Utils::read_null_terminated_string(data->Buffer) + "\"";
 					break;
+				}
 				case HavokTypeBodyEntry::Kind::INT:
 				{
 					val = "int";
@@ -427,18 +431,19 @@ void HavokTag::GetObject(uint32_t idx)
 					break;
 				case HavokTypeBodyEntry::Kind::POINTER:
 				{
-					uint32_t item_idx = data->Buffer->get_u32();
-					val = (item_idx == 0 || item_idx >= (uint32_t)item->Entries.size()) ? "null" : vformat("-> item[%d]", item_idx);
+					uint32_t ptr = data->Buffer->get_u32();
+					val = vformat("Ptr: 0x%X", ptr);
 					break;
 				}
 				case HavokTypeBodyEntry::Kind::ARRAY:
 				{
-					uint32_t item_idx = data->Buffer->get_u32();
-					val = (item_idx == 0 || item_idx >= (uint32_t)item->Entries.size()) ? "[]" : vformat("-> item[%d] count=%d", item_idx, item->Entries[item_idx].count);
+					uint32_t ptr = data->Buffer->get_u32();
+					//auto itm = item->Entries[ptr];
+					val = vformat("Array @ 0x%X", ptr);
 					break;
 				}
 				case HavokTypeBodyEntry::Kind::RECORD:
-					val = "{struct}";
+					val = vformat("{struct} @ 0x%X", field_off);
 					break;
 				default:
 					val = "?";
