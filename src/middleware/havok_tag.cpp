@@ -319,50 +319,8 @@ String HavokUtils::ResolveTemplateParam(Ref<HavokStrings> tst, Ref<HavokTypeName
     return String::num_uint64(p.val);
 }
 
-void HavokTag::GetObject(uint32_t idx)
+void HavokTag::ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx)
 {
-    TreeItem *root = get_tree_item();
-    ERR_FAIL_NULL_MSG(root, "Tree root is null");
-
-    TreeItem *item_obj = Utils::FindTreeItemByName(root, "ITEM");
-    ERR_FAIL_NULL_MSG(item_obj, "Couldn't find ITEM");
-
-	Ref<HavokItem> item = item_obj->get_metadata(0);
-    ERR_FAIL_COND_MSG(item.is_null(), "ITEM metadata is not a HavokItem");
-
-	if(idx >= item->Entries.size())
-		return;
-
-	TreeItem *tst_obj = Utils::FindTreeItemByName(root, "TST1");
-    ERR_FAIL_NULL_MSG(tst_obj, "Couldn't find TST1");
-
-	Ref<HavokStrings> tst = tst_obj->get_metadata(0);
-    ERR_FAIL_COND_MSG(tst.is_null(), "TST1 metadata is not a HavokItem");
-
-	TreeItem *fst_obj = Utils::FindTreeItemByName(root, "FST1");
-    ERR_FAIL_NULL_MSG(fst_obj, "Couldn't find FST1");
-
-	Ref<HavokStrings> fst = fst_obj->get_metadata(0);
-    ERR_FAIL_COND_MSG(fst.is_null(), "FST1 metadata is not a HavokItem");
-
-	TreeItem *tna_obj = Utils::FindTreeItemByName(root, "TNA1");
-    ERR_FAIL_NULL_MSG(tna_obj, "Couldn't find TNA1");
-
-	Ref<HavokTypeNameDescriptor> tna = tna_obj->get_metadata(0);
-    ERR_FAIL_COND_MSG(tna.is_null(), "TNA1 metadata is not a HavokItem");
-
-	TreeItem *tbdy_obj = Utils::FindTreeItemByName(root, "TBDY");
-    ERR_FAIL_NULL_MSG(tbdy_obj, "Couldn't find TBDY");
-
-	Ref<HavokTypeBodyDescriptor> tbdy = tbdy_obj->get_metadata(0);
-    ERR_FAIL_COND_MSG(tbdy.is_null(), "TBDY metadata is not a HavokItem");
-
-	TreeItem *data_obj = Utils::FindTreeItemByName(root, "DATA");
-    ERR_FAIL_NULL_MSG(data_obj, "Couldn't find DATA");
-
-	Ref<HavokData> data = data_obj->get_metadata(0);
-    ERR_FAIL_COND_MSG(data.is_null(), "DATA metadata is not a HavokItem");
-
 	const auto &item_ent = item->Entries[idx];
 	uint32_t typeIdx = item_ent.typeIndex;
 
@@ -379,7 +337,7 @@ void HavokTag::GetObject(uint32_t idx)
 	for (int i = 0; i < tna_ent.params.size(); i++)
 		params.append(HavokUtils::ResolveTemplateParam(tst, tna, tna_ent.params[i]));
 
-	UtilityFunctions::print(vformat("%s<%s>", name, String(", ").join(params)));
+	UtilityFunctions::print(vformat("%s<%s> [parent: %d]", name, String(", ").join(params), tbdy_ent.parentIndex));
 	if (tna_ent.bodyIndex >= 0)
 	{
 		for (int j = 0; j < tbdy_ent.members.size(); j++)
@@ -433,6 +391,7 @@ void HavokTag::GetObject(uint32_t idx)
 				{
 					uint32_t ptr = data->Buffer->get_u32();
 					val = vformat("Ptr: 0x%X", ptr);
+					ParseItemEntry(item, tst, fst, tna, tbdy, data, ptr);
 					break;
 				}
 				case HavokTypeBodyEntry::Kind::ARRAY:
@@ -451,6 +410,50 @@ void HavokTag::GetObject(uint32_t idx)
 			UtilityFunctions::print(vformat("  +0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
 		}
 	}
+}
+
+void HavokTag::GetObject(uint32_t idx)
+{
+    TreeItem *root = get_tree_item();
+    ERR_FAIL_NULL_MSG(root, "Tree root is null");
+
+    TreeItem *item_obj = Utils::FindTreeItemByName(root, "ITEM");
+    ERR_FAIL_NULL_MSG(item_obj, "Couldn't find ITEM");
+
+	Ref<HavokItem> item = item_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(item.is_null(), "ITEM metadata is not a HavokItem");
+
+	TreeItem *tst_obj = Utils::FindTreeItemByName(root, "TST1");
+    ERR_FAIL_NULL_MSG(tst_obj, "Couldn't find TST1");
+
+	Ref<HavokStrings> tst = tst_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(tst.is_null(), "TST1 metadata is not a HavokItem");
+
+	TreeItem *fst_obj = Utils::FindTreeItemByName(root, "FST1");
+    ERR_FAIL_NULL_MSG(fst_obj, "Couldn't find FST1");
+
+	Ref<HavokStrings> fst = fst_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(fst.is_null(), "FST1 metadata is not a HavokItem");
+
+	TreeItem *tna_obj = Utils::FindTreeItemByName(root, "TNA1");
+    ERR_FAIL_NULL_MSG(tna_obj, "Couldn't find TNA1");
+
+	Ref<HavokTypeNameDescriptor> tna = tna_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(tna.is_null(), "TNA1 metadata is not a HavokItem");
+
+	TreeItem *tbdy_obj = Utils::FindTreeItemByName(root, "TBDY");
+    ERR_FAIL_NULL_MSG(tbdy_obj, "Couldn't find TBDY");
+
+	Ref<HavokTypeBodyDescriptor> tbdy = tbdy_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(tbdy.is_null(), "TBDY metadata is not a HavokItem");
+
+	TreeItem *data_obj = Utils::FindTreeItemByName(root, "DATA");
+    ERR_FAIL_NULL_MSG(data_obj, "Couldn't find DATA");
+
+	Ref<HavokData> data = data_obj->get_metadata(0);
+    ERR_FAIL_COND_MSG(data.is_null(), "DATA metadata is not a HavokItem");
+
+	ParseItemEntry(item, tst, fst, tna, tbdy, data, idx);
 }
 
 uint32_t HavokTag::GetObjectCount()

@@ -361,12 +361,14 @@ public:
 	void LoadFromFile(String file);
 
 	TreeItem* get_tree_item() { return tree->get_root(); }
+
 	void GetObject(uint32_t idx);
 	uint32_t GetObjectCount();
 
 private:
 	Tree* tree;
 
+	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx);
 	void parse_section(Ref<StreamPeerBuffer> sp, TreeItem *parent);
 	TreeItem* parse_tag0(Ref<StreamPeerBuffer> sp, uint32_t size);
 	TreeItem* parse_sdkv(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
