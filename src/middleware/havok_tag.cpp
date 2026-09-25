@@ -300,7 +300,7 @@ String HavokUtils::ResolveTemplateParam(Ref<HavokStrings> tst, Ref<HavokTypeName
 void HavokTag::WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth,
 	Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst,
 	Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data,
-	HashSet<uint32_t> &visiting)
+	HashSet<uint32_t> &visiting, bool is_inherited)
 {
 	if (typeIdx == 0 || typeIdx - 1 >= (uint32_t)tna->Entries.size())
 		return;
@@ -310,7 +310,7 @@ void HavokTag::WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth,
 
 	HavokTypeBodyEntry &owner = tbdy->Entries.ptrw()[bodyIdx];
 	if (owner.parentIndex != 0)
-		WalkMembers(owner.parentIndex, base_offset, depth, item, tst, fst, tna, tbdy, data, visiting); // inherited fields first
+		WalkMembers(owner.parentIndex, base_offset, depth, item, tst, fst, tna, tbdy, data, visiting, true); // inherited fields first
 
 	for (int j = 0; j < owner.members.size(); j++)
 	{
@@ -430,7 +430,8 @@ void HavokTag::WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth,
 			default:
 				val = "?";
 		}
-		UtilityFunctions::print(indent + vformat("+0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
+		String tag = is_inherited ? " [inherited]" : "";
+		UtilityFunctions::print(indent + vformat("+0x%X %s %s%s", memb.offset, fst->Strings[memb.nameIndex], val, tag));
 	}
 }
 
