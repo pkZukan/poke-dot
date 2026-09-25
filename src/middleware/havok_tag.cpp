@@ -105,8 +105,6 @@ void HavokTag::parse_section(Ref<StreamPeerBuffer> sp, TreeItem *parent)
 
 TreeItem* HavokTag::parse_tag0(Ref<StreamPeerBuffer> sp, uint32_t size) 
 {
-	UtilityFunctions::print("Parsing TAG0 section");
-
 	TreeItem *node = tree->create_item();
 	node->set_text(0, "TAG0");
 
@@ -117,8 +115,6 @@ TreeItem* HavokTag::parse_sdkv(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing SDKV section");
 	
 	Ref<HavokSdkVer> sdk_ver;
 	sdk_ver.instantiate();
@@ -135,8 +131,6 @@ TreeItem* HavokTag::parse_data(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing DATA section");
 	
 	Ref<HavokData> data;
 	data.instantiate();
@@ -154,8 +148,6 @@ TreeItem* HavokTag::parse_type(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 	if(parent == nullptr)
 		return nullptr;
 
-	UtilityFunctions::print("Parsing TYPE section");
-
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "TYPE");
 
@@ -167,8 +159,6 @@ TreeItem* HavokTag::parse_indx(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 	if(parent == nullptr)
 		return nullptr;
 
-	UtilityFunctions::print("Parsing INDX section");
-
 	TreeItem *node = tree->create_item(parent);
 	node->set_text(0, "INDX");
 
@@ -179,8 +169,6 @@ TreeItem* HavokTag::parse_tst1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing TST1 section");
 	
     Ref<HavokStrings> tst = HavokUtils::ReadStrings(sp, size);
 
@@ -195,8 +183,6 @@ TreeItem* HavokTag::parse_tna1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing TNA1 section");
 
 	Ref<HavokTypeNameDescriptor> tna;
 	tna.instantiate();
@@ -220,8 +206,6 @@ TreeItem* HavokTag::parse_fst1(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing FST1 section");
 	
     Ref<HavokStrings> fst = HavokUtils::ReadStrings(sp, size);
 
@@ -236,8 +220,6 @@ TreeItem* HavokTag::parse_tbdy(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing TBDY section");
 
 	TreeItem *root = get_tree_item();
     ERR_FAIL_NULL_V_MSG(root, nullptr, "Tree root is null");
@@ -272,8 +254,6 @@ TreeItem* HavokTag::parse_item(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing ITEM section");
 	
     Ref<HavokItem> item;
     item.instantiate();
@@ -294,8 +274,6 @@ TreeItem* HavokTag::parse_tpad(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 {
 	if(parent == nullptr)
 		return nullptr;
-
-	UtilityFunctions::print("Parsing TPAD section");
 	
     //Run through padding
 	while(sp->get_position() < size)
@@ -319,96 +297,175 @@ String HavokUtils::ResolveTemplateParam(Ref<HavokStrings> tst, Ref<HavokTypeName
     return String::num_uint64(p.val);
 }
 
+void HavokTag::WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth,
+	Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst,
+	Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data,
+	HashSet<uint32_t> &visiting)
+{
+	if (typeIdx == 0 || typeIdx - 1 >= (uint32_t)tna->Entries.size())
+		return;
+	int32_t bodyIdx = tna->Entries[typeIdx - 1].bodyIndex;
+	if (bodyIdx < 0)
+		return;
+
+	HavokTypeBodyEntry &owner = tbdy->Entries.ptrw()[bodyIdx];
+	if (owner.parentIndex != 0)
+		WalkMembers(owner.parentIndex, base_offset, depth, item, tst, fst, tna, tbdy, data, visiting); // inherited fields first
+
+	for (int j = 0; j < owner.members.size(); j++)
+	{
+		HavokFieldEntry memb = owner.members[j];
+
+		HavokTypeBodyEntry::Kind kind = HavokTypeBodyEntry::Kind::VOID;
+		HavokTypeBodyEntry field_body;
+		bool has_body = false;
+		if (memb.typeIndex != 0 && memb.typeIndex - 1 < (uint32_t)tna->Entries.size())
+		{
+			int32_t fbidx = tna->Entries[memb.typeIndex - 1].bodyIndex;
+			if (fbidx >= 0)
+			{
+				field_body = tbdy->Entries[fbidx];
+				kind = (HavokTypeBodyEntry::Kind)(field_body.format & 0x0f);
+				has_body = true;
+			}
+		}
+
+		uint32_t field_off = has_body ? field_body.AlignUp(base_offset + memb.offset) : (base_offset + memb.offset);
+
+		data->Buffer->seek(field_off);
+		String indent; for (int d = 0; d < depth; d++) indent += "  ";
+		String val;
+
+		switch (kind)
+		{
+			case HavokTypeBodyEntry::Kind::VOID:
+				val = "void";
+				break;
+			case HavokTypeBodyEntry::Kind::OPAQUE:
+				val = "opaque";
+				break;
+			case HavokTypeBodyEntry::Kind::BOOL:
+				val = data->Buffer->get_u8() == 1 ? "true" : "false";
+				break;
+			case HavokTypeBodyEntry::Kind::STRING:
+			{
+				uint32_t str_idx = data->Buffer->get_u32();
+				if (str_idx == 0 || str_idx >= (uint32_t)item->Entries.size())
+					val = "\"\"";
+				else
+				{
+					data->Buffer->seek(item->Entries[str_idx].offset);
+					val = "\"" + Utils::read_null_terminated_string(data->Buffer) + "\"";
+				}
+				break;
+			}
+			case HavokTypeBodyEntry::Kind::INT:
+			{
+				uint32_t bytes = MAX<uint32_t>(1, (field_body.format >> 10) / 8);
+				bool big_endian = (field_body.format & 0x100) != 0;
+				bool is_signed  = (field_body.format & 0x200) != 0;
+				uint64_t raw = 0;
+				for (uint32_t b = 0; b < bytes; b++)
+				{
+					uint8_t byte = data->Buffer->get_u8();
+					if (big_endian) raw = (raw << 8) | byte;
+					else raw |= (uint64_t)byte << (8 * b);
+				}
+				if (is_signed && bytes < 8)
+				{
+					uint64_t sign_bit = 1ULL << (bytes * 8 - 1);
+					if (raw & sign_bit) raw |= ~((1ULL << (bytes * 8)) - 1);
+				}
+				val = vformat("%d", (int64_t)raw);
+				break;
+			}
+			case HavokTypeBodyEntry::Kind::FLOAT:
+				val = vformat("%f", field_body.size == 8 ? data->Buffer->get_double() : data->Buffer->get_float());
+				break;
+			case HavokTypeBodyEntry::Kind::POINTER:
+			{
+				uint32_t ptr = data->Buffer->get_u32();
+				if (ptr == 0 || ptr >= (uint32_t)item->Entries.size())
+					val = "null";
+				else if (visiting.has(ptr))
+					val = vformat("-> item[%d] (cycle)", ptr);
+				else
+				{
+					val = vformat("-> item[%d]", ptr);
+					UtilityFunctions::print(indent + vformat("+0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
+					visiting.insert(ptr);
+					ParseItemEntry(item, tst, fst, tna, tbdy, data, ptr, visiting);
+					visiting.erase(ptr);
+					continue; // already printed above
+				}
+				break;
+			}
+			case HavokTypeBodyEntry::Kind::ARRAY:
+			{
+				bool inline_array = has_body && (field_body.format & 0x20) != 0;
+				if (inline_array)
+				{
+					int32_t elem_bidx = (field_body.subtype != 0 && field_body.subtype - 1 < (uint32_t)tna->Entries.size())
+						? tna->Entries[field_body.subtype - 1].bodyIndex : -1;
+					uint32_t elem_stride = (elem_bidx >= 0) ? tbdy->Entries[elem_bidx].size : 0;
+					uint32_t elem_count = (elem_stride > 0) ? field_body.size / elem_stride : 0;
+					val = vformat("[inline array, count=%d]", elem_count);
+					UtilityFunctions::print(indent + vformat("+0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
+					for (uint32_t e = 0; e < elem_count; e++)
+						WalkMembers(field_body.subtype, field_off + e * elem_stride, depth + 1, item, tst, fst, tna, tbdy, data, visiting);
+					continue;
+				}
+				uint32_t arr_idx = data->Buffer->get_u32();
+				if (arr_idx == 0 || arr_idx >= (uint32_t)item->Entries.size())
+					val = "[]";
+				else
+					val = vformat("-> item[%d] count=%d", arr_idx, item->Entries[arr_idx].count);
+				break;
+			}
+			case HavokTypeBodyEntry::Kind::RECORD:
+				val = "{struct}";
+				UtilityFunctions::print(indent + vformat("+0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
+				WalkMembers(memb.typeIndex, field_off, depth + 1, item, tst, fst, tna, tbdy, data, visiting); // same offset, no dereference
+				continue;
+			default:
+				val = "?";
+		}
+		UtilityFunctions::print(indent + vformat("+0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
+	}
+}
+
 void HavokTag::ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx)
 {
+	HashSet<uint32_t> visiting;
+	visiting.insert(idx);
+	ParseItemEntry(item, tst, fst, tna, tbdy, data, idx, visiting);
+}
+
+void HavokTag::ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx, HashSet<uint32_t> &visiting)
+{
+	if (idx >= (uint32_t)item->Entries.size())
+		return;
+
 	const auto &item_ent = item->Entries[idx];
 	uint32_t typeIdx = item_ent.typeIndex;
-
 	if (typeIdx == 0 || typeIdx - 1 >= (uint32_t)tna->Entries.size())
-    	return;
+		return;
 
 	HavokTypeNameEntry tna_ent = tna->Entries[typeIdx - 1];
-	HavokTypeBodyEntry tbdy_ent;
-	if (tna_ent.bodyIndex >= 0)
-		tbdy_ent = tbdy->Entries[tna_ent.bodyIndex];
-
 	String name = tst->Strings[tna_ent.nameIdx];
 	PackedStringArray params;
 	for (int i = 0; i < tna_ent.params.size(); i++)
 		params.append(HavokUtils::ResolveTemplateParam(tst, tna, tna_ent.params[i]));
 
-	UtilityFunctions::print(vformat("%s<%s> [parent: %d]", name, String(", ").join(params), tbdy_ent.parentIndex));
-	if (tna_ent.bodyIndex >= 0)
+	uint32_t stride = (tna_ent.bodyIndex >= 0) ? tbdy->Entries[tna_ent.bodyIndex].size : 0;
+	uint32_t elem_count = MAX<uint32_t>(1, item_ent.count);
+	for (uint32_t e = 0; e < elem_count && stride > 0; e++)
 	{
-		for (int j = 0; j < tbdy_ent.members.size(); j++)
-		{
-			HavokTypeBodyMemberEntry memb = tbdy_ent.members[j];
-			uint32_t field_off = item_ent.offset + memb.offset;
-
-			HavokTypeBodyEntry::Kind kind = HavokTypeBodyEntry::Kind::VOID;
-			HavokTypeBodyEntry field_body;
-			if (memb.typeIndex != 0 && memb.typeIndex - 1 < (uint32_t)tna->Entries.size())
-			{
-				int32_t fbidx = tna->Entries[memb.typeIndex - 1].bodyIndex;
-				if (fbidx >= 0)
-				{
-					field_body = tbdy->Entries[fbidx];
-					kind = (HavokTypeBodyEntry::Kind)(field_body.format & 0x0f);
-				}
-			}
-
-			data->Buffer->seek(field_off);
-			String val;
-			switch (kind)
-			{
-				case HavokTypeBodyEntry::Kind::VOID:
-					val = "void";
-					break;
-				case HavokTypeBodyEntry::Kind::OPAQUE:
-					val = "opaque";
-					//TODO
-					break;
-				case HavokTypeBodyEntry::Kind::BOOL:
-					val = data->Buffer->get_u8() == 1 ? "true" : "false";
-					break;
-				case HavokTypeBodyEntry::Kind::STRING:
-				{
-					uint32_t ptr = data->Buffer->get_u32();
-					data->Buffer->seek(item->Entries[ptr].offset);
-					val = "String: \"" + Utils::read_null_terminated_string(data->Buffer) + "\"";
-					break;
-				}
-				case HavokTypeBodyEntry::Kind::INT:
-				{
-					val = "int";
-					//TODO
-					break;
-				}
-				case HavokTypeBodyEntry::Kind::FLOAT:
-					val = vformat("%f", field_body.size == 8 ? data->Buffer->get_double() : data->Buffer->get_float());
-					break;
-				case HavokTypeBodyEntry::Kind::POINTER:
-				{
-					uint32_t ptr = data->Buffer->get_u32();
-					val = vformat("Ptr: 0x%X", ptr);
-					ParseItemEntry(item, tst, fst, tna, tbdy, data, ptr);
-					break;
-				}
-				case HavokTypeBodyEntry::Kind::ARRAY:
-				{
-					uint32_t ptr = data->Buffer->get_u32();
-					//auto itm = item->Entries[ptr];
-					val = vformat("Array @ 0x%X", ptr);
-					break;
-				}
-				case HavokTypeBodyEntry::Kind::RECORD:
-					val = vformat("{struct} @ 0x%X", field_off);
-					break;
-				default:
-					val = "?";
-			}
-			UtilityFunctions::print(vformat("  +0x%X %s %s", memb.offset, fst->Strings[memb.nameIndex], val));
-		}
+		if (elem_count > 1)
+			UtilityFunctions::print(vformat("%s<%s> [%d]", name, String(", ").join(params), e));
+		else
+			UtilityFunctions::print(vformat("%s<%s>", name, String(", ").join(params)));
+		WalkMembers(typeIdx, item_ent.offset + e * stride, 1, item, tst, fst, tna, tbdy, data, visiting);
 	}
 }
 
@@ -422,6 +479,9 @@ void HavokTag::GetObject(uint32_t idx)
 
 	Ref<HavokItem> item = item_obj->get_metadata(0);
     ERR_FAIL_COND_MSG(item.is_null(), "ITEM metadata is not a HavokItem");
+
+	if (idx >= item->Entries.size())
+		return;
 
 	TreeItem *tst_obj = Utils::FindTreeItemByName(root, "TST1");
     ERR_FAIL_NULL_MSG(tst_obj, "Couldn't find TST1");

@@ -13,6 +13,7 @@
 #include <godot_cpp/classes/tree_item.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
 #include <godot_cpp/templates/vector.hpp>
+#include <godot_cpp/templates/hash_set.hpp>
 #include "utils.h"
 
 #include <vector>
@@ -198,15 +199,15 @@ struct HavokTypeBodyInterfaceEntry
     }
 };
 
-struct HavokTypeBodyMemberEntry
+struct HavokFieldEntry
 {
 	uint32_t nameIndex;
 	uint32_t flags;
 	uint32_t offset;
 	uint32_t typeIndex;
 
-	HavokTypeBodyMemberEntry(){}
-	HavokTypeBodyMemberEntry(Ref<StreamPeerBuffer> sp)
+	HavokFieldEntry(){}
+	HavokFieldEntry(Ref<StreamPeerBuffer> sp)
 	{
 		nameIndex = HavokUtils::read_var32(sp);
 		flags = HavokUtils::read_var32(sp);
@@ -217,6 +218,7 @@ struct HavokTypeBodyMemberEntry
 
 struct HavokTypeBodyEntry
 {
+public:
 	enum Kind
 	{
 		VOID = 0,
@@ -239,7 +241,7 @@ struct HavokTypeBodyEntry
 	uint32_t size;
 	uint32_t alignment;
 	uint32_t flags;
-	Vector<HavokTypeBodyMemberEntry> members;
+	Vector<HavokFieldEntry> members;
 	Vector<HavokTypeBodyInterfaceEntry> interfaces;
 	uint32_t attribs;
 
@@ -255,6 +257,10 @@ struct HavokTypeBodyEntry
 		HAS_ATTRIBUTES = (1 << 7),
 	};
 
+private:
+	uint32_t opts;
+
+public:
 	HavokTypeBodyEntry(){}
 	HavokTypeBodyEntry(Ref<StreamPeerBuffer> sp)
 	{
@@ -262,7 +268,7 @@ struct HavokTypeBodyEntry
 		if(typeIndex != 0)
 		{
 			parentIndex = HavokUtils::read_var32(sp);
-			uint32_t opts = HavokUtils::read_var32(sp);
+			opts = HavokUtils::read_var32(sp);
 			if(opts & OptionalFlags::HAS_FORMAT)
 			{
 				format = HavokUtils::read_var32(sp);
@@ -286,7 +292,7 @@ struct HavokTypeBodyEntry
 				uint16_t properties = (num >> 16) & 0xFFFF;
 				for(int i = 0; i < fieldCnt; i++)
 				{
-					HavokTypeBodyMemberEntry ent(sp);
+					HavokFieldEntry ent(sp);
 					members.push_back(ent);
 				}
 			}
@@ -300,6 +306,13 @@ struct HavokTypeBodyEntry
 			//if(opts & OptionalFlags::HAS_ATTRIBUTES)
 			//	attribs = HavokUtils::read_var32(sp);
 		}
+	}
+
+	uint32_t AlignUp(uint32_t x) 
+	{
+		if (opts & OptionalFlags::HAS_SIZE_ALIGN)
+			x = (x + alignment - 1) & ~(alignment - 1);
+		return x;
 	}
 };
 
@@ -368,7 +381,9 @@ public:
 private:
 	Tree* tree;
 
-	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx);
+	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx); // existing signature stays as public entry
+void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx, HashSet<uint32_t> &visiting);
+void WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth, Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, HashSet<uint32_t> &visiting);
 	void parse_section(Ref<StreamPeerBuffer> sp, TreeItem *parent);
 	TreeItem* parse_tag0(Ref<StreamPeerBuffer> sp, uint32_t size);
 	TreeItem* parse_sdkv(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);
