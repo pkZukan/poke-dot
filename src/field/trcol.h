@@ -31,6 +31,7 @@ public:
 	void LoadFromFile(String file);
 
 	Ref<HavokTag> get_tag() { return tag; }
+	Ref<ArrayMesh> get_mesh();
 
 private:
 	Ref<HavokTag> tag;

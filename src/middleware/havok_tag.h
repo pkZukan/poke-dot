@@ -12,8 +12,10 @@
 #include <godot_cpp/classes/tree.hpp>
 #include <godot_cpp/classes/tree_item.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
+#include <godot_cpp/variant/packed_int32_array.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_set.hpp>
+#include <godot_cpp/classes/array_mesh.hpp>
 #include "utils.h"
 
 #include <vector>
@@ -55,32 +57,26 @@ namespace HavokUtils
 
 class HavokSdkVer : public Resource {
 	GDCLASS(HavokSdkVer, Resource)
-
 protected:
 	static void _bind_methods();
-
 public:
 	HavokSdkVer() {}
 	~HavokSdkVer() {}
-
 	String Version;
 };
 
 class HavokStrings : public Resource {
 	GDCLASS(HavokStrings, Resource)
-
 protected:
 	static void _bind_methods();
-
 public:
 	HavokStrings() {}
 	~HavokStrings() {}
-
 	PackedStringArray Strings;
 };
 
 enum HavokSectionType : uint32_t
-{	
+{
 	BRANCH = 0,
 	LEAF = 1,
 };
@@ -97,32 +93,27 @@ struct HavokItemEntry
 	uint32_t typeIndex;
 	Kind kind;
 	uint32_t offset;
-    uint32_t count;
+	uint32_t count;
 
-    HavokItemEntry(){}
+	HavokItemEntry(){}
 	HavokItemEntry(Ref<StreamPeerBuffer> sp)
 	{
 		uint32_t typeIndex_and_kind = sp->get_u32();
-		
 		typeIndex = typeIndex_and_kind & 0xFFFFFF;
 		kind = (Kind)(typeIndex_and_kind >> 24);
-		
 		offset = sp->get_u32();
 		count = sp->get_u32();
 	}
 };
 
-class HavokItem : public Resource 
+class HavokItem : public Resource
 {
 	GDCLASS(HavokItem, Resource)
-
 protected:
 	static void _bind_methods();
-
 public:
 	HavokItem() {}
-    ~HavokItem() {}
-
+	~HavokItem() {}
 	Vector<HavokItemEntry> Entries;
 };
 
@@ -131,11 +122,9 @@ class HavokData : public Resource
 	GDCLASS(HavokData, Resource)
 protected:
 	static void _bind_methods();
-
 public:
 	HavokData() {}
-    ~HavokData() {}
-
+	~HavokData() {}
 	Ref<StreamPeerBuffer> Buffer;
 };
 
@@ -156,7 +145,6 @@ struct HavokTypeNameEntry
 {
 	uint32_t nameIdx;
 	Vector<HavokTypeNameParamEntry> params;
-
 	int32_t bodyIndex = -1;
 
 	HavokTypeNameEntry(){}
@@ -172,31 +160,28 @@ struct HavokTypeNameEntry
 	}
 };
 
-class HavokTypeNameDescriptor : public Resource 
+class HavokTypeNameDescriptor : public Resource
 {
 	GDCLASS(HavokTypeNameDescriptor, Resource)
-
 protected:
 	static void _bind_methods();
-
 public:
 	HavokTypeNameDescriptor() {}
-    ~HavokTypeNameDescriptor() {}
-
+	~HavokTypeNameDescriptor() {}
 	Vector<HavokTypeNameEntry> Entries;
 };
 
 struct HavokTypeBodyInterfaceEntry
 {
-    uint32_t typeIndex;
-    uint32_t offset;
+	uint32_t typeIndex;
+	uint32_t offset;
 
 	HavokTypeBodyInterfaceEntry(){}
-    HavokTypeBodyInterfaceEntry(Ref<StreamPeerBuffer> sp)
-    {
-        typeIndex = HavokUtils::read_var32(sp);
-        offset = HavokUtils::read_var32(sp);
-    }
+	HavokTypeBodyInterfaceEntry(Ref<StreamPeerBuffer> sp)
+	{
+		typeIndex = HavokUtils::read_var32(sp);
+		offset = HavokUtils::read_var32(sp);
+	}
 };
 
 struct HavokFieldEntry
@@ -222,28 +207,28 @@ public:
 	enum Kind
 	{
 		VOID = 0,
-    	OPAQUE = 1,
-    	BOOL = 2,
-    	STRING = 3,
-    	INT = 4,
-    	FLOAT = 5,
-    	POINTER = 6,
-    	RECORD = 7,
-    	ARRAY = 8
+		OPAQUE = 1,
+		BOOL = 2,
+		STRING = 3,
+		INT = 4,
+		FLOAT = 5,
+		POINTER = 6,
+		RECORD = 7,
+		ARRAY = 8
 	};
 
-	uint32_t typeIndex;
-	uint32_t parentIndex;
-	uint32_t format;
-	Kind kind;
-	uint32_t subtype;
-	uint32_t version;
-	uint32_t size;
-	uint32_t alignment;
-	uint32_t flags;
+	uint32_t typeIndex = 0;
+	uint32_t parentIndex = 0;
+	uint32_t format = 0;
+	Kind kind = Kind::VOID;
+	uint32_t subtype = 0;
+	uint32_t version = 0;
+	uint32_t size = 0;
+	uint32_t alignment = 0;
+	uint32_t flags = 0;
 	Vector<HavokFieldEntry> members;
 	Vector<HavokTypeBodyInterfaceEntry> interfaces;
-	uint32_t attribs;
+	uint32_t attribs = 0;
 
 	enum OptionalFlags
 	{
@@ -258,7 +243,7 @@ public:
 	};
 
 private:
-	uint32_t opts;
+	uint32_t opts = 0;
 
 public:
 	HavokTypeBodyEntry(){}
@@ -289,7 +274,6 @@ public:
 			{
 				uint32_t num = HavokUtils::read_var32(sp);
 				uint16_t fieldCnt = num & 0xFFFF;
-				uint16_t properties = (num >> 16) & 0xFFFF;
 				for(int i = 0; i < fieldCnt; i++)
 				{
 					HavokFieldEntry ent(sp);
@@ -299,7 +283,6 @@ public:
 			if (opts & OptionalFlags::HAS_INTERFACES)
 			{
 				uint32_t num = HavokUtils::read_var32(sp);
-
 				for (uint32_t i = 0; i < num; i++)
 					interfaces.push_back(HavokTypeBodyInterfaceEntry(sp));
 			}
@@ -308,9 +291,9 @@ public:
 		}
 	}
 
-	uint32_t AlignUp(uint32_t x) 
+	uint32_t AlignUp(uint32_t x) const
 	{
-		if (opts & OptionalFlags::HAS_SIZE_ALIGN)
+		if ((opts & OptionalFlags::HAS_SIZE_ALIGN) && alignment > 0)
 			x = (x + alignment - 1) & ~(alignment - 1);
 		return x;
 	}
@@ -318,15 +301,24 @@ public:
 
 class HavokTypeBodyDescriptor : public Resource {
 	GDCLASS(HavokTypeBodyDescriptor, Resource)
-
 protected:
 	static void _bind_methods();
-
 public:
 	HavokTypeBodyDescriptor() {}
-    ~HavokTypeBodyDescriptor() {}
-
+	~HavokTypeBodyDescriptor() {}
 	Vector<HavokTypeBodyEntry> Entries;
+};
+
+struct HavokSimdTreeNode
+{
+	float lx[4], hx[4];
+	float ly[4], hy[4];
+	float lz[4], hz[4];
+	uint32_t data[4];
+	bool isLeaf;
+
+	bool IsBound(int i) const { return lx[i] <= hx[i] && ly[i] <= hy[i] && lz[i] <= hz[i]; }
+	static const int NodeCount = 4;
 };
 
 struct HavokSection
@@ -343,7 +335,6 @@ struct HavokSection
 		size = (size_and_flags & 0x3FFFFFFF) - 8;
 		flags = size_and_flags >> 30;
 		tag = __builtin_bswap32(sp->get_u32());
-
 		isLeaf = (flags & LEAF);
 
 		Array res = sp->get_data(size);
@@ -354,6 +345,49 @@ struct HavokSection
 	}
 };
 
+// ---- Cursor-based read layer ----
+
+struct HavokContext
+{
+	Ref<HavokItem> item;
+	Ref<HavokStrings> tst;
+	Ref<HavokStrings> fst;
+	Ref<HavokTypeNameDescriptor> tna;
+	Ref<HavokTypeBodyDescriptor> tbdy;
+	Ref<HavokData> data;
+
+	bool IsValid() const { return item.is_valid() && tst.is_valid() && fst.is_valid() && tna.is_valid() && tbdy.is_valid() && data.is_valid(); }
+};
+
+struct HavokMeshSection
+{
+	PackedVector3Array vertices;
+	PackedInt32Array faceIndices;
+	Ref<ArrayMesh> mesh;
+};
+
+struct HavokCursor
+{
+	HavokContext *ctx = nullptr;
+	uint32_t typeIdx = 0;
+	uint32_t offset = 0;
+	bool valid = false;
+	HavokTypeBodyEntry::Kind kind = HavokTypeBodyEntry::Kind::VOID;
+	HavokTypeBodyEntry body;
+
+	// only meaningful when kind == ARRAY
+	uint32_t arrCount = 0, arrElemType = 0, arrStride = 0, arrOffset = 0;
+
+	bool IsNull() const { return !valid; }
+	HavokCursor Field(const String &name) const;
+	HavokCursor operator[](uint32_t i) const;
+	uint32_t Count() const { return arrCount; }
+	int64_t AsInt() const;
+	double AsFloat() const;
+	bool AsBool() const;
+	String AsString() const;
+};
+
 class HavokTag : public Resource {
 	GDCLASS(HavokTag, Resource)
 
@@ -361,7 +395,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	HavokTag() 
+	HavokTag()
 	{
 		tree = memnew(Tree);
 		tree->set_columns(1);
@@ -375,15 +409,26 @@ public:
 
 	TreeItem* get_tree_item() { return tree->get_root(); }
 
-	void GetObject(uint32_t idx);
-	uint32_t GetObjectCount();
+	// cursor-based reads
+	HavokContext BuildContext();
+	HavokCursor Root(uint32_t itemIdx, HavokContext &ctx);
+	Vector<HavokMeshSection> GetFaces();
+
+	static bool ResolveTypeKind(uint32_t typeIdx, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy,
+		HavokTypeBodyEntry::Kind &kind, HavokTypeBodyEntry &body);
 
 private:
 	Tree* tree;
 
-	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx); // existing signature stays as public entry
+	// dump path
+	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx);
 	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx, HashSet<uint32_t> &visiting);
 	void WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth, Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, HashSet<uint32_t> &visiting, bool is_inherited = false);
+
+	// shared lookup helpers
+	int32_t FindItemByTypeName(Ref<HavokItem> item, Ref<HavokTypeNameDescriptor> tna, Ref<HavokStrings> tst, const String &typeName);
+
+	// chunk parsing
 	void parse_section(Ref<StreamPeerBuffer> sp, TreeItem *parent);
 	TreeItem* parse_tag0(Ref<StreamPeerBuffer> sp, uint32_t size);
 	TreeItem* parse_sdkv(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);

@@ -122,12 +122,16 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 						push_warning("Failed to load TRCOL: " + col_path)
 						return
 
-					var faces: PackedVector3Array = trcol.get_faces()
+					var mesh: ArrayMesh = trcol.get_mesh()
+
+					if mesh == null:
+						push_warning("Failed to create TRCOL mesh: " + col_path)
+						return
 
 					var static_body := StaticBody3D.new()
 					static_body.name = col_path.get_file().get_basename()
 
-					# Apply ModelShape transform to the collision body.
+					# Apply ModelShape transform.
 					var s: Vector3 = model_shape.scale
 					var r: Vector3 = model_shape.rot
 					var p: Vector3 = model_shape.pos
@@ -145,19 +149,41 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 					static_body.transform = xform
 
 					parent_node.add_child(static_body)
+
 					if Engine.is_editor_hint():
 						static_body.owner = get_tree().edited_scene_root
 
-					var concave := ConcavePolygonShape3D.new()
-					concave.set_faces(faces)
+					var faces := PackedVector3Array()
 
-					var col_node := CollisionShape3D.new()
-					col_node.name = "CollisionMesh"
-					col_node.shape = concave
+					for surface in mesh.get_surface_count():
+						var arrays: Array = mesh.surface_get_arrays(surface)
 
-					static_body.add_child(col_node)
-					if Engine.is_editor_hint():
-						col_node.owner = get_tree().edited_scene_root
+						var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+						var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+
+						if indices.is_empty():
+							faces.append_array(vertices)
+						else:
+							for i in range(0, indices.size(), 3):
+								if i + 2 >= indices.size():
+									break
+
+								faces.append(vertices[indices[i]])
+								faces.append(vertices[indices[i + 1]])
+								faces.append(vertices[indices[i + 2]])
+
+					if not faces.is_empty():
+						var concave := ConcavePolygonShape3D.new()
+						concave.set_faces(faces)
+
+						var col_node := CollisionShape3D.new()
+						col_node.name = "CollisionShape"
+						col_node.shape = concave
+
+						static_body.add_child(col_node)
+
+						if Engine.is_editor_hint():
+							col_node.owner = get_tree().edited_scene_root
 
 	# Recurse into sub_objects with the updated parent_node
 	var sub_objs: Array[TRScene] = []
