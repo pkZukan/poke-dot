@@ -780,15 +780,17 @@ Vector<HavokMeshSection> HavokTag::GetGeometrySections()
 			if (a >= vertexCount || b >= vertexCount || c >= vertexCount || d >= vertexCount)
 				continue;
 
+			// Emit Godot's clockwise front faces, reversing Havok's winding
+			// for both triangles so rendering and concave collision agree.
 			out.faceIndices.push_back((int32_t)a);
-			out.faceIndices.push_back((int32_t)b);
 			out.faceIndices.push_back((int32_t)c);
+			out.faceIndices.push_back((int32_t)b);
 
 			if (c != d)
 			{
 				out.faceIndices.push_back((int32_t)a);
-				out.faceIndices.push_back((int32_t)c);
 				out.faceIndices.push_back((int32_t)d);
+				out.faceIndices.push_back((int32_t)c);
 			}
 		}
 

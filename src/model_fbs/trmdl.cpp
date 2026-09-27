@@ -29,6 +29,15 @@ void TRModel::LoadFromFile(String file)
     auto trmdl = Titan::Model::GetTRMDL(buf.ptr());
     ERR_FAIL_COND_MSG(trmdl == NULL, vformat("Couldn't load TRMDL flatbuffer"));
 
+    BBox = AABB();
+    const auto *bounds = trmdl->bounds();
+    if (bounds && bounds->min() && bounds->max())
+    {
+        Vector3 min = Utils::toGodotVec3(bounds->min());
+        Vector3 max = Utils::toGodotVec3(bounds->max());
+        BBox = AABB(min, max - min);
+    }
+
     //Get Meshes
     auto meshes = trmdl->meshes();
     if(meshes)

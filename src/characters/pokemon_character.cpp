@@ -87,8 +87,11 @@ void PokemonCharacter::_initialize()
 
     _actor->Initialize();
 
-    //Going to set the collision box as the bounding box for convenience
-    _col_shape->set_size(_actor->GetBBox().get_size());
+    // BoxShape3D is centered on its node; model bounds need not be centered
+    // on the character's origin (typically the feet).
+    const AABB bounds = _actor->GetBBox();
+    _col_shape->set_size(bounds.get_size());
+    _col->set_position(bounds.get_center());
 
     Skeleton3D *_skel = _actor->GetSkeleton();
 
