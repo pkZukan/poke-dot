@@ -22,11 +22,11 @@ Ref<ArrayMesh> TRCOL::get_mesh()
 
 	ERR_FAIL_COND_V_MSG(tag.is_null(), mesh, "TRCOL: no tag loaded, call LoadFromFile first");
 
-	Vector<HavokMeshSection> sections = tag->GetFaces();
+	Vector<HavokMeshSection> geometry_sections = tag->GetGeometrySections();
 
-	for (int i = 0; i < sections.size(); i++)
+	for (int i = 0; i < geometry_sections.size(); i++)
 	{
-		const HavokMeshSection &section = sections[i];
+		const HavokMeshSection &section = geometry_sections[i];
 
 		if (section.vertices.is_empty() || section.faceIndices.is_empty())
 			continue;

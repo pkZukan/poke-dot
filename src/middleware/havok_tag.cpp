@@ -672,40 +672,31 @@ String HavokCursor::AsString() const
 
 // ---------------- Mesh extraction ----------------
 
-Vector<HavokMeshSection> HavokTag::GetFaces()
+Vector<HavokMeshSection> HavokTag::GetGeometrySections()
 {
 	Vector<HavokMeshSection> sections;
 
 	HavokContext ctx = BuildContext();
-	ERR_FAIL_COND_V_MSG(
-		!ctx.IsValid(),
-		sections,
-		"Failed to build Havok context (missing sections)"
-	);
+	ERR_FAIL_COND_V_MSG(!ctx.IsValid(), sections, "Failed to build Havok context (missing sections)");
 
-	int32_t meshIdx = FindItemByTypeName(
-		ctx.item,
-		ctx.tna,
-		ctx.tst,
-		"hknpMeshShape"
-	);
-
-	ERR_FAIL_COND_V_MSG(
-		meshIdx < 0,
-		sections,
-		"hknpMeshShape not found in ITEM"
-	);
+	int32_t meshIdx = FindItemByTypeName(ctx.item, ctx.tna, ctx.tst, "hknpMeshShape");
+	ERR_FAIL_COND_V_MSG(meshIdx < 0, sections, "hknpMeshShape not found in ITEM");
 
 	HavokCursor mesh = Root((uint32_t)meshIdx, ctx);
+	ERR_FAIL_COND_V_MSG(mesh.IsNull(), sections, "Failed to resolve hknpMeshShape item");
 
-	ERR_FAIL_COND_V_MSG(
-		mesh.IsNull(),
-		sections,
-		"Failed to resolve hknpMeshShape item"
-	);
+	HavokCursor vcu = mesh.Field("vertexConversionUtil");
+	HavokCursor bitScale16Inv = vcu.Field("bitScale16Inv");
+	float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f;
+	if (!bitScale16Inv.IsNull())
+	{
+		ctx.data->Buffer->seek(bitScale16Inv.offset);
+		scale_x = ctx.data->Buffer->get_float();
+		scale_y = ctx.data->Buffer->get_float();
+		scale_z = ctx.data->Buffer->get_float();
+	}
 
 	HavokCursor geoSections = mesh.Field("geometrySections");
-
 	if (geoSections.IsNull())
 		return sections;
 
@@ -716,105 +707,67 @@ Vector<HavokMeshSection> HavokTag::GetFaces()
 		HavokCursor prims = sec.Field("primitives");
 		HavokCursor vertexBuffer = sec.Field("vertexBuffer");
 		HavokCursor sectionOffset = sec.Field("sectionOffset");
-		HavokCursor bitScale = sec.Field("bitScale8Inv");
-		HavokCursor bitOffset = sec.Field("bitOffset");
 
-		if (prims.IsNull() || vertexBuffer.IsNull())
+		if (prims.IsNull() || vertexBuffer.IsNull() || sectionOffset.IsNull())
 			continue;
+
+		int32_t offset_x = (int32_t)sectionOffset[0].AsInt();
+		int32_t offset_y = (int32_t)sectionOffset[1].AsInt();
+		int32_t offset_z = (int32_t)sectionOffset[2].AsInt();
+
+		bool isQuantized = (uint32_t)offset_x != 0x7FFFFFFFu;
 
 		HavokMeshSection out;
 
-		// vertexBuffer is a byte array.
-		// Vertex16_3 = uint16 x, uint16 y, uint16 z = 6 bytes.
-		uint32_t vertexCount = vertexBuffer.Count() / 6;
-
-		out.vertices.resize(vertexCount);
-
-		// Fixed arrays.
-		float offset_x = (float)sectionOffset[0].AsInt();
-		float offset_y = (float)sectionOffset[1].AsInt();
-		float offset_z = (float)sectionOffset[2].AsInt();
-
-		int16_t bit_x = (int16_t)bitOffset[0].AsInt();
-		int16_t bit_y = (int16_t)bitOffset[1].AsInt();
-		int16_t bit_z = (int16_t)bitOffset[2].AsInt();
-
-		// hkFloat3.
-		float scale_x = (float)bitScale.Field("x").AsFloat();
-		float scale_y = (float)bitScale.Field("y").AsFloat();
-		float scale_z = (float)bitScale.Field("z").AsFloat();
-
-		// Read one little-endian uint16 from the raw uint8 array.
-		auto read_u16 = [&](uint32_t pos) -> uint16_t
+		if (isQuantized)
 		{
-			return
-				(uint16_t)vertexBuffer[pos + 0].AsInt() |
-				((uint16_t)vertexBuffer[pos + 1].AsInt() << 8);
-		};
+			uint32_t vertexCount = vertexBuffer.arrCount / 6;
+			out.vertices.resize(vertexCount);
 
-		for (uint32_t i = 0; i < vertexCount; i++)
+			for (uint32_t i = 0; i < vertexCount; i++)
+			{
+				ctx.data->Buffer->seek(vertexBuffer.arrOffset + i * 6);
+				uint16_t rx = ctx.data->Buffer->get_u16();
+				uint16_t ry = ctx.data->Buffer->get_u16();
+				uint16_t rz = ctx.data->Buffer->get_u16();
+
+				float px = (float)((int32_t)rx + offset_x) * scale_x;
+				float py = (float)((int32_t)ry + offset_y) * scale_y;
+				float pz = (float)((int32_t)rz + offset_z) * scale_z;
+
+				out.vertices[i] = Vector3(px, py, pz);
+			}
+		}
+		else
 		{
-			uint32_t pos = i * 6;
+			uint32_t vertexCount = vertexBuffer.arrCount / 12;
+			out.vertices.resize(vertexCount);
 
-			uint16_t x = read_u16(pos + 0);
-			uint16_t y = read_u16(pos + 2);
-			uint16_t z = read_u16(pos + 4);
-
-			/*
-			 * Dequantize Vertex16_3.
-			 *
-			 * This is the first equation to test against the actual
-			 * collision data:
-			 */
-			float px = offset_x + ((float)x + bit_x) * scale_x;
-			float py = offset_y + ((float)y + bit_y) * scale_y;
-			float pz = offset_z + ((float)z + bit_z) * scale_z;
-
-			out.vertices[i] = Vector3(px, py, pz);
+			for (uint32_t i = 0; i < vertexCount; i++)
+			{
+				ctx.data->Buffer->seek(vertexBuffer.arrOffset + i * 12);
+				float x = ctx.data->Buffer->get_float();
+				float y = ctx.data->Buffer->get_float();
+				float z = ctx.data->Buffer->get_float();
+				out.vertices[i] = Vector3(x, y, z);
+			}
 		}
 
-		// Primitive = 4 uint8 vertex IDs.
+		uint32_t vertexCount = out.vertices.size();
 		for (uint32_t p = 0; p < prims.Count(); p++)
 		{
 			HavokCursor prim = prims[p];
-
 			uint32_t a = (uint32_t)prim.Field("aId").AsInt();
 			uint32_t b = (uint32_t)prim.Field("bId").AsInt();
 			uint32_t c = (uint32_t)prim.Field("cId").AsInt();
 
-			if (a >= vertexCount ||
-				b >= vertexCount ||
-				c >= vertexCount)
+			if (a >= vertexCount || b >= vertexCount || c >= vertexCount)
 				continue;
 
 			out.faceIndices.push_back((int32_t)a);
 			out.faceIndices.push_back((int32_t)b);
 			out.faceIndices.push_back((int32_t)c);
 		}
-
-		// Build Godot mesh.
-		if (!out.vertices.is_empty() && !out.faceIndices.is_empty())
-		{
-			Array arrays;
-			arrays.resize(Mesh::ARRAY_MAX);
-
-			arrays[Mesh::ARRAY_VERTEX] = out.vertices;
-			arrays[Mesh::ARRAY_INDEX] = out.faceIndices;
-
-			out.mesh.instantiate();
-
-			out.mesh->add_surface_from_arrays(
-				Mesh::PRIMITIVE_TRIANGLES,
-				arrays
-			);
-		}
-
-		UtilityFunctions::print(vformat(
-			"GeometrySection %d: %d vertices, %d triangles",
-			s,
-			out.vertices.size(),
-			out.faceIndices.size() / 3
-		));
 
 		sections.push_back(out);
 	}

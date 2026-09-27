@@ -363,7 +363,6 @@ struct HavokMeshSection
 {
 	PackedVector3Array vertices;
 	PackedInt32Array faceIndices;
-	Ref<ArrayMesh> mesh;
 };
 
 struct HavokCursor
@@ -412,7 +411,7 @@ public:
 	// cursor-based reads
 	HavokContext BuildContext();
 	HavokCursor Root(uint32_t itemIdx, HavokContext &ctx);
-	Vector<HavokMeshSection> GetFaces();
+	Vector<HavokMeshSection> GetGeometrySections();
 
 	static bool ResolveTypeKind(uint32_t typeIdx, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy,
 		HavokTypeBodyEntry::Kind &kind, HavokTypeBodyEntry &body);
