@@ -467,6 +467,21 @@ bool HavokTag::ResolveTypeKind(uint32_t typeIdx, Ref<HavokTypeNameDescriptor> tn
 	if (bodyIdx < 0)
 		return false;
 	body = tbdy->Entries[bodyIdx];
+	// hkUint32, hkReal, etc. can omit format/size and inherit them from
+	// their underlying type. In particular, a zero-sized hkUint32 makes
+	// sectionOffset appear to be an empty inline array during mesh decoding.
+	uint32_t parentIdx = body.parentIndex;
+	for (int depth = 0; parentIdx != 0; depth++)
+	{
+		if (depth >= tna->Entries.size() || parentIdx - 1 >= (uint32_t)tna->Entries.size())
+			return false;
+		int32_t parentBodyIdx = tna->Entries[parentIdx - 1].bodyIndex;
+		if (parentBodyIdx < 0)
+			return false;
+		const HavokTypeBodyEntry &parent = tbdy->Entries[parentBodyIdx];
+		body.InheritLayout(parent);
+		parentIdx = parent.parentIndex;
+	}
 	kind = (HavokTypeBodyEntry::Kind)(body.format & 0x0f);
 	return true;
 }
@@ -690,10 +705,10 @@ Vector<HavokMeshSection> HavokTag::GetGeometrySections()
 	float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f;
 	if (!bitScale16Inv.IsNull())
 	{
-		ctx.data->Buffer->seek(bitScale16Inv.offset);
-		scale_x = ctx.data->Buffer->get_float();
-		scale_y = ctx.data->Buffer->get_float();
-		scale_z = ctx.data->Buffer->get_float();
+		// hkVector4 inherits an inline float array; use its element cursors.
+		scale_x = (float)bitScale16Inv[0].AsFloat();
+		scale_y = (float)bitScale16Inv[1].AsFloat();
+		scale_z = (float)bitScale16Inv[2].AsFloat();
 	}
 
 	HavokCursor geoSections = mesh.Field("geometrySections");
@@ -760,13 +775,21 @@ Vector<HavokMeshSection> HavokTag::GetGeometrySections()
 			uint32_t a = (uint32_t)prim.Field("aId").AsInt();
 			uint32_t b = (uint32_t)prim.Field("bId").AsInt();
 			uint32_t c = (uint32_t)prim.Field("cId").AsInt();
+			uint32_t d = (uint32_t)prim.Field("dId").AsInt();
 
-			if (a >= vertexCount || b >= vertexCount || c >= vertexCount)
+			if (a >= vertexCount || b >= vertexCount || c >= vertexCount || d >= vertexCount)
 				continue;
 
 			out.faceIndices.push_back((int32_t)a);
 			out.faceIndices.push_back((int32_t)b);
 			out.faceIndices.push_back((int32_t)c);
+
+			if (c != d)
+			{
+				out.faceIndices.push_back((int32_t)a);
+				out.faceIndices.push_back((int32_t)c);
+				out.faceIndices.push_back((int32_t)d);
+			}
 		}
 
 		sections.push_back(out);

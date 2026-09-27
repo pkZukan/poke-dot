@@ -37,4 +37,4 @@ camera_attributes = SubResource("CameraAttributesPractical_0xm2m")
 compositor = SubResource("Compositor_h2yge")
 
 [node name="Spawn" type="Node3D" parent="." unique_id=536453065]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -786.89557, 0.90738964, -889.58246)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -790.2946, 2.562284, -891.9895)

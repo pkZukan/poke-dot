@@ -291,6 +291,28 @@ public:
 		}
 	}
 
+	// Typedef-like Havok types may store their layout only on a parent type.
+	void InheritLayout(const HavokTypeBodyEntry &parent)
+	{
+		if (!(opts & HAS_FORMAT) && (parent.opts & HAS_FORMAT))
+		{
+			format = parent.format;
+			kind = parent.kind;
+			opts |= HAS_FORMAT;
+		}
+		if (!(opts & HAS_SUBTYPE) && (parent.opts & HAS_SUBTYPE))
+		{
+			subtype = parent.subtype;
+			opts |= HAS_SUBTYPE;
+		}
+		if (!(opts & HAS_SIZE_ALIGN) && (parent.opts & HAS_SIZE_ALIGN))
+		{
+			size = parent.size;
+			alignment = parent.alignment;
+			opts |= HAS_SIZE_ALIGN;
+		}
+	}
+
 	uint32_t AlignUp(uint32_t x) const
 	{
 		if ((opts & OptionalFlags::HAS_SIZE_ALIGN) && alignment > 0)
