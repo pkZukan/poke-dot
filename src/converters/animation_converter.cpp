@@ -113,7 +113,7 @@ void TrinityAnimationConverter::convert_tracm_to_godot_animation(
         Ref<TRMeshAnimeTrack> mat_trk = tracks[i];
         String mesh_path = mat_trk->get_path();
 
-        // 1. Visibility
+        // Visibility
         Ref<TRVisibilityShapeTimeline> vis = mat_trk->get_vis_anim();
         if (vis.is_valid()) {
             int track_idx = godot_anim->add_track(Animation::TYPE_VALUE);
@@ -121,7 +121,7 @@ void TrinityAnimationConverter::convert_tracm_to_godot_animation(
             sample_bool_track(godot_anim, track_idx, vis->get_info()->get_values(), frame_rate, key_frames);
         }
 
-        // 2. Material Animations
+        // Material Animations
         Ref<TRTrackMaterialTimeline> mat_anim = mat_trk->get_mat_anim();
         if (mat_anim.is_valid()) {
             Array mat_tracks = mat_anim->get_material_tracks();
@@ -134,10 +134,6 @@ void TrinityAnimationConverter::convert_tracm_to_godot_animation(
                     Ref<TRTrackMaterialAnim> m_anim = anim_values[k];
                     String param_name = m_anim->get_Name();
                     Ref<TRTrackMaterialChannelVec4> channels = m_anim->get_list();
-                    
-                    // We can sample each channel to its own property track if needed,
-                    // but shader parameters are often Colors or Vector4s.
-                    // For now, let's treat them as individual tracks for simplicity if they have data.
                     
                     if (channels->get_x().is_valid() && channels->get_x()->get_values().size() > 0) {
                         int trk_idx = godot_anim->add_track(Animation::TYPE_VALUE);
@@ -163,7 +159,7 @@ void TrinityAnimationConverter::convert_tracm_to_godot_animation(
             }
         }
         
-        // 3. Blendshapes
+        // Blendshapes
         Ref<TRBlendShapeTimeline> blend_anim = mat_trk->get_blendshape_anim();
         if (blend_anim.is_valid()) {
             Array btracks = blend_anim->get_blendshape_tracks();

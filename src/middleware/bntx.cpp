@@ -139,14 +139,15 @@ uint32_t BinaryTexture::getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t imag
 
 Image::Format BinaryTexture::GetGodotImageFormat(int bntx_format)
 {
-    Image::Format fmt = Image::FORMAT_RGBA8;
+    // An unknown format must not be interpreted as uncompressed RGBA8.
+    Image::Format fmt = Image::FORMAT_MAX;
     switch (bntx_format)
     {
         case 0x0b01: fmt = Image::FORMAT_RGBA8;       break;
         case 0x0b06: fmt = Image::FORMAT_RGBA8;       break;
         case 0x0701: fmt = Image::FORMAT_RGB565;      break;
         case 0x0201: fmt = Image::FORMAT_L8;          break;
-        case 0x0901: fmt = Image::FORMAT_RGH;         break;
+        case 0x0901: fmt = Image::FORMAT_RG8;         break;
         case 0x1a01: fmt = Image::FORMAT_DXT1;        break;
         case 0x1a06: fmt = Image::FORMAT_DXT1;        break;
         case 0x1b01: fmt = Image::FORMAT_DXT3;        break;
@@ -157,12 +158,12 @@ Image::Format BinaryTexture::GetGodotImageFormat(int bntx_format)
         case 0x1d02: fmt = Image::FORMAT_RGTC_R;      break;
         case 0x1e01: fmt = Image::FORMAT_RGTC_RG;     break;
         case 0x1e02: fmt = Image::FORMAT_RGTC_RG;     break;
-        case 0x1f01: fmt = Image::FORMAT_BPTC_RGBFU;  break;
-        case 0x1f02: fmt = Image::FORMAT_BPTC_RGBF;   break;
+        case 0x1f0a: fmt = Image::FORMAT_BPTC_RGBFU;  break;
+        case 0x1f05: fmt = Image::FORMAT_BPTC_RGBF;   break;
         case 0x2001: fmt = Image::FORMAT_BPTC_RGBA;   break;
         case 0x2006: fmt = Image::FORMAT_BPTC_RGBA;   break;
         case 0x2d01: fmt = Image::FORMAT_ASTC_4x4;    break;
-        case 0x2d06: fmt = Image::FORMAT_ASTC_4x4_HDR; break;
+        case 0x2d06: fmt = Image::FORMAT_ASTC_4x4;    break;
         /*case 0x2e01: fmt = Image::FORMAT_ASTC_5x4;     break;
         case 0x2e06: fmt = Image::FORMAT_ASTC_5x4_HDR; break;
         case 0x2f01: fmt = Image::FORMAT_ASTC_5x5;     break;
@@ -176,7 +177,7 @@ Image::Format BinaryTexture::GetGodotImageFormat(int bntx_format)
         case 0x3301: fmt = Image::FORMAT_ASTC_8x6;     break;
         case 0x3306: fmt = Image::FORMAT_ASTC_8x6_HDR; break;*/
         case 0x3401: fmt = Image::FORMAT_ASTC_8x8;    break;
-        case 0x3406: fmt = Image::FORMAT_ASTC_8x8_HDR; break;
+        case 0x3406: fmt = Image::FORMAT_ASTC_8x8;    break;
         /*case 0x3501: fmt = Image::FORMAT_ASTC_10x5;    break;
         case 0x3506: fmt = Image::FORMAT_ASTC_10x5_HDR; break;
         case 0x3601: fmt = Image::FORMAT_ASTC_10x6;    break;
@@ -236,6 +237,12 @@ void BinaryTexture::LoadFromBuffer(PackedByteArray buf)
         uint16_t nameLen = sp->get_16();
         set_name(sp->get_string(nameLen));
 
+        Image::Format fmt = GetGodotImageFormat(brti_hdr.Format);
+        ERR_FAIL_COND_MSG(fmt == Image::FORMAT_MAX,
+            vformat("Unsupported BNTX format 0x%04x for texture '%s' (%dx%d).",
+                brti_hdr.Format, get_name(), Width, Height));
+        ERR_FAIL_COND_MSG(MipsCount == 0, "BNTX texture has no mipmap data.");
+
         // Get mipmap pointers
         sp->seek(brti_hdr.MipMapArrayPtr);
         std::vector<uint64_t> Mips;
@@ -260,8 +267,6 @@ void BinaryTexture::LoadFromBuffer(PackedByteArray buf)
         Array data = sp->get_data(mip0Size);
         PackedByteArray buffer = PackedByteArray(data[1]);
 
-        Image::Format fmt = GetGodotImageFormat(brti_hdr.Format);
-        
         PackedByteArray unswizzled = Swizzle(Width, Height, brti_hdr, buffer, false);
 
         set_data(Width, Height, false, fmt, unswizzled);
