@@ -1,0 +1,17 @@
+namespace Titan.TrinityScene;
+
+table InstanceBuffer 
+{
+    data: [ubyte] (required);
+}
+
+table TRINS 
+{
+    type_name: string (required);
+    version: uint;
+    count: uint;
+    reserved: uint;
+    buffer: InstanceBuffer (required);
+}
+
+root_type TRINS;

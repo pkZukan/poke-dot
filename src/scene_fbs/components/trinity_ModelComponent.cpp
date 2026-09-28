@@ -13,4 +13,4 @@ void TrinityModelComponent::LoadFromBuffer(const void* buffer)
     auto modelComponent = Titan::TrinityScene::GetTrinityModelComponent(buffer);
     set_FilePath(Utils::toGodotString(modelComponent->file_path()));
     set_Name(Utils::toGodotString(modelComponent->name()));
-}   
+}

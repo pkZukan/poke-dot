@@ -52,7 +52,7 @@ func add_suffix_num(path: String, num: int = 0) -> String:
 	return path.get_base_dir().path_join(new_filename)
 
 
-func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", load_queue: Array[Dictionary] = []) -> void:
+func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", load_queue: Array[Dictionary] = [], instancer: TrinityModelInstancerComponent = null) -> void:
 	match scene.Name:
 		"SubScene":
 			var subscn: TRSubScene = scene.nested_type
@@ -100,7 +100,8 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 			load_queue.append({
 				"parent": parent_node,
 				"dir": model_path.get_base_dir(),
-				"file": model_path.get_file()
+				"file": model_path.get_file(),
+				"instancer": instancer
 			})
 		"trinity_CollisionComponent":
 			var col_comp: TrinityCollisionComponent = scene.nested_type as TrinityCollisionComponent
@@ -188,8 +189,13 @@ func load_scene(scene: TRScene, parent_node: Node3D, base_path: String = "", loa
 	# Recurse into sub_objects with the updated parent_node
 	var sub_objs: Array[TRScene] = []
 	sub_objs.assign(scene.sub_objects)
+	# The instancer is a sibling and can follow the model in the file.
+	var model_instancer: TrinityModelInstancerComponent = null
 	for sub in sub_objs:
-		load_scene(sub, parent_node, base_path, load_queue)
+		if sub.nested_type is TrinityModelInstancerComponent:
+			model_instancer = sub.nested_type
+	for sub in sub_objs:
+		load_scene(sub, parent_node, base_path, load_queue, model_instancer if sub.Name == "trinity_ModelComponent" else null)
 
 
 func load_scene_file(scene_file: String, parent_node: Node3D, load_queue: Array[Dictionary]) -> void:
@@ -210,6 +216,38 @@ func load_scene_file(scene_file: String, parent_node: Node3D, load_queue: Array[
 	for c in chunks:
 		load_scene(c, subscene_container, scene_file.get_base_dir(), load_queue)
 	
+func instantiate_model_job(job: Dictionary) -> void:
+	var instancer: TrinityModelInstancerComponent = job.get("instancer")
+	var transforms: Array[Transform3D] = []
+	if instancer:
+		var instances := ResourceLoader.load("res://Assets/".path_join(instancer.FilePath)) as TRINS
+		if instances == null:
+			return
+		transforms = instances.transforms
+		# Do not leave a phantom model at the group origin for empty/invalid data.
+		if transforms.is_empty():
+			return
+	var model = TrinityModel.new()
+	model.load_model(job["dir"], job["file"])
+	model.name = job["file"].get_basename()
+	if not instancer:
+		job["parent"].add_child(model)
+		if Engine.is_editor_hint():
+			model.owner = get_tree().edited_scene_root
+		return
+
+	for i in transforms.size():
+		# Duplicate nodes while sharing meshes, materials and textures.
+		var instance: Node3D = model if i == 0 else model.duplicate(0)
+		instance.name = job["file"].get_basename() + "_" + str(i)
+		# TRINS matrices are world transforms: do not add the group origin again.
+		instance.top_level = true
+		instance.transform = transforms[i]
+		job["parent"].add_child(instance)
+		if Engine.is_editor_hint():
+			instance.owner = get_tree().edited_scene_root
+
+
 func load_models_async() -> void:
 	var load_queue: Array[Dictionary] = []
 
@@ -235,13 +273,7 @@ func load_models_async() -> void:
 		if not FileAccess.file_exists(job["dir"].path_join(job["file"])):
 			continue
 			
-		var model = TrinityModel.new()
-		model.load_model(job["dir"], job["file"])
-		model.name = job["file"].get_basename()
-		
-		job["parent"].add_child(model)
-		if Engine.is_editor_hint():
-			model.owner = get_tree().edited_scene_root
+		instantiate_model_job(job)
 
 		loading_progress.emit(i + 1, total_items)
 

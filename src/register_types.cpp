@@ -42,6 +42,7 @@
 #include "middleware/havok_tag.h"
 
 #include "field/trcol.h"
+#include "field/trins.h"
 
 #include "ui_fbs/truiv.h"
 #include "ui_fbs/uikit/uikit_gauge.h"
@@ -87,6 +88,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
@@ -214,6 +216,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TrinityScenePoint)
 		GDREGISTER_CLASS(TrinityObjectTemplate)
 		GDREGISTER_CLASS(TrinityModelComponent)
+		GDREGISTER_CLASS(TrinityModelInstancerComponent)
 		GDREGISTER_CLASS(TrinityAnimationComponent)
 		GDREGISTER_CLASS(TrinityCollisionComponent)
 		GDREGISTER_CLASS(TrinityBodyCollision)
@@ -261,6 +264,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)
+		GDREGISTER_CLASS(TRINS)
 
 		//UIkit
 		GDREGISTER_CLASS(TRUIV)
@@ -300,6 +304,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
@@ -353,6 +358,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 

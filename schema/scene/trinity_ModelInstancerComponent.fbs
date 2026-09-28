@@ -1,0 +1,8 @@
+namespace Titan.TrinityScene;
+
+table TrinityModelInstancerComponent 
+{
+    file_path: string;
+}
+
+root_type TrinityModelInstancerComponent;
