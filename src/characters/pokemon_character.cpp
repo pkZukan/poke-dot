@@ -225,18 +225,22 @@ void PokemonCharacter::apply_movement(double delta)
 
 void PokemonCharacter::_try_step_up(const Vector3& motion)
 {
-    if (step_height <= 0.0f || motion.is_zero_approx()) return;
+    if (step_height <= 0.0f || motion.is_zero_approx()) 
+        return;
 
     const float margin = get_safe_margin();
     const Vector3 lift(0, step_height + margin * 2.0f, 0);
     Transform3D probe = get_global_transform();
+    
     Ref<KinematicCollision3D> hit;
     hit.instantiate();
 
     if (!test_move(probe, motion, hit, margin)) 
         return;
+
     if (hit->get_normal().y >= Math::cos(get_floor_max_angle())) 
         return;
+
     if (test_move(probe, lift, hit, margin)) 
         return;
 
@@ -247,6 +251,7 @@ void PokemonCharacter::_try_step_up(const Vector3& motion)
     probe.origin += motion;
     if (!test_move(probe, -lift, hit, margin)) 
         return;
+
     if (hit->get_normal().y < Math::cos(get_floor_max_angle())) 
         return;
 

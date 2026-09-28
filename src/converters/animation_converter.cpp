@@ -87,93 +87,6 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
     return godot_anim;
 }
 
-void TrinityAnimationConverter::convert_tracm_to_godot_animation(
-    const String& tracmFile,
-    Ref<Animation> godot_anim
-) 
-{
-    Ref<TRAnimationChannelMeshes> tracm = ResourceLoader::get_singleton()->load(tracmFile);
-    if (!tracm.is_valid()) 
-    {
-        UtilityFunctions::push_error("Failed to load TRACM animation ", tracmFile);
-        return;
-    }
-
-    float frame_rate = tracm->get_info()->get_animation_rate();
-    int key_frames = tracm->get_info()->get_animation_count();
-
-    float length = (float)key_frames / frame_rate;
-    if (length > godot_anim->get_length()) {
-        godot_anim->set_length(length);
-    }
-
-    Array tracks = tracm->get_tracks();
-    for (int i = 0; i < tracks.size(); i++) 
-    {
-        Ref<TRMeshAnimeTrack> mat_trk = tracks[i];
-        String mesh_path = mat_trk->get_path();
-
-        // Visibility
-        Ref<TRVisibilityShapeTimeline> vis = mat_trk->get_vis_anim();
-        if (vis.is_valid()) {
-            int track_idx = godot_anim->add_track(Animation::TYPE_VALUE);
-            godot_anim->track_set_path(track_idx, mesh_path + ":visible");
-            sample_bool_track(godot_anim, track_idx, vis->get_info()->get_values(), frame_rate, key_frames);
-        }
-
-        // Material Animations
-        Ref<TRTrackMaterialTimeline> mat_anim = mat_trk->get_mat_anim();
-        if (mat_anim.is_valid()) {
-            Array mat_tracks = mat_anim->get_material_tracks();
-            for (int j = 0; j < mat_tracks.size(); j++) {
-                Ref<TRTrackMaterial> trk = mat_tracks[j];
-                String mat_name = trk->get_Name();
-                
-                Array anim_values = trk->get_anim_values();
-                for (int k = 0; k < anim_values.size(); k++) {
-                    Ref<TRTrackMaterialAnim> m_anim = anim_values[k];
-                    String param_name = m_anim->get_Name();
-                    Ref<TRTrackMaterialChannelVec4> channels = m_anim->get_list();
-                    
-                    if (channels->get_x().is_valid() && channels->get_x()->get_values().size() > 0) {
-                        int trk_idx = godot_anim->add_track(Animation::TYPE_VALUE);
-                        godot_anim->track_set_path(trk_idx, mesh_path + "_" + mat_name + ":material_override:shader_parameter/" + param_name + ":x");
-                        sample_material_channel(godot_anim, trk_idx, channels->get_x(), frame_rate);
-                    }
-                    if (channels->get_y().is_valid() && channels->get_y()->get_values().size() > 0) {
-                        int trk_idx = godot_anim->add_track(Animation::TYPE_VALUE);
-                        godot_anim->track_set_path(trk_idx, mesh_path + "_" + mat_name + ":material_override:shader_parameter/" + param_name + ":y");
-                        sample_material_channel(godot_anim, trk_idx, channels->get_y(), frame_rate);
-                    }
-                    if (channels->get_z().is_valid() && channels->get_z()->get_values().size() > 0) {
-                        int trk_idx = godot_anim->add_track(Animation::TYPE_VALUE);
-                        godot_anim->track_set_path(trk_idx, mesh_path + "_" + mat_name + ":material_override:shader_parameter/" + param_name + ":z");
-                        sample_material_channel(godot_anim, trk_idx, channels->get_z(), frame_rate);
-                    }
-                    if (channels->get_w().is_valid() && channels->get_w()->get_values().size() > 0) {
-                        int trk_idx = godot_anim->add_track(Animation::TYPE_VALUE);
-                        godot_anim->track_set_path(trk_idx, mesh_path + "_" + mat_name + ":material_override:shader_parameter/" + param_name + ":w");
-                        sample_material_channel(godot_anim, trk_idx, channels->get_w(), frame_rate);
-                    }
-                }
-            }
-        }
-        
-        // Blendshapes
-        Ref<TRBlendShapeTimeline> blend_anim = mat_trk->get_blendshape_anim();
-        if (blend_anim.is_valid()) {
-            Array btracks = blend_anim->get_blendshape_tracks();
-            for (int j = 0; j < btracks.size(); j++) {
-                Ref<TRTrackBlendShape> btrk = btracks[j];
-                String bname = btrk->get_Name();
-                int track_idx = godot_anim->add_track(Animation::TYPE_BLEND_SHAPE);
-                godot_anim->track_set_path(track_idx, mesh_path + ":" + bname);
-                sample_float_track(godot_anim, track_idx, btrk->get_track(), frame_rate, key_frames);
-            }
-        }
-    }
-}
-
 void TrinityAnimationConverter::sample_float_track(
     Ref<Animation> anim, int track_idx,
     const Ref<Resource>& trk,
@@ -260,6 +173,48 @@ void TrinityAnimationConverter::sample_bool_track(
     }
 }
 
+void TrinityAnimationConverter::add_material_tracks(
+    Ref<Animation> anim, Ref<TRTrackMaterial> track,
+    const String& base, const Dictionary& types, float frame_rate)
+{
+    auto add_channel = [&](const String& path, Ref<TRTrackMaterialChannel> channel, bool discrete) {
+        if (channel.is_null() || channel->get_values().is_empty()) return;
+        int index = anim->find_track(NodePath(path), Animation::TYPE_VALUE);
+        if (index < 0) index = anim->add_track(Animation::TYPE_VALUE);
+        anim->track_set_path(index, NodePath(path));
+        anim->track_set_interpolation_type(index, Animation::INTERPOLATION_LINEAR);
+        anim->track_set_interpolation_loop_wrap(index, false);
+        anim->value_track_set_update_mode(index, discrete ? Animation::UPDATE_DISCRETE : Animation::UPDATE_CONTINUOUS);
+        sample_material_channel(anim, index, channel, frame_rate);
+    };
+
+    // Despite the schema name, init_values contains animated scalar curves.
+    for (const Variant& value : track->get_init_values()) {
+        Ref<TRTrackMaterialInit> parameter = value;
+        if (parameter.is_null() || !types.has(parameter->get_Name())) continue;
+        int type = types[parameter->get_Name()];
+        if (type == Variant::FLOAT || type == Variant::INT || type == Variant::BOOL)
+            add_channel(base + parameter->get_Name(), parameter->get_list(), type != Variant::FLOAT);
+    }
+    for (const Variant& value : track->get_anim_values()) {
+        Ref<TRTrackMaterialAnim> parameter = value;
+        if (parameter.is_null() || parameter->get_list().is_null() || !types.has(parameter->get_Name())) continue;
+        int type = types[parameter->get_Name()];
+        int count = type == Variant::VECTOR4 || type == Variant::COLOR ? 4 :
+            type == Variant::VECTOR3 ? 3 : type == Variant::VECTOR2 ? 2 :
+            type == Variant::FLOAT || type == Variant::INT || type == Variant::BOOL ? 1 : 0;
+        Ref<TRTrackMaterialChannelVec4> channels = parameter->get_list();
+        Ref<TRTrackMaterialChannel> components[] = {channels->get_x(), channels->get_y(), channels->get_z(), channels->get_w()};
+        const char* names[] = {"x", "y", "z", "w"};
+        const char* colors[] = {"r", "g", "b", "a"};
+        for (int i = 0; i < count; ++i) {
+            String path = base + parameter->get_Name();
+            if (count > 1) path += ":" + String(type == Variant::COLOR ? colors[i] : names[i]);
+            add_channel(path, components[i], type == Variant::INT || type == Variant::BOOL);
+        }
+    }
+}
+
 void TrinityAnimationConverter::sample_material_channel(
     Ref<Animation> anim, int track_idx,
     Ref<TRTrackMaterialChannel> chan,
@@ -269,7 +224,9 @@ void TrinityAnimationConverter::sample_material_channel(
     Array values = chan->get_values();
     for (int i = 0; i < values.size(); i++) {
         Ref<TRTrackMaterialValue> mval = values[i];
-        anim->track_insert_key(track_idx, mval->get_Time() / frame_rate, mval->get_Value());
+        const double time = mval->get_Time() / frame_rate;
+        anim->track_insert_key(track_idx, time, mval->get_Value());
+        if (time > anim->get_length()) anim->set_length(time);
     }
 }
 

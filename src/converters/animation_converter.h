@@ -20,10 +20,6 @@ public:
         Skeleton3D* skl, 
         const String& skl_path
     );
-    static void convert_tracm_to_godot_animation(
-        const String& tracmFile,
-        Ref<Animation> godot_anim
-    );
 
 private:
     static Ref<BoneTrack> get_bone_track(const Ref<TRAnimation>& anim, const String& bone_name);
@@ -40,6 +36,7 @@ private:
         float frame_rate, int key_frames
     );
 
+public:
     static void sample_float_track(
         Ref<Animation> anim, int track_idx,
         const Ref<Resource>& trk,
@@ -52,6 +49,12 @@ private:
         float frame_rate, int key_frames
     );
 
+    static void add_material_tracks(
+        Ref<Animation> anim, Ref<TRTrackMaterial> track,
+        const String& parameter_path, const Dictionary& parameter_types, float frame_rate
+    );
+
+private:
     static void sample_material_channel(
         Ref<Animation> anim, int track_idx,
         Ref<TRTrackMaterialChannel> chan,

@@ -4,6 +4,8 @@
 #include <godot_cpp/classes/animation_library.hpp>
 #include <godot_cpp/classes/animation_player.hpp>
 #include <godot_cpp/classes/standard_material3d.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
+#include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -236,18 +238,93 @@ void ActorObj::_add_animation(String anim_file, String name)
 
 void ActorObj::_add_mesh_animation(String tracm_file, String name)
 {
+    ERR_FAIL_NULL(_model);
+    Ref<TRAnimationChannelMeshes> tracm = ResourceLoader::get_singleton()->load(tracm_file);
+    if (!tracm.is_valid())
+    {
+        UtilityFunctions::push_error("Failed to load TRACM animation ", tracm_file);
+        return;
+    }
+
     Ref<Animation> godot_anim;
-    if (_anim_lib->has_animation(name)) 
+    if (_anim_lib->has_animation(name))
     {
         godot_anim = _anim_lib->get_animation(name);
-    } 
-    else 
+    }
+    else
     {
         godot_anim.instantiate();
         _anim_lib->add_animation(name, godot_anim);
     }
 
-    TrinityAnimationConverter::convert_tracm_to_godot_animation(tracm_file, godot_anim);
+    ERR_FAIL_COND(tracm->get_info().is_null());
+    float frame_rate = tracm->get_info()->get_animation_rate();
+    ERR_FAIL_COND_MSG(frame_rate <= 0, "TRACM frame rate must be positive");
+    int key_frames = tracm->get_info()->get_animation_count();
+
+    float length = (float)key_frames / frame_rate;
+    if (godot_anim->get_track_count() == 0)
+        godot_anim->set_loop_mode(tracm->get_info()->get_does_loop() ? Animation::LOOP_LINEAR : Animation::LOOP_NONE);
+    if (godot_anim->get_track_count() == 0 || length > godot_anim->get_length()) {
+        godot_anim->set_length(length);
+    }
+
+    TypedArray<Node> meshes = _model->find_children("*", "MeshInstance3D", true, false);
+    Array tracks = tracm->get_tracks();
+    for (int i = 0; i < tracks.size(); i++)
+    {
+        Ref<TRMeshAnimeTrack> mat_trk = tracks[i];
+        String mesh_path = mat_trk->get_path();
+
+        for (int mesh_idx = 0; mesh_idx < meshes.size(); ++mesh_idx) 
+        {
+            MeshInstance3D* mesh = Object::cast_to<MeshInstance3D>(meshes[mesh_idx]);
+            const String prefix = mesh_path.get_file() + "_";
+            if (!String(mesh->get_name()).begins_with(prefix)) continue;
+
+            Ref<TRVisibilityShapeTimeline> vis = mat_trk->get_vis_anim();
+            if (vis.is_valid() && vis->get_info().is_valid() && vis->get_info()->get_values().is_valid()) 
+            {
+                int track_idx = godot_anim->add_track(Animation::TYPE_VALUE);
+                godot_anim->track_set_path(track_idx, String(get_path_to(mesh)) + ":visible");
+                godot_anim->value_track_set_update_mode(track_idx, Animation::UPDATE_DISCRETE);
+                TrinityAnimationConverter::sample_bool_track(godot_anim, track_idx, vis->get_info()->get_values(), frame_rate, key_frames);
+            }
+
+            Ref<TRTrackMaterialTimeline> timeline = mat_trk->get_mat_anim();
+            if (timeline.is_null()) continue;
+            float material_rate = frame_rate;
+            if (timeline->get_info().is_valid() && timeline->get_info()->get_animation_rate() > 0)
+                material_rate = timeline->get_info()->get_animation_rate();
+            Array materials = timeline->get_material_tracks();
+            for (int j = 0; j < materials.size(); ++j) {
+                Ref<TRTrackMaterial> material = materials[j];
+                if (String(mesh->get_name()) != prefix + material->get_Name()) continue;
+                Ref<ShaderMaterial> shader_material = mesh->get_material_override();
+                if (shader_material.is_null() || shader_material->get_shader().is_null()) continue;
+                Dictionary types;
+                for (const Variant& entry : shader_material->get_shader()->get_shader_uniform_list()) {
+                    Dictionary uniform = entry;
+                    types[uniform["name"]] = uniform["type"];
+                }
+                const String path = String(get_path_to(mesh)) + ":material_override:shader_parameter/";
+                TrinityAnimationConverter::add_material_tracks(godot_anim, material, path, types, material_rate);
+            }
+        }
+
+        // Blendshapes
+        Ref<TRBlendShapeTimeline> blend_anim = mat_trk->get_blendshape_anim();
+        if (blend_anim.is_valid()) {
+            Array btracks = blend_anim->get_blendshape_tracks();
+            for (int j = 0; j < btracks.size(); j++) {
+                Ref<TRTrackBlendShape> btrk = btracks[j];
+                String bname = btrk->get_Name();
+                int track_idx = godot_anim->add_track(Animation::TYPE_BLEND_SHAPE);
+                godot_anim->track_set_path(track_idx, mesh_path + ":" + bname);
+                TrinityAnimationConverter::sample_float_track(godot_anim, track_idx, btrk->get_track(), frame_rate, key_frames);
+            }
+        }
+    }
 }
 
 Skeleton3D* ActorObj::_find_skeleton(Node* node) {
