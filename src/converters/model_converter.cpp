@@ -75,7 +75,8 @@ Dictionary TrinityModel::parse_mesh_buffer(
     int poly_type, int start, int count)
 {
     PackedVector3Array  pos, norm;
-    PackedVector2Array  uv;
+    PackedVector2Array  uv, uv2;
+    PackedColorArray   colors;
     PackedInt32Array    indices, blend_inds;
     PackedFloat32Array  blend_weights, tangents;
 
@@ -93,8 +94,10 @@ Dictionary TrinityModel::parse_mesh_buffer(
 
     Array accessors = accessor_table->get("Accessors");
 
-    int pos_attr = -1, norm_attr = -1, uv_attr = -1;
+    int pos_attr = -1, norm_attr = -1, uv_attr = -1, uv2_attr = -1;
     int blend_inds_attr = -1, blend_weights_attr = -1, tangent_attr = -1;
+    int color_attr = -1;
+    String color_type;
 
     for (int a = 0; a < accessors.size(); a++) {
         Ref<Resource> attrib = accessors[a];
@@ -103,7 +106,16 @@ Dictionary TrinityModel::parse_mesh_buffer(
 
         if (attr_name == "POSITION" && pos_attr == -1) pos_attr = attr_pos;
         else if (attr_name == "NORMAL" && norm_attr == -1) norm_attr = attr_pos;
-        else if (attr_name == "TEXCOORD" && uv_attr == -1) uv_attr = attr_pos;
+        else if (attr_name == "TEXCOORD") {
+            int layer = attrib->get("AttributeLayer");
+            if (layer == 0 && uv_attr == -1) uv_attr = attr_pos;
+            else if (layer == 1 && uv2_attr == -1) uv2_attr = attr_pos;
+        }
+        else if (attr_name == "COLOR" && color_attr == -1 && int(attrib->get("AttributeLayer")) == 0) {
+            color_type = attrib->get("Type");
+            if (color_type == "RGBA_8_UNORM" || color_type == "RGBA_16_FLOAT" || color_type == "RGBA_32_FLOAT")
+                color_attr = attr_pos;
+        }
         else if (attr_name == "BLEND_INDICES" && blend_inds_attr == -1) blend_inds_attr = attr_pos;
         else if (attr_name == "TANGENT" && tangent_attr == -1) tangent_attr = attr_pos;
         else if (attr_name == "BLEND_WEIGHTS" && blend_weights_attr == -1) blend_weights_attr = attr_pos;
@@ -132,6 +144,25 @@ Dictionary TrinityModel::parse_mesh_buffer(
             float u = stream_vert->get_float();
             float v = stream_vert->get_float();
             uv.push_back(Vector2(u, v));
+        }
+        if (uv2_attr != -1) {
+            stream_vert->seek(curr_pos + uv2_attr);
+            float u = stream_vert->get_float();
+            float v = stream_vert->get_float();
+            uv2.push_back(Vector2(u, v));
+        }
+        if (color_attr != -1) {
+            stream_vert->seek(curr_pos + color_attr);
+            Color color;
+            for (int channel = 0; channel < 4; channel++) {
+                if (color_type == "RGBA_8_UNORM")
+                    color[channel] = stream_vert->get_u8() / 255.0f;
+                else if (color_type == "RGBA_16_FLOAT")
+                    color[channel] = Utils::half_to_float(stream_vert->get_u16());
+                else
+                    color[channel] = stream_vert->get_float();
+            }
+            colors.push_back(color);
         }
         if (blend_inds_attr != -1) {
             stream_vert->seek(curr_pos + blend_inds_attr);
@@ -190,6 +221,8 @@ Dictionary TrinityModel::parse_mesh_buffer(
     result["Pos"]          = pos;
     result["Norm"]         = norm;
     result["UV"]           = uv;
+    result["UV2"]          = uv2;
+    result["Color"]        = colors;
     result["Indicies"]     = indices;
     result["BlendInds"]    = blend_inds;
     result["BlendWeights"] = blend_weights;
@@ -248,6 +281,34 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
             sm->set_shader_parameter(name, true);
         else if (val.to_lower() == "false")
             sm->set_shader_parameter(name, false);
+        else if (shader_name == "Standard")
+        {
+            // Translate symbolic material options to Standard.gdshader's port
+            // enums. These strings otherwise never reach the integer uniforms.
+            Dictionary options;
+            if (name == "LayerMaskSource") {
+                options["Texture"] = 0;
+                options["VertexColor"] = 1;
+            } else if (name == "LayerMaskSwizzle") {
+                options["RGBA"] = 0;
+                options["RRRR"] = 1;
+                options["GGGG"] = 2;
+                options["BBBB"] = 3;
+                options["AAAA"] = 4;
+            } else if (name == "LayerBaseMaskSource") {
+                options["One"] = 0;
+                options["BaseColorAlpha"] = 1;
+            } else if (name == "LayerBlendType") {
+                options["Mix"] = 0;
+                options["Add"] = 1;
+                options["Multiply"] = 2;
+            } else if (name == "WindReceiverType") {
+                options["None"] = 0;
+                options["SimpleLeaf"] = 1;
+            }
+            if (options.has(val))
+                sm->set_shader_parameter(name, options[val]);
+        }
     }
     return sm;
 }
@@ -424,6 +485,12 @@ void TrinityModel::_build_meshes(
 
             PackedVector2Array uv = result["UV"];
             if(!uv.is_empty()) arr[Mesh::ARRAY_TEX_UV] = uv;
+
+            PackedVector2Array uv2 = result["UV2"];
+            if(!uv2.is_empty()) arr[Mesh::ARRAY_TEX_UV2] = uv2;
+
+            PackedColorArray colors = result["Color"];
+            if(!colors.is_empty()) arr[Mesh::ARRAY_COLOR] = colors;
 
             PackedInt32Array indices = result["Indicies"];
             if(!indices.is_empty()) arr[Mesh::ARRAY_INDEX] = indices;

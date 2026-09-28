@@ -60,90 +60,186 @@ uniform float EmissionIntensity;
 uniform vec4 UVScaleOffset;
 uniform vec4 EmissionColor;
 
-void vertex() {
-	//
-}
 
-vec2 xform_uvs(vec2 uvs, vec4 scale_off)
+const float PARALLAX_DEPTH = 0.04;
+const float WIND_AMPLITUDE = 0.025;
+
+vec2 get_uv(vec2 uv) 
 {
-	vec2 v = scale_off.xy * (uvs - scale_off.zw);
-	return vec2(v.x, 1.0 - v.y);
+	vec2 transformed = UVScaleOffset.xy * (uv - UVScaleOffset.zw);
+	return vec2(transformed.x, 1.0 - transformed.y);
 }
 
-vec2 get_uv(vec2 uvs) 
+void vertex() 
 {
-    return xform_uvs(uvs, UVScaleOffset);
+	if (WindReceiverType != 0) 
+	{
+		float mask = 1.0;
+		if (EnableWindMaskMap)
+			mask = textureLod(WindMaskMap, get_uv(UV), 0.0).r;
+		
+		vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		float sway = sin(TIME * 1.7 + dot(world_position.xz, vec2(0.7, 0.5)));
+		VERTEX.x += sway * mask * WIND_AMPLITUDE;
+	}
 }
 
-void fragment() {
+vec3 decode_normal(vec3 encoded) 
+{
+	vec2 xy = encoded.xy * 2.0 - 1.0;
+	return normalize(vec3(xy, sqrt(max(1.0 - dot(xy, xy), 0.0001))));
+}
+
+// Whiteout blending preserves the neutral (0, 0, 1) detail normal.
+vec3 blend_detail_normal(vec3 base, vec3 detail) 
+{
+	return normalize(vec3(base.xy + detail.xy, base.z * detail.z));
+}
+
+void fragment() 
+{
 	vec2 uvs = get_uv(UV);
-	
-	vec4 layerMask = texture(LayerMaskMap, uvs);
-	layerMask = mix(vec4(0.0), layerMask, vec4(1.0));
-	
-	//Albedo
-	vec4 base_col = vec4(1, 1, 1, 1);
-	if (EnableBaseColorMap)
-	{
-		vec4 baseColMap = texture(BaseColorMap, uvs);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.r);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.g);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.b);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.a);
+	if (EnableParallaxMap) {
+		vec3 view_tangent = VIEW * mat3(normalize(TANGENT), normalize(BINORMAL), normalize(NORMAL));
+		float height = texture(ParallaxMap, uvs).r - 0.5;
+		// UVs above are vertically flipped, so flip the tangent-space Y offset too.
+		uvs -= vec2(view_tangent.x, -view_tangent.y) * height * PARALLAX_DEPTH
+			/ max(abs(view_tangent.z), 0.2);
 	}
-		
-	//Albedo
-	if (EnableBaseColorMap1)
-	{
-		vec4 baseColMap1 = texture(BaseColorMap1, uvs);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.r);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.g);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.b);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.a);
-	}
-	
-	//Normal
-	vec3 norm = vec3(1,1,1);
-	if(EnableNormalMap)
-		norm *= texture(NormalMap, uvs).rgb;
-	if(EnableNormalMap1)
-		norm *= texture(NormalMap1, uvs).rgb;
-	if(EnableNormalMap2)
-		norm *= texture(NormalMap2, uvs).rgb;
-		
-	//Emission
-	vec3 emission = texture(EmissionColorMap, uvs).rgb;
-	emission *= EmissionIntensity;
 
-	//Metallic
+	// Port enum: source 0 = texture, 1 = vertex color. Single-layer materials
+	// must not depend on an unbound LayerMaskMap (which defaults to white).
+	vec4 mask = vec4(0.0);
+	if (NumMaterialLayer > 1 || NumDetailLayer > 0) 
+	{
+		if (LayerMaskSource == 1) 
+		{
+			mask = COLOR;
+		} 
+		else 
+		{
+			mask = texture(LayerMaskMap, uvs);
+		}
+	}
+	// Swizzle 0 = RGBA; 1..4 replicate R/G/B/A respectively.
+	if (LayerMaskSwizzle == 1)
+		mask = vec4(mask.r);
+	else if (LayerMaskSwizzle == 2)
+		mask = vec4(mask.g);
+	else if (LayerMaskSwizzle == 3)
+		mask = vec4(mask.b);
+	else if (LayerMaskSwizzle == 4)
+		mask = vec4(mask.a);
+	mask = clamp(mask, vec4(0.0), vec4(1.0));
+	float layer_weight = NumMaterialLayer > 1 ? mask.r : 0.0;
+
+	vec4 base = vec4(1.0);
+	if (EnableBaseColorMap) {
+		base = texture(BaseColorMap, uvs);
+	}
+	// Base-mask source 0 = One, 1 = base texture alpha.
+	if (LayerBaseMaskSource == 1) 
+		layer_weight *= base.a; 
+	if (EnableBaseColorMap1 && NumMaterialLayer > 1) 
+	{
+		vec4 layer = texture(BaseColorMap1, uvs);
+		// Blend 0 = Mix, 1 = Add, 2 = Multiply.
+		if (LayerBlendType == 1) { base.rgb += layer.rgb * layer_weight; }
+		else if (LayerBlendType == 2) { base.rgb *= mix(vec3(1.0), layer.rgb, layer_weight); }
+		else { base = mix(base, layer, layer_weight); }
+	}
+	if (EnableVertexBaseColor) 
+	{
+		base *= COLOR;
+	}
+	if (EnableAlphaTest && base.a < 0.5) 
+	{
+		discard;
+	}
+
+	vec3 normal = vec3(0.0, 0.0, 1.0);
+	if (EnableNormalMap)
+		normal = decode_normal(texture(NormalMap, uvs).rgb); 
+		
+	if (EnableNormalMap1) 
+	{
+		vec3 layer_normal = decode_normal(texture(NormalMap1, uvs).rgb);
+		if (NumDetailLayer > 0) 
+		{
+			normal = blend_detail_normal(normal, normalize(mix(vec3(0.0, 0.0, 1.0), layer_normal, mask.r)));
+		} 
+		else if (NumMaterialLayer > 1) 
+		{
+			normal = normalize(mix(normal, layer_normal, layer_weight));
+		}
+	}
+	if (EnableNormalMap2) {
+		vec3 layer_normal = decode_normal(texture(NormalMap2, uvs).rgb);
+		if (NumDetailLayer > 1)
+		{
+			normal = blend_detail_normal(normal, normalize(mix(vec3(0.0, 0.0, 1.0), layer_normal, mask.g)));
+		} 
+		else if (NumMaterialLayer > 2) 
+		{
+			normal = normalize(mix(normal, layer_normal, mask.g));
+		}
+	}
+
 	float metallic = 0.0;
-    if (EnableMetallicMap) {
-        metallic = texture(MetallicMap, uvs).r;
-    }
-	
-	//Roughness
-	float roughness = 0.0;
-	if(EnableRoughnessMap)
-		roughness = mix(roughness, texture(RoughnessMap, uvs).r, layerMask.r);
-	if(EnableRoughnessMap1)
-		roughness = mix(roughness, texture(RoughnessMap1, uvs).r, layerMask.r);
+	if (EnableMetallicMap)
+		metallic = texture(MetallicMap, uvs).r;
 		
-	float specular = 0.5;
+	float roughness = 1.0;
+	if (EnableRoughnessMap)
+		roughness = texture(RoughnessMap, uvs).r; 
+		
+	if (EnableRoughnessMap1 && (NumMaterialLayer > 1 || NumDetailLayer > 0)) 
+	{
+		float weight = NumDetailLayer > 0 ? mask.r : layer_weight;
+		roughness = mix(roughness, texture(RoughnessMap1, uvs).r, weight);
+	}
+	float ao = 1.0;
+	if (EnableAOMap)
+		ao = texture(AOMap, uvs).r;
+	if (EnableAOMap1) 
+	{
+		float layer_ao = texture(AOMap1, uvs).r;
+		if (NumDetailLayer > 0)
+			ao *= mix(1.0, layer_ao, mask.r);
+		else if (NumMaterialLayer > 1)
+			ao = mix(ao, layer_ao, layer_weight);
+	}
+	if (EnableAOMap2) 
+	{
+		float layer_ao = texture(AOMap2, uvs).r;
+		if (NumDetailLayer > 1)
+			ao *= mix(1.0, layer_ao, mask.g);
+		else if (NumMaterialLayer > 2)
+			ao = mix(ao, layer_ao, mask.g);
+	}
 
-	//AO
-    float ao = 1.0;
-    if (EnableAOMap)
-        ao *= pow(texture(AOMap, uvs).r, 0.001);
-	if (EnableAOMap1)
-        ao *= pow(texture(AOMap1, uvs).r, 0.001);
-	if (EnableAOMap2)
-        ao *= pow(texture(AOMap2, uvs).r, 0.001);
-	
-	ALBEDO = base_col.rgb * COLOR.rgb;
-	NORMAL_MAP = norm;
-	METALLIC = metallic;
-	ROUGHNESS = roughness;
-	SPECULAR = specular;
+	vec3 emission = vec3(0.0);
+	if (EnableEmissionColorMap) 
+	{
+		vec4 emission_sample = texture(EmissionColorMap, uvs);
+		vec3 tint = EmissionColor.rgb;
+		if (EnableLerpBaseColorEmission) 
+		{
+			tint = mix(base.rgb, tint, emission_sample.a); 
+		}
+		emission = emission_sample.rgb * tint * EmissionIntensity;
+	}
+	if (EnableLightMap) 
+	{
+		vec2 light_uv = NumRequiredUV > 1 ? vec2(UV2.x, 1.0 - UV2.y) : uvs;
+		emission += base.rgb * texture(LightMap, light_uv).rgb * ao;
+	}
+
+	ALBEDO = base.rgb;
+	NORMAL_MAP = normal * 0.5 + 0.5;
+	METALLIC = clamp(metallic, 0.0, 1.0);
+	ROUGHNESS = clamp(roughness, 0.0, 1.0);
+	SPECULAR = 0.5;
 	EMISSION = emission;
-	AO = ao;
+	AO = clamp(ao, 0.0, 1.0);
 }
