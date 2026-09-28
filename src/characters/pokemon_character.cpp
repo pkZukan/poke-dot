@@ -1,8 +1,14 @@
 #include "pokemon_character.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/kinematic_collision3d.hpp>
 
 using namespace godot;
+
+PokemonCharacter::PokemonCharacter()
+{
+    set_floor_snap_length(0.35f);
+}
 
 void PokemonCharacter::_bind_methods() 
 {
@@ -12,6 +18,7 @@ void PokemonCharacter::_bind_methods()
     GETTER_SETTER_BIND(PokemonCharacter, form, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(PokemonCharacter, gender, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(PokemonCharacter, is_shiny, Variant::BOOL, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(PokemonCharacter, step_height, Variant::FLOAT, PROPERTY_HINT_RANGE, "0,1,0.01,or_greater,suffix:m")
 
     ClassDB::bind_method(D_METHOD("GetRootMotionPos"), &PokemonCharacter::GetRootMotionPos);
 
@@ -186,6 +193,7 @@ void PokemonCharacter::Attack()
 
 void PokemonCharacter::apply_movement(double delta)
 {
+    if (delta <= 0.0) return;
     Vector3 root_motion = GetRootMotionPos();
 
     float max_delta = 0.1f;
@@ -210,5 +218,41 @@ void PokemonCharacter::apply_movement(double delta)
         vel.y -= 9.8 * delta;
     }
     set_velocity(vel);
+    if (is_on_floor() && vel.y <= 0.0f)
+        _try_step_up(Vector3(vel.x, 0, vel.z) * delta);
     move_and_slide();
+}
+
+void PokemonCharacter::_try_step_up(const Vector3& motion)
+{
+    if (step_height <= 0.0f || motion.is_zero_approx()) return;
+
+    const float margin = get_safe_margin();
+    const Vector3 lift(0, step_height + margin * 2.0f, 0);
+    Transform3D probe = get_global_transform();
+    Ref<KinematicCollision3D> hit;
+    hit.instantiate();
+
+    if (!test_move(probe, motion, hit, margin)) 
+        return;
+    if (hit->get_normal().y >= Math::cos(get_floor_max_angle())) 
+        return;
+    if (test_move(probe, lift, hit, margin)) 
+        return;
+
+    probe.origin += lift;
+    if (test_move(probe, motion, hit, margin))
+        return;
+
+    probe.origin += motion;
+    if (!test_move(probe, -lift, hit, margin)) 
+        return;
+    if (hit->get_normal().y < Math::cos(get_floor_max_angle())) 
+        return;
+
+    const float rise = lift.y + hit->get_travel().y;
+    if (rise <= margin || rise > step_height + margin * 2.0f) 
+        return;
+
+    set_global_position(get_global_position() + Vector3(0, rise, 0));
 }

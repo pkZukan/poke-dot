@@ -23,7 +23,7 @@ protected:
     static void _bind_methods();
 
 public:
-    PokemonCharacter() = default;
+    PokemonCharacter();
     // Godot deletes child nodes before destroying the extension instance.
     ~PokemonCharacter() = default;
 
@@ -36,6 +36,7 @@ public:
     GETTER_SETTER_CALLBACK_DEFINE(uint8_t, form)
     GETTER_SETTER_CALLBACK_DEFINE(uint8_t, gender)
     GETTER_SETTER_CALLBACK_DEFINE(bool, is_shiny)
+    GETTER_SETTER_DEFINE(float, step_height)
 
     void setterCallback(String setterName)
     {
@@ -57,6 +58,7 @@ private:
     uint8_t form = 0;
     uint8_t gender = 0;
     bool is_shiny = false;
+    float step_height = 0.3f;
 
     Ref<BinaryTexture> icon;
 
@@ -70,6 +72,7 @@ private:
     void _travel(const String& state);
     void _initialize();
     void _cleanup();
+    void _try_step_up(const Vector3& motion);
 };
 
 } // namespace godot
