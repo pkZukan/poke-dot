@@ -23,11 +23,6 @@ void PokemonCharacter::_bind_methods()
     ClassDB::bind_method(D_METHOD("apply_movement", "delta"), &PokemonCharacter::apply_movement);
 }
 
-PokemonCharacter::~PokemonCharacter()
-{
-    _cleanup();
-}
-
 void PokemonCharacter::_enter_tree()
 {
     _initialize();
@@ -123,24 +118,33 @@ void PokemonCharacter::_initialize()
 
 void PokemonCharacter::_cleanup()
 {
+    // This is for rebuilding a live character, never for destruction. Stop
+    // animation evaluation before detaching the nodes its tracks target.
+    if (_anim_tree)
+    {
+        _anim_tree->set_active(false);
+        remove_child(_anim_tree);
+        _anim_tree->queue_free();
+        _anim_tree = nullptr;
+    }
+
     if (_actor)
     {
-        _actor->_cleanup();
+        remove_child(_actor);
         _actor->queue_free();
         _actor = nullptr;
     }
 
     if (_col)
     {
+        remove_child(_col);
         _col->queue_free();
         _col = nullptr;
     }
 
-    if(_anim_tree)
-    {
-        _anim_tree->queue_free();
-        _anim_tree = nullptr;
-    }
+    _anim_sm.unref();
+    _col_shape.unref();
+    icon.unref();
 }
 
 Vector3 PokemonCharacter::GetRootMotionPos()

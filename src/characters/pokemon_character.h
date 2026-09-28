@@ -24,7 +24,8 @@ protected:
 
 public:
     PokemonCharacter() = default;
-    ~PokemonCharacter();
+    // Godot deletes child nodes before destroying the extension instance.
+    ~PokemonCharacter() = default;
 
     void _enter_tree() override;
     void _ready() override;
@@ -38,7 +39,8 @@ public:
 
     void setterCallback(String setterName)
     {
-        _initialize();
+        if (is_inside_tree())
+            _initialize();
     }
 
     Vector3 GetRootMotionPos();

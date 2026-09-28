@@ -42,6 +42,7 @@ void PokemonCatalog::load_catalog()
 void PokemonCatalog::unload_catalog() 
 {
     _catalog_map.clear();
+    _catalog.unref();
 }
 
 Ref<CatalogEntry> PokemonCatalog::GetCatalogEntry(int species, uint8_t form, uint8_t gender)

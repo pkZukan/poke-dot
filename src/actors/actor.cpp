@@ -64,18 +64,27 @@ AABB ActorObj::GetBBox()
 
 void ActorObj::_cleanup() 
 {
-    if (_model) 
+    if (_anim_player)
     {
-        _model->queue_free();
-        _model = nullptr;
-    }
-    if (_anim_player) 
-    {
+        _anim_player->stop();
+        remove_child(_anim_player);
         _anim_player->queue_free();
         _anim_player = nullptr;
     }
+    _skeleton = nullptr;
+    _skl_path = String();
+    _anim_lib.unref();
+    _imm_mesh.unref();
+
+    if (_model) 
+    {
+        remove_child(_model);
+        _model->queue_free();
+        _model = nullptr;
+    }
     if (_debug_mesh) 
     {
+        remove_child(_debug_mesh);
         _debug_mesh->queue_free();
         _debug_mesh = nullptr;
     }
