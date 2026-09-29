@@ -55,7 +55,7 @@ vec2 wrap_uv(vec2 uv, int slot) {
     return vec2(wrap_axis(uv.x, sampler_repeat_u[slot]), wrap_axis(uv.y, sampler_repeat_v[slot]));
 }
 vec2 transform_uv(vec2 uv, vec4 scale_offset, vec2 center) {
-    vec2 result = scale_offset.xy * (uv - center) + center + scale_offset.zw;
+    vec2 result = (uv - center - scale_offset.zw) * scale_offset.xy + center;
     return vec2(result.x, 1.0 - result.y);
 }
 vec4 layer_weights(vec4 mask) {
@@ -67,23 +67,32 @@ vec4 layer_weights(vec4 mask) {
     return weights;
 }
 vec4 blend_colors(vec4 base, vec4 a, vec4 b, vec4 c, vec4 d, vec4 weights) {
-    return mix(mix(mix(mix(base, a, weights.r), b, weights.g), c, weights.b), d, weights.a);
+    float total = max(1.0 - dot(weights, vec4(1.0)), 0.0);
+    vec4 tint = vec4(base.rgb * total, base.a);
+    for (int i = 0; i < 4; i++) {
+        vec4 layer = i == 0 ? a : (i == 1 ? b : (i == 2 ? c : d));
+        tint.rgb = mix(tint.rgb, layer.rgb * base.rgb, weights[i]);
+        total = mix(total, 1.0, weights[i]);
+    }
+    tint.rgb /= max(total, 0.00001);
+    return tint;
+}
+
+void vertex() {
+    if (EnableDisplacementMap) {
+        vec2 source_uv = NumRequiredUV > 1 && UVIndexLayer3 != 0 ? UV2 : UV;
+        vec2 displacement_uv = transform_uv(source_uv, UVScaleOffset3, vec2(0.0));
+        float height = textureLod(DisplacementMap, wrap_uv(displacement_uv, 2), 0.0).r;
+        VERTEX += NORMAL * (sin(height) * COLOR.r * DisplacementHeight);
+    }
 }
 
 void fragment() {
     vec2 uv = transform_uv(UV, UVScaleOffset, vec2(0.0));
-    vec2 displacement = vec2(0.0);
-    if (EnableDisplacementMap) {
-        vec2 source_uv = NumRequiredUV > 1 && UVIndexLayer3 == 1 ? UV2 : UV;
-        vec2 displacement_uv = transform_uv(source_uv, UVScaleOffset3, vec2(0.0));
-        float height = texture(DisplacementMap, wrap_uv(displacement_uv, 2)).r * 2.0 - 1.0;
-        
-        displacement = vec2(height) * DisplacementHeight;
-    }
     vec4 texel = vec4(1.0);
-    if (EnableBaseColorMap) texel = texture(BaseColorMap, wrap_uv(uv + displacement, 0));
+    if (EnableBaseColorMap) texel = texture(BaseColorMap, wrap_uv(uv, 0));
     vec4 weights = vec4(0.0);
-    if (NumMaterialLayer > 1) weights = layer_weights(texture(LayerMaskMap, wrap_uv(uv + displacement, 1)));
+    if (NumMaterialLayer > 1) weights = layer_weights(texture(LayerMaskMap, wrap_uv(uv, 1)));
     vec4 tint = blend_colors(BaseColor, BaseColorLayer1, BaseColorLayer2, BaseColorLayer3, BaseColorLayer4, weights);
     vec4 color = texel * tint;
     if (EnableAlphaTest && color.a < DiscardValue) discard;

@@ -162,7 +162,7 @@ vec2 wrap_uv(vec2 uv, int slot) {
     return vec2(wrap_axis(uv.x, sampler_repeat_u[slot]), wrap_axis(uv.y, sampler_repeat_v[slot]));
 }
 vec2 transform_uv(vec2 uv, vec4 scale_offset, vec2 center) {
-    vec2 result = scale_offset.xy * (uv - center) + center + scale_offset.zw;
+    vec2 result = (uv - center - scale_offset.zw) * scale_offset.xy + center;
     return vec2(result.x, 1.0 - result.y);
 }
 vec4 layer_weights(vec4 mask) {
@@ -177,15 +177,23 @@ vec4 blend_colors(vec4 base, vec4 a, vec4 b, vec4 c, vec4 d, vec4 weights) {
     return mix(mix(mix(mix(base, a, weights.r), b, weights.g), c, weights.b), d, weights.a);
 }
 
-// The original programs are unavailable: lighting below is a Godot approximation.
 varying vec3 shadow_tint;
 varying float surface_specular;
 varying float surface_gloss;
 varying float rim_mask;
+varying float surface_offset;
+varying float surface_contrast;
+varying float surface_mask;
+varying float surface_ao;
+varying float surface_emission;
+
+float adjust_contrast(float value, float contrast) {
+    return clamp((value - 0.5) * (1.0 + 2.0 * contrast) + 0.5, 0.0, 1.0);
+}
 
 vec2 get_uv(vec2 uv, int slot) {
     vec4 transform = slot == 1 && EnableUVScaleOffsetNormal ? UVScaleOffsetNormal : UVScaleOffset;
-    vec2 center = UVCenter0.xy;
+    vec2 center = slot == 1 && EnableUVScaleOffsetNormal ? vec2(0.0) : UVCenter0.xy;
     if (EnableEyeOptions && slot == 10) { transform = UVScaleOffset1; center = UVCenter1.xy; }
     if (EnableEyeOptions && slot == 11) {
         transform = UVScaleOffset2;
@@ -216,43 +224,64 @@ void fragment() {
     if (NumMaterialLayer > 1) weights = layer_weights(texture(LayerMaskMap, get_uv(layer_uv, 8)));
     vec4 texel = vec4(1.0);
     if (EnableBaseColorMap) texel = texture(BaseColorMap, get_uv(surface_uv, 0));
-    vec4 tint = blend_colors(BaseColor, BaseColorLayer1, BaseColorLayer2, BaseColorLayer3, BaseColorLayer4, weights);
-    vec4 base = BaseColorMultiply ? texel * tint : tint;
-    if (!BaseColorMultiply && EnableBaseColorMap && NumMaterialLayer <= 1) base *= texel;
+    float total = max(1.0 - dot(weights, vec4(1.0)), 0.0);
+    vec4 base = BaseColor * texel;
+    base.rgb *= total;
+    for (int i = 0; i < 4; i++) {
+        vec4 tint = i == 0 ? BaseColorLayer1 : (i == 1 ? BaseColorLayer2 : (i == 2 ? BaseColorLayer3 : BaseColorLayer4));
+        if (BaseColorMultiply) tint *= texel;
+        base.rgb = mix(base.rgb, tint.rgb, weights[i]);
+    }
     float luminance = dot(base.rgb, vec3(0.2126, 0.7152, 0.0722));
     base.rgb = max(mix(vec3(luminance), base.rgb, SaturationPower) * (1.0 - BaseColorDarkness), vec3(0.0));
     if (EnableAlphaTest && base.a < DiscardValue) discard;
 
-    shadow_tint = blend_colors(ShadowingColor, ShadowingColorLayer1, ShadowingColorLayer2, ShadowingColorLayer3, ShadowingColorLayer4, weights).rgb;
-    float shadow_mask = clamp(texture(ShadowingColorMaskMap, get_uv(surface_uv, 5)).r + ShadowingColorMaskMapValue, 0.0, 1.0);
+    shadow_tint = blend_colors(vec4(ShadowingColor.rgb * total, ShadowingColor.a), ShadowingColorLayer1, ShadowingColorLayer2, ShadowingColorLayer3, ShadowingColorLayer4, weights).rgb;
+    float shadow_mask = clamp(texture(ShadowingColorMaskMap, get_uv(surface_uv, 5)).r * ShadowingColorMaskMapValue, 0.0, 1.0);
     shadow_tint = mix(shadow_tint, texture(ShadowingColorMap, get_uv(surface_uv, 4)).rgb, shadow_mask);
     if (EnableEyeOptions && RequireEyelidShadowMap) {
         float eyelid = texture(EyelidShadowMaskMap, get_uv(UV, 11)).r;
-        base.rgb *= mix(BaseColorLayer6.rgb, vec3(1.0), eyelid);
+        vec3 tint = mix(vec3(1.0), BaseColorLayer6.rgb, eyelid);
+        base.rgb *= tint;
+        shadow_tint *= tint;
     }
     vec2 ao_uv = NumRequiredUV > 1 && UVIndexAO == 1 ? UV2 : surface_uv;
-    AO = EnableAOMap ? mix(1.0, texture(OcclusionMap, get_uv(ao_uv, 2)).r, clamp(OcclusionStrength, 0.0, 1.0)) : 1.0;
+    AO = EnableAOMap ? pow(max(texture(OcclusionMap, get_uv(ao_uv, 2)).r, 0.00001), max(OcclusionStrength, 0.0)) : 1.0;
     if (EnableNormalMap) {
         vec2 xy = texture(NormalMap, get_uv(UV, 1)).rg * 2.0 - 1.0;
         NORMAL_MAP = vec3(xy, sqrt(max(1.0 - dot(xy, xy), 0.0))) * 0.5 + 0.5;
         NORMAL_MAP_DEPTH = NormalHeight;
     }
+    surface_ao = AO;
     vec3 spec_mask = texture(SpecularMaskMap, get_uv(surface_uv, 3)).rgb;
     float intensity = blend_values(SpecularIntensity, vec4(SpecularLayer1Intensity, SpecularLayer2Intensity, SpecularLayer3Intensity, SpecularLayer4Intensity), weights);
     float offset = blend_values(SpecularOffset, vec4(SpecularLayer1Offset, SpecularLayer2Offset, SpecularLayer3Offset, SpecularLayer4Offset), weights);
     float contrast = blend_values(SpecularContrast, vec4(SpecularLayer1Contrast, SpecularLayer2Contrast, SpecularLayer3Contrast, SpecularLayer4Contrast), weights);
     surface_gloss = clamp((spec_mask.r - 0.5) * (1.0 + contrast) + 0.5 + offset, 0.0, 1.0);
     surface_specular = max(intensity, 0.0);
+    surface_offset = offset;
+    surface_contrast = contrast;
+    surface_mask = spec_mask.r;
     METALLIC = clamp(blend_values(Metallic, vec4(MetallicLayer1, MetallicLayer2, MetallicLayer3, MetallicLayer4), weights), 0.0, 1.0);
-    ROUGHNESS = clamp(1.0 - (EnableHairSpecular ? spec_mask.g : surface_gloss) + ReflectionsBlur, 0.04, 1.0);
+    ROUGHNESS = 1.0; // Stylized highlights are evaluated explicitly in light().
     SPECULAR = clamp(surface_specular / 0.08, 0.0, 1.0);
     rim_mask = texture(RimLightMaskMap, get_uv(surface_uv, 6)).r;
     vec3 emission = EmissionColor.rgb * EmissionIntensity;
     if (EnableEmissionLayer) {
         vec3 layer_emission = blend_colors(vec4(emission, 1.0), EmissionColorLayer1 * EmissionIntensityLayer1, EmissionColorLayer2 * EmissionIntensityLayer2, EmissionColorLayer3 * EmissionIntensityLayer3, EmissionColorLayer4 * EmissionIntensityLayer4, weights).rgb;
-        emission = EnableLerpBaseColorEmission ? base.rgb * layer_emission : layer_emission;
+        emission = layer_emission;
     }
-    if (EnableEyeOptions && EnableHighlight) emission += texture(HighlightMaskMap, get_uv(UV, 10)).rgb * EmissionColorLayer5.rgb * EmissionIntensityLayer5;
+    surface_emission = EnableEmissionLayer ? blend_values(EmissionIntensity,
+        vec4(EmissionIntensityLayer1, EmissionIntensityLayer2, EmissionIntensityLayer3, EmissionIntensityLayer4), weights) : EmissionIntensity;
+    if (EnableLerpBaseColorEmission) {
+        base.rgb *= max(1.0 - surface_emission, 0.0);
+        shadow_tint *= max(1.0 - surface_emission, 0.0);
+    }
+    if (EnableEyeOptions && EnableHighlight) {
+        float highlight = texture(HighlightMaskMap, get_uv(UV, 10)).r;
+        base.rgb = mix(base.rgb, EmissionColorLayer5.rgb * EmissionIntensityLayer5, highlight);
+        shadow_tint = mix(shadow_tint, EmissionColorLayer5.rgb * EmissionIntensityLayer5, highlight);
+    }
     
     vec3 reflected = reflect(-VIEW, NORMAL);
     vec2 reflection_uv = vec2(atan(reflected.z, reflected.x) / (2.0 * PI) + 0.5, acos(clamp(reflected.y, -1.0, 1.0)) / PI);
@@ -263,24 +292,46 @@ void fragment() {
         float edge = pow(clamp(1.0 - dot(NORMAL, VIEW), 0.0, 1.0), max(AuraRimPower, 0.001));
         emission += EmissionColor.rgb * wave * noise * edge * AuraIntensity;
     }
-    ALBEDO = base.rgb * COLOR.rgb;
+    ALBEDO = base.rgb;
     EMISSION = emission;
 }
 void light() {
     float light_enabled = LIGHT_IS_DIRECTIONAL || EnableAdditionalLight != 0 ? 1.0 : 0.0;
     float ndotl = dot(NORMAL, LIGHT);
-    float diffuse = clamp((ndotl + HalfLambertBias) / max(1.0 + HalfLambertBias, 0.001), 0.0, 1.0);
-    diffuse = pow(diffuse, max(ShadingBias, 0.001));
-    if (DiffusionLevels > 1.0) diffuse = floor(diffuse * DiffusionLevels) / DiffusionLevels;
-    float shadow = clamp((diffuse + ShadowingShift) * (1.0 + ShadowingContrast) * ShadowingBias, 0.0, 1.0);
-    float mid_area = clamp(1.0 - abs(diffuse - 0.5 - MidAreaShift) * (2.0 + MidAreaContrast), 0.0, 1.0);
-    float dark_area = clamp((1.0 - diffuse + DarkAreaShift) * (1.0 + DarkAreaContrast), 0.0, 1.0);
-    vec3 tint = hue_rotate(shadow_tint, (MidAreaHueOffset * mid_area + DarkAreaHueOffset * dark_area) * HueShiftBias * HueShiftAreaValue);
-    vec3 shaded = mix(ALBEDO, mix(tint, ALBEDO, shadow), clamp(ShadowStrength, 0.0, 1.0));
-    float attenuation = (ReceiveShadow != 0 ? ATTENUATION : 1.0) * light_enabled;
-    DIFFUSE_LIGHT += shaded * LIGHT_COLOR * (diffuse + (1.0 - diffuse) * ShadowingGIGain) * attenuation / PI;
+    float diffuse = ndotl * 0.5 + 0.5;
+    diffuse = clamp(mix(diffuse, diffuse * diffuse, HalfLambertBias), 0.0, 1.0);
+    float attenuation = ReceiveShadow > 0 ? ATTENUATION : 1.0;
+    float shadow = clamp(attenuation + ShadowStrength * ShadowStrength, 0.0, 1.0);
+    vec3 light_color = LIGHT_COLOR / PI * light_enabled;
+    float shading_width = max(ShadingBias * ShadingBias * ShadowingBias, 0.00001);
+    float shaded_weight = clamp((0.5 * ShadowingBias + 0.5 * shading_width - diffuse) / shading_width, 0.0, 1.0);
+    vec3 shaded = ALBEDO * clamp(shadow_tint + vec3(surface_ao), vec3(0.0), vec3(1.0));
+    float brightness = max(light_color.r, max(light_color.g, light_color.b)) * diffuse * surface_ao * shadow;
+    float mid_area = adjust_contrast(1.0 - smoothstep(MidAreaShift, 1.0 + MidAreaShift, brightness), MidAreaContrast);
+    float dark_area = adjust_contrast(1.0 - smoothstep(DarkAreaShift, 1.0 + DarkAreaShift, brightness), DarkAreaContrast);
+    vec3 mid_tint = mix(shaded, hue_rotate(shaded, MidAreaHueOffset), mid_area);
+    vec3 dark_tint = hue_rotate(shaded, DarkAreaHueOffset);
+    float gradient = adjust_contrast(smoothstep(ShadowingShift, 1.0 + ShadowingShift, attenuation * (ndotl * 0.5 + 0.5)), ShadowingContrast);
+    vec3 tint = mix(mix(dark_tint, mid_tint, dark_area), mix(mid_tint, dark_tint, dark_area), gradient);
+    tint *= mix(1.0, 0.5, HueShiftAreaValue * mid_area);
+    shaded = mix(shaded, mix(shaded, tint, HueShiftBias), clamp(light_color, vec3(0.0), vec3(1.0)));
+    shaded *= mix(vec3(1.0), shadow_tint, shaded_weight);
+    // Godot multiplies accumulated diffuse by ALBEDO after light().
+    // Supply only the shading ratio here, otherwise the base color is squared.
+    DIFFUSE_LIGHT += shaded / max(ALBEDO, vec3(0.00001)) * light_color * shadow;
+
+    float fresnel = 1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
+    float rim = adjust_contrast(smoothstep(RimLightOffset, 1.0, fresnel), RimLightContrast);
+    float rim_front = rim * smoothstep(-0.4, 0.0, ndotl + fresnel - 1.0) * RimLightIntensity * ndotl * surface_ao;
+    float rim_back = rim * smoothstep(-0.4, 0.0, -ndotl + fresnel - 1.0);
+    float back_weight = rim_back * BackRimLightIntensity;
+    rim_back = mix(back_weight, rim_back, back_weight) * RimLightIntensity;
+    rim = mix(rim_front, rim_back, clamp(-ndotl, 0.0, 1.0)) * rim_mask * max(1.0 - surface_emission, 0.0);
     vec3 halfway = normalize(LIGHT + VIEW);
-    float spec = smoothstep(0.0, 1.0, pow(max(dot(NORMAL, halfway), 0.0), mix(4.0, 12.0, min(surface_gloss, 0.6)))) * clamp(ndotl, 0.0, 1.0);
-    float rim = pow(clamp(1.0 - dot(NORMAL, VIEW) + RimLightOffset, 0.0, 1.0), clamp(RimLightContrast, 0.5, 3.0));
-    SPECULAR_LIGHT += LIGHT_COLOR * (spec * surface_specular * 0.3 + rim_mask * rim * 0.5 * (RimLightIntensity * max(ndotl, 0.0) + BackRimLightIntensity * max(-ndotl, 0.0))) * attenuation;
+    float spec = pow(clamp(dot(NORMAL, halfway), 0.0, 1.0), 8.0);
+    spec = adjust_contrast(smoothstep(surface_offset, 1.0 + surface_offset, spec), surface_contrast);
+    vec3 specular = light_color * shadow * (spec * surface_specular * surface_mask * surface_ao);
+    // Rim and specular share a bounded highlight; adding both overbrightens it.
+    specular = clamp(max(specular, vec3(rim)), vec3(0.0), vec3(1.0));
+    SPECULAR_LIGHT += specular * clamp(light_color * shadow, vec3(0.0), vec3(1.0)) * light_color * shadow;
 }

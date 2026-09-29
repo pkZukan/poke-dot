@@ -286,8 +286,11 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
             // Explicit port enums for the symbolic eye options in TRMTR.
             if (name == "EyelidType" && val == "None")
                 sm->set_shader_parameter(name, 0);
-            else if (name == "EnableIrisRefraction" && val == "Ng")
-                sm->set_shader_parameter(name, 0);
+            else if (name == "EnableIrisRefraction") {
+                if (val == "None") sm->set_shader_parameter(name, 0);
+                else if (val == "Ng") sm->set_shader_parameter(name, 1);
+                else if (val == "Ncc") sm->set_shader_parameter(name, 2);
+            }
         }
         else if (shader_name == "Standard")
         {
