@@ -1,0 +1,23 @@
+include "../common.fbs";
+
+namespace Titan.TrinityScene;
+
+table TrinityCameraEntity
+{
+    name: string;
+    activate: bool;
+    position: Titan.Math.Vec3;
+    rotation: Titan.Math.Vec3;
+    distance: float;
+    fov_y: float;
+    near_plane: float;
+    far_plane: float;
+    projection_type: uint8;
+    camera_mode: uint8;
+    target_name: string;
+    use_roll: bool;
+    roll: float;
+    attach_transform: bool;
+}
+
+root_type TrinityCameraEntity;

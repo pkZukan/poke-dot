@@ -1,0 +1,8 @@
+namespace Titan.TrinityScene;
+
+table TrinityLayoutCommonResourceComponent
+{
+    // No fields are documented in the reference yet.
+}
+
+root_type TrinityLayoutCommonResourceComponent;

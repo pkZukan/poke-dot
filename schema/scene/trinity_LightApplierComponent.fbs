@@ -1,0 +1,8 @@
+namespace Titan.TrinityScene;
+
+table TrinityLightApplierComponent
+{
+    // No fields are documented in the reference yet.
+}
+
+root_type TrinityLightApplierComponent;

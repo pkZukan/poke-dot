@@ -1,0 +1,11 @@
+namespace Titan.TrinityScene;
+
+table TrinityOverrideSensorData
+{
+    realizing_distance: float;
+    unrealizing_distance: float;
+    loading_distance: float;
+    unloading_distance: float;
+}
+
+root_type TrinityOverrideSensorData;

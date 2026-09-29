@@ -1,0 +1,8 @@
+namespace Titan.TrinityScene;
+
+table TrinityTextureBufferComponent
+{
+    // No fields are documented in the reference yet.
+}
+
+root_type TrinityTextureBufferComponent;

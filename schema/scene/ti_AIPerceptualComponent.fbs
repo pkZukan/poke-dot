@@ -1,0 +1,8 @@
+namespace Titan.TrinityScene;
+
+table TiAIPerceptualComponent
+{
+    value: bool;
+}
+
+root_type TiAIPerceptualComponent;

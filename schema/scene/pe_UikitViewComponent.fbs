@@ -1,0 +1,9 @@
+namespace Titan.TrinityScene;
+
+table PeUikitViewComponent
+{
+    file_path: string;
+    blua_path: string;
+}
+
+root_type PeUikitViewComponent;

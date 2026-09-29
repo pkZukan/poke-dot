@@ -1,0 +1,9 @@
+namespace Titan.TrinityScene;
+
+table TrinityLayoutComponent
+{
+    file_path: string;
+    layout_name: string;
+}
+
+root_type TrinityLayoutComponent;

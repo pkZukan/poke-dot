@@ -1,0 +1,12 @@
+namespace Titan.TrinityScene;
+
+table TrinityTerrainStreamingSetting
+{
+    low_load_radius: float;
+    medium_load_radius: float;
+    high_load_radius: float;
+    collision_load_radius: float;
+    tree_load_radius: float;
+}
+
+root_type TrinityTerrainStreamingSetting;

@@ -1,0 +1,15 @@
+namespace Titan.TrinityScene;
+
+table PeFlatbuffersDataEntry
+{
+    name: string;
+    file_path: float;
+}
+
+table PeFlatbuffersDataComponent
+{
+    bfbs_file_path: string;
+    data: [PeFlatbuffersDataEntry];
+}
+
+root_type PeFlatbuffersDataComponent;

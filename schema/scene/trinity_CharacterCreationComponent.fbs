@@ -1,0 +1,31 @@
+namespace Titan.TrinityScene;
+
+table TrinityCCDataMasterEntry
+{
+    part: string;
+    file: string;
+    name: string;
+}
+
+table TrinityCharacterCreationComponent
+{
+    name: string;
+    unk0: uint32;
+    unk1: float;
+    unk2: float;
+    unk3: float;
+    unk4: uint32;
+    unk5: float;
+    unk6: uint32;
+    unk7: float;
+    unk8: uint32;
+    unk9: float;
+    unk10: uint32;
+    unk11: float;
+    unk12: uint32;
+    unk13: uint32;
+    ccdata_master_list: [TrinityCCDataMasterEntry];
+    unk14: [uint32];
+}
+
+root_type TrinityCharacterCreationComponent;

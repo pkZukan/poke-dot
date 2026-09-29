@@ -1,0 +1,8 @@
+namespace Titan.TrinityScene;
+
+table TrinityGluePlugin
+{
+    // No fields are documented in the reference yet.
+}
+
+root_type TrinityGluePlugin;

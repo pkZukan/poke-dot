@@ -1,0 +1,28 @@
+include "../common.fbs";
+
+namespace Titan.TrinityScene;
+
+table TrinityStreamingObject
+{
+    name: string;
+    nested_type: [uint8];
+}
+
+table TrinityStreamingPointData
+{
+    name: string;
+    position: Titan.Math.Vec3;
+}
+
+table TrinityStreamingEntry
+{
+    point: TrinityStreamingPointData;
+    objects: [TrinityStreamingObject];
+}
+
+table TrinityStreamingPoint
+{
+    entries: [TrinityStreamingEntry];
+}
+
+root_type TrinityStreamingPoint;

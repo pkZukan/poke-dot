@@ -1,0 +1,28 @@
+namespace Titan.TrinityScene;
+
+table TrinityPropertyMetadata
+{
+    unk0: uint64;
+    unk1: bool;
+}
+
+table TrinityProperty
+{
+    name: string;
+    value: bool;
+    unk0: TrinityPropertyMetadata;
+}
+
+table TrinityPropertyGroup
+{
+    properties: [TrinityProperty];
+}
+
+table TrinityPropertySheet
+{
+    property_name: string;
+    property_template: string;
+    unk0: [TrinityPropertyGroup];
+}
+
+root_type TrinityPropertySheet;

@@ -1,0 +1,13 @@
+namespace Titan.TrinityScene;
+
+table TrinityScriptComponent
+{
+    file_path: string;
+    package_name: string;
+    is_parallelized: bool;
+    priority: float;
+    is_static: bool;
+    res_name: string;
+}
+
+root_type TrinityScriptComponent;

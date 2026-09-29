@@ -1,0 +1,9 @@
+namespace Titan.TrinityScene;
+
+table PeInputEventTriggerComponent
+{
+    input_name: string;
+    resource_name: string;
+}
+
+root_type PeInputEventTriggerComponent;
