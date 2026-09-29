@@ -5,11 +5,14 @@ namespace Titan.Model;
 file_extension "trmtr";
 
 enum UVWrapMode: uint32 {
-    //Time to test these as bit fields?
-    WRAP = 0, //0000
-    CLAMP = 1, //0001
-    MIRROR = 6, //0110
-    MIRROR_ONCE = 7, //0111
+    CLAMP = 0,
+    WRAP = 1,
+    MIRROR_CLAMP = 2,
+    MIRROR_CLAMP_TO_EDGE = 3,
+    MIRROR_CLAMP_TO_BORDER = 4,
+    CLAMP_TO_BORDER = 5,
+    MIRROR = 6,
+    CLAMP_TO_EDGE = 7,
 }
 
 table SamplerState {
@@ -22,9 +25,9 @@ table SamplerState {
     SamplerState_6: float;
     SamplerState_7: float;
     SamplerState_8: float;
-    repeat_u: UVWrapMode = WRAP; //0x1, 0x6 or 0x7
-    repeat_v: UVWrapMode = WRAP; //0x1, 0x6 or 0x7
-    repeat_w: UVWrapMode = WRAP; //Never used
+    repeat_u: UVWrapMode = CLAMP;
+    repeat_v: UVWrapMode = CLAMP;
+    repeat_w: UVWrapMode = CLAMP; //Never used
     border_color: Titan.Math.RGBA;
 }
 
@@ -56,7 +59,7 @@ table Shader {
 table Texture  {
     texture_name: string;
     texture_file: string;
-    texture_slot: uint32 = 0;
+    texture_slot: uint32 = 0; // Sampler ID; retained name for API compatibility.
 }
 
 table Byte_Extra {

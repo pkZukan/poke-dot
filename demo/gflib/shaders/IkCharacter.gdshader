@@ -1,26 +1,24 @@
 shader_type spatial;
 render_mode cull_back;
 
-uniform sampler2D BaseColorMap  : source_color, hint_default_white;
-uniform sampler2D NormalMap     : hint_normal;
-uniform sampler2D OcclusionMap   : hint_default_black;
-uniform sampler2D SpecularMaskMap  : hint_default_white;
-uniform sampler2D ShadowingColorMap : hint_default_white;
-uniform sampler2D ShadowingColorMaskMap         : hint_default_white;
-uniform sampler2D RimLightMaskMap        : hint_default_white;
-uniform sampler2D LocalReflectionMap        : hint_default_white;
-uniform sampler2D LayerMaskMap  : hint_default_black;
-uniform sampler2D ParallaxMap   : hint_default_black;
-uniform sampler2D HighlightMaskMap : source_color, hint_default_black;
-uniform sampler2D EyelidShadowMaskMap      : hint_default_white;
+uniform sampler2D BaseColorMap  : source_color, hint_default_white, repeat_enable;
+uniform sampler2D NormalMap     : hint_normal, repeat_enable;
+uniform sampler2D OcclusionMap   : hint_default_black, repeat_enable;
+uniform sampler2D SpecularMaskMap  : hint_default_white, repeat_enable;
+uniform sampler2D ShadowingColorMap : hint_default_white, repeat_enable;
+uniform sampler2D ShadowingColorMaskMap         : hint_default_white, repeat_enable;
+uniform sampler2D RimLightMaskMap        : hint_default_white, repeat_enable;
+uniform sampler2D LocalReflectionMap        : hint_default_white, repeat_enable;
+uniform sampler2D LayerMaskMap  : hint_default_black, repeat_enable;
+uniform sampler2D ParallaxMap   : hint_default_black, repeat_enable;
+uniform sampler2D HighlightMaskMap : source_color, hint_default_black, repeat_enable;
+uniform sampler2D EyelidShadowMaskMap      : hint_default_white, repeat_enable;
 
-//Hacky way to set sampler data because we cant access slots directly
+// Shader slots are resolved by texture name in the material loader.
 uniform int sampler_repeat_u[12];
 uniform int sampler_repeat_v[12];
-const int UV_WRAP = 0;
-const int UV_CLAMP = 1;
-const int UV_MIRROR = 6;
-const int UV_MIRROR_ONCE = 7;
+uniform vec4 sampler_border_color[12];
+#include "trinity_sampler.gdshaderinc"
 
 //Shader strings (as bool)
 uniform bool EnableBaseColorMap;
@@ -152,15 +150,6 @@ uniform bool EnableAuraEffect = false;
 
 // Rendering metadata (category, weather, dirt/jewel and distance dither)
 // is retained for the importer; no corresponding scene systems exist here.
-float wrap_axis(float value, int mode) {
-    if (mode == UV_CLAMP) return clamp(value, 0.0, 1.0);
-    if (mode == UV_MIRROR) return 1.0 - abs(mod(value, 2.0) - 1.0);
-    if (mode == UV_MIRROR_ONCE) return clamp(abs(value), 0.0, 1.0);
-    return fract(value);
-}
-vec2 wrap_uv(vec2 uv, int slot) {
-    return vec2(wrap_axis(uv.x, sampler_repeat_u[slot]), wrap_axis(uv.y, sampler_repeat_v[slot]));
-}
 vec2 transform_uv(vec2 uv, vec4 scale_offset, vec2 center) {
     vec2 result = (uv - center - scale_offset.zw) * scale_offset.xy + center;
     return vec2(result.x, 1.0 - result.y);
@@ -201,7 +190,7 @@ vec2 get_uv(vec2 uv, int slot) {
         vec2 v = uv - vec2(0.5);
         uv = vec2(cos(angle)*v.x - sin(angle)*v.y, sin(angle)*v.x + cos(angle)*v.y) + vec2(0.5);
     }
-    return wrap_uv(transform_uv(uv, transform, center), slot);
+    return transform_uv(uv, transform, center);
 }
 float blend_values(float base, vec4 layers, vec4 weights) {
     return mix(mix(mix(mix(base, layers.r, weights.r), layers.g, weights.g), layers.b, weights.b), layers.a, weights.a);
@@ -215,15 +204,15 @@ void fragment() {
     vec2 surface_uv = UV;
     if (EnableEyeOptions && EnableParallaxMap) {
         vec3 view_tangent = VIEW * mat3(normalize(TANGENT), normalize(BINORMAL), normalize(NORMAL));
-        float height = texture(ParallaxMap, get_uv(UV, 9)).r;
+        float height = sample_trinity(ParallaxMap, get_uv(UV, 9), 9).r;
         float refraction = EnableIrisRefraction != 0 ? 1.0 / max(ParallaxIOR, 1.0) : 1.0;
         surface_uv -= view_tangent.xy / max(abs(view_tangent.z), 0.2) * height * ParallaxHeight * refraction;
     }
     vec2 layer_uv = NumRequiredUV > 1 && UVIndexLayerMask == 1 ? UV2 : surface_uv;
     vec4 weights = vec4(0.0);
-    if (NumMaterialLayer > 1) weights = layer_weights(texture(LayerMaskMap, get_uv(layer_uv, 8)));
+    if (NumMaterialLayer > 1) weights = layer_weights(sample_trinity(LayerMaskMap, get_uv(layer_uv, 8), 8));
     vec4 texel = vec4(1.0);
-    if (EnableBaseColorMap) texel = texture(BaseColorMap, get_uv(surface_uv, 0));
+    if (EnableBaseColorMap) texel = sample_trinity(BaseColorMap, get_uv(surface_uv, 0), 0);
     float total = max(1.0 - dot(weights, vec4(1.0)), 0.0);
     vec4 base = BaseColor * texel;
     base.rgb *= total;
@@ -237,23 +226,23 @@ void fragment() {
     if (EnableAlphaTest && base.a < DiscardValue) discard;
 
     shadow_tint = blend_colors(vec4(ShadowingColor.rgb * total, ShadowingColor.a), ShadowingColorLayer1, ShadowingColorLayer2, ShadowingColorLayer3, ShadowingColorLayer4, weights).rgb;
-    float shadow_mask = clamp(texture(ShadowingColorMaskMap, get_uv(surface_uv, 5)).r * ShadowingColorMaskMapValue, 0.0, 1.0);
-    shadow_tint = mix(shadow_tint, texture(ShadowingColorMap, get_uv(surface_uv, 4)).rgb, shadow_mask);
+    float shadow_mask = clamp(sample_trinity(ShadowingColorMaskMap, get_uv(surface_uv, 5), 5).r * ShadowingColorMaskMapValue, 0.0, 1.0);
+    shadow_tint = mix(shadow_tint, sample_trinity(ShadowingColorMap, get_uv(surface_uv, 4), 4).rgb, shadow_mask);
     if (EnableEyeOptions && RequireEyelidShadowMap) {
-        float eyelid = texture(EyelidShadowMaskMap, get_uv(UV, 11)).r;
+        float eyelid = sample_trinity(EyelidShadowMaskMap, get_uv(UV, 11), 11).r;
         vec3 tint = mix(vec3(1.0), BaseColorLayer6.rgb, eyelid);
         base.rgb *= tint;
         shadow_tint *= tint;
     }
     vec2 ao_uv = NumRequiredUV > 1 && UVIndexAO == 1 ? UV2 : surface_uv;
-    AO = EnableAOMap ? pow(max(texture(OcclusionMap, get_uv(ao_uv, 2)).r, 0.00001), max(OcclusionStrength, 0.0)) : 1.0;
+    AO = EnableAOMap ? pow(max(sample_trinity(OcclusionMap, get_uv(ao_uv, 2), 2).r, 0.00001), max(OcclusionStrength, 0.0)) : 1.0;
     if (EnableNormalMap) {
-        vec2 xy = texture(NormalMap, get_uv(UV, 1)).rg * 2.0 - 1.0;
+        vec2 xy = sample_trinity(NormalMap, get_uv(UV, 1), 1).rg * 2.0 - 1.0;
         NORMAL_MAP = vec3(xy, sqrt(max(1.0 - dot(xy, xy), 0.0))) * 0.5 + 0.5;
         NORMAL_MAP_DEPTH = NormalHeight;
     }
     surface_ao = AO;
-    vec3 spec_mask = texture(SpecularMaskMap, get_uv(surface_uv, 3)).rgb;
+    vec3 spec_mask = sample_trinity(SpecularMaskMap, get_uv(surface_uv, 3), 3).rgb;
     float intensity = blend_values(SpecularIntensity, vec4(SpecularLayer1Intensity, SpecularLayer2Intensity, SpecularLayer3Intensity, SpecularLayer4Intensity), weights);
     float offset = blend_values(SpecularOffset, vec4(SpecularLayer1Offset, SpecularLayer2Offset, SpecularLayer3Offset, SpecularLayer4Offset), weights);
     float contrast = blend_values(SpecularContrast, vec4(SpecularLayer1Contrast, SpecularLayer2Contrast, SpecularLayer3Contrast, SpecularLayer4Contrast), weights);
@@ -265,7 +254,7 @@ void fragment() {
     METALLIC = clamp(blend_values(Metallic, vec4(MetallicLayer1, MetallicLayer2, MetallicLayer3, MetallicLayer4), weights), 0.0, 1.0);
     ROUGHNESS = 1.0; // Stylized highlights are evaluated explicitly in light().
     SPECULAR = clamp(surface_specular / 0.08, 0.0, 1.0);
-    rim_mask = texture(RimLightMaskMap, get_uv(surface_uv, 6)).r;
+    rim_mask = sample_trinity(RimLightMaskMap, get_uv(surface_uv, 6), 6).r;
     vec3 emission = EmissionColor.rgb * EmissionIntensity;
     if (EnableEmissionLayer) {
         vec3 layer_emission = blend_colors(vec4(emission, 1.0), EmissionColorLayer1 * EmissionIntensityLayer1, EmissionColorLayer2 * EmissionIntensityLayer2, EmissionColorLayer3 * EmissionIntensityLayer3, EmissionColorLayer4 * EmissionIntensityLayer4, weights).rgb;
@@ -278,14 +267,14 @@ void fragment() {
         shadow_tint *= max(1.0 - surface_emission, 0.0);
     }
     if (EnableEyeOptions && EnableHighlight) {
-        float highlight = texture(HighlightMaskMap, get_uv(UV, 10)).r;
+        float highlight = sample_trinity(HighlightMaskMap, get_uv(UV, 10), 10).r;
         base.rgb = mix(base.rgb, EmissionColorLayer5.rgb * EmissionIntensityLayer5, highlight);
         shadow_tint = mix(shadow_tint, EmissionColorLayer5.rgb * EmissionIntensityLayer5, highlight);
     }
     
     vec3 reflected = reflect(-VIEW, NORMAL);
     vec2 reflection_uv = vec2(atan(reflected.z, reflected.x) / (2.0 * PI) + 0.5, acos(clamp(reflected.y, -1.0, 1.0)) / PI);
-    emission += textureLod(LocalReflectionMap, reflection_uv, max(ReflectionsBlur, 0.0) * 8.0).rgb * METALLIC * surface_specular;
+    emission += sample_trinity(LocalReflectionMap, reflection_uv, 7).rgb * METALLIC * surface_specular;
     if (EnableAuraEffect) {
         float wave = 0.5 + 0.5 * sin(UV.y * AuraColorScale * 2.0 * PI + TIME * AuraColorScrollSpeed);
         float noise = 0.5 + 0.5 * sin(dot(UV, vec2(12.9898, 78.233)) * AuraNoiseScale + TIME * AuraNoiseScrollSpeed);

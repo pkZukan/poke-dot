@@ -1,9 +1,9 @@
 shader_type spatial;
 render_mode unshaded, cull_back, depth_draw_opaque;
 
-uniform sampler2D BaseColorMap : source_color;
-uniform sampler2D LayerMaskMap;
-uniform sampler2D DisplacementMap;
+uniform sampler2D BaseColorMap : source_color, repeat_enable;
+uniform sampler2D LayerMaskMap: repeat_enable;
+uniform sampler2D DisplacementMap: repeat_enable;
 
 uniform bool EnableBaseColorMap;
 uniform bool EnableAlphaTest;
@@ -11,13 +11,11 @@ uniform int NumMaterialLayer;
 uniform bool EnableDisplacementMap;
 uniform int NumRequiredUV;
 
-//Hacky way to set sampler data because we cant access slots directly
+// Shader slots are resolved by texture name in the material loader.
 uniform int sampler_repeat_u[3];
 uniform int sampler_repeat_v[3];
-const int UV_WRAP = 0;
-const int UV_CLAMP = 1;
-const int UV_MIRROR = 6;
-const int UV_MIRROR_ONCE = 7;
+uniform vec4 sampler_border_color[3];
+#include "trinity_sampler.gdshaderinc"
 
 //Float params
 uniform float DisplacementHeight;
@@ -45,15 +43,6 @@ uniform int EnableDirt;
 uniform int UVIndexLayer3;
 
 
-float wrap_axis(float value, int mode) {
-    if (mode == UV_CLAMP) return clamp(value, 0.0, 1.0);
-    if (mode == UV_MIRROR) return 1.0 - abs(mod(value, 2.0) - 1.0);
-    if (mode == UV_MIRROR_ONCE) return clamp(abs(value), 0.0, 1.0);
-    return fract(value);
-}
-vec2 wrap_uv(vec2 uv, int slot) {
-    return vec2(wrap_axis(uv.x, sampler_repeat_u[slot]), wrap_axis(uv.y, sampler_repeat_v[slot]));
-}
 vec2 transform_uv(vec2 uv, vec4 scale_offset, vec2 center) {
     vec2 result = (uv - center - scale_offset.zw) * scale_offset.xy + center;
     return vec2(result.x, 1.0 - result.y);
@@ -82,7 +71,7 @@ void vertex() {
     if (EnableDisplacementMap) {
         vec2 source_uv = NumRequiredUV > 1 && UVIndexLayer3 != 0 ? UV2 : UV;
         vec2 displacement_uv = transform_uv(source_uv, UVScaleOffset3, vec2(0.0));
-        float height = textureLod(DisplacementMap, wrap_uv(displacement_uv, 2), 0.0).r;
+        float height = sample_trinity(DisplacementMap, displacement_uv, 2).r;
         VERTEX += NORMAL * (sin(height) * COLOR.r * DisplacementHeight);
     }
 }
@@ -90,9 +79,9 @@ void vertex() {
 void fragment() {
     vec2 uv = transform_uv(UV, UVScaleOffset, vec2(0.0));
     vec4 texel = vec4(1.0);
-    if (EnableBaseColorMap) texel = texture(BaseColorMap, wrap_uv(uv, 0));
+    if (EnableBaseColorMap) texel = sample_trinity(BaseColorMap, uv, 0);
     vec4 weights = vec4(0.0);
-    if (NumMaterialLayer > 1) weights = layer_weights(texture(LayerMaskMap, wrap_uv(uv, 1)));
+    if (NumMaterialLayer > 1) weights = layer_weights(sample_trinity(LayerMaskMap, uv, 1));
     vec4 tint = blend_colors(BaseColor, BaseColorLayer1, BaseColorLayer2, BaseColorLayer3, BaseColorLayer4, weights);
     vec4 color = texel * tint;
     if (EnableAlphaTest && color.a < DiscardValue) discard;

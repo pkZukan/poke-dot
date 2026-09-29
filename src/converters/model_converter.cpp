@@ -365,20 +365,53 @@ void TrinityModel::_apply_params(const Ref<MaterialEntry>& mat, Ref<ShaderMateri
 
 void TrinityModel::_apply_samplers(const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
 {
-    //Hacky way to set sampler data because we cant access slots directly
+    // TextureEntry::Slot stores a sampler ID, not a shader texture location.
+    // These locations match the shared sampling calls in the two shaders.
+    Ref<Shader> shader = shdr->get_shader();
+    if (shader.is_null()) return;
+    const String shader_path = shader->get_path();
+    PackedStringArray names;
+    if (shader_path.ends_with("/IkCharacter.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "OcclusionMap",
+            "SpecularMaskMap", "ShadowingColorMap", "ShadowingColorMaskMap",
+            "RimLightMaskMap", "LocalReflectionMap", "LayerMaskMap", "ParallaxMap",
+            "HighlightMaskMap", "EyelidShadowMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Unlit.gdshader")) {
+        names.push_back("BaseColorMap");
+        names.push_back("LayerMaskMap");
+        names.push_back("DisplacementMap");
+    } else {
+        return;
+    }
     Array samps = mat->get_Samplers();
-    int size = samps.size();
     PackedInt32Array repeat_u, repeat_v;
-    repeat_u.resize(size);
-    repeat_v.resize(size);
-    for(int slot = 0; slot < samps.size(); slot++)
-    {
-        Ref<SamplerEntry> samp = samps[slot];
+    PackedColorArray borders;
+    repeat_u.resize(names.size());
+    repeat_v.resize(names.size());
+    borders.resize(names.size());
+    // Missing textures use shader defaults without border-color darkening.
+    repeat_u.fill(7);
+    repeat_v.fill(7);
+    borders.fill(Color(0, 0, 0, 0));
+    Array textures = mat->get_Textures();
+    for (int i = 0; i < textures.size(); i++) {
+        Ref<TextureEntry> texture = textures[i];
+        int slot = names.find(texture->get_Name());
+        if (slot < 0) continue;
+        int sampler_id = texture->get_Slot();
+        if (sampler_id < 0 || sampler_id >= samps.size()) {
+            UtilityFunctions::push_warning("Invalid sampler ID for ", texture->get_Name());
+            continue;
+        }
+        Ref<SamplerEntry> samp = samps[sampler_id];
         repeat_u[slot] = samp->get_RepeatU();
         repeat_v[slot] = samp->get_RepeatV();
+        borders[slot] = samp->get_BorderColor();
     }
     shdr->set_shader_parameter("sampler_repeat_u", repeat_u);
     shdr->set_shader_parameter("sampler_repeat_v", repeat_v);
+    shdr->set_shader_parameter("sampler_border_color", borders);
 }
 
 // ---------------------------------------------------------------------------
