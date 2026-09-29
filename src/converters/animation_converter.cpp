@@ -147,7 +147,7 @@ void TrinityAnimationConverter::sample_bool_track(
     else if (Ref<DynamicBoolTrack> dynamic = trk; dynamic.is_valid()) 
     {
         Array co = dynamic->get_values();
-        for (int frame = 0; frame < co.size(); frame++) 
+        for (int frame = 0; frame < co.size() && frame <= key_frames; frame++)
         {
             float time = MIN((float)frame / frame_rate, end_time);
             anim->track_insert_key(track_idx, time, co[frame]);
@@ -156,6 +156,7 @@ void TrinityAnimationConverter::sample_bool_track(
     {
         Array frames = f8->get_frames();
         Array co     = f8->get_values();
+        ERR_FAIL_COND_MSG(frames.size() != co.size(), "Visibility frame/value count mismatch");
         for (int i = 0; i < frames.size(); i++) 
         {
             float time = (float)(int)frames[i] / frame_rate;
@@ -165,6 +166,7 @@ void TrinityAnimationConverter::sample_bool_track(
     {
         Array frames = f16->get_frames();
         Array co     = f16->get_values();
+        ERR_FAIL_COND_MSG(frames.size() != co.size(), "Visibility frame/value count mismatch");
         for (int i = 0; i < frames.size(); i++) 
         {
             float time = (float)(int)frames[i] / frame_rate;

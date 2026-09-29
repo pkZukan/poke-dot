@@ -14,15 +14,15 @@ table FixedBoolTrack {
     value: bool;
 }
 table DynamicBoolTrack {
-    value: [bool];
+    value: [uint8];
 }
 table Framed16BoolTrack {
 	frames: [uint16];
-    value: [bool];
+    value: [uint8];
 }
 table Framed8BoolTrack {
 	frames: [uint8];
-    value: [bool];
+    value: [uint8];
 }
 
 table TrackFlagsInfo {

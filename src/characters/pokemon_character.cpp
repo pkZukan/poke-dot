@@ -2,6 +2,7 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/kinematic_collision3d.hpp>
+#include <godot_cpp/classes/engine.hpp>
 
 using namespace godot;
 
@@ -84,13 +85,10 @@ void PokemonCharacter::_initialize()
     add_child(_col);
     add_child(_anim_tree);
 
-    // AnimationTree must resolve track paths from the same root as AnimationPlayer
     _anim_tree->set_root_node(_anim_tree->get_path_to(_actor));
 
     _actor->Initialize();
 
-    // BoxShape3D is centered on its node; model bounds need not be centered
-    // on the character's origin (typically the feet).
     const AABB bounds = _actor->GetBBox();
     _col_shape->set_size(bounds.get_size());
     _col->set_position(bounds.get_center());
@@ -112,7 +110,6 @@ void PokemonCharacter::_initialize()
     }
 
     _anim_tree->set_animation_player(player->get_path());
-    _anim_tree->set_active(true);
 
     for (StringName anim_name : player->get_animation_list()) 
     {
@@ -121,6 +118,8 @@ void PokemonCharacter::_initialize()
         anim_node->set_animation(anim_name);
         _anim_sm->add_node(anim_name, anim_node);
     }
+
+    _anim_tree->set_active(!Engine::get_singleton()->is_editor_hint());
 }
 
 void PokemonCharacter::_cleanup()

@@ -306,7 +306,8 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFl
             t.instantiate();
             Array vals;
             for (size_t i = 0; i < src->value()->size(); i++)
-                vals.append(src->value()->Get(i));
+                for (int bit = 0; bit < 8; ++bit)
+                    vals.append(bool((src->value()->Get(i) >> bit) & 1));
             t->set_values(vals);
             return t;
         }
@@ -318,8 +319,10 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFl
             Array frames, vals;
             for (size_t i = 0; i < src->frames()->size(); i++)
                 frames.append(src->frames()->Get(i));
-            for (size_t i = 0; i < src->value()->size(); i++)
-                vals.append(src->value()->Get(i));
+            // Visibility values are packed LSB-first, one bit per key.
+            ERR_FAIL_COND_V_MSG(!src->value() || src->value()->size() * 8 < src->frames()->size(), Ref<Resource>(), "Truncated visibility flags");
+            for (size_t i = 0; i < src->frames()->size(); i++)
+                vals.append(bool((src->value()->Get(i / 8) >> (i % 8)) & 1));
             t->set_frames(frames); 
             t->set_values(vals);
             return t;
@@ -332,8 +335,10 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFl
             Array frames, vals;
             for (size_t i = 0; i < src->frames()->size(); i++)
                 frames.append(src->frames()->Get(i));
-            for (size_t i = 0; i < src->value()->size(); i++)
-                vals.append(src->value()->Get(i));
+            // Visibility values are packed LSB-first, one bit per key.
+            ERR_FAIL_COND_V_MSG(!src->value() || src->value()->size() * 8 < src->frames()->size(), Ref<Resource>(), "Truncated visibility flags");
+            for (size_t i = 0; i < src->frames()->size(); i++)
+                vals.append(bool((src->value()->Get(i / 8) >> (i % 8)) & 1));
             t->set_frames(frames); 
             t->set_values(vals);
             return t;

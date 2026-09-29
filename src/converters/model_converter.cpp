@@ -166,10 +166,10 @@ Dictionary TrinityModel::parse_mesh_buffer(
         }
         if (blend_inds_attr != -1) {
             stream_vert->seek(curr_pos + blend_inds_attr);
-            blend_inds.push_back(stream_vert->get_8());
-            blend_inds.push_back(stream_vert->get_8());
-            blend_inds.push_back(stream_vert->get_8());
-            blend_inds.push_back(stream_vert->get_8());
+            blend_inds.push_back(stream_vert->get_u8());
+            blend_inds.push_back(stream_vert->get_u8());
+            blend_inds.push_back(stream_vert->get_u8());
+            blend_inds.push_back(stream_vert->get_u8());
         }
         if (tangent_attr != -1) {
             stream_vert->seek(curr_pos + tangent_attr);
