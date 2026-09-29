@@ -50,7 +50,7 @@ public:
 	~TrinitySceneParser(){}
 
     template <typename T>
-    static Ref<Resource> CreateFromData(const void* data) 
+    static Ref<Resource> CreateFromData(const void* data)
     {
         Ref<T> res;
         res.instantiate();

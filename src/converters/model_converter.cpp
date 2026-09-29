@@ -281,6 +281,14 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
             sm->set_shader_parameter(name, true);
         else if (val.to_lower() == "false")
             sm->set_shader_parameter(name, false);
+        else if (shader_name == "IkCharacter")
+        {
+            // Explicit port enums for the symbolic eye options in TRMTR.
+            if (name == "EyelidType" && val == "None")
+                sm->set_shader_parameter(name, 0);
+            else if (name == "EnableIrisRefraction" && val == "Ng")
+                sm->set_shader_parameter(name, 0);
+        }
         else if (shader_name == "Standard")
         {
             // Translate symbolic material options to Standard.gdshader's port
@@ -514,6 +522,12 @@ void TrinityModel::_build_meshes(
             mi->set_name(mesh_name + "_" + material_name);
             mi->set_mesh(arr_mesh);
             mi->set_material_override(materials.get(material_name, Variant()));
+            Ref<ShaderMaterial> shader_material = mi->get_material_override();
+            if (shader_material.is_valid()) {
+                Variant cast_shadow = shader_material->get_shader_parameter("CastShadow");
+                if (cast_shadow.get_type() == Variant::INT && int(cast_shadow) == 0)
+                    mi->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+            }
             if(skin.is_valid())
                 mi->set_skin(skin);
             if(skl)

@@ -1,28 +1,71 @@
+include "../common.fbs";
+
 namespace Titan.TrinityScene;
 
-table TrinityPropertyMetadata
+union PropVal
 {
-    unk0: uint64;
-    unk1: bool;
+    PropInt,
+    PropDec,
+    PropStr,
+    PropEnum,
+    PropList,
+    PropTable,
+    PropUnion,
+    Titan.Math.Vec2,
+    Titan.Math.Vec3,
+    Titan.Math.Vec4,
 }
 
-table TrinityProperty
+table PropInt
+{
+    data: ulong;
+    size: ubyte;
+}
+
+table PropDec
+{
+    data: double;
+    size: ubyte;
+}
+
+table PropStr
+{
+    data: string;
+}
+
+table PropEnum
 {
     name: string;
-    value: bool;
-    unk0: TrinityPropertyMetadata;
+    val: int;
 }
 
-table TrinityPropertyGroup
+table PropUnion
 {
-    properties: [TrinityProperty];
+    type: PropEnum;
+    val: PropTable;
+}
+
+table PropField
+{
+    name: string;
+    value: PropVal;
+}
+
+table PropTable
+{
+    fields: [PropField];
+}
+
+table PropList
+{
+    vals: [PropVal];
 }
 
 table TrinityPropertySheet
 {
     property_name: string;
     property_template: string;
-    unk0: [TrinityPropertyGroup];
+    unk0: [PropTable];
 }
 
 root_type TrinityPropertySheet;

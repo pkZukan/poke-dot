@@ -6,43 +6,110 @@
 
 namespace godot {
 
-class TrinityPropertyMetadata : public Resource {
-    GDCLASS(TrinityPropertyMetadata, Resource)
+class PropTable;
+
+class PropInt : public Resource {
+    GDCLASS(PropInt, Resource)
 protected:
     static void _bind_methods();
 public:
-    void LoadFromTable(const Titan::TrinityScene::TrinityPropertyMetadata* table);
-    GETTER_SETTER_DEFINE(uint64_t, unk0)
-    GETTER_SETTER_DEFINE(bool, unk1)
+    void LoadFromTable(const Titan::TrinityScene::PropInt* table);
+    GETTER_SETTER_DEFINE(uint64_t, data)
+    GETTER_SETTER_DEFINE(int, size)
 private:
-    uint64_t unk0 = 0;
-    bool unk1 = false;
+    uint64_t data = 0;
+    int size = 0;
 };
 
-class TrinityProperty : public Resource {
-    GDCLASS(TrinityProperty, Resource)
+class PropDec : public Resource {
+    GDCLASS(PropDec, Resource)
 protected:
     static void _bind_methods();
 public:
-    void LoadFromTable(const Titan::TrinityScene::TrinityProperty* table);
+    void LoadFromTable(const Titan::TrinityScene::PropDec* table);
+    GETTER_SETTER_DEFINE(double, data)
+    GETTER_SETTER_DEFINE(int, size)
+private:
+    double data = 0.0;
+    int size = 0;
+};
+
+class PropStr : public Resource {
+    GDCLASS(PropStr, Resource)
+protected:
+    static void _bind_methods();
+public:
+    void LoadFromTable(const Titan::TrinityScene::PropStr* table);
+    GETTER_SETTER_DEFINE(String, data)
+private:
+    String data;
+};
+
+class PropEnum : public Resource {
+    GDCLASS(PropEnum, Resource)
+protected:
+    static void _bind_methods();
+public:
+    void LoadFromTable(const Titan::TrinityScene::PropEnum* table);
     GETTER_SETTER_DEFINE(String, name)
-    GETTER_SETTER_DEFINE(bool, value)
-    GETTER_SETTER_DEFINE(Ref<TrinityPropertyMetadata>, unk0)
+    int get_val() { return val; }
+    void set_val(int value) { val = value; }
 private:
     String name;
-    bool value = false;
-    Ref<TrinityPropertyMetadata> unk0;
+    int val = 0;
 };
 
-class TrinityPropertyGroup : public Resource {
-    GDCLASS(TrinityPropertyGroup, Resource)
+class PropUnion : public Resource {
+    GDCLASS(PropUnion, Resource)
 protected:
     static void _bind_methods();
 public:
-    void LoadFromTable(const Titan::TrinityScene::TrinityPropertyGroup* table);
-    GETTER_SETTER_DEFINE(Array, properties)
+    void LoadFromTable(const Titan::TrinityScene::PropUnion* table);
+    GETTER_SETTER_DEFINE(Ref<PropEnum>, type)
+    Ref<PropTable> get_val() { return val; }
+    void set_val(Ref<PropTable> value) { val = value; }
 private:
-    Array properties;
+    Ref<PropEnum> type;
+    Ref<PropTable> val;
+};
+
+class PropField : public Resource {
+    GDCLASS(PropField, Resource)
+protected:
+    static void _bind_methods();
+public:
+    void LoadFromTable(const Titan::TrinityScene::PropField* table);
+    GETTER_SETTER_DEFINE(String, name)
+    GETTER_SETTER_DEFINE(int, value_type)
+    GETTER_SETTER_DEFINE(Variant, value)
+private:
+    String name;
+    int value_type = 0;
+    Variant value;
+};
+
+class PropTable : public Resource {
+    GDCLASS(PropTable, Resource)
+protected:
+    static void _bind_methods();
+public:
+    void LoadFromTable(const Titan::TrinityScene::PropTable* table);
+    GETTER_SETTER_DEFINE(Array, fields)
+private:
+    Array fields;
+};
+
+class PropList : public Resource {
+    GDCLASS(PropList, Resource)
+protected:
+    static void _bind_methods();
+public:
+    void LoadFromTable(const Titan::TrinityScene::PropList* table);
+    GETTER_SETTER_DEFINE(Array, vals)
+    GETTER_SETTER_DEFINE(PackedInt32Array, vals_type)
+private:
+    Array vals;
+    PackedInt32Array vals_type;
 };
 
 class TrinityPropertySheet : public Resource {

@@ -22,20 +22,20 @@ const int UV_MIRROR_ONCE = 7;
 //Float params
 uniform float DisplacementHeight;
 uniform float DiscardValue;
-uniform float LayerMaskScale1;
-uniform float LayerMaskScale2;
-uniform float LayerMaskScale3;
-uniform float LayerMaskScale4;
+uniform float LayerMaskScale1 = 1.0;
+uniform float LayerMaskScale2 = 1.0;
+uniform float LayerMaskScale3 = 1.0;
+uniform float LayerMaskScale4 = 1.0;
 uniform float EmissionIntensity;
 
 //Float4 params
-uniform vec4 BaseColor;
-uniform vec4 UVScaleOffset;
-uniform vec4 BaseColorLayer1;
-uniform vec4 BaseColorLayer2;
-uniform vec4 BaseColorLayer3;
-uniform vec4 BaseColorLayer4;
-uniform vec4 UVScaleOffset3;
+uniform vec4 BaseColor = vec4(1.0);
+uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
+uniform vec4 BaseColorLayer1 = vec4(1.0);
+uniform vec4 BaseColorLayer2 = vec4(1.0);
+uniform vec4 BaseColorLayer3 = vec4(1.0);
+uniform vec4 BaseColorLayer4 = vec4(1.0);
+uniform vec4 UVScaleOffset3 = vec4(1.0, 1.0, 0.0, 0.0);
 
 uniform int CastShadow;
 uniform int CategoryLabel;
@@ -44,45 +44,48 @@ uniform int EnableGlobalWeather;
 uniform int EnableDirt;
 uniform int UVIndexLayer3;
 
-void vertex() 
-{
-	//
+
+float wrap_axis(float value, int mode) {
+    if (mode == UV_CLAMP) return clamp(value, 0.0, 1.0);
+    if (mode == UV_MIRROR) return 1.0 - abs(mod(value, 2.0) - 1.0);
+    if (mode == UV_MIRROR_ONCE) return clamp(abs(value), 0.0, 1.0);
+    return fract(value);
+}
+vec2 wrap_uv(vec2 uv, int slot) {
+    return vec2(wrap_axis(uv.x, sampler_repeat_u[slot]), wrap_axis(uv.y, sampler_repeat_v[slot]));
+}
+vec2 transform_uv(vec2 uv, vec4 scale_offset, vec2 center) {
+    vec2 result = scale_offset.xy * (uv - center) + center + scale_offset.zw;
+    return vec2(result.x, 1.0 - result.y);
+}
+vec4 layer_weights(vec4 mask) {
+    vec4 weights = clamp(mask * vec4(LayerMaskScale1, LayerMaskScale2, LayerMaskScale3, LayerMaskScale4), vec4(0.0), vec4(1.0));
+    if (NumMaterialLayer < 2) weights.r = 0.0;
+    if (NumMaterialLayer < 3) weights.g = 0.0;
+    if (NumMaterialLayer < 4) weights.b = 0.0;
+    if (NumMaterialLayer < 5) weights.a = 0.0;
+    return weights;
+}
+vec4 blend_colors(vec4 base, vec4 a, vec4 b, vec4 c, vec4 d, vec4 weights) {
+    return mix(mix(mix(mix(base, a, weights.r), b, weights.g), c, weights.b), d, weights.a);
 }
 
-vec2 get_uv(vec2 uvs, int slot) 
-{
-    vec2 result = uvs;
-    
-	//flip
-	result.y = 1.0 - result.y;
-	
-    return result;
-}
-
-void fragment() 
-{
-	float displace_val = texture(DisplacementMap, get_uv(UV, 2)).r;
-	float disp_signed  = (displace_val * 2.0 - 1.0) * DisplacementHeight;
-	vec2 displaced_uv  = NORMAL.xy * disp_signed;
-	
-	vec2 baseCol_uv = get_uv(UV, 0) + displaced_uv;
-	vec2 layerMsk_uv = get_uv(UV, 1) + displaced_uv;
-	
-	vec4 layerMask = texture(LayerMaskMap, layerMsk_uv);
-	layerMask = mix(vec4(0.0), layerMask, vec4(1.0));
-	
-	//Albedo
-	vec4 base_col = vec4(1, 1, 1, 1);
-	if (EnableBaseColorMap)
-	{
-		vec4 baseColMap = texture(BaseColorMap, baseCol_uv);
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer1.rgb * baseColMap.rgb, layerMask.r);
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer2.rgb * baseColMap.rgb, layerMask.g);
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer3.rgb * baseColMap.rgb, layerMask.b);
-		base_col.rgb = mix(base_col.rgb, BaseColorLayer4.rgb * baseColMap.rgb, layerMask.a);
-	}
-		
-	ALBEDO = base_col.rgb;
-	ALPHA = base_col.a;
-	EMISSION = base_col.rgb * EmissionIntensity;
+void fragment() {
+    vec2 uv = transform_uv(UV, UVScaleOffset, vec2(0.0));
+    vec2 displacement = vec2(0.0);
+    if (EnableDisplacementMap) {
+        vec2 source_uv = NumRequiredUV > 1 && UVIndexLayer3 == 1 ? UV2 : UV;
+        vec2 displacement_uv = transform_uv(source_uv, UVScaleOffset3, vec2(0.0));
+        float height = texture(DisplacementMap, wrap_uv(displacement_uv, 2)).r * 2.0 - 1.0;
+        
+        displacement = vec2(height) * DisplacementHeight;
+    }
+    vec4 texel = vec4(1.0);
+    if (EnableBaseColorMap) texel = texture(BaseColorMap, wrap_uv(uv + displacement, 0));
+    vec4 weights = vec4(0.0);
+    if (NumMaterialLayer > 1) weights = layer_weights(texture(LayerMaskMap, wrap_uv(uv + displacement, 1)));
+    vec4 tint = blend_colors(BaseColor, BaseColorLayer1, BaseColorLayer2, BaseColorLayer3, BaseColorLayer4, weights);
+    vec4 color = texel * tint;
+    if (EnableAlphaTest && color.a < DiscardValue) discard;
+    ALBEDO = color.rgb * EmissionIntensity;
 }
