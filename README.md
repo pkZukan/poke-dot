@@ -1,5 +1,5 @@
 # poke-dot
-Pokemon file formats for Godot
+Pokemon ZA asset file support for Godot
 
 ## Screenshot
 ![godot](https://i.imgur.com/5L7Uw4y.png)
