@@ -1,0 +1,7 @@
+namespace Titan.pe.UIKit;
+
+table UIKitScrollPanel {
+    name: string;
+}
+
+root_type UIKitScrollPanel;

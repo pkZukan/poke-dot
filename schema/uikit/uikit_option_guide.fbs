@@ -1,0 +1,7 @@
+namespace Titan.pe.UIKit;
+
+table UIKitOptionGuide {
+    name: string;
+}
+
+root_type UIKitOptionGuide;

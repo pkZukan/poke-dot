@@ -51,6 +51,48 @@ Ref<Resource> TRUIViewChunk::ParseChunkData(String type, const void* data)
         uikitButton->LoadFromBuffer(data);
         return uikitButton;
     }
+    else if( type == "UikitCursor" )
+    {
+        Ref<UIKitCursor> component;
+        component.instantiate();
+        component->LoadFromBuffer(data);
+        return component;
+    }
+    else if( type == "UikitGridPanel" )
+    {
+        Ref<UIKitGridPanel> component;
+        component.instantiate();
+        component->LoadFromBuffer(data);
+        return component;
+    }
+    else if( type == "UikitOptionGuide" )
+    {
+        Ref<UIKitOptionGuide> component;
+        component.instantiate();
+        component->LoadFromBuffer(data);
+        return component;
+    }
+    else if( type == "UikitScrollPanel" )
+    {
+        Ref<UIKitScrollPanel> component;
+        component.instantiate();
+        component->LoadFromBuffer(data);
+        return component;
+    }
+    else if( type == "UikitSwitchItem" )
+    {
+        Ref<UIKitSwitchItem> component;
+        component.instantiate();
+        component->LoadFromBuffer(data);
+        return component;
+    }
+    else if( type == "UikitSwitchPanel" )
+    {
+        Ref<UIKitSwitchPanel> component;
+        component.instantiate();
+        component->LoadFromBuffer(data);
+        return component;
+    }
     else return Ref<Resource>();
 }
 

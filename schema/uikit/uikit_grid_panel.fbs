@@ -1,0 +1,22 @@
+namespace Titan.pe.UIKit;
+
+struct Vector2i {
+    x: int;
+    y: int;
+}
+
+table ButtonInfoTable {
+    name: string;
+    pos: Vector2i;
+    size: Vector2i;
+}
+
+table UIKitGridPanel {
+    name: string;
+    cursor_name: string;
+    grid_size: Vector2i;
+    mode: int;
+    button_info: [ButtonInfoTable];
+}
+
+root_type UIKitGridPanel;

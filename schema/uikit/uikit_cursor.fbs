@@ -1,0 +1,9 @@
+namespace Titan.pe.UIKit;
+
+table UIKitCursor {
+    name: string;
+    control_name: string;
+    control_index: int;
+}
+
+root_type UIKitCursor;

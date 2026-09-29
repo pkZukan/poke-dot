@@ -10,6 +10,12 @@
 #include "uikit/uikit_shortcut.h"
 #include "uikit/uikit_switch.h"
 #include "uikit/uikit_button.h"
+#include "uikit/uikit_cursor.h"
+#include "uikit/uikit_grid_panel.h"
+#include "uikit/uikit_option_guide.h"
+#include "uikit/uikit_scroll_panel.h"
+#include "uikit/uikit_switch_item.h"
+#include "uikit/uikit_switch_panel.h"
 #include <utils.h>
 
 namespace godot {

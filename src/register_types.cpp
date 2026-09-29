@@ -50,6 +50,12 @@
 #include "ui_fbs/uikit/uikit_shortcut.h"
 #include "ui_fbs/uikit/uikit_switch.h"
 #include "ui_fbs/uikit/uikit_button.h"
+#include "ui_fbs/uikit/uikit_cursor.h"
+#include "ui_fbs/uikit/uikit_grid_panel.h"
+#include "ui_fbs/uikit/uikit_option_guide.h"
+#include "ui_fbs/uikit/uikit_scroll_panel.h"
+#include "ui_fbs/uikit/uikit_switch_item.h"
+#include "ui_fbs/uikit/uikit_switch_panel.h"
 
 #include "utils.h"
 #include "scene_fbs/trinity_scene_parser.h"
@@ -308,6 +314,13 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(UIKitShortcut)
 		GDREGISTER_CLASS(UIKitButton)
 		GDREGISTER_CLASS(UIKitSwitch)
+		GDREGISTER_CLASS(UIKitButtonInfo)
+		GDREGISTER_CLASS(UIKitCursor)
+		GDREGISTER_CLASS(UIKitGridPanel)
+		GDREGISTER_CLASS(UIKitOptionGuide)
+		GDREGISTER_CLASS(UIKitScrollPanel)
+		GDREGISTER_CLASS(UIKitSwitchItem)
+		GDREGISTER_CLASS(UIKitSwitchPanel)
 
 		//Helpers
 		GDREGISTER_CLASS(TrinitySceneParser)

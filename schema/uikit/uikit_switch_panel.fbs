@@ -1,0 +1,7 @@
+namespace Titan.pe.UIKit;
+
+table UIKitSwitchPanel {
+    name: string;
+}
+
+root_type UIKitSwitchPanel;
