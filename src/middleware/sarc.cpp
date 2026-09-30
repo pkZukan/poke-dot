@@ -74,11 +74,10 @@ void SarcInspectorControl::_on_item_activated()
     //Set current resource as bntx
     if (file_name.ends_with("bntx")) 
     {
-        Ref<BinaryTexture> bntx;
+        Ref<BinaryTextureArchive> bntx;
         bntx.instantiate();
-        bntx->LoadFromBuffer(data);
-
-        m_active_resource = bntx;
+        if (bntx->LoadFromBuffer(data) == OK)
+            m_active_resource = bntx;
     }
 
     //Deffered call to render in inspector

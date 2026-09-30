@@ -195,89 +195,109 @@ Image::Format BinaryTexture::GetGodotImageFormat(int bntx_format)
     return fmt;
 }
 
-void BinaryTexture::LoadFromFile(String file)
+// Keep the constructor-parsed headers, checking their byte ranges before reading.
+static bool has_bytes(const Ref<StreamPeerBuffer> &sp, uint64_t offset, uint64_t size)
 {
-    PackedByteArray buf = FileAccess::get_file_as_bytes(file);
-    ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load BNTX file: %s", file));
-    LoadFromBuffer(buf);
+    uint64_t end = sp->get_size();
+    return offset <= end && size <= end - offset;
 }
 
-void BinaryTexture::LoadFromBuffer(PackedByteArray buf)
+Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset)
 {
+    ERR_FAIL_COND_V(!has_bytes(sp, info_offset, 160), ERR_FILE_CORRUPT);
+    sp->seek(info_offset);
+    BRTInfo info(sp);
+    ERR_FAIL_COND_V(info.Magic != "BRTI", ERR_FILE_CORRUPT);
+    ERR_FAIL_COND_V(!has_bytes(sp, info.NameOffset, 2), ERR_FILE_CORRUPT);
+    sp->seek(info.NameOffset);
+    uint16_t name_length = sp->get_16();
+    ERR_FAIL_COND_V(!has_bytes(sp, info.NameOffset + 2, name_length), ERR_FILE_CORRUPT);
+    set_name(sp->get_string(name_length));
+
+    Image::Format format = GetGodotImageFormat(info.Format);
+    ERR_FAIL_COND_V_MSG(format == Image::FORMAT_MAX, ERR_UNAVAILABLE,
+        vformat("Unsupported BNTX format 0x%04x for texture '%s'.", info.Format, get_name()));
+    ERR_FAIL_COND_V(info.Width <= 0 || info.Height <= 0 || info.Width > 32768 || info.Height > 32768 ||
+        info.SizeRange < 0 || info.SizeRange > 5 || info.Alignment <= 0 ||
+        (info.Alignment & (info.Alignment - 1)) != 0 || info.MipsCount == 0 || info.DataSize <= 0, ERR_FILE_CORRUPT);
+    ERR_FAIL_COND_V(!has_bytes(sp, info.MipMapArrayPtr, uint64_t(info.MipsCount) * 8), ERR_FILE_CORRUPT);
+    sp->seek(info.MipMapArrayPtr);
+    uint64_t start = sp->get_64();
+    uint64_t end = info.MipsCount > 1 ? sp->get_64() : start + uint64_t(info.DataSize);
+    ERR_FAIL_COND_V(end <= start || end - start > uint64_t(info.DataSize) ||
+        !has_bytes(sp, start, end - start), ERR_FILE_CORRUPT);
+    sp->seek(start);
+    Array bytes = sp->get_data(end - start);
+    ERR_FAIL_COND_V(int(bytes[0]) != OK, ERR_FILE_CORRUPT);
+    PackedByteArray pixels = Swizzle(info.Width, info.Height, info, bytes[1], false);
+    set_data(info.Width, info.Height, false, format, pixels);
+    return is_empty() ? ERR_FILE_CORRUPT : OK;
+}
+
+void BinaryTextureArchive::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("LoadFromFile", "path"), &BinaryTextureArchive::LoadFromFile);
+    ClassDB::bind_method(D_METHOD("LoadFromBuffer", "buffer"), &BinaryTextureArchive::LoadFromBuffer);
+    ClassDB::bind_method(D_METHOD("get_textures"), &BinaryTextureArchive::get_textures);
+    ClassDB::bind_method(D_METHOD("GetTexture", "name"), &BinaryTextureArchive::GetTexture);
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "textures", PROPERTY_HINT_ARRAY_TYPE, "BinaryTexture",
+        PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_textures");
+}
+
+Ref<BinaryTexture> BinaryTextureArchive::GetTexture(const String &name) const
+{
+    for (int i = 0; i < textures.size(); ++i)
+    {
+        Ref<BinaryTexture> texture = textures[i];
+        if (texture->get_name() == name) return texture;
+    }
+    return Ref<BinaryTexture>();
+}
+
+Error BinaryTextureArchive::LoadFromFile(const String &path)
+{
+    textures.clear();
+    Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
+    ERR_FAIL_COND_V_MSG(file.is_null(), ERR_FILE_CANT_OPEN, "Could not open " + path);
+    return LoadFromBuffer(file->get_buffer(file->get_length()));
+}
+
+Error BinaryTextureArchive::LoadFromBuffer(const PackedByteArray &buffer)
+{
+    textures.clear();
+    ERR_FAIL_COND_V(buffer.size() < 68, ERR_FILE_CORRUPT);
     Ref<StreamPeerBuffer> sp;
     sp.instantiate();
-    sp->set_data_array(buf);
-
-    sp->seek(0);
-
-    // BNTX header
-    BNTXHeader bntx_hdr(sp);
-    ERR_FAIL_COND(bntx_hdr.Magic != "BNTX");
-
-    // NX header
-    NXHeader nx_hdr(sp);
-    ERR_FAIL_COND(nx_hdr.Magic != "NX  ");
-
-    for (int i = 0; i < nx_hdr.Count; i++)
+    sp->set_data_array(buffer);
+    BNTXHeader header(sp);
+    ERR_FAIL_COND_V(header.Magic != "BNTX" || header.FileSize != uint64_t(buffer.size()), ERR_FILE_CORRUPT);
+    NXHeader nx(sp);
+    ERR_FAIL_COND_V(nx.Magic != "NX  " || !has_bytes(sp, nx.InfoPtrAddr, uint64_t(nx.Count) * 8) ||
+        !has_bytes(sp, nx.DataBlkAddr, 16), ERR_FILE_CORRUPT);
+    sp->seek(nx.DataBlkAddr);
+    BRTData data(sp);
+    ERR_FAIL_COND_V(data.Magic != "BRTD", ERR_FILE_CORRUPT);
+    TypedArray<BinaryTexture> loaded;
+    for (uint32_t i = 0; i < nx.Count; ++i)
     {
-        sp->seek(nx_hdr.InfoPtrAddr + (i * 8));
-        uint64_t info_pos = sp->get_64();
-        sp->seek(info_pos);
-
-        // BRTInfo
-        BRTInfo brti_hdr(sp);
-        ERR_FAIL_COND(brti_hdr.Magic != "BRTI");
-        int Width     = brti_hdr.Width;
-        int Height    = brti_hdr.Height;
-        int Depth     = brti_hdr.Depth;
-        int MipsCount = brti_hdr.MipsCount;
-
-        // Get image name
-        sp->seek(brti_hdr.NameOffset);
-        uint16_t nameLen = sp->get_16();
-        set_name(sp->get_string(nameLen));
-
-        Image::Format fmt = GetGodotImageFormat(brti_hdr.Format);
-        ERR_FAIL_COND_MSG(fmt == Image::FORMAT_MAX,
-            vformat("Unsupported BNTX format 0x%04x for texture '%s' (%dx%d).",
-                brti_hdr.Format, get_name(), Width, Height));
-        ERR_FAIL_COND_MSG(MipsCount == 0, "BNTX texture has no mipmap data.");
-
-        // Get mipmap pointers
-        sp->seek(brti_hdr.MipMapArrayPtr);
-        std::vector<uint64_t> Mips;
-        for (int j = 0; j < MipsCount; j++)
-        {
-            Mips.push_back(sp->get_64());
-        }
-
-        // BRTD
-        sp->seek(nx_hdr.DataBlkAddr);
-        BRTData brtd_hdr(sp);
-        ERR_FAIL_COND(brtd_hdr.Magic != "BRTD");
-
-        // Use the actual mip0 data range rather than the full DataSize.
-        // DataSize covers ALL mips; we only want mip0 here so that the
-        // buffer passed to Swizzle() matches the surface dimensions.
-        uint32_t mip0Size = (MipsCount > 1)
-            ? (uint32_t)(Mips[1] - Mips[0])
-            : brti_hdr.DataSize;
-
-        sp->seek(Mips[0]);
-        Array data = sp->get_data(mip0Size);
-        PackedByteArray buffer = PackedByteArray(data[1]);
-
-        PackedByteArray unswizzled = Swizzle(Width, Height, brti_hdr, buffer, false);
-
-        set_data(Width, Height, false, fmt, unswizzled);
+        sp->seek(nx.InfoPtrAddr + uint64_t(i) * 8);
+        uint64_t offset = sp->get_64();
+        Ref<BinaryTexture> texture;
+        texture.instantiate();
+        Error error = texture->LoadFromEntry(sp, offset);
+        if (error != OK) return error;
+        loaded.push_back(texture);
     }
+    textures = loaded;
+    return OK;
 }
 
 Variant ResourceFormatLoaderBNTX::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
 {
-    Ref<BinaryTexture> bntx;
+    Ref<BinaryTextureArchive> bntx;
     bntx.instantiate();
-    bntx->LoadFromFile(p_path);
+    Error error = bntx->LoadFromFile(p_path);
+    if (error != OK) return error;
     return bntx;
 }
 
@@ -290,6 +310,10 @@ PackedStringArray ResourceFormatLoaderBNTX::_get_recognized_extensions() const
 
 bool ResourceFormatLoaderBNTX::_handles_type(const StringName &p_type) const
 {
-    // Must match the actual class name, not ImageTexture
-    return p_type == String("BinaryTexture");
+    return p_type == StringName("BinaryTextureArchive");
+}
+
+String ResourceFormatLoaderBNTX::_get_resource_type(const String &path) const
+{
+    return path.get_extension().to_lower() == "bntx" ? "BinaryTextureArchive" : "";
 }

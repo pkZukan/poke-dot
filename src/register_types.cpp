@@ -302,6 +302,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
+		GDREGISTER_CLASS(BinaryTextureArchive)
 		GDREGISTER_CLASS(SeadArchive)
 		GDREGISTER_CLASS(BinaryLayout)
 		GDREGISTER_CLASS(BinaryLayoutAnimation)

@@ -8,6 +8,7 @@
 #include <godot_cpp/classes/stream_peer_buffer.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/variant/typed_array.hpp>
 #include "utils.h"
 
 namespace godot {
@@ -149,27 +150,31 @@ struct BRTData
 class BinaryTexture : public Image {
     GDCLASS(BinaryTexture, Image)
 
-	typedef struct
-	{
-		uint16_t nx_fmt;
-		Image::Format godot_fmt;
-		uint8_t bpp;
-		uint32_t blk_width;
-		uint32_t blk_height;
-	} FormatTableEntry;
 protected:
 	static void _bind_methods();
 public:
 	BinaryTexture(){}
 	~BinaryTexture(){}
 
-    void LoadFromFile(String file);
-	void LoadFromBuffer(PackedByteArray buf);
+    Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset);
 
 private:
 	Image::Format GetGodotImageFormat(int bntx_format);
 	PackedByteArray Swizzle(uint32_t width, uint32_t height, BRTInfo info, PackedByteArray data, bool toSwizzle);
 	uint32_t getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t image_width, uint32_t bytes_per_pixel, uint32_t base_address, uint32_t block_height);
+};
+
+class BinaryTextureArchive : public Resource {
+    GDCLASS(BinaryTextureArchive, Resource)
+protected:
+    static void _bind_methods();
+public:
+    Error LoadFromFile(const String &path);
+    Error LoadFromBuffer(const PackedByteArray &buffer);
+    TypedArray<BinaryTexture> get_textures() const { return textures.duplicate(); }
+    Ref<BinaryTexture> GetTexture(const String &name) const;
+private:
+    TypedArray<BinaryTexture> textures;
 };
 
 class ResourceFormatLoaderBNTX : public ResourceFormatLoader {
@@ -181,6 +186,7 @@ public:
 	~ResourceFormatLoaderBNTX(){}
 
 	virtual PackedStringArray _get_recognized_extensions() const override;
+    String _get_resource_type(const String &path) const override;
 	virtual bool _handles_type(const StringName &p_type) const override;
 	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
 };

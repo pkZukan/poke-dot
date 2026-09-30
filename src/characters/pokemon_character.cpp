@@ -13,7 +13,10 @@ PokemonCharacter::PokemonCharacter()
 
 void PokemonCharacter::_bind_methods() 
 {
-    GETTER_SETTER_BIND(PokemonCharacter, icon, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "BinaryTexture")
+    ClassDB::bind_method(D_METHOD("get_icon"), &PokemonCharacter::get_icon);
+    ClassDB::bind_method(D_METHOD("set_icon", "icon"), &PokemonCharacter::set_icon);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "icon", PROPERTY_HINT_RESOURCE_TYPE, "BinaryTexture",
+        PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "set_icon", "get_icon");
 
     GETTER_SETTER_BIND(PokemonCharacter, species, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(PokemonCharacter, form, Variant::INT, PROPERTY_HINT_NONE)
@@ -70,7 +73,13 @@ void PokemonCharacter::_initialize()
 
     _actor = memnew(PokemonActor);
     _actor->SetInfo(catEnt, is_shiny);
-    icon = ResourceLoader::get_singleton()->load(_actor->GetIconPath());
+    Ref<BinaryTextureArchive> icon_archive = ResourceLoader::get_singleton()->load(_actor->GetIconPath());
+    if (icon_archive.is_valid())
+    {
+        TypedArray<BinaryTexture> textures = icon_archive->get_textures();
+        if (textures.size() == 1)
+            icon = textures[0];
+    }
 
     _col = memnew(CollisionShape3D);
     _col_shape.instantiate();
