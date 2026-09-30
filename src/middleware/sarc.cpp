@@ -1,5 +1,6 @@
 #include "sarc.h"
 #include "bflyt.h"
+#include "bflan.h"
 
 using namespace godot;
 
@@ -59,6 +60,15 @@ void SarcInspectorControl::_on_item_activated()
         layout->LoadFromBuffer(data);
 
         m_active_resource =  layout;
+    }
+
+    if (file_name.ends_with("bflan"))
+    {
+        Ref<BinaryLayoutAnimation> animation;
+        animation.instantiate();
+        animation->LoadFromBuffer(data);
+        
+        m_active_resource = animation;
     }
 
     //Set current resource as bntx
