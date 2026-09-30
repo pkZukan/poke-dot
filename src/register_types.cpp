@@ -39,6 +39,7 @@
 
 #include "middleware/bntx.h"
 #include "middleware/sarc.h"
+#include "middleware/bflyt.h"
 #include "middleware/havok_tag.h"
 
 #include "field/trcol.h"
@@ -92,6 +93,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderSARC)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
@@ -299,6 +301,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
 		GDREGISTER_CLASS(SeadArchive)
+		GDREGISTER_CLASS(BinaryLayout)
 		GDREGISTER_CLASS(HavokTag)
 		GDREGISTER_CLASS(HavokSdkVer)
 		GDREGISTER_CLASS(HavokItem)
@@ -354,6 +357,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderSARC)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
@@ -408,6 +412,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderSARC)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRINS)

@@ -1,4 +1,5 @@
 #include "sarc.h"
+#include "bflyt.h"
 
 using namespace godot;
 
@@ -49,6 +50,16 @@ void SarcInspectorControl::_on_item_activated()
 
     String file_name = item->get_metadata(0);
     PackedByteArray data = m_archive->get_file_data(file_name);
+
+    m_active_resource.unref();
+    if (file_name.ends_with("bflyt")) 
+    {
+        Ref<BinaryLayout> layout;
+        layout.instantiate();
+        layout->LoadFromBuffer(data);
+
+        m_active_resource =  layout;
+    }
 
     //Set current resource as bntx
     if (file_name.ends_with("bntx")) 
