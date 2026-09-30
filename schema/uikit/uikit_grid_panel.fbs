@@ -1,20 +1,17 @@
-namespace Titan.pe.UIKit;
+include "../common.fbs";
 
-struct Vector2i {
-    x: int;
-    y: int;
-}
+namespace Titan.pe.UIKit;
 
 table ButtonInfoTable {
     name: string;
-    pos: Vector2i;
-    size: Vector2i;
+    pos: Titan.Math.Vec2i;
+    size: Titan.Math.Vec2i;
 }
 
 table UIKitGridPanel {
     name: string;
     cursor_name: string;
-    grid_size: Vector2i;
+    grid_size: Titan.Math.Vec2i;
     mode: int;
     button_info: [ButtonInfoTable];
 }

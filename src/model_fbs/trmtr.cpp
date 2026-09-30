@@ -153,15 +153,15 @@ void TRMaterial::LoadFromFile(String file)
         {
             Ref<SamplerEntry> sampEnt;
             sampEnt.instantiate();
-            sampEnt->set_SamplerState_0(samplers->Get(j)->SamplerState_0());
-            sampEnt->set_SamplerState_1(samplers->Get(j)->SamplerState_1());
-            sampEnt->set_SamplerState_2(samplers->Get(j)->SamplerState_2());
-            sampEnt->set_SamplerState_3(samplers->Get(j)->SamplerState_3());
-            sampEnt->set_SamplerState_4(samplers->Get(j)->SamplerState_4());
-            sampEnt->set_SamplerState_5(samplers->Get(j)->SamplerState_5());
-            sampEnt->set_SamplerState_6(samplers->Get(j)->SamplerState_6());
-            sampEnt->set_SamplerState_7(samplers->Get(j)->SamplerState_7());
-            sampEnt->set_SamplerState_8(samplers->Get(j)->SamplerState_8());
+            sampEnt->set_SamplerState_0(samplers->Get(j)->sampler_state_0());
+            sampEnt->set_SamplerState_1(samplers->Get(j)->sampler_state_1());
+            sampEnt->set_SamplerState_2(samplers->Get(j)->sampler_state_2());
+            sampEnt->set_SamplerState_3(samplers->Get(j)->sampler_state_3());
+            sampEnt->set_SamplerState_4(samplers->Get(j)->sampler_state_4());
+            sampEnt->set_SamplerState_5(samplers->Get(j)->sampler_state_5());
+            sampEnt->set_SamplerState_6(samplers->Get(j)->sampler_state_6());
+            sampEnt->set_SamplerState_7(samplers->Get(j)->sampler_state_7());
+            sampEnt->set_SamplerState_8(samplers->Get(j)->sampler_state_8());
             sampEnt->set_RepeatU(samplers->Get(j)->repeat_u());
             sampEnt->set_RepeatV(samplers->Get(j)->repeat_v());
             sampEnt->set_RepeatW(samplers->Get(j)->repeat_w());

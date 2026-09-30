@@ -2,6 +2,13 @@
 
 using namespace godot;
 
+void UIKitButtonInfo::_bind_methods()
+{
+    GETTER_SETTER_BIND(UIKitButtonInfo, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitButtonInfo, Pos, Variant::VECTOR2I, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitButtonInfo, Size, Variant::VECTOR2I, PROPERTY_HINT_NONE)
+}
+
 void UIKitGridPanel::_bind_methods()
 {
     GETTER_SETTER_BIND(UIKitGridPanel, Name, Variant::STRING, PROPERTY_HINT_NONE)
@@ -9,6 +16,15 @@ void UIKitGridPanel::_bind_methods()
     GETTER_SETTER_BIND(UIKitGridPanel, GridSize, Variant::VECTOR2I, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitGridPanel, Mode, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitGridPanel, ButtonInfo, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "UIKitButtonInfo")
+}
+
+void UIKitButtonInfo::LoadFromBuffer(const Titan::pe::UIKit::ButtonInfoTable* button_info)
+{
+    ERR_FAIL_COND_MSG(button_info == nullptr, "Couldn't parse UIKitButtonInfo");
+
+    set_Name(Utils::toGodotString(button_info->name()));
+    set_Pos(Utils::toGodotVec2i(button_info->pos()));
+    set_Size(Utils::toGodotVec2i(button_info->size()));
 }
 
 void UIKitGridPanel::LoadFromBuffer(const void* buffer)

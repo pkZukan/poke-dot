@@ -16,15 +16,15 @@ enum UVWrapMode: uint32 {
 }
 
 table SamplerState {
-    SamplerState_0: uint32 = 0x0;
-    SamplerState_1: uint32 = 0x0;
-    SamplerState_2: uint32 = 0x0;
-    SamplerState_3: uint32 = 0x0;
-    SamplerState_4: float;
-    SamplerState_5: float;
-    SamplerState_6: float;
-    SamplerState_7: float;
-    SamplerState_8: float;
+    sampler_state_0: uint32 = 0x0;
+    sampler_state_1: uint32 = 0x0;
+    sampler_state_2: uint32 = 0x0;
+    sampler_state_3: uint32 = 0x0;
+    sampler_state_4: float;
+    sampler_state_5: float;
+    sampler_state_6: float;
+    sampler_state_7: float;
+    sampler_state_8: float;
     repeat_u: UVWrapMode = CLAMP;
     repeat_v: UVWrapMode = CLAMP;
     repeat_w: UVWrapMode = CLAMP; //Never used

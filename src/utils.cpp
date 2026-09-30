@@ -17,6 +17,16 @@ godot::Vector4 Utils::toGodotVec4(const Titan::Math::Vec4 *vec)
     return Vector4(vec->x(), vec->y(), vec->z(), vec->w());
 }
 
+godot::Vector2i Utils::toGodotVec2i(const Titan::Math::Vec2i *vec)
+{
+    return Vector2i(vec->x(), vec->y());
+}
+
+godot::Vector3i Utils::toGodotVec3i(const Titan::Math::Vec3i *vec)
+{
+    return Vector3i(vec->x(), vec->y(), vec->z());
+}
+
 godot::Transform3D Utils::toGodotTransform(const Titan::Math::Transform *tran)
 {
     Vector3 scale = toGodotVec3(&tran->scale());
