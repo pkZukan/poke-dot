@@ -76,9 +76,9 @@ void PokemonCharacter::_initialize()
     Ref<BinaryTextureArchive> icon_archive = ResourceLoader::get_singleton()->load(_actor->GetIconPath());
     if (icon_archive.is_valid())
     {
-        TypedArray<BinaryTexture> textures = icon_archive->get_textures();
+        TypedDictionary<String, BinaryTexture> textures = icon_archive->get_textures();
         if (textures.size() == 1)
-            icon = textures[0];
+            icon = textures.values()[0];
     }
 
     _col = memnew(CollisionShape3D);

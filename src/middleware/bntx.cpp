@@ -240,18 +240,13 @@ void BinaryTextureArchive::_bind_methods()
     ClassDB::bind_method(D_METHOD("LoadFromBuffer", "buffer"), &BinaryTextureArchive::LoadFromBuffer);
     ClassDB::bind_method(D_METHOD("get_textures"), &BinaryTextureArchive::get_textures);
     ClassDB::bind_method(D_METHOD("GetTexture", "name"), &BinaryTextureArchive::GetTexture);
-    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "textures", PROPERTY_HINT_ARRAY_TYPE, "BinaryTexture",
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "textures", PROPERTY_HINT_DICTIONARY_TYPE, "String;BinaryTexture",
         PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_textures");
 }
 
 Ref<BinaryTexture> BinaryTextureArchive::GetTexture(const String &name) const
 {
-    for (int i = 0; i < textures.size(); ++i)
-    {
-        Ref<BinaryTexture> texture = textures[i];
-        if (texture->get_name() == name) return texture;
-    }
-    return Ref<BinaryTexture>();
+    return textures.get(name, Ref<BinaryTexture>());
 }
 
 Error BinaryTextureArchive::LoadFromFile(const String &path)
@@ -277,7 +272,7 @@ Error BinaryTextureArchive::LoadFromBuffer(const PackedByteArray &buffer)
     sp->seek(nx.DataBlkAddr);
     BRTData data(sp);
     ERR_FAIL_COND_V(data.Magic != "BRTD", ERR_FILE_CORRUPT);
-    TypedArray<BinaryTexture> loaded;
+    TypedDictionary<String, BinaryTexture> loaded;
     for (uint32_t i = 0; i < nx.Count; ++i)
     {
         sp->seek(nx.InfoPtrAddr + uint64_t(i) * 8);
@@ -286,7 +281,10 @@ Error BinaryTextureArchive::LoadFromBuffer(const PackedByteArray &buffer)
         texture.instantiate();
         Error error = texture->LoadFromEntry(sp, offset);
         if (error != OK) return error;
-        loaded.push_back(texture);
+        const String name = texture->get_name();
+        ERR_FAIL_COND_V_MSG(loaded.has(name), ERR_FILE_CORRUPT,
+            vformat("Duplicate BNTX texture name '%s'.", name));
+        loaded[name] = texture;
     }
     textures = loaded;
     return OK;

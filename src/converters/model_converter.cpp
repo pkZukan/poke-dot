@@ -333,13 +333,18 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
     for (int i = 0; i < textures.size(); i++) {
         Ref<TextureEntry> t = textures[i];
         String file = t->get_File();
+        String texName = file.get_file().get_basename();
         String tex_name = t->get_Name();
 
-        Ref<Image> img = ResourceLoader::get_singleton()->load(path.path_join(file), "", ResourceLoader::CACHE_MODE_IGNORE);
-        if (!img.is_valid()) 
+        Ref<BinaryTextureArchive> bntx = ResourceLoader::get_singleton()->load(path.path_join(file), "", ResourceLoader::CACHE_MODE_IGNORE);
+        if (bntx.is_null())
             continue;
 
-        Ref<ImageTexture> img_tex = ImageTexture::create_from_image(img);
+        TypedDictionary<String, BinaryTexture> imgs = bntx->get_textures();
+        if (imgs.is_empty())
+            continue;
+
+        Ref<ImageTexture> img_tex = ImageTexture::create_from_image(imgs[texName]);
         if (img_tex.is_valid())
             shdr->set_shader_parameter(tex_name, img_tex);
     }

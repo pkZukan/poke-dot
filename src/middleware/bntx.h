@@ -8,7 +8,7 @@
 #include <godot_cpp/classes/stream_peer_buffer.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-#include <godot_cpp/variant/typed_array.hpp>
+#include <godot_cpp/variant/typed_dictionary.hpp>
 #include "utils.h"
 
 namespace godot {
@@ -171,10 +171,10 @@ protected:
 public:
     Error LoadFromFile(const String &path);
     Error LoadFromBuffer(const PackedByteArray &buffer);
-    TypedArray<BinaryTexture> get_textures() const { return textures.duplicate(); }
+    TypedDictionary<String, BinaryTexture> get_textures() const { return textures.duplicate(); }
     Ref<BinaryTexture> GetTexture(const String &name) const;
 private:
-    TypedArray<BinaryTexture> textures;
+    TypedDictionary<String, BinaryTexture> textures;
 };
 
 class ResourceFormatLoaderBNTX : public ResourceFormatLoader {

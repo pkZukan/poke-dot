@@ -7,6 +7,7 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/script.hpp>
+#include "middleware/bntx.h"
 #include "model_fbs/trmdl.h"
 #include "model_fbs/trskl.h"
 #include "model_fbs/trmsh.h"
