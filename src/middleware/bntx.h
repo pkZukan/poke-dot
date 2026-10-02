@@ -10,6 +10,7 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/typed_dictionary.hpp>
 #include "utils.h"
+#include <godot_cpp/variant/vector4i.hpp>
 
 namespace godot {
 
@@ -157,8 +158,10 @@ public:
 	~BinaryTexture(){}
 
     Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset);
+    Vector4i get_channel_sources() const;
 
 private:
+    Vector4i channel_sources = Vector4i(2, 3, 4, 5);
 	Image::Format GetGodotImageFormat(int bntx_format);
 	PackedByteArray Swizzle(uint32_t width, uint32_t height, BRTInfo info, PackedByteArray data, bool toSwizzle);
 	uint32_t getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t image_width, uint32_t bytes_per_pixel, uint32_t base_address, uint32_t block_height);

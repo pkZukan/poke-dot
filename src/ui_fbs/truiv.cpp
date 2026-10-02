@@ -1,4 +1,5 @@
 #include "truiv.h"
+#include <functional>
 
 using namespace godot;
 
@@ -98,36 +99,60 @@ Ref<Resource> TRUIViewChunk::ParseChunkData(String type, const void* data)
 
 void TRUIV::LoadFromFile(String file)
 {
+    Chunks.clear();
+
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRUIV file: %s", file));
+
+    flatbuffers::Verifier verifier(buf.ptr(), buf.size());
+    ERR_FAIL_COND_MSG(!Titan::TrinityUI::VerifyTRUIVBuffer(verifier), "Invalid TRUIV flatbuffer");
+
     auto truiv = Titan::TrinityUI::GetTRUIV(buf.ptr());
-    ERR_FAIL_COND_MSG(truiv == nullptr, "Couldn't parse TRUIV");
+    bool valid = true;
 
-    auto chunks = truiv->chunks();
-    Array chunksArray;
-    for(int i = 0; i < chunks->size(); i++)
-    {
-        auto chunk = chunks->Get(i);
-        Ref<TRUIViewChunk> viewChunk;
-        viewChunk.instantiate();
-
+    //Verify and parse chunk
+    std::function<Ref<TRUIViewChunk>(const Titan::TrinityUI::ViewChunk *)> parse_chunk;
+    parse_chunk = [&](const Titan::TrinityUI::ViewChunk *chunk) -> Ref<TRUIViewChunk> {
+        Ref<TRUIViewChunk> result;
+        result.instantiate();
         String type = Utils::toGodotString(chunk->type());
-        viewChunk->set_Type(type);
-
-        if (auto data = chunk->data()) 
-        {
-            auto parsedData = viewChunk->ParseChunkData(type, data->data());
-            viewChunk->set_Data(parsedData);
+        result->set_Type(type);
+        if (auto data = chunk->data()) {
+            flatbuffers::Verifier payload(data->data(), data->size());
+            if (type == "UikitGauge") valid = valid && Titan::pe::UIKit::VerifyUIKitGaugeBuffer(payload);
+            if (type == "UikitBody") valid = valid && Titan::pe::UIKit::VerifyUIKitBodyBuffer(payload);
+            if (type == "UikitSwitch") valid = valid && Titan::pe::UIKit::VerifyUIKitSwitchBuffer(payload);
+            if (type == "UikitShortcut") valid = valid && Titan::pe::UIKit::VerifyUIKitShortcutBuffer(payload);
+            if (type == "UikitButton") valid = valid && Titan::pe::UIKit::VerifyUIKitButtonBuffer(payload);
+            if (type == "UikitCursor") valid = valid && Titan::pe::UIKit::VerifyUIKitCursorBuffer(payload);
+            if (type == "UikitGridPanel") valid = valid && Titan::pe::UIKit::VerifyUIKitGridPanelBuffer(payload);
+            if (type == "UikitOptionGuide") valid = valid && Titan::pe::UIKit::VerifyUIKitOptionGuideBuffer(payload);
+            if (type == "UikitScrollPanel") valid = valid && Titan::pe::UIKit::VerifyUIKitScrollPanelBuffer(payload);
+            if (type == "UikitSwitchItem") valid = valid && Titan::pe::UIKit::VerifyUIKitSwitchItemBuffer(payload);
+            if (type == "UikitSwitchPanel") valid = valid && Titan::pe::UIKit::VerifyUIKitSwitchPanelBuffer(payload);
+            if (!valid) return Ref<TRUIViewChunk>();
+            result->set_Data(result->ParseChunkData(type, data->data()));
         }
 
-        auto children = chunk->children();
-        Array childrenArray;
-        for(int j = 0; j < children->size(); j++)
-            childrenArray.push_back(children->Get(j));
-        viewChunk->set_Children(childrenArray);
-        chunksArray.push_back(viewChunk);
+        //Parse children
+        Array children;
+        if (auto source = chunk->children()) {
+            for (auto child : *source) {
+                children.push_back(parse_chunk(child));
+                if (!valid) return Ref<TRUIViewChunk>();
+            }
+        }
+        result->set_Children(children);
+        return result;
+    };
+    Array parsed;
+    if (auto chunks = truiv->chunks()) {
+        for (auto chunk : *chunks) {
+            parsed.push_back(parse_chunk(chunk));
+            ERR_FAIL_COND_MSG(!valid, "Invalid TRUIV component payload");
+        }
     }
-    set_Chunks(chunksArray);
+    set_Chunks(parsed);
 }
 
 Variant ResourceFormatLoaderTRUIV::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const

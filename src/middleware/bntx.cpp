@@ -4,7 +4,13 @@ using namespace godot;
 
 void BinaryTexture::_bind_methods() 
 {
-    //
+    ClassDB::bind_method(D_METHOD("get_channel_sources"), &BinaryTexture::get_channel_sources);
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR4I, "channel_sources", PROPERTY_HINT_NONE, "",
+        PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_channel_sources");
+}
+
+Vector4i BinaryTexture::get_channel_sources() const {
+    return channel_sources;
 }
 
 std::pair<int, int> bpps[] = {
@@ -230,6 +236,9 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
     Array bytes = sp->get_data(end - start);
     ERR_FAIL_COND_V(int(bytes[0]) != OK, ERR_FILE_CORRUPT);
     PackedByteArray pixels = Swizzle(info.Width, info.Height, info, bytes[1], false);
+    const uint32_t sources = uint32_t(info.ChannelType);
+    channel_sources = Vector4i(sources & 0xff, (sources >> 8) & 0xff,
+        (sources >> 16) & 0xff, (sources >> 24) & 0xff);
     set_data(info.Width, info.Height, false, format, pixels);
     return is_empty() ? ERR_FILE_CORRUPT : OK;
 }

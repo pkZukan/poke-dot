@@ -1,4 +1,5 @@
 #include "register_types.h"
+#include "converters/ui_converter.h"
 
 #include "model_fbs/trmdl.h"
 #include "model_fbs/trmsh.h"
@@ -299,6 +300,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(PokemonCharacter)
 		GDREGISTER_CLASS(TrinityAnimationConverter)
 		GDREGISTER_CLASS(TrinityModel)
+		GDREGISTER_CLASS(TrinityUI)
 
 		//middleware
 		GDREGISTER_CLASS(BinaryTexture)
