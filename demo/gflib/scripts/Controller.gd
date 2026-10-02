@@ -8,6 +8,7 @@ const AnimationController = preload("res://gflib/scripts/AnimationController.gd"
 
 @export_category("Control sensitivity")
 @export var mouse_sensitivity: float = 0.2
+@export var joy_sensitivity: float = 120.0  # degrees per second at full tilt
 
 @export_category("Jump")
 @export_range(0.0, 20.0, 0.1) var jump_velocity: float = 4.5
@@ -21,14 +22,26 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _input(event: InputEvent) -> void:
+	# mouse look
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		pkmn.rotate_y(deg_to_rad(-event.screen_relative.x * mouse_sensitivity))
-		camera_pivot.rotation.x = clampf(
-			camera_pivot.rotation.x - deg_to_rad(event.screen_relative.y * mouse_sensitivity),
-			deg_to_rad(-80.0), deg_to_rad(80.0)
+		_apply_look(
+			event.screen_relative.x * mouse_sensitivity,
+			event.screen_relative.y * mouse_sensitivity
 		)
 
+func _apply_look(yaw_deg: float, pitch_deg: float) -> void:
+	pkmn.rotate_y(deg_to_rad(-yaw_deg))
+	camera_pivot.rotation.x = clampf(
+		camera_pivot.rotation.x - deg_to_rad(pitch_deg),
+		deg_to_rad(-80.0), deg_to_rad(80.0)
+	)
+
 func _physics_process(delta: float) -> void:
+	# joypad look
+	var look := Input.get_vector("look_left", "look_right", "look_up", "look_down")
+	if look != Vector2.ZERO:
+		_apply_look(look.x * joy_sensitivity * delta, look.y * joy_sensitivity * delta)
+
 	var movement := Input.get_vector("strafe_left", "strafe_right", "move_back", "move_forward")
 	animations.set_movement(movement, Input.is_action_pressed("run"))
 
