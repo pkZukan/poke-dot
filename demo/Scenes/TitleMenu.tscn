@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://bwlive2etjeq2"]
+
+[ext_resource type="Script" uid="uid://b2m7cx2nnkhrg" path="res://Scripts/UI/title_menu.gd" id="1_tt5f1"]
+
+[node name="TitleMenu" type="Control" unique_id=1844400793]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_tt5f1")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1870110747]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Title" type="TextureRect" parent="Backdrop" unique_id=2002618195]
+layout_mode = 1
+mouse_filter = 2
+expand_mode = 1
+
+[node name="MenuContainer" type="VBoxContainer" parent="Backdrop" unique_id=607738738]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.49400002
+anchor_top = 0.878
+anchor_right = 0.49400002
+anchor_bottom = 0.878
+offset_left = -151.08801
+offset_top = -39.94403
+offset_right = 151.91199
+offset_bottom = 40.05597
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="NewGame" type="Button" parent="Backdrop/MenuContainer" unique_id=1252544909]
+layout_mode = 2
+text = "New Game"
+
+[connection signal="pressed" from="Backdrop/MenuContainer/NewGame" to="." method="NewGame"]
