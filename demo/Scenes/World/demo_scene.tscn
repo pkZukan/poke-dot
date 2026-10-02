@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://catth7mjjf5fi"]
 
-[ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://Scripts/main.gd" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://Scripts/World/demo_scene.gd" id="1_3tqv8"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1bvp3"]
 sky_energy_multiplier = 0.36
@@ -8,12 +8,12 @@ sun_angle_max = 10.86
 sun_curve = 0.07500003
 energy_multiplier = 3.08
 
-[sub_resource type="Sky" id="Sky_1bvp3"]
+[sub_resource type="Sky" id="Sky_ie00b"]
 sky_material = SubResource("ProceduralSkyMaterial_1bvp3")
 
 [sub_resource type="Environment" id="Environment_0xm2m"]
 background_mode = 2
-sky = SubResource("Sky_1bvp3")
+sky = SubResource("Sky_ie00b")
 ambient_light_source = 3
 tonemap_mode = 3
 ssil_enabled = true
@@ -23,7 +23,7 @@ ssil_enabled = true
 [sub_resource type="Compositor" id="Compositor_h2yge"]
 
 [node name="WorldContainer" type="Node3D" unique_id=1974166111]
-script = ExtResource("1_ig7tw")
+script = ExtResource("1_3tqv8")
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=661450487]
 transform = Transform3D(1, 0, 0, 0, -0.12356678, 0.99233633, 0, -0.99233633, -0.12356678, 0, 401.68225, -727.2737)

@@ -10,7 +10,7 @@ func _ready() -> void:
 	if progress_bar:
 		progress_bar.value = 0.0
 	
-	next_scene_path = "res://Scenes/" + GameManager.nextScene
+	next_scene_path = "res://Scenes/World/" + GameManager.nextScene
 	
 	if not next_scene_path.is_empty():
 		ResourceLoader.load_threaded_request(next_scene_path)

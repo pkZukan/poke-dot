@@ -6,10 +6,6 @@
 #include <godot_cpp/classes/collision_shape3d.hpp>
 #include <godot_cpp/classes/box_shape3d.hpp>
 #include <godot_cpp/classes/animation_tree.hpp>
-#include <godot_cpp/classes/animation_node_state_machine.hpp>
-#include <godot_cpp/classes/animation_node_state_machine_playback.hpp>
-#include <godot_cpp/classes/animation_node_animation.hpp>
-#include <godot_cpp/classes/animation_node_time_scale.hpp>
 #include "actors/pokemon_actor.h"
 #include "actors/actor.h"
 #include "middleware/bntx.h"
@@ -28,8 +24,6 @@ public:
     ~PokemonCharacter() = default;
 
     void _enter_tree() override;
-    void _ready() override;
-    void _process(double delta) override;
 
     GETTER_SETTER_DEFINE(Ref<BinaryTexture>, icon)
     GETTER_SETTER_CALLBACK_DEFINE(uint16_t, species)
@@ -37,6 +31,7 @@ public:
     GETTER_SETTER_CALLBACK_DEFINE(uint8_t, gender)
     GETTER_SETTER_CALLBACK_DEFINE(bool, is_shiny)
     GETTER_SETTER_DEFINE(float, step_height)
+    GETTER_SETTER_DEFINE(float, max_root_motion_speed)
 
     void setterCallback(String setterName)
     {
@@ -46,12 +41,10 @@ public:
 
     Vector3 GetRootMotionPos();
 
-    void Idle();
-    void Walk(float dir);
-    void Run();
-    void Roar();
-    void Attack();
-    void apply_movement(double delta);
+    Node3D *get_model() const;
+    AnimationPlayer *get_animation_player() const;
+    void configure_animation_tree(AnimationTree *tree);
+    void apply_movement(double delta, const Vector3 &direction);
 
 private:
     uint16_t species = 0;
@@ -59,17 +52,15 @@ private:
     uint8_t gender = 0;
     bool is_shiny = false;
     float step_height = 0.3f;
-
+    float max_root_motion_speed = 30.0f;
     Ref<BinaryTexture> icon;
 
     PokemonActor *_actor = nullptr;
     AnimationTree *_anim_tree = nullptr;
-    Ref<AnimationNodeStateMachine> _anim_sm;
     
     CollisionShape3D *_col = nullptr;
     Ref<BoxShape3D> _col_shape;
 
-    void _travel(const String& state);
     void _initialize();
     void _cleanup();
     void _try_step_up(const Vector3& motion);

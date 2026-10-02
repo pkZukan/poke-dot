@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://feiijofpwsso"]
 
 [ext_resource type="Script" uid="uid://cr44l78deqhtd" path="res://gflib/scripts/Controller.gd" id="1_frlub"]
+[ext_resource type="Script" uid="uid://daugln1yhofy4" path="res://gflib/scripts/AnimationController.gd" id="2_animation"]
+[ext_resource type="AnimationNodeBlendTree" uid="uid://c5prxotv5la8b" path="res://gflib/animations/locomotion.tres" id="3_graph"]
 
 [node name="Player" type="PokemonCharacter" unique_id=2118575156]
 species = 5
@@ -12,3 +14,26 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=101391186]
 transform = Transform3D(1, 4.4838173e-09, 1.15058185e-10, -4.4838173e-09, 0.99868387, 0.05128889, 1.15058185e-10, -0.05128889, 0.99868387, 0, 1.17, 2.043)
 far = 10000.0
+
+[node name="AnimationTree" type="AnimationTree" parent="." unique_id=1061216346]
+active = false
+root_node = NodePath("../Model")
+root_motion_track = NodePath("pm0005_00_00/pm0005_00_00:origin")
+root_motion_local = true
+callback_mode_process = 2
+tree_root = ExtResource("3_graph")
+anim_player = NodePath("../Model/AnimationPlayer")
+parameters/Locomotion/blend_position = 0.0
+parameters/Motion/current_state = ""
+parameters/Motion/transition_request = ""
+parameters/Motion/current_index = -1
+parameters/Roar/active = false
+parameters/Roar/internal_active = false
+parameters/Roar/request = 0
+parameters/Attack/active = false
+parameters/Attack/internal_active = false
+parameters/Attack/request = 0
+parameters/IdleVariation/active = false
+parameters/IdleVariation/internal_active = false
+parameters/IdleVariation/request = 0
+script = ExtResource("2_animation")

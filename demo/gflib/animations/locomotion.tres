@@ -1,0 +1,119 @@
+[gd_resource type="AnimationNodeBlendTree" format=3 uid="uid://c5prxotv5la8b"]
+
+[sub_resource type="AnimationNodeOneShot" id="OneShot_attack"]
+fadein_time = 0.1
+fadeout_time = 0.1
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_attack"]
+animation = &"00400_attack01"
+
+[sub_resource type="AnimationNodeOneShot" id="OneShot_idlevar"]
+fadein_time = 0.1
+fadeout_time = 0.1
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_idlevar"]
+animation = &"00010_defaultidle01"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_jumpdown_loop"]
+animation = &"00153_jumpdown01_loop"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_jumpdown_start"]
+animation = &"00152_jumpdown01_start"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_jumpup_loop"]
+animation = &"00151_jumpup01_loop"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_jumpup_start"]
+animation = &"00150_jumpup01_start"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_land"]
+animation = &"00155_land02"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_idle"]
+animation = &"00000_defaultwait01_loop"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_walk"]
+animation = &"00030_walk01_loop"
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_run"]
+animation = &"00100_run01_loop"
+
+[sub_resource type="AnimationNodeBlendSpace1D" id="BlendSpace_locomotion"]
+min_space = 0.0
+max_space = 2.0
+sync_mode = 1
+blend_point_0/node = SubResource("Anim_idle")
+blend_point_0/pos = 0.0
+blend_point_0/name = &"0"
+blend_point_1/node = SubResource("Anim_walk")
+blend_point_1/pos = 1.0
+blend_point_1/name = &"1"
+blend_point_2/node = SubResource("Anim_run")
+blend_point_2/pos = 2.0
+blend_point_2/name = &"2"
+
+[sub_resource type="AnimationNodeTransition" id="Transition_motion"]
+xfade_time = 0.12
+input_0/name = "ground"
+input_0/auto_advance = false
+input_0/break_loop_at_end = false
+input_0/reset = true
+input_1/name = "jump_up_start"
+input_1/auto_advance = false
+input_1/break_loop_at_end = false
+input_1/reset = true
+input_2/name = "jump_up_loop"
+input_2/auto_advance = false
+input_2/break_loop_at_end = false
+input_2/reset = true
+input_3/name = "jump_down_start"
+input_3/auto_advance = false
+input_3/break_loop_at_end = false
+input_3/reset = true
+input_4/name = "jump_down_loop"
+input_4/auto_advance = false
+input_4/break_loop_at_end = false
+input_4/reset = true
+input_5/name = "land"
+input_5/auto_advance = false
+input_5/break_loop_at_end = false
+input_5/reset = true
+
+[sub_resource type="AnimationNodeOneShot" id="OneShot_roar"]
+fadein_time = 0.1
+fadeout_time = 0.1
+
+[sub_resource type="AnimationNodeAnimation" id="Anim_roar"]
+animation = &"00300_roar01"
+
+[resource]
+resource_local_to_scene = true
+resource_name = "Pokemon locomotion"
+nodes/output/position = Vector2(1300, -100)
+nodes/Locomotion/node = SubResource("BlendSpace_locomotion")
+nodes/Locomotion/position = Vector2(-200, -300)
+nodes/JumpUpStart/node = SubResource("Anim_jumpup_start")
+nodes/JumpUpStart/position = Vector2(-200, -160)
+nodes/JumpUpLoop/node = SubResource("Anim_jumpup_loop")
+nodes/JumpUpLoop/position = Vector2(-200, -40)
+nodes/JumpDownStart/node = SubResource("Anim_jumpdown_start")
+nodes/JumpDownStart/position = Vector2(-200, 80)
+nodes/JumpDownLoop/node = SubResource("Anim_jumpdown_loop")
+nodes/JumpDownLoop/position = Vector2(-200, 200)
+nodes/Land/node = SubResource("Anim_land")
+nodes/Land/position = Vector2(-200, 320)
+nodes/Motion/node = SubResource("Transition_motion")
+nodes/Motion/position = Vector2(100, -100)
+nodes/RoarAnim/node = SubResource("Anim_roar")
+nodes/RoarAnim/position = Vector2(100, 120)
+nodes/Roar/node = SubResource("OneShot_roar")
+nodes/Roar/position = Vector2(400, -100)
+nodes/AttackAnim/node = SubResource("Anim_attack")
+nodes/AttackAnim/position = Vector2(400, 120)
+nodes/Attack/node = SubResource("OneShot_attack")
+nodes/Attack/position = Vector2(700, -100)
+nodes/IdleVariationAnim/node = SubResource("Anim_idlevar")
+nodes/IdleVariationAnim/position = Vector2(700, 120)
+nodes/IdleVariation/node = SubResource("OneShot_idlevar")
+nodes/IdleVariation/position = Vector2(1000, -100)
+node_connections = [&"output", 0, &"IdleVariation", &"Motion", 0, &"Locomotion", &"Motion", 1, &"JumpUpStart", &"Motion", 2, &"JumpUpLoop", &"Motion", 3, &"JumpDownStart", &"Motion", 4, &"JumpDownLoop", &"Motion", 5, &"Land", &"Roar", 0, &"Motion", &"Roar", 1, &"RoarAnim", &"Attack", 0, &"Roar", &"Attack", 1, &"AttackAnim", &"IdleVariation", 0, &"Attack", &"IdleVariation", 1, &"IdleVariationAnim"]

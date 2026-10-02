@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://b4loiyeu2oiuc"]
+
+[ext_resource type="Script" uid="uid://dqsjhfd1va246" path="res://Scripts/World/test_scene.gd" id="1_acdkv"]
+[ext_resource type="Texture2D" uid="uid://bowlsnjar6ov0" path="res://icon.svg" id="2_2xts1"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_6chjh"]
+sky_energy_multiplier = 0.36
+sun_angle_max = 10.86
+sun_curve = 0.07500003
+energy_multiplier = 3.08
+
+[sub_resource type="Sky" id="Sky_1bvp3"]
+sky_material = SubResource("ProceduralSkyMaterial_6chjh")
+
+[sub_resource type="Environment" id="Environment_phepx"]
+background_mode = 2
+sky = SubResource("Sky_1bvp3")
+ambient_light_source = 3
+tonemap_mode = 3
+ssil_enabled = true
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_orl8w"]
+
+[sub_resource type="Compositor" id="Compositor_8xpg0"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_ws83t"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2xts1"]
+albedo_texture = ExtResource("2_2xts1")
+uv1_scale = Vector3(10, 10, 10)
+uv1_triplanar = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ws83t"]
+size = Vector3(1, 1, 0.052001953)
+
+[node name="TestMap" type="Node3D" unique_id=834262546]
+script = ExtResource("1_acdkv")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1146665384]
+transform = Transform3D(1, 0, 0, 0, -0.12356678, 0.99233633, 0, -0.99233633, -0.12356678, 0, 401.68225, -727.2737)
+light_energy = 0.348
+shadow_enabled = true
+shadow_blur = 2.656
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=640649907]
+environment = SubResource("Environment_phepx")
+camera_attributes = SubResource("CameraAttributesPractical_orl8w")
+compositor = SubResource("Compositor_8xpg0")
+
+[node name="Platform" type="MeshInstance3D" parent="." unique_id=584753562]
+transform = Transform3D(10, 0, 0, 0, -4.371139e-07, 10, 0, -10, -4.371139e-07, 0, 0, 0)
+mesh = SubResource("QuadMesh_ws83t")
+surface_material_override/0 = SubResource("StandardMaterial3D_2xts1")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Platform" unique_id=255958360]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Platform/StaticBody3D" unique_id=1407322932]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, -0.01184082, 5.17578e-10)
+shape = SubResource("BoxShape3D_ws83t")
+
+[node name="Spawn" type="Node3D" parent="." unique_id=693115844]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05996704, 0)

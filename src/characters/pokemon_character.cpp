@@ -24,40 +24,20 @@ void PokemonCharacter::_bind_methods()
     GETTER_SETTER_BIND(PokemonCharacter, is_shiny, Variant::BOOL, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(PokemonCharacter, step_height, Variant::FLOAT, PROPERTY_HINT_RANGE, "0,1,0.01,or_greater,suffix:m")
 
+    GETTER_SETTER_BIND(PokemonCharacter, max_root_motion_speed, Variant::FLOAT, PROPERTY_HINT_RANGE, "0,100,0.1,or_greater,suffix:m/s")
+
     ClassDB::bind_method(D_METHOD("GetRootMotionPos"), &PokemonCharacter::GetRootMotionPos);
 
-    ClassDB::bind_method(D_METHOD("Idle"), &PokemonCharacter::Idle);
-    ClassDB::bind_method(D_METHOD("Walk", "dir"), &PokemonCharacter::Walk);
-    ClassDB::bind_method(D_METHOD("Run"), &PokemonCharacter::Run);
-    ClassDB::bind_method(D_METHOD("Roar"), &PokemonCharacter::Roar);
-    ClassDB::bind_method(D_METHOD("Attack"), &PokemonCharacter::Attack);
-    ClassDB::bind_method(D_METHOD("apply_movement", "delta"), &PokemonCharacter::apply_movement);
+    ClassDB::bind_method(D_METHOD("get_model"), &PokemonCharacter::get_model);
+    ClassDB::bind_method(D_METHOD("get_animation_player"), &PokemonCharacter::get_animation_player);
+    ClassDB::bind_method(D_METHOD("configure_animation_tree", "tree"), &PokemonCharacter::configure_animation_tree);
+    ClassDB::bind_method(D_METHOD("apply_movement", "delta", "direction"), &PokemonCharacter::apply_movement, DEFVAL(Vector3(0, 0, 1)));
+    ADD_SIGNAL(MethodInfo("character_rebuilt"));
 }
 
 void PokemonCharacter::_enter_tree()
 {
     _initialize();
-}
-
-void PokemonCharacter::_ready()
-{
-    //
-}
-
-void PokemonCharacter::_process(double delta)
-{
-    //
-}
-
-void PokemonCharacter::_travel(const String& state)
-{
-    Ref<AnimationNodeStateMachine> sm = _anim_tree->get_tree_root();
-    if (sm.is_valid()) {
-        AnimationNodeStateMachinePlayback* pb = Object::cast_to<AnimationNodeStateMachinePlayback>(
-            _anim_tree->get("parameters/playback")
-        );
-        if (pb) pb->travel(state);
-    }
 }
 
 void PokemonCharacter::_initialize()
@@ -85,16 +65,9 @@ void PokemonCharacter::_initialize()
     _col_shape.instantiate();
     _col->set_shape(_col_shape);
 
-    _anim_tree = memnew(AnimationTree);
-    _anim_sm.instantiate();
-    _anim_tree->set_tree_root(_anim_sm);
-    _anim_tree->set_advance_expression_base_node(NodePath("."));
-
+    _actor->set_name("Model");
     add_child(_actor);
     add_child(_col);
-    add_child(_anim_tree);
-
-    _anim_tree->set_root_node(_anim_tree->get_path_to(_actor));
 
     _actor->Initialize();
 
@@ -102,32 +75,47 @@ void PokemonCharacter::_initialize()
     _col_shape->set_size(bounds.get_size());
     _col->set_position(bounds.get_center());
 
-    Skeleton3D *_skel = _actor->GetSkeleton();
+    emit_signal("character_rebuilt");
+}
 
-    String origin_bone = _skel->get_bone_name(1);
-    String bone0 = _skel->get_bone_name(0);
-    NodePath rm_path = NodePath(bone0 + "/" + bone0 + ":" + origin_bone);
+Node3D *PokemonCharacter::get_model() const
+{
+    return _actor;
+}
+
+AnimationPlayer *PokemonCharacter::get_animation_player() const
+{
+    return _actor ? _actor->GetAnimationPlayer() : nullptr;
+}
+
+void PokemonCharacter::configure_animation_tree(AnimationTree *tree)
+{
+    if (_anim_tree) _anim_tree->set_active(false);
+    _anim_tree = tree;
+    if (!_anim_tree) return;
+
+    _anim_tree->set_active(false);
+
+    AnimationPlayer *player = get_animation_player();
+    if (!_actor || !player) return;
+
+    Skeleton3D *skeleton = _actor->GetSkeleton();
+    if (!skeleton || skeleton->get_bone_count() < 2) return;
+
+    const String bone0 = skeleton->get_bone_name(0);
+    const NodePath root_path(vformat("%s/%s:%s", bone0, bone0, skeleton->get_bone_name(1)));
+    _anim_tree->set_root_node(_anim_tree->get_path_to(_actor));
+    _anim_tree->set_animation_player(_anim_tree->get_path_to(player));
     _anim_tree->set_root_motion_local(true);
-    _anim_tree->set_root_motion_track(rm_path);
-    _anim_tree->set_process_callback(AnimationTree::ANIMATION_PROCESS_PHYSICS);
-
-    AnimationPlayer *player = _actor->GetAnimationPlayer();
-    if(!player)
-    {
-        UtilityFunctions::printerr("AnimationPlayer null!");
-        return;
+    _anim_tree->set_root_motion_track(root_path);
+    _anim_tree->set_process_callback(AnimationTree::ANIMATION_PROCESS_MANUAL);
+    for (StringName name : player->get_animation_list()) {
+        Ref<Animation> animation = player->get_animation(name);
+        const int track = animation->find_track(root_path, Animation::TYPE_POSITION_3D);
+        // Accumulated root translation must not interpolate back to its origin.
+        if (track >= 0) 
+            animation->track_set_interpolation_loop_wrap(track, false);
     }
-
-    _anim_tree->set_animation_player(player->get_path());
-
-    for (StringName anim_name : player->get_animation_list()) 
-    {
-        Ref<AnimationNodeAnimation> anim_node;
-        anim_node.instantiate();
-        anim_node->set_animation(anim_name);
-        _anim_sm->add_node(anim_name, anim_node);
-    }
-
     _anim_tree->set_active(!Engine::get_singleton()->is_editor_hint());
 }
 
@@ -138,8 +126,6 @@ void PokemonCharacter::_cleanup()
     if (_anim_tree)
     {
         _anim_tree->set_active(false);
-        remove_child(_anim_tree);
-        _anim_tree->queue_free();
         _anim_tree = nullptr;
     }
 
@@ -157,77 +143,48 @@ void PokemonCharacter::_cleanup()
         _col = nullptr;
     }
 
-    _anim_sm.unref();
     _col_shape.unref();
     icon.unref();
+
 }
 
 Vector3 PokemonCharacter::GetRootMotionPos()
 {
-    return _anim_tree->get_root_motion_position();
+    return _anim_tree ? _anim_tree->get_root_motion_position() : Vector3();
 }
 
-void PokemonCharacter::Idle()
-{
-    _travel("00000_defaultwait01_loop");
-}
-
-void PokemonCharacter::Walk(float dir)
-{
-    _travel("00030_walk01_loop");
-    
-    Ref<AnimationNodeAnimation> anim_node = _anim_sm->get_node("00030_walk01_loop");
-    if (anim_node.is_valid()) {
-        anim_node->set_play_mode(dir >= 0 
-            ? AnimationNodeAnimation::PLAY_MODE_FORWARD 
-            : AnimationNodeAnimation::PLAY_MODE_BACKWARD);
-    }
-}
-
-void PokemonCharacter::Run()
-{
-    _travel("00100_run01_loop");
-}
-
-void PokemonCharacter::Roar()
-{
-    _travel("00300_roar01");
-}
-
-void PokemonCharacter::Attack()
-{
-    _travel("00400_attack01");
-}
-
-void PokemonCharacter::apply_movement(double delta)
+void PokemonCharacter::apply_movement(double delta, const Vector3 &direction)
 {
     if (delta <= 0.0) return;
     Vector3 root_motion = GetRootMotionPos();
-
-    float max_delta = 0.1f;
-    if (root_motion.length() > max_delta)
-    {
+    
+    if (!root_motion.is_finite() || (max_root_motion_speed > 0.0f && root_motion.length() > max_root_motion_speed * delta))
         root_motion = Vector3();
-    }
 
     Vector3 vel = get_velocity();
-    if (is_on_floor())
+    if (is_on_floor() && vel.y <= 0.0f)
     {
-        Vector3 motion = get_global_transform().basis.xform(root_motion);
+        //Grounded motion
+        Vector3 horizontal_direction(direction.x, 0, direction.z);
+        if (!horizontal_direction.is_finite()) horizontal_direction = Vector3();
+        Vector3 motion = get_global_transform().basis.xform(horizontal_direction.limit_length() * root_motion.z);
         vel.x = motion.x / delta;
         vel.z = motion.z / delta;
         if (vel.y < 0)
         {
             vel.y = 0;
         }
+
+        //Curb/stair stepup
+        _try_step_up(Vector3(vel.x, 0, vel.z) * delta);
     }
-    else
+    else if (!is_on_floor())
     {
         vel.y -= 9.8 * delta;
     }
+    
     set_velocity(vel);
-    if (is_on_floor() && vel.y <= 0.0f)
-        _try_step_up(Vector3(vel.x, 0, vel.z) * delta);
+
     move_and_slide();
 }
 

@@ -28,7 +28,7 @@ func _ready() -> void:
 
 func NewGame():
 	GameManager.state = GameManager.GameState.STATE_PLAYING
-	GameManager.LoadScene("main.tscn")
+	GameManager.LoadScene("test_scene.tscn")
 	
 func LoadGame():
 	pass
