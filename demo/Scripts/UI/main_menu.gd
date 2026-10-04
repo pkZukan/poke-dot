@@ -94,11 +94,11 @@ func _initialize() -> void:
 		apply_state(component, "exp_out", 5.0)
 		apply_state(component, "lvup_out", 6.0)
 		apply_state(component, "num_select_on")
-	_set_text("T_money_00", "0")
-	_set_text("T_quest_name_00", "No tracked quest")
-	_set_text("T_quest_03", "")
-	_set_text("T_mrrw_name_00", "—")
-	_set_text("T_mrrw_num_00", "")
+	set_money(0)
+	set_research_level(0)
+	set_research_exp(0, 1)
+	set_quest("No tracked quest", "")
+	set_next_award("-", "")
 	var research := get_pane("L_mr_00")
 	var reward_label := research.find_child("T_option_00", true, false) as Label
 	if reward_label:
@@ -123,6 +123,33 @@ func _update_cursor() -> void:
 	if anchor:
 		var target := anchor.get_global_transform() * (anchor.size * 0.5)
 		cursor.position = cursor.get_parent().get_global_transform().affine_inverse() * target - cursor.size * 0.5
+
+# Set money display
+func set_money(amount: int) -> void:
+	_set_text("T_money_00", str(maxi(amount, 0)))
+
+# Set research lvl
+func set_research_level(level: int) -> void:
+	var display_level := clampi(level, 0, 99)
+	apply_state("L_mr_lv_num_01", "ptn", floori(display_level / 10.0))
+	apply_state("L_mr_lv_num_00", "ptn", display_level % 10)
+
+# Set exp ring
+func set_research_exp(current_exp: int, required_exp: int) -> void:
+	var progress := 0.0
+	if required_exp > 0:
+		progress = clampf(float(current_exp) / float(required_exp), 0.0, 1.0)
+	# The authored gauge spans frames 0–100. Its ring also requires wnd1
+	# rendering and secondary-texture transforms, not yet supported by TrinityUI.
+	apply_state("L_mr_gauge_00", "gauge", progress * 100.0)
+
+func set_quest(name: String, desc: String):
+	_set_text("T_quest_name_00", name)
+	_set_text("T_quest_03", desc)
+
+func set_next_award(name: String, num: String):
+	_set_text("T_mrrw_name_00", name)
+	_set_text("T_mrrw_num_00", num)
 
 func _set_text(pane_name: String, text: String) -> void:
 	var label := get_pane(pane_name) as Label

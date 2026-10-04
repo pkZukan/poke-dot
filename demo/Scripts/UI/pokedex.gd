@@ -24,12 +24,17 @@ func _initialize() -> void:
 	apply_state(".", "f_in_keep", 33.0)
 	apply_state(".", "keep", 0.0)
 
-	# Replace authored sample text until Pokédex/save data is connected.
-	_set_text("T_v_get_00", "0")
-	_set_text("T_hget_00", "Caught")
-	_set_text("T_v_find_00", "0")
-	_set_text("T_hget_01", "Seen")
+	set_seen(0)
+	set_caught(0)
 
+func set_caught(num: int):
+	_set_text("T_v_get_00", str(maxi(num, 0)))
+	_set_text("T_hget_00", "Number Caught")
+	
+func set_seen(num: int):
+	_set_text("T_v_find_00", str(maxi(num, 0)))
+	_set_text("T_hget_01", "Number Seen")
+	
 func _set_text(pane_name: String, text: String) -> void:
 	var label := get_pane(pane_name) as Label
 	if label:
