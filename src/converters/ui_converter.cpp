@@ -193,7 +193,11 @@ Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const
                     base = container->get_size() * 0.5;
                 }
             } else {
-                base = parent->get_size() * pane_origin(origin >> 4);
+                // BFLYT child translations are relative to the parent's local origin,
+                // which Godot represents as its pivot, not its rectangle center.
+                // Parent-origin bits add a half-size offset around that origin.
+                base = parent->get_pivot_offset()
+                    + parent->get_size() * (pane_origin(origin >> 4) - Vector2(0.5, 0.5));
             }
             node->set_size(size);
             node->set_pivot_offset(pivot);

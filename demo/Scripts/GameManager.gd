@@ -19,12 +19,14 @@ func _ready() -> void:
 	state = GameState.STATE_MAINMENU
 	add_child(MainMenuScene.instantiate())
 	
-func _process(_delta: float) -> void:
-	if Input.is_action_just_pressed("main_menu"):
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("main_menu"):
 		match state:
 			GameState.STATE_PLAYING:
+				get_viewport().set_input_as_handled()
 				set_state(GameState.STATE_PAUSED)
 			GameState.STATE_PAUSED:
+				get_viewport().set_input_as_handled()
 				set_state(GameState.STATE_PLAYING)
 
 func set_state(new_state: GameState) -> void:

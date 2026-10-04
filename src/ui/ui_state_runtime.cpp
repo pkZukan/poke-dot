@@ -134,12 +134,19 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
     {
         if (target == 16) 
         {
-            if ((int(metadata.get("flags", 0)) & 2) || String(metadata.get("type", "")) == "prt1") 
-                Color color = pane->get_modulate(); color.a = value / 255.0; pane->set_modulate(color);
-            else if (picture)
-                Color color = picture->get_self_modulate(); color.a = value / 255.0; picture->set_self_modulate(color);
-            else
-                Color color = pane->get_self_modulate(); color.a = value / 255.0; pane->set_self_modulate(color);
+            if ((int(metadata.get("flags", 0)) & 2) || String(metadata.get("type", "")) == "prt1") {
+                Color color = pane->get_modulate();
+                color.a = value / 255.0;
+                pane->set_modulate(color);
+            } else if (picture) {
+                Color color = picture->get_self_modulate();
+                color.a = value / 255.0;
+                picture->set_self_modulate(color);
+            } else {
+                Color color = pane->get_self_modulate();
+                color.a = value / 255.0;
+                pane->set_self_modulate(color);
+            }
         } 
         else if (Object::cast_to<Label>(pane) && target < 4) 
         {

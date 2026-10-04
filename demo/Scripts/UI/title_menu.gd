@@ -17,11 +17,8 @@ func _ready() -> void:
 			pane.modulate.a = 1.0
 
 	$MenuContainer/NewGame.grab_focus()
-	_initialize()
 	
-func _initialize():
-	# Turn on and off some panes
-	get_pane("N_banner_00").show()
+	# Hide dummy pane
 	get_pane("P_ofsc_00").hide()
 
 func NewGame():
