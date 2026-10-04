@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://dxlq87lwo8l4a"]
+
+[ext_resource type="Script" uid="uid://dqv0ftelyjdp6" path="res://Scripts/UI/main_menu.gd" id="1_5wsvm"]
+
+[node name="MainMenu" type="TrinityUI" unique_id=686238925]
+script = ExtResource("1_5wsvm")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1763365425]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

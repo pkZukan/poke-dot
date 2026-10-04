@@ -21,7 +21,7 @@ protected:
     void _notification(int what);
 
 public:
-    Error load_ui(const String &truiv_path, const String &arc_path, const String &layout_file = "");
+    Error load_ui(const String &truiv_path, const String &arc_path);
     Control *get_pane(const String &name) const;
     PackedStringArray get_warnings() const;
 

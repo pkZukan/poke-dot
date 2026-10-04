@@ -37,4 +37,9 @@ grow_vertical = 2
 layout_mode = 2
 text = "New Game"
 
+[node name="Debug" type="Button" parent="MenuContainer" unique_id=183604212]
+layout_mode = 2
+text = "Debug"
+
 [connection signal="pressed" from="MenuContainer/NewGame" to="." method="NewGame"]
+[connection signal="pressed" from="MenuContainer/Debug" to="." method="_on_debug_pressed"]

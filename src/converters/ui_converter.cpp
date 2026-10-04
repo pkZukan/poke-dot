@@ -17,7 +17,7 @@ void TrinityUI::warn_once(PackedStringArray &warnings, const String &message) {
 }
 
 void TrinityUI::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("load_ui", "truiv_path", "arc_path", "layout_file"), &TrinityUI::load_ui, DEFVAL(String()));
+    ClassDB::bind_method(D_METHOD("load_ui", "truiv_path", "arc_path"), &TrinityUI::load_ui);
     ClassDB::bind_method(D_METHOD("get_pane", "name"), &TrinityUI::get_pane);
     ClassDB::bind_method(D_METHOD("get_warnings"), &TrinityUI::get_warnings);
 }
@@ -49,28 +49,19 @@ PackedStringArray TrinityUI::get_warnings() const {
     return get_meta("conversion_warnings", PackedStringArray());
 }
 
-Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const String &layout_file) {
+Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path) {
     ERR_FAIL_COND_V_MSG(!FileAccess::file_exists(truiv_path) || !FileAccess::file_exists(arc_path), ERR_FILE_NOT_FOUND, "UI input file does not exist");
     Ref<TRUIV> view = ResourceLoader::get_singleton()->load(truiv_path);
     Ref<SeadArchive> archive = ResourceLoader::get_singleton()->load(arc_path);
     ERR_FAIL_COND_V_MSG(view.is_null() || archive.is_null() || view->get_Chunks().is_empty(), ERR_FILE_CORRUPT, "Could not load UI inputs");
-    String selected = layout_file;
     PackedStringArray files = archive->get_files();
-    if (selected.is_empty()) {
-        for (int i = 0; i < files.size(); ++i) {
-            if (!files[i].ends_with(".bflyt")) continue;
-            ERR_FAIL_COND_V_MSG(!selected.is_empty(), ERR_INVALID_PARAMETER, "ARC contains multiple layouts; specify layout_file");
-            selected = files[i];
-        }
+    PackedStringArray selected_files;
+    for (int i = 0; i < files.size(); ++i) {
+        if (files[i].ends_with(".bflyt")) selected_files.push_back(files[i]);
     }
-    ERR_FAIL_COND_V_MSG(selected.is_empty() || !archive->has_file(selected), ERR_FILE_NOT_FOUND, "BFLYT layout not found in ARC");
-    Ref<BinaryLayout> binary_layout;
-    binary_layout.instantiate();
-    Error error = binary_layout->LoadFromBuffer(archive->get_file_data(selected));
-    if (error != OK) return error;
-    Dictionary data = binary_layout->get_layout();
-    Vector2 native_size = data["size"];
-    ERR_FAIL_COND_V(native_size.x <= 0 || native_size.y <= 0, ERR_FILE_CORRUPT);
+    ERR_FAIL_COND_V_MSG(selected_files.is_empty(), ERR_FILE_NOT_FOUND, "BFLYT layout not found in ARC");
+    String selected = selected_files[0];
+    Error error;
 
     Ref<Shader> picture_shader = ResourceLoader::get_singleton()->load("res://gflib/shaders/ui_picture.gdshader");
     ERR_FAIL_COND_V_MSG(picture_shader.is_null(), ERR_FILE_NOT_FOUND, "UI picture shader not found");
@@ -96,106 +87,130 @@ Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const
         }
     }
 
-    // Build off-tree, then replace only the subtree owned by the converter.
-    Control *layout = memnew(Control);
-    layout->set_name("Layout");
-    layout->set_mouse_filter(MOUSE_FILTER_IGNORE);
-    layout->set_size(native_size);
-    layout->set_meta("layout_size", native_size);
-    layout->set_meta("bflyt", binary_layout);
-    Array panes = data["panes"];
-    Array materials = data["materials"];
-    PackedStringArray texture_names = data["textures"];
+    Control *layout = nullptr;
     PackedStringArray warnings;
     std::vector<Control *> nodes;
     Dictionary paths;
-    for (int i = 0; i < panes.size(); ++i) {
-        Dictionary pane = panes[i];
-        int parent_index = pane["parent"];
-        if (parent_index < -1 || parent_index >= i) {
-            memdelete(layout);
+
+    for (int f = 0; f < selected_files.size(); ++f) {
+        Ref<BinaryLayout> binary_layout;
+        binary_layout.instantiate();
+        error = binary_layout->LoadFromBuffer(archive->get_file_data(selected_files[f]));
+        if (error != OK) {
+            if (layout) memdelete(layout);
+            return error;
+        }
+        Dictionary data = binary_layout->get_layout();
+        Vector2 native_size = data["size"];
+        if (native_size.x <= 0 || native_size.y <= 0) {
+            if (layout) memdelete(layout);
             return ERR_FILE_CORRUPT;
         }
-        Control *parent = parent_index < 0 ? layout : nodes[parent_index];
-        Control *node = memnew(Control);
-        node->set_name(pane["name"]);
-        node->set_mouse_filter(MOUSE_FILTER_IGNORE);
-        parent->add_child(node);
-        nodes.push_back(node);
-        node->set_meta("bflyt_pane", pane);
-        const Vector2 size = pane["size"];
-        const int origin = pane["origin"];
-        const Vector2 pivot = size * pane_origin(origin);
-        const Vector3 translation = pane["translation"];
-        const Vector3 rotation = pane["rotation"];
-        Vector2 base;
-        if (parent_index < 0) {
-            if (bool(data["draw_from_center"])) base = native_size * 0.5;
-        } else {
-            base = parent->get_size() * pane_origin(origin >> 4);
+
+        if (!layout) {
+            layout = memnew(Control);
+            layout->set_name("Layout");
+            layout->set_mouse_filter(MOUSE_FILTER_IGNORE);
+            layout->set_size(native_size);
+            layout->set_meta("layout_size", native_size);
+            layout->set_meta("bflyt", binary_layout);
         }
-        node->set_size(size);
-        node->set_pivot_offset(pivot);
-        node->set_position(base + Vector2(translation.x, -translation.y) - pivot);
-        node->set_scale(pane["scale"]);
-        node->set_rotation(-Math::deg_to_rad(rotation.z));
-        if (rotation.x != 0 || rotation.y != 0) warn_once(warnings, "3D pane rotations are not rendered");
-        const int flags = pane["flags"];
-        node->set_visible(flags & 1);
-        const Color alpha(1, 1, 1, double(pane["alpha"]) / 255.0);
-        if (flags & 2) node->set_modulate(alpha);
-        const String type = pane["type"];
-        if (type != "pic1") {
-            if (type != "pan1" && type != "bnd1") warn_once(warnings, "Unrendered pane type: " + type);
-            continue;
+
+        Array panes = data["panes"];
+        Array materials = data["materials"];
+        PackedStringArray texture_names = data["textures"];
+        std::vector<Control *> layout_nodes;
+        const String layout_name = selected_files[f].get_file().get_basename();
+
+        for (int i = 0; i < panes.size(); ++i) {
+            Dictionary pane = panes[i];
+            int parent_index = pane["parent"];
+            if (parent_index < -1 || parent_index >= i) {
+                memdelete(layout);
+                return ERR_FILE_CORRUPT;
+            }
+            Control *parent = parent_index < 0 ? layout : layout_nodes[parent_index];
+            Control *node = memnew(Control);
+            node->set_name(parent_index < 0 ? layout_name : String(pane["name"]));
+            node->set_mouse_filter(MOUSE_FILTER_IGNORE);
+            parent->add_child(node);
+            layout_nodes.push_back(node);
+            nodes.push_back(node);
+            node->set_meta("bflyt_pane", pane);
+            const Vector2 size = pane["size"];
+            const int origin = pane["origin"];
+            const Vector2 pivot = size * pane_origin(origin);
+            const Vector3 translation = pane["translation"];
+            const Vector3 rotation = pane["rotation"];
+            Vector2 base;
+            if (parent_index < 0) {
+                if (bool(data["draw_from_center"])) base = native_size * 0.5;
+            } else {
+                base = parent->get_size() * pane_origin(origin >> 4);
+            }
+            node->set_size(size);
+            node->set_pivot_offset(pivot);
+            node->set_position(base + Vector2(translation.x, -translation.y) - pivot);
+            node->set_scale(pane["scale"]);
+            node->set_rotation(-Math::deg_to_rad(rotation.z));
+            if (rotation.x != 0 || rotation.y != 0) warn_once(warnings, "3D pane rotations are not rendered");
+            const int flags = pane["flags"];
+            node->set_visible(flags & 1);
+            const Color alpha(1, 1, 1, double(pane["alpha"]) / 255.0);
+            if (flags & 2) node->set_modulate(alpha);
+            const String type = pane["type"];
+            if (type != "pic1") {
+                if (type != "pan1" && type != "bnd1") warn_once(warnings, "Unrendered pane type: " + type);
+                continue;
+            }
+            Dictionary material = materials[int(pane["material_index"])];
+            Array maps = material["texture_maps"];
+            if (maps.is_empty()) {
+                warn_once(warnings, "Picture material without a texture: " + String(material["name"]));
+                continue;
+            }
+            Dictionary map = maps[0];
+            String texture_name = texture_names[int(map["texture_index"])];
+            if (!textures.has(texture_name)) {
+                warn_once(warnings, "Missing texture: " + texture_name);
+                continue;
+            }
+            if (maps.size() > 1) warn_once(warnings, "Multi-texture materials render their first texture only; game shaders are not converted");
+            Array uv_sets = pane["uv_sets"];
+            if (uv_sets.is_empty()) {
+                warn_once(warnings, "Picture without UV coordinates: " + String(pane["name"]));
+                continue;
+            }
+            Ref<Texture2D> texture = textures[texture_name];
+            PackedVector2Array source_uv = uv_sets[0];
+            PackedColorArray source_colors = pane["colors"];
+            const int order[] = {0, 1, 3, 2};
+            const Vector2 corners[] = {Vector2(), Vector2(size.x, 0), Vector2(0, size.y), size};
+            PackedVector2Array vertices, uv;
+            PackedColorArray colors;
+            for (int k : order) {
+                vertices.push_back(corners[k]);
+                uv.push_back(source_uv[k] * texture->get_size());
+                colors.push_back(source_colors[k]);
+            }
+            Polygon2D *picture = memnew(Polygon2D);
+            picture->set_name("Picture");
+            picture->set_polygon(vertices);
+            picture->set_uv(uv);
+            picture->set_vertex_colors(colors);
+            picture->set_texture(texture);
+            picture->set_material(texture_materials[texture_name]);
+            if (!(flags & 2)) picture->set_self_modulate(alpha);
+            int wrap_s = map["wrap_s"], wrap_t = map["wrap_t"];
+            picture->set_texture_filter(wrap_s < 3 && wrap_t < 3 ? TEXTURE_FILTER_NEAREST : TEXTURE_FILTER_LINEAR);
+            if (wrap_s == wrap_t && (wrap_s == 1 || wrap_s == 5)) picture->set_texture_repeat(TEXTURE_REPEAT_ENABLED);
+            else if (wrap_s == wrap_t && (wrap_s == 2 || wrap_s == 6)) picture->set_texture_repeat(TEXTURE_REPEAT_MIRROR);
+            else {
+                picture->set_texture_repeat(TEXTURE_REPEAT_DISABLED);
+                if (wrap_s != wrap_t || wrap_s == 3 || wrap_s == 7) warn_once(warnings, "Unsupported sampler wrap combination uses clamp");
+            }
+            node->add_child(picture);
         }
-        Dictionary material = materials[int(pane["material_index"])];
-        Array maps = material["texture_maps"];
-        if (maps.is_empty()) {
-            warn_once(warnings, "Picture material without a texture: " + String(material["name"]));
-            continue;
-        }
-        Dictionary map = maps[0];
-        String texture_name = texture_names[int(map["texture_index"])];
-        if (!textures.has(texture_name)) {
-            warn_once(warnings, "Missing texture: " + texture_name);
-            continue;
-        }
-        if (maps.size() > 1) warn_once(warnings, "Multi-texture materials render their first texture only; game shaders are not converted");
-        Array uv_sets = pane["uv_sets"];
-        if (uv_sets.is_empty()) {
-            warn_once(warnings, "Picture without UV coordinates: " + String(pane["name"]));
-            continue;
-        }
-        Ref<Texture2D> texture = textures[texture_name];
-        PackedVector2Array source_uv = uv_sets[0];
-        PackedColorArray source_colors = pane["colors"];
-        const int order[] = {0, 1, 3, 2};
-        const Vector2 corners[] = {Vector2(), Vector2(size.x, 0), Vector2(0, size.y), size};
-        PackedVector2Array vertices, uv;
-        PackedColorArray colors;
-        for (int k : order) {
-            vertices.push_back(corners[k]);
-            uv.push_back(source_uv[k] * texture->get_size());
-            colors.push_back(source_colors[k]);
-        }
-        Polygon2D *picture = memnew(Polygon2D);
-        picture->set_name("Picture");
-        picture->set_polygon(vertices);
-        picture->set_uv(uv);
-        picture->set_vertex_colors(colors);
-        picture->set_texture(texture);
-        picture->set_material(texture_materials[texture_name]);
-        if (!(flags & 2)) picture->set_self_modulate(alpha);
-        int wrap_s = map["wrap_s"], wrap_t = map["wrap_t"];
-        picture->set_texture_filter(wrap_s < 3 && wrap_t < 3 ? TEXTURE_FILTER_NEAREST : TEXTURE_FILTER_LINEAR);
-        if (wrap_s == wrap_t && (wrap_s == 1 || wrap_s == 5)) picture->set_texture_repeat(TEXTURE_REPEAT_ENABLED);
-        else if (wrap_s == wrap_t && (wrap_s == 2 || wrap_s == 6)) picture->set_texture_repeat(TEXTURE_REPEAT_MIRROR);
-        else {
-            picture->set_texture_repeat(TEXTURE_REPEAT_DISABLED);
-            if (wrap_s != wrap_t || wrap_s == 3 || wrap_s == 7) warn_once(warnings, "Unsupported sampler wrap combination uses clamp");
-        }
-        node->add_child(picture);
     }
     warn_once(warnings, "Static layout only: BFLAN playback, UIKit actions, and game material shaders are not implemented");
     Node *old = get_node_or_null(NodePath("Layout"));
