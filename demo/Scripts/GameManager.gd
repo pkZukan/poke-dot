@@ -20,7 +20,7 @@ func _ready() -> void:
 	add_child(MainMenuScene.instantiate())
 	
 func _process(_delta: float) -> void:
-	if Input.is_action_just_pressed("pause"):
+	if Input.is_action_just_pressed("main_menu"):
 		match state:
 			GameState.STATE_PLAYING:
 				set_state(GameState.STATE_PAUSED)

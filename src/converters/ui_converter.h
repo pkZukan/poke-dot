@@ -10,6 +10,7 @@
 #include "middleware/bflyt.h"
 #include "middleware/bntx.h"
 #include "middleware/sarc.h"
+#include "ui/ui_state_runtime.h"
 
 namespace godot {
 
@@ -21,11 +22,14 @@ protected:
     void _notification(int what);
 
 public:
-    Error load_ui(const String &truiv_path, const String &arc_path);
+    // Attaches the layout to parent_path (relative to this node). Returns OK on success.
+    Error load_ui(const String &truiv_path, const String &arc_path, const NodePath &parent_path);
+    Error apply_state(const String &component, const String &state, double frame = 0.0);
     Control *get_pane(const String &name) const;
     PackedStringArray get_warnings() const;
 
 private:
+    UIStateRuntime state_runtime;
     void fit_layout();
     static float origin_fraction(int value);
     static Vector2 pane_origin(int flags);

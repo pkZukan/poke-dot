@@ -154,6 +154,11 @@ bool BinaryLayout::parse_material(BflytUtils::Reader &r, uint64_t offset, uint32
 	material["name"] = r.string(offset, 28);
 	uint32_t flags = r.number(offset + (version >= 0x08000000 ? 28 : 36), 4);
 	material["flags"] = flags;
+	const uint64_t colors = offset + (version >= 0x08000000 ? 36 : 28);
+	for (int i = 0; i < 2; ++i) {
+		uint64_t c = colors + i * 4;
+		material[i == 0 ? "black_color" : "white_color"] = Color(r.number(c, 1) / 255.0, r.number(c + 1, 1) / 255.0, r.number(c + 2, 1) / 255.0, r.number(c + 3, 1) / 255.0);
+	}
 	Array maps;
 	for (uint32_t i = 0; i < (flags & 3); ++i)
 	{
@@ -165,6 +170,16 @@ bool BinaryLayout::parse_material(BflytUtils::Reader &r, uint64_t offset, uint32
 		maps.push_back(map);
 	}
 	material["texture_maps"] = maps;
+	Array transforms;
+	for (uint32_t i = 0; i < ((flags >> 2) & 3); ++i) {
+		uint64_t p = offset + header + (flags & 3) * 4 + i * 20;
+		Dictionary transform;
+		transform["translation"] = r.vec2(p);
+		transform["rotation"] = r.real(p + 8);
+		transform["scale"] = r.vec2(p + 12);
+		transforms.push_back(transform);
+	}
+	material["texture_transforms"] = transforms;
 	material["raw_data"] = r.data.slice(offset, r.end);
 	return true;
 }
@@ -205,7 +220,38 @@ bool BinaryLayout::parse_pane(BflytUtils::Reader &r, const BflytSection &section
 	pane["scale"] = r.vec2(p + 68);
 	pane["size"] = r.vec2(p + 76);
 	if (tag == "pic1" && !parse_pic1(r, section, pane)) return false;
-	if (tag == "txt1" || tag == "wnd1" || tag == "prt1" || tag == "ali1" || tag == "scr1" || tag == "cpt1")
+	if (tag == "prt1") {
+		ERR_FAIL_COND_V_MSG(!r.has(p + 84, 12), false, "Truncated parts pane");
+		const uint32_t count = r.number(p + 84, 4);
+		ERR_FAIL_COND_V_MSG(!r.has(p + 96, uint64_t(count) * 40 + 1), false, "Truncated parts table");
+		pane["parts_scale"] = r.vec2(p + 88);
+		pane["parts_name"] = r.cstring(p + 96 + uint64_t(count) * 40);
+		pane["parts_override_count"] = count;
+	}
+	if (tag == "txt1") {
+		ERR_FAIL_COND_V_MSG(!r.has(p + 84, 44), false, "Truncated text pane");
+		pane["text_alignment"] = r.number(p + 92, 1);
+		pane["font_size"] = r.vec2(p + 112);
+		pane["font_index"] = r.number(p + 90, 2);
+		const uint64_t c = p + 104;
+		pane["text_color"] = Color(r.number(c, 1) / 255.0, r.number(c + 1, 1) / 255.0, r.number(c + 2, 1) / 255.0, r.number(c + 3, 1) / 255.0);
+		const uint32_t offset = r.number(p + 100, 4);
+		String text;
+		if (offset) {
+			ERR_FAIL_COND_V_MSG(offset < 128 || !r.has(p + offset, 2), false, "Invalid text offset");
+			std::vector<char16_t> characters;
+			for (uint64_t at = p + offset; ; at += 2) {
+				ERR_FAIL_COND_V_MSG(!r.has(at, 2), false, "Unterminated text");
+				uint32_t character = r.number(at, 2);
+				if (!character) break;
+				characters.push_back(char16_t(character));
+			}
+			characters.push_back(0);
+			text = String::utf16(characters.data());
+		}
+		pane["text"] = text;
+	}
+	if (tag == "wnd1" || tag == "ali1" || tag == "scr1" || tag == "cpt1")
 	{
 		if (!ctx.warnings.has(tag)) ctx.warnings.push_back(tag);
 	}
