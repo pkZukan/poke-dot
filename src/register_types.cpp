@@ -43,6 +43,8 @@
 #include "middleware/bflyt.h"
 #include "middleware/bflan.h"
 #include "middleware/havok_tag.h"
+#include "middleware/bffnt.h"
+#include "middleware/bfcpx.h"
 
 #include "field/trcol.h"
 #include "field/trins.h"
@@ -94,6 +96,8 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFCPX)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
@@ -315,6 +319,9 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(HavokTypeNameDescriptor)
 		GDREGISTER_CLASS(HavokTypeBodyDescriptor)
 		GDREGISTER_CLASS(HavokData)
+		GDREGISTER_CLASS(BinaryFont)
+		GDREGISTER_CLASS(BinaryCompositeFont)
+
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)
@@ -362,6 +369,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFCPX)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
@@ -418,6 +427,8 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFCPX)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dxlq87lwo8l4a"]
 
 [ext_resource type="Script" uid="uid://dqv0ftelyjdp6" path="res://Scripts/UI/main_menu.gd" id="1_5wsvm"]
+[ext_resource type="PackedScene" uid="uid://6xlpkimkbl7o" path="res://Scenes/UI/box.tscn" id="2_o14dv"]
 [ext_resource type="PackedScene" uid="uid://y3b3ks4j5str" path="res://Scenes/UI/pokedex.tscn" id="2_pokedex"]
 
 [node name="MainMenu" type="TrinityUI" unique_id=686238925]
@@ -10,7 +11,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_5wsvm")
-submenu_scenes = Array[PackedScene]([null, null, ExtResource("2_pokedex"), null, null, null])
+submenu_scenes = Array[PackedScene]([ExtResource("2_o14dv"), null, ExtResource("2_pokedex"), null, null, null])
 
 [node name="canvas" type="Control" parent="." unique_id=2047030468]
 anchors_preset = 0

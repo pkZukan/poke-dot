@@ -58,6 +58,32 @@ PackedStringArray TrinityUI::get_warnings() const {
     return get_meta("conversion_warnings", PackedStringArray());
 }
 
+Ref<Font> TrinityUI::get_font(const String &p_name) 
+{
+    String name = p_name;
+    if(p_name.ends_with("fcpx"))
+        name = p_name.replace(".fcpx", ".bfcpx"); //Gamefreak moment
+
+	if (font_cache.has(name)) {
+		return font_cache[name];
+	}
+	const String path = font_dir.path_join(name);
+	Ref<Font> f;
+	if (name.get_extension() == "bfcpx") 
+    {
+        Ref<BinaryCompositeFont> composite;
+        composite.instantiate();
+        f = composite->load_bfcpx(path);
+    } else {
+        Ref<BinaryFont> bf;
+        bf.instantiate();
+        if (bf->load_bffnt(path) == OK)
+            f = bf;
+    }
+	font_cache[name] = f;
+	return f;
+}
+
 Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const NodePath &parent_path) {
     Node *layout_parent = get_node_or_null(parent_path);
     ERR_FAIL_NULL_V_MSG(layout_parent, ERR_DOES_NOT_EXIST, "UI parent path does not exist");
@@ -221,18 +247,24 @@ Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const
                 continue;
             }
             if (type == "scr1") node->set_clip_contents(true);
-            if (type == "txt1") {
+            if (type == "txt1") 
+            {
                 Label *label = Object::cast_to<Label>(node);
+                if (!label) continue;
+
                 label->set_clip_text(true);
                 label->set_text(pane["text"]);
+
                 Vector2 font_size = pane["font_size"];
                 label->add_theme_font_size_override("font_size", MAX(1, int(font_size.y)));
                 label->add_theme_color_override("font_color", pane["text_color"]);
+
                 int align = pane["text_alignment"];
                 int horizontal = align & 3, vertical = (align >> 2) & 3;
                 label->set_horizontal_alignment(HorizontalAlignment(horizontal == 0 ? 1 : horizontal == 1 ? 0 : 2));
                 label->set_vertical_alignment(VerticalAlignment(vertical == 0 ? 1 : vertical == 1 ? 0 : 2));
-                warn_once(warnings, "Text uses the fallback font and authored strings; localization/game data is not bound");
+                PackedStringArray font_list = data["fonts"];
+                label->add_theme_font_override("font", get_font(font_list[0]));
                 continue;
             }
             if (type != "pic1") {

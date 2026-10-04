@@ -7,7 +7,7 @@ const ARC_PATH := "res://Assets/ui/data/main_menu/main_menu_top_00.arc"
 const TRUIV_PATH := "res://Assets/ui/data/main_menu/view_main_menu_top_00.truiv"
 
 #Consts
-const menu_entry_names := ["Boxes", "Satchel", "Pokédex", "Mable’s Research", "Z-A Royale", "Link Play"]
+const menu_entry_names := ["Boxes", "Satchel", "Pokédex", "Mable's Research", "Z-A Royale", "Link Play"]
 
 # Store ui scene instances
 @export var submenu_scenes: Array[PackedScene] = [null, null, null, null, null, null]

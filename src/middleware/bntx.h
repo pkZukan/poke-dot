@@ -157,7 +157,7 @@ public:
 	BinaryTexture(){}
 	~BinaryTexture(){}
 
-    Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset);
+    Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, int layer = 0);
     Vector4i get_channel_sources() const;
 
 private:

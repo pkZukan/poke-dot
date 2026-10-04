@@ -208,7 +208,7 @@ static bool has_bytes(const Ref<StreamPeerBuffer> &sp, uint64_t offset, uint64_t
     return offset <= end && size <= end - offset;
 }
 
-Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset)
+Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, int layer)
 {
     ERR_FAIL_COND_V(!has_bytes(sp, info_offset, 160), ERR_FILE_CORRUPT);
     sp->seek(info_offset);
@@ -225,12 +225,17 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
         vformat("Unsupported BNTX format 0x%04x for texture '%s'.", info.Format, get_name()));
     ERR_FAIL_COND_V(info.Width <= 0 || info.Height <= 0 || info.Width > 32768 || info.Height > 32768 ||
         info.SizeRange < 0 || info.SizeRange > 5 || info.Alignment <= 0 ||
-        (info.Alignment & (info.Alignment - 1)) != 0 || info.MipsCount == 0 || info.DataSize <= 0, ERR_FILE_CORRUPT);
+        (info.Alignment & (info.Alignment - 1)) != 0 || info.MipsCount == 0 || info.DataSize <= 0 ||
+        info.ArrayLength <= 0 || layer < 0 || layer >= info.ArrayLength ||
+        info.DataSize % info.ArrayLength != 0, ERR_FILE_CORRUPT);
     ERR_FAIL_COND_V(!has_bytes(sp, info.MipMapArrayPtr, uint64_t(info.MipsCount) * 8), ERR_FILE_CORRUPT);
     sp->seek(info.MipMapArrayPtr);
     uint64_t start = sp->get_64();
-    uint64_t end = info.MipsCount > 1 ? sp->get_64() : start + uint64_t(info.DataSize);
-    ERR_FAIL_COND_V(end <= start || end - start > uint64_t(info.DataSize) ||
+    const uint64_t layer_size = uint64_t(info.DataSize) / info.ArrayLength;
+    uint64_t end = info.MipsCount > 1 ? sp->get_64() : start + layer_size;
+    start += layer_size * layer;
+    end += layer_size * layer;
+    ERR_FAIL_COND_V(end <= start || end - start > layer_size ||
         !has_bytes(sp, start, end - start), ERR_FILE_CORRUPT);
     sp->seek(start);
     Array bytes = sp->get_data(end - start);
