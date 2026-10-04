@@ -3,7 +3,7 @@ extends TrinityUI
 signal option_selected(index: int)
 
 #View files
-const ARC_PATH := "res://Assets/ui/data/main_menu/main_menu_top_00.arc"
+const ARC_PATH := "res://Assets/ui/data/main_menu/main_menu_top_00_eng.arc"
 const TRUIV_PATH := "res://Assets/ui/data/main_menu/view_main_menu_top_00.truiv"
 
 #Consts

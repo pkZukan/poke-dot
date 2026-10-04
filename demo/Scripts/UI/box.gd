@@ -2,7 +2,7 @@ extends TrinityUI
 
 signal back_requested
 
-const ARC_PATH := "res://Assets/ui/data/box/box_top_00.arc"
+const ARC_PATH := "res://Assets/ui/data/box/box_top_00_eng.arc"
 const TRUIV_PATH := "res://Assets/ui/data/box/view_box_top_00.truiv"
 
 func _ready() -> void:
@@ -17,12 +17,8 @@ func _ready() -> void:
 	
 	_initialize()
 
-func _initialize() -> void:
-	# Sample the completed entrance states; apply_state does not play animations.
-	apply_state(".", "in", 3.0)
-	# f_in alone leaves the title transparent. Its continuation reveals it.
-	apply_state(".", "f_in_keep", 33.0)
-	apply_state(".", "keep", 0.0)
+func _initialize() -> void:	
+	_set_text("T_name_tmc_00", "Current Party")
 	
 func _set_text(pane_name: String, text: String) -> void:
 	var label := get_pane(pane_name) as Label

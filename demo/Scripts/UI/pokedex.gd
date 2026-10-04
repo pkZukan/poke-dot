@@ -2,7 +2,7 @@ extends TrinityUI
 
 signal back_requested
 
-const ARC_PATH := "res://Assets/ui/data/pokedex/pokedex_top.arc"
+const ARC_PATH := "res://Assets/ui/data/pokedex/pokedex_top_eng.arc"
 const TRUIV_PATH := "res://Assets/ui/data/pokedex/view_pokedex_top_00.truiv"
 
 func _ready() -> void:

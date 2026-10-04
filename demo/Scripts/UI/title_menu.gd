@@ -1,6 +1,6 @@
 extends TrinityUI
 
-const ARC_PATH := "res://Assets/ui/data/title_menu/title_menu_00.arc"
+const ARC_PATH := "res://Assets/ui/data/title_menu/title_menu_00_eng.arc"
 const TRUIV_PATH := "res://Assets/ui/data/title_menu/view_title_menu_00.truiv"
 
 func _ready() -> void:
