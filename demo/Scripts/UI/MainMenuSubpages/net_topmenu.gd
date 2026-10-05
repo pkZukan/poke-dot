@@ -15,10 +15,22 @@ func _ready() -> void:
 	_set_text("T_guide_text_00", "Move up the ranks by taking part in online battles and earning points!")
 	get_scope("L_info_00")._set_text("T_option_00", "Check News")
 	
-	_initialize()
+	_initialize_text()
+	_initialize_state()
 
-func _initialize() -> void:	
-	pass
+func _initialize_state() -> void:
+	# Sample the completed entrance; apply_state does not play animations.
+	apply_state(".", "in", 3.0)
+	apply_state(".", "keep")
+	for i in 5:
+		var component := "L_menu_list_%02d" % i
+		apply_state(component, "active")
+		apply_state(component, "select" if i == 0 else "unselect", 4.0)
+
+func _initialize_text():
+	var entries := ["Link Trade", "Link Battle", "Mystery Gift"]
+	for i in entries.size():
+		get_scope("L_menu_list_%02d" % (i + 2))._set_text("T_list_00", entries[i])
 	
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
