@@ -7,8 +7,8 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/text_server.hpp>
 #include <godot_cpp/classes/font_file.hpp>
+#include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/core/math.hpp>
-#include <vector>
 #include "middleware/bflyt.h"
 #include "middleware/bntx.h"
 #include "middleware/bfcpx.h"
@@ -35,12 +35,20 @@ public:
 private:
     UIStateRuntime state_runtime;
     void fit_layout();
+    bool build_layout(const String &layout_name, Control *container, PackedStringArray ancestry);
     static float origin_fraction(int value);
     static Vector2 pane_origin(int flags);
     static void warn_once(PackedStringArray &warnings, const String &message);
 
     String font_dir = "res://Assets/ui/font/bin/";
-    HashMap<String, Ref<Font>> font_cache;
+    Dictionary font_cache;
+    Dictionary layouts;
+    
+    Control *layout = nullptr;
+    PackedStringArray warnings;
+    Vector<Control *> nodes;
+    Dictionary textures;
+    Dictionary texture_materials;
 };
 
 } // namespace godot
