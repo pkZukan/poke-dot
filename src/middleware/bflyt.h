@@ -72,7 +72,12 @@ private:
 	bool parse_pas1(BflytContext &ctx);
 	bool parse_pae1(BflytContext &ctx);
 	bool parse_pane(BflytUtils::Reader &r, const BflytSection &section, BflytContext &ctx);
+	bool parse_pane_payload(BflytUtils::Reader &r, const BflytSection &section, BflytContext &ctx, Dictionary &pane);
 	bool parse_pic1(BflytUtils::Reader &r, const BflytSection &section, Dictionary &pane);
+	bool parse_wnd1(BflytUtils::Reader &r, const BflytSection &section, Dictionary &pane);
+	bool parse_prt1(BflytUtils::Reader &r, const BflytSection &section, Dictionary &pane);
+	bool parse_txt1(BflytUtils::Reader &r, const BflytSection &section, Dictionary &pane);
+	bool parse_unrendered_pane(const BflytSection &section, BflytContext &ctx);
 	bool validate_references(const BflytContext &ctx);
 };
 
