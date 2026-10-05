@@ -42,6 +42,7 @@ private:
 
     String font_dir = "res://Assets/ui/font/bin/";
     Dictionary font_cache;
+    Dictionary archive_fonts;
     Dictionary layouts;
     
     Control *layout = nullptr;

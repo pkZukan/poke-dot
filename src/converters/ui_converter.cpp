@@ -60,28 +60,33 @@ PackedStringArray TrinityUI::get_warnings() const {
 
 Ref<Font> TrinityUI::get_font(const String &p_name) 
 {
+    // The layout calls composite fonts .fcpx, while loose files use .bfcpx.
     String name = p_name;
-    if(p_name.ends_with("fcpx"))
-        name = p_name.replace(".fcpx", ".bfcpx"); //Gamefreak moment
+    if (name.ends_with(".fcpx")) name = name.get_basename() + ".bfcpx";
+    if (font_cache.has(name)) return font_cache[name];
 
-	if (font_cache.has(name)) {
-		return font_cache[name];
-	}
-	const String path = font_dir.path_join(name);
-	Ref<Font> f;
-	if (name.get_extension() == "bfcpx") 
-    {
+    Ref<Font> font;
+    Error error;
+    if (name.get_extension() == "bfcpx") {
         Ref<BinaryCompositeFont> composite;
         composite.instantiate();
-        f = composite->load_bfcpx(path);
+        // Archive composites describe the layout's font; their members live in
+        // the shared font directory, just as they do for loose composites.
+        if (archive_fonts.has(name))
+            error = composite->LoadFromBuffer(archive_fonts[name], font_dir);
+        else
+            error = composite->LoadFromFile(font_dir.path_join(name));
+        if (error == OK) font = composite;
+        for (const String &warning : composite->get_warnings()) warn_once(warnings, warning);
     } else {
-        Ref<BinaryFont> bf;
-        bf.instantiate();
-        if (bf->load_bffnt(path) == OK)
-            f = bf;
+        Ref<BinaryFont> bitmap;
+        bitmap.instantiate();
+        error = bitmap->LoadFromFile(font_dir.path_join(name));
+        if (error == OK) font = bitmap;
     }
-	font_cache[name] = f;
-	return f;
+    if (error != OK) warn_once(warnings, vformat("Could not load UI font '%s' (error %d).", p_name, error));
+    font_cache[name] = font;
+    return font;
 }
 
 bool TrinityUI::build_layout(const String &layout_name, Control *container, PackedStringArray ancestry)
@@ -190,7 +195,13 @@ bool TrinityUI::build_layout(const String &layout_name, Control *container, Pack
             label->set_horizontal_alignment(HorizontalAlignment(horizontal == 0 ? 1 : horizontal == 1 ? 0 : 2));
             label->set_vertical_alignment(VerticalAlignment(vertical == 0 ? 1 : vertical == 1 ? 0 : 2));
             PackedStringArray font_list = data["fonts"];
-            label->add_theme_font_override("font", get_font(font_list[0]));
+            const int font_index = pane["font_index"];
+            if (font_index < 0 || font_index >= font_list.size()) {
+                warn_once(warnings, vformat("Invalid font index %d in layout '%s', pane '%s'.", font_index, layout_name, pane["name"]));
+            } else {
+                Ref<Font> font = get_font(font_list[font_index]);
+                if (font.is_valid()) label->add_theme_font_override("font", font);
+            }
             continue;
         }
         if (type != "pic1") 
@@ -281,7 +292,16 @@ Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const
     Ref<SeadArchive> archive = ResourceLoader::get_singleton()->load(arc_path);
     ERR_FAIL_COND_V_MSG(view.is_null() || archive.is_null() || view->get_Chunks().is_empty(), ERR_FILE_CORRUPT, "Could not load UI inputs");
 
+    font_cache.clear();
+    archive_fonts.clear();
     PackedStringArray files = archive->get_files();
+    for (const String &file : files) {
+        const String extension = file.get_extension();
+        if (extension != "fcpx" && extension != "bfcpx") continue;
+        const String name = file.get_file().get_basename() + ".bfcpx";
+        ERR_FAIL_COND_V_MSG(archive_fonts.has(name), ERR_INVALID_DATA, "Ambiguous composite font name in ARC: " + name);
+        archive_fonts[name] = archive->get_file_data(file);
+    }
     PackedStringArray bflyt_files;
     for (int i = 0; i < files.size(); ++i) 
     {

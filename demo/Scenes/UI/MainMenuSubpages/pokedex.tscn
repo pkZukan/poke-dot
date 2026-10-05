@@ -1,14 +1,13 @@
 [gd_scene format=3 uid="uid://y3b3ks4j5str"]
 
-[ext_resource type="Script" uid="uid://b3ajmi71ddfuc" path="res://Scripts/UI/pokedex.gd" id="1_nffnb"]
+[ext_resource type="Script" uid="uid://b3ajmi71ddfuc" path="res://Scripts/UI/MainMenuSubpages/pokedex.gd" id="1_xdsb6"]
 
 [node name="Pokedex" type="TrinityUI" unique_id=686238925]
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_nffnb")
+script = ExtResource("1_xdsb6")
 
 [node name="canvas" type="Control" parent="." unique_id=2047030468]
 anchors_preset = 0

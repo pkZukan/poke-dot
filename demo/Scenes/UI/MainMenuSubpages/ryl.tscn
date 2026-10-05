@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://ca3g32u4fh0ol"]
+
+[ext_resource type="Script" uid="uid://tq2qs0top4jr" path="res://Scripts/UI/MainMenuSubpages/ryl.gd" id="1_21q75"]
+
+[node name="Ryl" type="TrinityUI" unique_id=686238925]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_21q75")
+
+[node name="canvas" type="Control" parent="." unique_id=2047030468]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
