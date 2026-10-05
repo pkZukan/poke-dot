@@ -14,22 +14,23 @@
 #include "middleware/bfcpx.h"
 #include "middleware/sarc.h"
 #include "ui/ui_state_runtime.h"
+#include "ui/ui_pane.h"
 
 namespace godot {
 
-class TrinityUI : public Control {
-    GDCLASS(TrinityUI, Control)
+class TrinityUI : public TrinityPane {
+    GDCLASS(TrinityUI, TrinityPane)
 
 protected:
     static void _bind_methods();
     void _notification(int what);
+    Control *scope_root() const override;
 
 public:
     // Attaches the layout to parent_path (relative to this node). Returns OK on success.
     Error load_ui(const String &truiv_path, const String &arc_path, const NodePath &parent_path);
     Ref<Font> get_font(const String &p_name);
     Error apply_state(const String &component, const String &state, double frame = 0.0);
-    Control *get_pane(const String &name) const;
     PackedStringArray get_warnings() const;
 
 private:

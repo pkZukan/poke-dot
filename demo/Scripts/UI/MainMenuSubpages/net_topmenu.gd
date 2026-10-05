@@ -13,18 +13,13 @@ func _ready() -> void:
 		return
 
 	_set_text("T_guide_text_00", "Move up the ranks by taking part in online battles and earning points!")
-	_set_text("T_option_00", "Check News")
+	get_scope("L_info_00")._set_text("T_option_00", "Check News")
 	
 	_initialize()
 
 func _initialize() -> void:	
 	pass
 	
-func _set_text(pane_name: String, text: String) -> void:
-	var label := get_pane(pane_name) as Label
-	if label:
-		label.text = text
-
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return

@@ -177,7 +177,9 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
         else if (target == 5) pane->set_rotation(-Math::deg_to_rad(value));
         else if (target == 6 || target == 7) 
         {
-            Vector2 scale = pane->get_scale(); scale[target - 6] = value; pane->set_scale(scale);
+            Vector2 scale = pane->get_scale();
+            scale[target - 6] = value * (target == 6 ? double(pane->get_meta("text_scale_x", 1.0)) : 1.0);
+            pane->set_scale(scale);
         }
     } 
     else if (kind == "FLMC" && material.is_valid() && target < 8) {

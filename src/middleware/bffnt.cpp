@@ -95,7 +95,7 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 	sp->seek(finf);
 	const uint8_t font_type = sp->get_u8();
 	const int height = sp->get_u8();
-	sp->get_u8(); // nominal width
+	const int width = sp->get_u8(); // nominal width
 	const int ascent = sp->get_u8();
 	const int line_feed = sp->get_16();
 	sp->get_u16(); // alternate glyph index
@@ -257,6 +257,7 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 	set_data(PackedByteArray());
 	set_fallbacks(TypedArray<Font>());
 	set_allow_system_fallback(false);
+	set_meta("nominal_font_size", Vector2(width, height));
 	set_fixed_size(height);
 	set_fixed_size_scale_mode(TextServer::FIXED_SIZE_SCALE_ENABLED);
 	set_subpixel_positioning(TextServer::SUBPIXEL_POSITIONING_DISABLED);

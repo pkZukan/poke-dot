@@ -35,11 +35,6 @@ func set_seen(num: int):
 	_set_text("T_v_find_00", str(maxi(num, 0)))
 	_set_text("T_hget_01", "Number Seen")
 	
-func _set_text(pane_name: String, text: String) -> void:
-	var label := get_pane(pane_name) as Label
-	if label:
-		label.text = text
-
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return

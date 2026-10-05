@@ -20,11 +20,6 @@ func _ready() -> void:
 func _initialize() -> void:	
 	_set_text("T_name_tmc_00", "Current Party")
 	
-func _set_text(pane_name: String, text: String) -> void:
-	var label := get_pane(pane_name) as Label
-	if label:
-		label.text = text
-
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return

@@ -213,6 +213,18 @@ Error BinaryCompositeFont::LoadFromBuffer(const PackedByteArray &buffer, const S
 	set_data(PackedByteArray());
 	set_allow_system_fallback(false);
 	set_fallbacks(fonts);
+	// Bitmap composites retain their native, potentially non-square cell size.
+	// Outline fonts use a square em; symbol fallbacks must not replace the
+	// nominal dimensions of the bitmap font used for the layout's text.
+	Vector2 nominal_size(1, 1);
+	for (int i = 0; i < fonts.size(); ++i) {
+		Ref<Font> member = fonts[i];
+		if (member->has_meta("nominal_font_size")) {
+			nominal_size = member->get_meta("nominal_font_size");
+			break;
+		}
+	}
+	set_meta("nominal_font_size", nominal_size);
 	warnings = loaded_warnings;
 	return OK;
 }

@@ -76,16 +76,14 @@ func _initialize() -> void:
 
 	for i in menu_entry_names.size():
 		var component := "L_menu_button_%02d" % i
-		var part := get_pane(component)
 		apply_state(component, "active")
 		apply_state(component, "ptn_icon", i)
 		apply_state(component, "ptn_time")
 		apply_state(component, "ptn_inf")
 		apply_state(component, "select" if i == selected_idx else "unselect", 4.0)
+		var button := get_scope(component)
 		for label_name in ["T_00", "T_01"]:
-			var label := part.find_child(label_name, true, false) as Label
-			if label:
-				label.text = menu_entry_names[i]
+			button._set_text(label_name, menu_entry_names[i])
 	for i in 6:
 		var component := "L_temochi_btn_%02d" % i
 		apply_state(component, "empty")
@@ -99,13 +97,11 @@ func _initialize() -> void:
 	set_research_exp(0, 1)
 	set_quest("No tracked quest", "")
 	set_next_award("-", "")
-	var research := get_pane("L_mr_00")
-	var reward_label := research.find_child("T_option_00", true, false) as Label
-	if reward_label:
-		reward_label.text = "Reward List"
-	var map_label := get_pane("L_opguide_03").find_child("T_option_00", true, false) as Label
-	if map_label:
-		map_label.text = "Map"
+	var reward_prompt := get_scope("L_mr_00").get_scope("L_opguide_00")
+	reward_prompt._set_text("T_option_00", "Reward List")
+	apply_state(str(get_pane(".").get_path_to(reward_prompt)), "button_x")
+	get_scope("L_opguide_03")._set_text("T_option_00", "Map")
+	apply_state("L_opguide_03", "button_plus")
 	_update_cursor()
 
 func _move_selection(direction: int) -> void:
@@ -116,17 +112,17 @@ func _move_selection(direction: int) -> void:
 
 func _update_cursor() -> void:
 	var cursor := get_pane("L_cursor_00")
-	var button := get_pane("L_menu_button_%02d" % selected_idx)
+	var button := get_scope("L_menu_button_%02d" % selected_idx)
 	if not cursor or not button:
 		return
-	var anchor := button.find_child("N_cursor", true, false) as Control
+	var anchor := button.get_pane("N_cursor")
 	if anchor:
 		var target := anchor.get_global_transform() * (anchor.size * 0.5)
 		cursor.position = cursor.get_parent().get_global_transform().affine_inverse() * target - cursor.size * 0.5
 
 # Set money display
 func set_money(amount: int) -> void:
-	_set_text("T_money_00", str(maxi(amount, 0)))
+	_set_text("T_money_00", "\uE300 %d" % maxi(amount, 0))
 
 # Set research lvl
 func set_research_level(level: int) -> void:
@@ -150,11 +146,6 @@ func set_quest(name: String, desc: String):
 func set_next_award(name: String, num: String):
 	_set_text("T_mrrw_name_00", name)
 	_set_text("T_mrrw_num_00", num)
-
-func _set_text(pane_name: String, text: String) -> void:
-	var label := get_pane(pane_name) as Label
-	if label:
-		label.text = text
 
 func _on_state_changed(new_state: GameManager.GameState) -> void:
 	visible = (new_state == GameManager.GameState.STATE_PAUSED)

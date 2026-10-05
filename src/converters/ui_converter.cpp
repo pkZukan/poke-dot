@@ -21,7 +21,6 @@ void TrinityUI::warn_once(PackedStringArray &warnings, const String &message) {
 void TrinityUI::_bind_methods() {
     ClassDB::bind_method(D_METHOD("load_ui", "truiv_path", "arc_path", "parent_path"), &TrinityUI::load_ui);
     ClassDB::bind_method(D_METHOD("apply_state", "component", "state", "frame"), &TrinityUI::apply_state, DEFVAL(0.0));
-    ClassDB::bind_method(D_METHOD("get_pane", "name"), &TrinityUI::get_pane);
     ClassDB::bind_method(D_METHOD("get_warnings"), &TrinityUI::get_warnings);
 }
 
@@ -41,11 +40,8 @@ void TrinityUI::fit_layout() {
     layout->set_position((available - native_size * factor) * 0.5);
 }
 
-Control *TrinityUI::get_pane(const String &name) const {
-    // Paths are saved as metadata so lookups also work after PackedScene loading.
-    Dictionary paths = get_meta("pane_paths", Dictionary());
-    if (!paths.has(name)) return nullptr;
-    return Object::cast_to<Control>(get_node_or_null(paths[name]));
+Control *TrinityUI::scope_root() const {
+    return Object::cast_to<Control>(get_node_or_null(get_meta("layout_path", NodePath("Layout"))));
 }
 
 Error TrinityUI::apply_state(const String &component, const String &state, double frame) {
@@ -106,7 +102,7 @@ bool TrinityUI::build_layout(const String &layout_name, Control *container, Pack
     const bool is_entry = container == nullptr;
     if (is_entry) 
     {
-        layout = memnew(Control);
+        layout = memnew(TrinityPane);
         layout->set_name("Layout");
         layout->set_mouse_filter(MOUSE_FILTER_IGNORE);
         layout->set_size(native_size);
@@ -130,7 +126,7 @@ bool TrinityUI::build_layout(const String &layout_name, Control *container, Pack
             return false;
         }
         Control *parent = parent_index < 0 ? container : layout_nodes[parent_index];
-        Control *node = String(pane["type"]) == "txt1" ? memnew(Label) : memnew(Control);
+        Control *node = String(pane["type"]) == "txt1" ? static_cast<Control *>(memnew(Label)) : memnew(TrinityPane);
         node->set_name(parent_index < 0 ? layout_name : String(pane["name"]));
         node->set_mouse_filter(MOUSE_FILTER_IGNORE);
         parent->add_child(node);
@@ -200,7 +196,24 @@ bool TrinityUI::build_layout(const String &layout_name, Control *container, Pack
                 warn_once(warnings, vformat("Invalid font index %d in layout '%s', pane '%s'.", font_index, layout_name, pane["name"]));
             } else {
                 Ref<Font> font = get_font(font_list[font_index]);
-                if (font.is_valid()) label->add_theme_font_override("font", font);
+                if (font.is_valid()) {
+                    label->add_theme_font_override("font", font);
+                    // BFLYT specifies independent glyph width and height. Godot's font
+                    // size is uniform, so compensate the label's local geometry before
+                    // applying horizontal text scaling. Its visual bounds and pivot stay
+                    // at the authored pane bounds (including alignment and clipping).
+                    if (font_size.x > 0 && font_size.y > 0 && Math::is_finite(font_size.x) && Math::is_finite(font_size.y)) {
+                        const Vector2 nominal = font->get_meta("nominal_font_size", Vector2(1, 1));
+                        const real_t native_aspect = nominal.x > 0 && nominal.y > 0 ? nominal.y / nominal.x : 1;
+                        const real_t text_scale = font_size.x / font_size.y * native_aspect;
+                        const Vector2 text_pivot(pivot.x / text_scale, pivot.y);
+                        label->set_meta("text_scale_x", text_scale);
+                        label->set_size(Vector2(size.x / text_scale, size.y));
+                        label->set_pivot_offset(text_pivot);
+                        label->set_position(label->get_position() + pivot - text_pivot);
+                        label->set_scale(label->get_scale() * Vector2(text_scale, 1));
+                    }
+                }
             }
             continue;
         }
@@ -396,9 +409,7 @@ Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const
     {
         node->set_owner(scene_owner);
         for (int j = 0; j < node->get_child_count(); ++j) node->get_child(j)->set_owner(scene_owner);
-        String original_name = Dictionary(node->get_meta("bflyt_pane"))["name"];
         paths[String(layout->get_path_to(node))] = get_path_to(node);
-        if (!paths.has(original_name)) paths[original_name] = get_path_to(node);
     }
     set_meta("pane_paths", paths);
     set_meta("truiv", view);
