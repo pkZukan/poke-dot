@@ -344,7 +344,13 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
         if (imgs.is_empty())
             continue;
 
-        Ref<ImageTexture> img_tex = ImageTexture::create_from_image(imgs[texName]);
+        Ref<BinaryTexture> texture_array = imgs[texName];
+        if (texture_array.is_null() || texture_array->get_layers() == 0)
+            continue;
+        Ref<Image> image = texture_array->get_layer_data(0);
+        if (image.is_null())
+            continue;
+        Ref<ImageTexture> img_tex = ImageTexture::create_from_image(image);
         if (img_tex.is_valid())
             shdr->set_shader_parameter(tex_name, img_tex);
     }

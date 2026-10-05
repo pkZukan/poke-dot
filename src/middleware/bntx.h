@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/image.hpp>
+#include <godot_cpp/classes/texture2d_array.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/stream_peer_buffer.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
@@ -172,8 +173,9 @@ struct BRTData
 	}
 };
 
-class BinaryTexture : public Image {
-    GDCLASS(BinaryTexture, Image)
+// One named BNTX entry. The entry may contain multiple image layers.
+class BinaryTexture : public Texture2DArray {
+    GDCLASS(BinaryTexture, Texture2DArray)
 
 protected:
 	static void _bind_methods();
@@ -181,7 +183,7 @@ public:
 	BinaryTexture(){}
 	~BinaryTexture(){}
 
-    Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, int layer = 0);
+    Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset);
     Vector4i get_channel_sources() const;
 
 private:

@@ -218,7 +218,7 @@ static bool has_bytes(const Ref<StreamPeerBuffer> &sp, uint64_t offset, uint64_t
     return offset <= end && size <= end - offset;
 }
 
-Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, int layer)
+Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset)
 {
     ERR_FAIL_COND_V(!has_bytes(sp, info_offset, 160), ERR_FILE_CORRUPT);
     sp->seek(info_offset);
@@ -238,26 +238,39 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
     ERR_FAIL_COND_V(info.Width <= 0 || info.Height <= 0 || info.Width > 32768 || info.Height > 32768 ||
         info.SizeRange < 0 || info.SizeRange > 5 || info.Alignment <= 0 ||
         (info.Alignment & (info.Alignment - 1)) != 0 || info.MipsCount == 0 || info.DataSize <= 0 ||
-        info.ArrayLength <= 0 || layer < 0 || layer >= info.ArrayLength ||
+        info.ArrayLength <= 0 ||
         info.DataSize % info.ArrayLength != 0, ERR_FILE_CORRUPT);
     ERR_FAIL_COND_V(!has_bytes(sp, info.MipMapArrayPtr, uint64_t(info.MipsCount) * 8), ERR_FILE_CORRUPT);
     sp->seek(info.MipMapArrayPtr);
-    uint64_t start = sp->get_64();
+    const uint64_t first_mip_start = sp->get_64();
     const uint64_t layer_size = uint64_t(info.DataSize) / info.ArrayLength;
-    uint64_t end = info.MipsCount > 1 ? sp->get_64() : start + layer_size;
-    start += layer_size * layer;
-    end += layer_size * layer;
-    ERR_FAIL_COND_V(end <= start || end - start > layer_size ||
-        !has_bytes(sp, start, end - start), ERR_FILE_CORRUPT);
-    sp->seek(start);
-    Array bytes = sp->get_data(end - start);
-    ERR_FAIL_COND_V(int(bytes[0]) != OK, ERR_FILE_CORRUPT);
-    PackedByteArray pixels = Swizzle(info.Width, info.Height, info, bytes[1], false);
+    const uint64_t first_mip_end = info.MipsCount > 1 ? sp->get_64() : first_mip_start + layer_size;
+    ERR_FAIL_COND_V(first_mip_end <= first_mip_start || first_mip_end - first_mip_start > layer_size,
+        ERR_FILE_CORRUPT);
     const uint32_t sources = uint32_t(info.ChannelType);
     channel_sources = Vector4i(sources & 0xff, (sources >> 8) & 0xff,
         (sources >> 16) & 0xff, (sources >> 24) & 0xff);
-    set_data(info.Width, info.Height, false, format, pixels);
-    return is_empty() ? ERR_FILE_CORRUPT : OK;
+
+    TypedArray<Ref<Image>> layers;
+    for (int layer = 0; layer < info.ArrayLength; ++layer)
+    {
+        const uint64_t start = first_mip_start + layer_size * layer;
+        const uint64_t end = first_mip_end + layer_size * layer;
+        ERR_FAIL_COND_V(!has_bytes(sp, start, end - start), ERR_FILE_CORRUPT);
+        sp->seek(start);
+        Array bytes = sp->get_data(end - start);
+        ERR_FAIL_COND_V(bytes.size() < 2 || int(bytes[0]) != OK, ERR_FILE_CORRUPT);
+        PackedByteArray pixels = Swizzle(info.Width, info.Height, info, bytes[1], false);
+        Ref<Image> image;
+        image.instantiate();
+        image->set_data(info.Width, info.Height, false, format, pixels);
+        ERR_FAIL_COND_V(image->is_empty(), ERR_FILE_CORRUPT);
+        layers.push_back(image);
+    }
+
+    Error error = create_from_images(layers);
+    ERR_FAIL_COND_V(error != OK, error);
+    return OK;
 }
 
 Ref<BinaryTexture> BinaryTextureArchive::GetTexture(const String &name) const
@@ -282,7 +295,8 @@ Error BinaryTextureArchive::LoadFromBuffer(const PackedByteArray &buffer)
     sp->set_data_array(buffer);
     BNTXHeader header;
     BNTXHeader::Read(sp, header);
-    ERR_FAIL_COND_V(header.Magic != "BNTX" || header.FileSize != uint64_t(buffer.size()), ERR_FILE_CORRUPT);
+    ERR_FAIL_COND_V(header.Magic != "BNTX" || header.unk_1 != 0xfeff ||
+        header.FileSize != uint64_t(buffer.size()), ERR_FILE_CORRUPT);
     NXHeader nx;
     NXHeader::Read(sp, nx);
     ERR_FAIL_COND_V(nx.Magic != "NX  " || !has_bytes(sp, nx.InfoPtrAddr, uint64_t(nx.Count) * 8) ||

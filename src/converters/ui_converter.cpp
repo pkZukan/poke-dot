@@ -438,12 +438,15 @@ Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const
         for (int j = 0; j < names.size(); ++j) 
         {
             ERR_FAIL_COND_V_MSG(textures.has(names[j]), ERR_INVALID_DATA, "Ambiguous texture name across BNTX archives");
-            Ref<BinaryTexture> image = images[names[j]];
+            Ref<BinaryTexture> texture_array = images[names[j]];
+            if (texture_array.is_null() || texture_array->get_layers() == 0) return ERR_FILE_CORRUPT;
+            Ref<Image> image = texture_array->get_layer_data(0);
+            if (image.is_null()) return ERR_FILE_CORRUPT;
             textures[names[j]] = ImageTexture::create_from_image(image);
             Ref<ShaderMaterial> shader_material;
             shader_material.instantiate();
             shader_material->set_shader(picture_shader);
-            shader_material->set_shader_parameter("channel_sources", image->get_channel_sources());
+            shader_material->set_shader_parameter("channel_sources", texture_array->get_channel_sources());
             texture_materials[names[j]] = shader_material;
         }
     }

@@ -204,49 +204,38 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 		}
 	}
 
-	// Reuse the BNTX decoder, including its array layer and channel selectors.
+	// Let the BNTX archive parser own its container and entry metadata.
 	PackedByteArray texture_data = buffer.slice(data_offset, data_offset + data_size);
-	Ref<StreamPeerBuffer> texture_stream;
-	// BNTX has its BOM at 12, not at 4.
-	texture_stream.instantiate();
-	texture_stream->set_data_array(texture_data);
-	if (texture_data.size() < 68 || texture_stream->get_string(8) != "BNTX" ||
-		texture_data[12] != 0xff || texture_data[13] != 0xfe) return ERR_FILE_CORRUPT;
-	texture_stream->seek(28);
-	if (texture_stream->get_u32() != data_size) return ERR_FILE_CORRUPT;
-	NXHeader nx;
-	NXHeader::Read(texture_stream, nx);
-	if (nx.Magic != "NX  " || nx.Count != 1 || !has_bytes(texture_stream, nx.InfoPtrAddr, 8)) return ERR_FILE_CORRUPT;
-	texture_stream->seek(nx.InfoPtrAddr);
-	const uint64_t info_offset = texture_stream->get_u64();
-	if (!has_bytes(texture_stream, info_offset, 160)) return ERR_FILE_CORRUPT;
-	texture_stream->seek(info_offset);
-	BRTInfo info;
-	BRTInfo::Read(texture_stream, info);
-	if (info.ArrayLength != sheet_count || info.Width != sheet_width || info.Height != sheet_height) return ERR_FILE_CORRUPT;
+	Ref<BinaryTextureArchive> texture_archive;
+	texture_archive.instantiate();
+	Error texture_error = texture_archive->LoadFromBuffer(texture_data);
+	if (texture_error != OK) return texture_error;
+	TypedDictionary<String, BinaryTexture> texture_entries = texture_archive->get_textures();
+	if (texture_entries.size() != 1) return ERR_FILE_CORRUPT;
+	Ref<BinaryTexture> texture = texture_entries.values()[0];
+	if (texture.is_null() || texture->get_layers() != sheet_count ||
+		texture->get_width() != sheet_width || texture->get_height() != sheet_height) return ERR_FILE_CORRUPT;
+	const Vector4i channels = texture->get_channel_sources();
+	for (int c = 0; c < 4; ++c) if (channels[c] < 0 || channels[c] > 5) return ERR_UNAVAILABLE;
 	Vector<Ref<Image>> sheets;
 	for (int layer = 0; layer < sheet_count; ++layer) {
-		Ref<BinaryTexture> texture;
-		texture.instantiate();
-		Error error = texture->LoadFromEntry(texture_stream, info_offset, layer);
-		if (error != OK) return error;
-		if (texture->is_compressed()) {
-			error = texture->decompress();
+		Ref<Image> image = texture->get_layer_data(layer);
+		if (image.is_null()) return ERR_FILE_CORRUPT;
+		if (image->is_compressed()) {
+			Error error = image->decompress();
 			if (error != OK) return error;
 		}
-		texture->convert(Image::FORMAT_RGBA8);
-		PackedByteArray pixels = texture->get_data();
-		const Vector4i channels = texture->get_channel_sources();
-		for (int c = 0; c < 4; ++c) if (channels[c] < 0 || channels[c] > 5) return ERR_UNAVAILABLE;
+		image->convert(Image::FORMAT_RGBA8);
+		PackedByteArray pixels = image->get_data();
 		uint8_t *dst = pixels.ptrw();
 		for (int64_t i = 0; i < pixels.size(); i += 4) {
 			const uint8_t source[] = {0, 255, dst[i], dst[i + 1], dst[i + 2], dst[i + 3]};
 			for (int c = 0; c < 4; ++c) dst[i + c] = source[channels[c]];
 		}
-		Ref<Image> image = Image::create_from_data(sheet_width, sheet_height, false, Image::FORMAT_RGBA8, pixels);
+		Ref<Image> font_sheet = Image::create_from_data(sheet_width, sheet_height, false, Image::FORMAT_RGBA8, pixels);
 		// NX font sheets are stored upside down (Switch Toolbox GetBitmapFont).
-		image->flip_y();
-		sheets.push_back(image);
+		font_sheet->flip_y();
+		sheets.push_back(font_sheet);
 	}
 
 	const int per_sheet = columns * rows;
