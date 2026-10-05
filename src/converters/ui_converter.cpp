@@ -8,6 +8,70 @@
 
 using namespace godot;
 
+void TrinityUI::_bind_methods() 
+{
+    ClassDB::bind_method(D_METHOD("get_pane", "name_or_path"), &TrinityUI::get_pane);
+    ClassDB::bind_method(D_METHOD("get_scope", "name_or_path"), &TrinityUI::get_scope);
+    ClassDB::bind_method(D_METHOD("_set_text", "name_or_path", "text"), &TrinityUI::_set_text);
+    ClassDB::bind_method(D_METHOD("load_ui", "truiv_path", "arc_path", "parent_path"), &TrinityUI::load_ui);
+    ClassDB::bind_method(D_METHOD("apply_state", "component", "state", "frame"), &TrinityUI::apply_state, DEFVAL(0.0));
+    ClassDB::bind_method(D_METHOD("get_warnings"), &TrinityUI::get_warnings);
+}
+
+bool TrinityUI::is_scope_node() const {
+    return has_meta("bflyt_pane") || has_meta("layout_size");
+}
+
+Control *TrinityUI::scope_root() const {
+    if (is_scope_node()) 
+        return const_cast<TrinityUI *>(this);
+    return Object::cast_to<Control>(get_node_or_null(get_meta("layout_path", NodePath("Layout"))));
+}
+
+Control *TrinityUI::get_pane(const String &name_or_path) const {
+    Control *root = scope_root();
+    if (!root) return nullptr;
+    if (name_or_path == ".") return root;
+    if (name_or_path.contains("/")) 
+    {
+        NodePath path(name_or_path);
+        if (path.is_absolute() || path.get_subname_count() != 0) return nullptr;
+        Control *pane = Object::cast_to<Control>(root->get_node_or_null(path));
+        return pane && pane->has_meta("bflyt_pane") && (pane == root || root->is_ancestor_of(pane)) ? pane : nullptr;
+    }
+
+    Control *match = nullptr;
+    Vector<Node *> pending;
+    pending.push_back(root);
+    while (!pending.is_empty()) {
+        Node *node = pending[pending.size() - 1];
+        pending.resize(pending.size() - 1);
+        Dictionary metadata = node->get_meta("bflyt_pane", Dictionary());
+        if (!metadata.is_empty() && String(metadata.get("name", "")) == name_or_path) {
+            Control *pane = Object::cast_to<Control>(node);
+            ERR_FAIL_COND_V_MSG(match && pane, nullptr,
+                "Ambiguous UI pane '" + name_or_path + "'; use get_scope() or a path relative to this scope.");
+            if (pane) match = pane;
+        }
+        for (int i = 0; i < node->get_child_count(); ++i) pending.push_back(node->get_child(i));
+    }
+    return match;
+}
+
+TrinityUI *TrinityUI::get_scope(const String &name_or_path) const {
+    return Object::cast_to<TrinityUI>(get_pane(name_or_path));
+}
+
+Error TrinityUI::_set_text(const String &name_or_path, const String &text) {
+    Control *pane = get_pane(name_or_path);
+    if (!pane) return ERR_DOES_NOT_EXIST;
+    Label *label = Object::cast_to<Label>(pane);
+    ERR_FAIL_NULL_V_MSG(label, ERR_INVALID_PARAMETER, "UI pane is not a text label: " + name_or_path);
+    label->set_text(text);
+    return OK;
+}
+
+
 float TrinityUI::origin_fraction(int value) {
     return value == 1 ? 0.0f : value == 2 ? 1.0f : 0.5f;
 }
@@ -18,13 +82,8 @@ void TrinityUI::warn_once(PackedStringArray &warnings, const String &message) {
     if (!warnings.has(message)) warnings.push_back(message);
 }
 
-void TrinityUI::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("load_ui", "truiv_path", "arc_path", "parent_path"), &TrinityUI::load_ui);
-    ClassDB::bind_method(D_METHOD("apply_state", "component", "state", "frame"), &TrinityUI::apply_state, DEFVAL(0.0));
-    ClassDB::bind_method(D_METHOD("get_warnings"), &TrinityUI::get_warnings);
-}
-
 void TrinityUI::_notification(int what) {
+    if (is_scope_node()) return;
     if (what == NOTIFICATION_RESIZED || what == NOTIFICATION_READY) fit_layout();
 }
 
@@ -38,10 +97,6 @@ void TrinityUI::fit_layout() {
     const real_t factor = MIN(available.x / native_size.x, available.y / native_size.y);
     layout->set_scale(Vector2(factor, factor));
     layout->set_position((available - native_size * factor) * 0.5);
-}
-
-Control *TrinityUI::scope_root() const {
-    return Object::cast_to<Control>(get_node_or_null(get_meta("layout_path", NodePath("Layout"))));
 }
 
 Error TrinityUI::apply_state(const String &component, const String &state, double frame) {
@@ -58,8 +113,10 @@ Ref<Font> TrinityUI::get_font(const String &p_name)
 {
     // The layout calls composite fonts .fcpx, while loose files use .bfcpx.
     String name = p_name;
-    if (name.ends_with(".fcpx")) name = name.get_basename() + ".bfcpx";
-    if (font_cache.has(name)) return font_cache[name];
+    if (name.ends_with(".fcpx")) 
+        name = name.get_basename() + ".bfcpx";
+    if (font_cache.has(name)) 
+        return font_cache[name];
 
     Ref<Font> font;
     Error error;
@@ -102,11 +159,11 @@ bool TrinityUI::build_layout(const String &layout_name, Control *container, Pack
     const bool is_entry = container == nullptr;
     if (is_entry) 
     {
-        layout = memnew(TrinityPane);
+        layout = memnew(TrinityUI);
         layout->set_name("Layout");
         layout->set_mouse_filter(MOUSE_FILTER_IGNORE);
-        layout->set_size(native_size);
         layout->set_meta("layout_size", native_size);
+        layout->set_size(native_size);
         layout->set_meta("bflyt", binary_layout);
         container = layout;
     }
@@ -126,7 +183,7 @@ bool TrinityUI::build_layout(const String &layout_name, Control *container, Pack
             return false;
         }
         Control *parent = parent_index < 0 ? container : layout_nodes[parent_index];
-        Control *node = String(pane["type"]) == "txt1" ? static_cast<Control *>(memnew(Label)) : memnew(TrinityPane);
+        Control *node = String(pane["type"]) == "txt1" ? static_cast<Control *>(memnew(Label)) : memnew(TrinityUI);
         node->set_name(parent_index < 0 ? layout_name : String(pane["name"]));
         node->set_mouse_filter(MOUSE_FILTER_IGNORE);
         parent->add_child(node);
@@ -296,6 +353,7 @@ bool TrinityUI::build_layout(const String &layout_name, Control *container, Pack
 
 Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const NodePath &parent_path) 
 {
+    ERR_FAIL_COND_V_MSG(is_scope_node(), ERR_UNAVAILABLE, "load_ui() must be called on the UI root, not a pane");
     Node *layout_parent = get_node_or_null(parent_path);
 
     ERR_FAIL_NULL_V_MSG(layout_parent, ERR_DOES_NOT_EXIST, "UI parent path does not exist");

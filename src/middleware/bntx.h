@@ -26,17 +26,23 @@ struct BNTXHeader
 	uint32_t RelocAddr;
 	uint32_t FileSize;
 
-	BNTXHeader(Ref<StreamPeerBuffer> sp)
+	static Error Read(const Ref<StreamPeerBuffer> &sp, BNTXHeader &out)
 	{
-		Magic = sp->get_string(8);
-		Version = sp->get_32();
-		unk_1 = sp->get_16();
-		Revision = sp->get_16();
-		FilenameAddr = sp->get_32();
-		unk_2 = sp->get_16();
-		StringAddr = sp->get_16();
-		RelocAddr = sp->get_32();
-		FileSize = sp->get_32();
+		ERR_FAIL_COND_V(sp.is_null(), ERR_INVALID_PARAMETER);
+
+		BNTXHeader result;
+		result.Magic = sp->get_string(8);
+		result.Version = sp->get_32();
+		result.unk_1 = sp->get_16();
+		result.Revision = sp->get_16();
+		result.FilenameAddr = sp->get_32();
+		result.unk_2 = sp->get_16();
+		result.StringAddr = sp->get_16();
+		result.RelocAddr = sp->get_32();
+		result.FileSize = sp->get_32();
+
+		out = result;
+		return OK;
 	}
 };
 
@@ -49,14 +55,20 @@ struct NXHeader
 	uint64_t DictAddr;
 	uint32_t StrDictSize;
 
-	NXHeader(Ref<StreamPeerBuffer> sp)
+	static Error Read(const Ref<StreamPeerBuffer> &sp, NXHeader &out)
 	{
-		Magic = sp->get_string(4);
-		Count = sp->get_32();
-		InfoPtrAddr = sp->get_64();
-		DataBlkAddr = sp->get_64();
-		DictAddr = sp->get_64();
-		StrDictSize = sp->get_32();
+		ERR_FAIL_COND_V(sp.is_null(), ERR_INVALID_PARAMETER);
+
+		NXHeader result;
+		result.Magic = sp->get_string(4);
+		result.Count = sp->get_32();
+		result.InfoPtrAddr = sp->get_64();
+		result.DataBlkAddr = sp->get_64();
+		result.DictAddr = sp->get_64();
+		result.StrDictSize = sp->get_32();
+
+		out = result;
+		return OK;
 	}
 };
 
@@ -97,42 +109,48 @@ struct BRTInfo
     uint64_t UserDescriptorSlot;
     uint64_t UserDataDicPtr;
 
-	BRTInfo(Ref<StreamPeerBuffer> sp)
+	static Error Read(const Ref<StreamPeerBuffer> &sp, BRTInfo &out)
 	{
-		Magic = sp->get_string(4);
-		Size = sp->get_32();
-		OffsetToData = sp->get_64();
-		TileMode = sp->get_8();
-		DIM = sp->get_8();
-		Flags = sp->get_16();
-		Swizzle = sp->get_16();
-		MipsCount = sp->get_16();
-		NumMultiSample = sp->get_32();
-		Format = sp->get_32();
-		GPUAccessFlags = sp->get_32();
-		Width = sp->get_32();
-		Height = sp->get_32();
-		Depth = sp->get_32();
-		ArrayLength = sp->get_32();
-		SizeRange = sp->get_32();
-		unk38 = sp->get_32();
-		unk3C = sp->get_32();
-		unk40 = sp->get_32();
-		unk44 = sp->get_32();
-		unk48 = sp->get_32();
-		unk4C = sp->get_32();
-		DataSize = sp->get_32();
-		Alignment = sp->get_32();
-		ChannelType = sp->get_32();
-		Type = sp->get_32();
-		NameOffset = sp->get_64();
-		ParentOffset = sp->get_64();
-		MipMapArrayPtr = sp->get_64();
-		UserDataPtr = sp->get_64();
-		TexturePtr = sp->get_64();
-		TextureViewPtr = sp->get_64();
-		UserDescriptorSlot = sp->get_64();
-		UserDataDicPtr = sp->get_64();
+		ERR_FAIL_COND_V(sp.is_null(), ERR_INVALID_PARAMETER);
+
+		BRTInfo result;
+		result.Magic = sp->get_string(4);
+		result.Size = sp->get_32();
+		result.OffsetToData = sp->get_64();
+		result.TileMode = sp->get_8();
+		result.DIM = sp->get_8();
+		result.Flags = sp->get_16();
+		result.Swizzle = sp->get_16();
+		result.MipsCount = sp->get_16();
+		result.NumMultiSample = sp->get_32();
+		result.Format = sp->get_32();
+		result.GPUAccessFlags = sp->get_32();
+		result.Width = sp->get_32();
+		result.Height = sp->get_32();
+		result.Depth = sp->get_32();
+		result.ArrayLength = sp->get_32();
+		result.SizeRange = sp->get_32();
+		result.unk38 = sp->get_32();
+		result.unk3C = sp->get_32();
+		result.unk40 = sp->get_32();
+		result.unk44 = sp->get_32();
+		result.unk48 = sp->get_32();
+		result.unk4C = sp->get_32();
+		result.DataSize = sp->get_32();
+		result.Alignment = sp->get_32();
+		result.ChannelType = sp->get_32();
+		result.Type = sp->get_32();
+		result.NameOffset = sp->get_64();
+		result.ParentOffset = sp->get_64();
+		result.MipMapArrayPtr = sp->get_64();
+		result.UserDataPtr = sp->get_64();
+		result.TexturePtr = sp->get_64();
+		result.TextureViewPtr = sp->get_64();
+		result.UserDescriptorSlot = sp->get_64();
+		result.UserDataDicPtr = sp->get_64();
+
+		out = result;
+		return OK;
 	}
 };
 
@@ -141,10 +159,16 @@ struct BRTData
 	String Magic;
 	uint64_t FileSize;
 
-	BRTData(Ref<StreamPeerBuffer> sp)
+	static Error Read(const Ref<StreamPeerBuffer> &sp, BRTData &out)
 	{
-		Magic = sp->get_string(8);
-		FileSize = sp->get_64();
+		ERR_FAIL_COND_V(sp.is_null(), ERR_INVALID_PARAMETER);
+
+		BRTData result;
+		result.Magic = sp->get_string(8);
+		result.FileSize = sp->get_64();
+
+		out = result;
+		return OK;
 	}
 };
 

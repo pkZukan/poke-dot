@@ -214,13 +214,15 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 		texture_data[12] != 0xff || texture_data[13] != 0xfe) return ERR_FILE_CORRUPT;
 	texture_stream->seek(28);
 	if (texture_stream->get_u32() != data_size) return ERR_FILE_CORRUPT;
-	NXHeader nx(texture_stream);
+	NXHeader nx;
+	NXHeader::Read(texture_stream, nx);
 	if (nx.Magic != "NX  " || nx.Count != 1 || !has_bytes(texture_stream, nx.InfoPtrAddr, 8)) return ERR_FILE_CORRUPT;
 	texture_stream->seek(nx.InfoPtrAddr);
 	const uint64_t info_offset = texture_stream->get_u64();
 	if (!has_bytes(texture_stream, info_offset, 160)) return ERR_FILE_CORRUPT;
 	texture_stream->seek(info_offset);
-	BRTInfo info(texture_stream);
+	BRTInfo info;
+	BRTInfo::Read(texture_stream, info);
 	if (info.ArrayLength != sheet_count || info.Width != sheet_width || info.Height != sheet_height) return ERR_FILE_CORRUPT;
 	Vector<Ref<Image>> sheets;
 	for (int layer = 0; layer < sheet_count; ++layer) {

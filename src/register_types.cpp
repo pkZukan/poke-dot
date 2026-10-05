@@ -304,7 +304,6 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(PokemonCharacter)
 		GDREGISTER_CLASS(TrinityAnimationConverter)
 		GDREGISTER_CLASS(TrinityModel)
-		GDREGISTER_CLASS(TrinityPane)
 		GDREGISTER_CLASS(TrinityUI)
 
 		//middleware
@@ -322,7 +321,6 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(HavokData)
 		GDREGISTER_CLASS(BinaryFont)
 		GDREGISTER_CLASS(BinaryCompositeFont)
-
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)

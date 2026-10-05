@@ -9,6 +9,16 @@ void BinaryTexture::_bind_methods()
         PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_channel_sources");
 }
 
+void BinaryTextureArchive::_bind_methods()
+{
+    ClassDB::bind_method(D_METHOD("LoadFromFile", "path"), &BinaryTextureArchive::LoadFromFile);
+    ClassDB::bind_method(D_METHOD("LoadFromBuffer", "buffer"), &BinaryTextureArchive::LoadFromBuffer);
+    ClassDB::bind_method(D_METHOD("get_textures"), &BinaryTextureArchive::get_textures);
+    ClassDB::bind_method(D_METHOD("GetTexture", "name"), &BinaryTextureArchive::GetTexture);
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "textures", PROPERTY_HINT_DICTIONARY_TYPE, "String;BinaryTexture",
+        PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_textures");
+}
+
 Vector4i BinaryTexture::get_channel_sources() const {
     return channel_sources;
 }
@@ -212,7 +222,9 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
 {
     ERR_FAIL_COND_V(!has_bytes(sp, info_offset, 160), ERR_FILE_CORRUPT);
     sp->seek(info_offset);
-    BRTInfo info(sp);
+
+    BRTInfo info;
+    BRTInfo::Read(sp, info);
     ERR_FAIL_COND_V(info.Magic != "BRTI", ERR_FILE_CORRUPT);
     ERR_FAIL_COND_V(!has_bytes(sp, info.NameOffset, 2), ERR_FILE_CORRUPT);
     sp->seek(info.NameOffset);
@@ -248,16 +260,6 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
     return is_empty() ? ERR_FILE_CORRUPT : OK;
 }
 
-void BinaryTextureArchive::_bind_methods()
-{
-    ClassDB::bind_method(D_METHOD("LoadFromFile", "path"), &BinaryTextureArchive::LoadFromFile);
-    ClassDB::bind_method(D_METHOD("LoadFromBuffer", "buffer"), &BinaryTextureArchive::LoadFromBuffer);
-    ClassDB::bind_method(D_METHOD("get_textures"), &BinaryTextureArchive::get_textures);
-    ClassDB::bind_method(D_METHOD("GetTexture", "name"), &BinaryTextureArchive::GetTexture);
-    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "textures", PROPERTY_HINT_DICTIONARY_TYPE, "String;BinaryTexture",
-        PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_textures");
-}
-
 Ref<BinaryTexture> BinaryTextureArchive::GetTexture(const String &name) const
 {
     return textures.get(name, Ref<BinaryTexture>());
@@ -278,13 +280,16 @@ Error BinaryTextureArchive::LoadFromBuffer(const PackedByteArray &buffer)
     Ref<StreamPeerBuffer> sp;
     sp.instantiate();
     sp->set_data_array(buffer);
-    BNTXHeader header(sp);
+    BNTXHeader header;
+    BNTXHeader::Read(sp, header);
     ERR_FAIL_COND_V(header.Magic != "BNTX" || header.FileSize != uint64_t(buffer.size()), ERR_FILE_CORRUPT);
-    NXHeader nx(sp);
+    NXHeader nx;
+    NXHeader::Read(sp, nx);
     ERR_FAIL_COND_V(nx.Magic != "NX  " || !has_bytes(sp, nx.InfoPtrAddr, uint64_t(nx.Count) * 8) ||
         !has_bytes(sp, nx.DataBlkAddr, 16), ERR_FILE_CORRUPT);
     sp->seek(nx.DataBlkAddr);
-    BRTData data(sp);
+    BRTData data;
+    BRTData::Read(sp, data);
     ERR_FAIL_COND_V(data.Magic != "BRTD", ERR_FILE_CORRUPT);
     TypedDictionary<String, BinaryTexture> loaded;
     for (uint32_t i = 0; i < nx.Count; ++i)
