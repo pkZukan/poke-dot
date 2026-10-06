@@ -5,14 +5,14 @@ fadein_time = 0.1
 fadeout_time = 0.1
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_attack"]
-animation = &"00400_attack01"
+animation = &"01020_ballthrow01"
 
 [sub_resource type="AnimationNodeOneShot" id="OneShot_idlevar"]
 fadein_time = 0.1
 fadeout_time = 0.1
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_idlevar"]
-animation = &"00010_defaultidle01"
+animation = &"00011_def01_idle01"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_jumpdown_loop"]
 animation = &"00153_jumpdown01_loop"
@@ -30,13 +30,13 @@ animation = &"00150_jumpup01_start"
 animation = &"00155_land02"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_idle"]
-animation = &"00000_defaultwait01_loop"
+animation = &"00001_defaultwait01_loop"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_walk"]
-animation = &"00030_walk01_loop"
+animation = &"00051_walk01_000_loop"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_run"]
-animation = &"00100_run01_loop"
+animation = &"00071_run01_000_loop"
 
 [sub_resource type="AnimationNodeBlendSpace1D" id="BlendSpace_locomotion"]
 min_space = 0.0
@@ -89,7 +89,7 @@ animation = &"00300_roar01"
 [resource]
 resource_local_to_scene = true
 resource_name = "Pokemon locomotion"
-graph_offset = Vector2(-337.86273, -240.80911)
+graph_offset = Vector2(-22.090912, -178)
 nodes/output/position = Vector2(1300, -100)
 nodes/Locomotion/node = SubResource("BlendSpace_locomotion")
 nodes/Locomotion/position = Vector2(-320, -400)

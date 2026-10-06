@@ -183,7 +183,6 @@ void ActorObj::_load_animations(String tracn_file)
     if(tracn_file.is_empty()) return;
     
     //Load TRACN
-    tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
     String pokeBase = tracn_file.get_base_dir();
     Ref<TRAnimationChannelNames> tracn = ResourceLoader::get_singleton()->load(tracn_file);
 

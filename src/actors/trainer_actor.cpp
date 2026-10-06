@@ -19,7 +19,8 @@ void TrainerActor::Initialize()
 {
     String base_path = "res://Assets/ik_chara";
     
-    _trainer_path = base_path.path_join("model_cc_ir/tr0001_00_rival_f");
+    _trainer_mdl_path = base_path.path_join("model_cc_ir/tr0001_00_rival_f");
+    _trainer_mot_path = base_path.path_join("motion_cc_ir/tr0001_00_rival_f");
 
-    LoadActor(_trainer_path.path_join("tr0001_00.trmdl"), "");
+    LoadActor(_trainer_mdl_path.path_join("tr0001_00.trmdl"), _trainer_mot_path.path_join("tr0001_00_other.tracn"));
 }

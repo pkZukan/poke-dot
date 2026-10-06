@@ -31,7 +31,8 @@ public:
 private:
     int id = 0;
 
-    String _trainer_path;
+    String _trainer_mdl_path;
+    String _trainer_mot_path;
 };
 
 } // namespace godot

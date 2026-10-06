@@ -18,7 +18,7 @@ far = 10000.0
 [node name="AnimationTree" type="AnimationTree" parent="." unique_id=1061216346]
 active = false
 root_node = NodePath("../Model")
-root_motion_track = NodePath("pm0005_00_00/pm0005_00_00:origin")
+root_motion_track = NodePath("chara_root/chara_root:origin")
 root_motion_local = true
 callback_mode_process = 2
 tree_root = ExtResource("2_bqqab")
