@@ -1,24 +1,20 @@
 @tool
 extends AnimationTree
 
-# Clip names (must match animations in the character's AnimationPlayer).
-const IDLE := &"00000_defaultwait01_loop"
-const WALK := &"00030_walk01_loop"
-const RUN := &"00100_run01_loop"
-const IDLE_VARIATION := &"00010_defaultidle01"
-const JUMP_START := &"00150_jumpup01_start"
-const JUMP_LOOP := &"00151_jumpup01_loop"
-const FALL_START := &"00152_jumpdown01_start"
-const FALL_LOOP := &"00153_jumpdown01_loop"
-const LAND := &"00155_land02"
-const ATTACK := &"00400_attack01"
-const ROAR := &"00300_roar01"
+const LOCOMOTION := &"Locomotion"
+const IDLE_VARIATION := &"IdleVariation"
+const JUMP_START := &"JumpUpStart"
+const JUMP_LOOP := &"JumpUpLoop"
+const FALL_START := &"JumpDownStart"
+const FALL_LOOP := &"JumpDownLoop"
+const LAND := &"Land"
+const ROAR := &"Roar"
+const ATTACK := &"Attack"
 
-# Blend tree parameter paths (node names come from the blend tree resource).
 const BLEND_PARAM := &"parameters/Locomotion/blend_position"
 const TRANSITION_PARAM := &"parameters/Motion/transition_request"
 
-# Transition input names for the "Motion" node.
+# Transition input names on the "Motion" node.
 const GROUND := &"ground"
 const STATE_INPUT := {
 	JUMP_START: &"jump_up_start",
@@ -28,11 +24,11 @@ const STATE_INPUT := {
 	LAND: &"land",
 }
 
-# One-shot request paths, keyed by the clip they play.
-const ONE_SHOTS := {
-	ROAR: &"parameters/Roar/request",
-	ATTACK: &"parameters/Attack/request",
-	IDLE_VARIATION: &"parameters/IdleVariation/request",
+# Which Animation node plays inside each OneShot.
+const ONE_SHOT_CLIPS := {
+	ROAR: &"RoarAnim",
+	ATTACK: &"AttackAnim",
+	IDLE_VARIATION: &"IdleVariationAnim",
 }
 
 @export_range(0.0, 1.0, 0.01) var locomotion_blend_time: float = 0.15
@@ -53,17 +49,25 @@ var _action_interruptible := false
 var _action_state: StringName
 var _requested_state: StringName
 var _idle_elapsed := 0.0
-var _character: PokemonCharacter
+var _character = null
 var _model: Node3D
 var _player: AnimationPlayer
 var _graph_template: AnimationNodeBlendTree
 
+var _lengths := {}
 
 func _ready() -> void:
-	_character = get_parent() as PokemonCharacter
+	_character = get_parent()
 	_graph_template = tree_root as AnimationNodeBlendTree
 	_character.character_rebuilt.connect(_bind_character)
 	_bind_character()
+
+
+func _anim_name(graph: AnimationNodeBlendTree, node_name: StringName) -> StringName:
+	if not graph.has_node(node_name):
+		return &""
+	var node := graph.get_node(node_name) as AnimationNodeAnimation
+	return node.animation if node else &""
 
 
 func _bind_character() -> void:
@@ -72,20 +76,33 @@ func _bind_character() -> void:
 	_player = _character.get_animation_player()
 	_character.configure_animation_tree(self)
 	if _player == null or _graph_template == null:
-		active = false
 		return
-	# Preserve the editable resource in the editor. Runtime instances get their
-	# own graph so fallback clips for one species cannot change another's graph.
+	# Preserve the editable resource in the editor.
 	if Engine.is_editor_hint():
 		return
 	tree_root = _graph_template.duplicate(true)
 	var graph := tree_root as AnimationNodeBlendTree
-	var fallback: StringName = IDLE if _player.has_animation(IDLE) else WALK
-	if not _player.has_animation(fallback):
-		active = false
-		push_warning("Character has no idle or walk animation for locomotion")
+
+	_lengths.clear()
+	var keys: Array = STATE_INPUT.keys() + ONE_SHOT_CLIPS.keys()
+	for key in keys:
+		var anim := _anim_name(graph, ONE_SHOT_CLIPS.get(key, key))
+		if anim != &"" and _player.has_animation(anim):
+			_lengths[key] = _player.get_animation(anim).length
+
+	var loco_clips: Array[StringName] = []
+	if graph.has_node(LOCOMOTION):
+		var loco := graph.get_node(LOCOMOTION) as AnimationNodeBlendSpace1D
+		for i in loco.get_blend_point_count():
+			var clip := loco.get_blend_point_node(i) as AnimationNodeAnimation
+			if clip and _player.has_animation(clip.animation):
+				loco_clips.append(clip.animation)
+	if loco_clips.is_empty():
+		push_warning("Character has no locomotion animations")
 		return
-	# Blend tree nodes appear in the property list as "nodes/<name>/node".
+	var fallback := loco_clips[0]
+	var walk_fallback := loco_clips[1] if loco_clips.size() > 1 else fallback
+
 	for prop in graph.get_property_list():
 		var prop_name: String = prop.name
 		if not (prop_name.begins_with("nodes/") and prop_name.ends_with("/node")):
@@ -95,8 +112,8 @@ func _bind_character() -> void:
 			_resolve_clip(node, fallback)
 		elif node is AnimationNodeBlendSpace1D:
 			for i in node.get_blend_point_count():
-				var clip := node.get_blend_point_node(i) as AnimationNodeAnimation
-				_resolve_clip(clip, WALK if _player.has_animation(WALK) else fallback)
+				_resolve_clip(node.get_blend_point_node(i) as AnimationNodeAnimation, walk_fallback)
+
 	_input = Vector2.ZERO
 	_running = false
 	movement_direction = Vector3(0, 0, 1)
@@ -123,38 +140,42 @@ func set_movement(input: Vector2, running: bool) -> void:
 	_running = running
 
 
-func play_action(clip: StringName, interruptible: bool = false) -> void:
+func play_action(action: StringName, interruptible: bool = false) -> void:
+	if not active:
+		return
 	if not _character.is_on_floor() or _character.velocity.y > 0.0:
 		return
 	if _action_remaining > 0.0 and not _action_interruptible:
 		return
-	if not ONE_SHOTS.has(clip):
+	if not ONE_SHOT_CLIPS.has(action):
 		return
-	var duration := _clip_length(clip)
+	var duration := _clip_length(action)
 	if duration <= 0.0:
 		return
-	_action_state = clip
+	_action_state = action
 	_action_remaining = duration
 	_action_interruptible = interruptible
 	_idle_elapsed = 0.0
-	set(ONE_SHOTS[clip], AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+	set(_one_shot_param(action), AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+
+
+func _one_shot_param(action: StringName) -> StringName:
+	return StringName("parameters/%s/request" % action)
 
 
 func _cancel_action() -> void:
-	if _action_remaining > 0.0 and ONE_SHOTS.has(_action_state):
-		set(ONE_SHOTS[_action_state], AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
+	if _action_remaining > 0.0 and ONE_SHOT_CLIPS.has(_action_state):
+		set(_one_shot_param(_action_state), AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
 	_action_remaining = 0.0
 
 
-func _clip_length(clip: StringName) -> float:
-	if _player == null or not _player.has_animation(clip):
-		return 0.0
-	return _player.get_animation(clip).length
+func _clip_length(key: StringName) -> float:
+	return _lengths.get(key, 0.0)
 
 
-# Maps a clip to its Transition input, falling back to ground if the clip is missing.
-func _available_state(clip: StringName) -> StringName:
-	return STATE_INPUT[clip] if _player.has_animation(clip) else GROUND
+# Maps a clip key to its Transition input, falling back to ground if missing.
+func _available_state(key: StringName) -> StringName:
+	return STATE_INPUT[key] if _lengths.has(key) else GROUND
 
 
 # Called once by Controller, after input/jump handling and before native physics.
@@ -173,8 +194,8 @@ func update_animation(delta: float) -> void:
 			1.0 - exp(-maxf(turn_speed, 0.0) * delta)
 		)
 
-	var airborne := not _character.is_on_floor() or _character.velocity.y > 0.0
-	var falling := _character.velocity.y <= 0.0
+	var airborne = not _character.is_on_floor() or _character.velocity.y > 0.0
+	var falling = _character.velocity.y <= 0.0
 	var state := GROUND
 	if airborne:
 		_air_time = 0.0 if not _airborne or falling != _falling else _air_time + delta

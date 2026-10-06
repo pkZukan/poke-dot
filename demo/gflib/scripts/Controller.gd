@@ -2,7 +2,7 @@ extends Node
 
 const AnimationController = preload("res://gflib/scripts/AnimationController.gd")
 
-@onready var pkmn: PokemonCharacter = $"."
+@onready var character = $"."
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var animations: AnimationController = $AnimationTree
 
@@ -30,7 +30,7 @@ func _input(event: InputEvent) -> void:
 		)
 
 func _apply_look(yaw_deg: float, pitch_deg: float) -> void:
-	pkmn.rotate_y(deg_to_rad(-yaw_deg))
+	character.rotate_y(deg_to_rad(-yaw_deg))
 	camera_pivot.rotation.x = clampf(
 		camera_pivot.rotation.x - deg_to_rad(pitch_deg),
 		deg_to_rad(-80.0), deg_to_rad(80.0)
@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	var movement := Input.get_vector("strafe_left", "strafe_right", "move_back", "move_forward")
 	animations.set_movement(movement, Input.is_action_pressed("run"))
 
-	if pkmn.is_on_floor():
+	if character.is_on_floor():
 		_coyote_remaining = coyote_time
 	else:
 		_coyote_remaining = maxf(0.0, _coyote_remaining - delta)
@@ -54,9 +54,9 @@ func _physics_process(delta: float) -> void:
 	if jump_pressed:
 		_jump_buffer_remaining = jump_buffer_time
 	if (jump_pressed or _jump_buffer_remaining > 0.0) and (
-		pkmn.is_on_floor() or _coyote_remaining > 0.0
+		character.is_on_floor() or _coyote_remaining > 0.0
 	):
-		pkmn.velocity.y = jump_velocity
+		character.velocity.y = jump_velocity
 		_coyote_remaining = 0.0
 		_jump_buffer_remaining = 0.0
 
@@ -66,4 +66,4 @@ func _physics_process(delta: float) -> void:
 		animations.play_action(AnimationController.ATTACK)
 
 	animations.update_animation(delta)
-	pkmn.apply_movement(delta, animations.movement_direction)
+	character.apply_movement(delta, animations.movement_direction)

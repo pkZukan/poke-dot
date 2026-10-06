@@ -34,6 +34,7 @@
 #include "actors/pokemon_actor.h"
 #include "actors/trainer_actor.h"
 #include "characters/pokemon_character.h"
+#include "characters/trainer_character.h"
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
 #include "converters/ui_converter.h"
@@ -304,6 +305,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(PokemonActor)
 		GDREGISTER_CLASS(TrainerActor)
 		GDREGISTER_CLASS(PokemonCharacter)
+		GDREGISTER_CLASS(TrainerCharacter)
 		GDREGISTER_CLASS(TrinityAnimationConverter)
 		GDREGISTER_CLASS(TrinityModel)
 		GDREGISTER_CLASS(TrinityPane)
