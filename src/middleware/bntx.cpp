@@ -5,6 +5,7 @@ using namespace godot;
 void BinaryTexture::_bind_methods() 
 {
     ClassDB::bind_method(D_METHOD("get_channel_sources"), &BinaryTexture::get_channel_sources);
+    ClassDB::bind_method(D_METHOD("get_layer_image", "layer"), &BinaryTexture::get_layer_image);
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR4I, "channel_sources", PROPERTY_HINT_NONE, "",
         PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_channel_sources");
 }
@@ -21,6 +22,11 @@ void BinaryTextureArchive::_bind_methods()
 
 Vector4i BinaryTexture::get_channel_sources() const {
     return channel_sources;
+}
+
+Ref<Image> BinaryTexture::get_layer_image(int layer) const {
+    if (layer < 0 || layer >= layer_images.size()) return Ref<Image>();
+    return layer_images[layer];
 }
 
 std::pair<int, int> bpps[] = {
@@ -268,6 +274,7 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
         layers.push_back(image);
     }
 
+    layer_images = layers;
     Error error = create_from_images(layers);
     ERR_FAIL_COND_V(error != OK, error);
     return OK;

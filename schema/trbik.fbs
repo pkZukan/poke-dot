@@ -1,16 +1,19 @@
-struct Vec3 {
+struct Vec3 
+{
     x: float;
     y: float;
     z: float;
 }
 
-table IKRoot {
+table IKRoot 
+{
     name: string;
     unk_0: uint8;
     value: float;
 }
 
-table Limit {
+table Limit 
+{
     unk_0: uint8;
     unk_2: uint8;
     unk_3: Vec3;
@@ -21,7 +24,8 @@ table Limit {
     unk_8: float;
 }
 
-table Physics {
+table Physics 
+{
     unk_0: uint8;
     unk_1: float;
     unk_2: float;
@@ -36,7 +40,8 @@ table Physics {
     unk_11: Vec3;
 }
 
-table IKBone {
+table IKBone 
+{
     name: string;
     unk_0: uint8;
     value: float;
@@ -48,7 +53,8 @@ table IKBone {
     p2: Physics;
 }
 
-table TRBIK {
+table TRBIK 
+{
     root: IKRoot;
     bones: [IKBone];
 }

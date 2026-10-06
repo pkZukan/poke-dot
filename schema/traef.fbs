@@ -28,7 +28,8 @@ table EffectValue_String
     value: string;
 }
 
-table Effect {
+table Effect
+{
     name: string;
     value: EffectValue;
 }
@@ -42,7 +43,8 @@ table AnimationEffect
     effects: [Effect];
 }
 
-table TRAEF{
+table TRAEF
+{
     effects: [AnimationEffect];
 }
 

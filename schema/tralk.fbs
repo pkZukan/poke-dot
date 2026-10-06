@@ -2,7 +2,8 @@ include "common.fbs";
 
 namespace Titan.Animation;
 
-table LookAt{
+table LookAt
+{
     channel_name: string;
     min_rot: Titan.Math.Vec3;
     max_rot: Titan.Math.Vec3;
@@ -27,7 +28,8 @@ table LookAt{
     track_name: [string];
     unk_22: float;
 }
-table TRALK {
+table TRALK 
+{
     res_0: uint32 = 0x0;
     unk_1: [LookAt];
     unk_2: uint32 = 0x1;

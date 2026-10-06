@@ -181,6 +181,16 @@ bool BinaryLayout::parse_material(BflytUtils::Reader &r, uint64_t offset, uint32
 		transforms.push_back(transform);
 	}
 	material["texture_transforms"] = transforms;
+	const bool has_color_blend_mode = flags & (1u << 10);
+	const uint32_t later_material_data = flags & 0xFFFFE800u;
+	if (has_color_blend_mode && later_material_data == 0 && r.has(r.end - 4, 4)) {
+		Dictionary blend_mode;
+		blend_mode["equation"] = r.number(r.end - 4, 1);
+		blend_mode["source"] = r.number(r.end - 3, 1);
+		blend_mode["destination"] = r.number(r.end - 2, 1);
+		blend_mode["logic_operation"] = r.number(r.end - 1, 1);
+		material["color_blend_mode"] = blend_mode;
+	}
 	material["raw_data"] = r.data.slice(offset, r.end);
 	return true;
 }

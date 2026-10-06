@@ -4,23 +4,27 @@ namespace Titan.Model;
 
 file_extension "trmmt";
 
-table MaterialSwitches {
+table MaterialSwitches 
+{
     material_name: string;
     material_flag: uint8;
 }
 
-table MaterialMapper {
+table MaterialMapper 
+{
     mesh_name: string;
     material_name: string;
     layer_name: string;
 }
 
-table EmbeddedTRACM {
+table EmbeddedTRACM 
+{
     bytebuffer: [uint8];
 }
 
 //Appears only on Arceus?
-table MaterialProperties {
+table MaterialProperties 
+{
     name: string;
     mappers: [MaterialMapper];
     res_2: uint32;
@@ -29,14 +33,16 @@ table MaterialProperties {
     res_5: [uint32];
 }
 
-table MMT {
+table MMT 
+{
     name: string;
     material_name: [string];
     material_switches: [MaterialSwitches];
     material_properties: [MaterialProperties];
 } 
 
-table TRMMT {
+table TRMMT 
+{
     res_0: uint32;
     res_1: uint32;
     material: [MMT];

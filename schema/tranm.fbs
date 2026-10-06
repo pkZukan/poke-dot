@@ -45,7 +45,8 @@ table Framed16RotationTrack
     co:[Titan.Math.sVec3];
 }
 
-table Framed8RotationTrack {
+table Framed8RotationTrack 
+{
 
     frames: [uint8];
     co: [Titan.Math.sVec3];

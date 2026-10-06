@@ -216,7 +216,7 @@ Error UIBuilder::load_textures(const Ref<SeadArchive> &archive, const PackedStri
             ERR_FAIL_COND_V_MSG(textures.has(names[j]), ERR_INVALID_DATA, "Ambiguous texture name across BNTX archives");
             Ref<BinaryTexture> texture_array = images[names[j]];
             if (texture_array.is_null() || texture_array->get_layers() == 0) return ERR_FILE_CORRUPT;
-            Ref<Image> image = texture_array->get_layer_data(0);
+            Ref<Image> image = texture_array->get_layer_image(0);
             if (image.is_null()) return ERR_FILE_CORRUPT;
             textures[names[j]] = ImageTexture::create_from_image(image);
             Ref<ShaderMaterial> shader_material;
@@ -522,7 +522,7 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
             return nullptr;
         }
         if (maps.size() > 1)
-            ui_warn_once(warnings, "Multi-texture materials render their first texture only; game shaders are not converted");
+            ui_warn_once(warnings, "Additional UI material texture maps are not converted");
         if (uv.size() != 4) {
             ui_warn_once(warnings, "Picture without usable UV coordinates; using the full texture");
             uv = default_uv();
@@ -549,19 +549,46 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
     return quad;
 }
 
-Ref<ShaderMaterial> UIBuilder::make_picture_material(const String &texture_name, const Dictionary &material) {
+Ref<ShaderMaterial> UIBuilder::make_picture_material(const String &texture_name, const Dictionary &material)
+{
     Ref<ShaderMaterial> source_material = texture_materials[texture_name];
+    ERR_FAIL_COND_V_MSG(source_material.is_null(), Ref<ShaderMaterial>(), vformat("Missing picture material for texture: %s", texture_name));
+
     Ref<ShaderMaterial> pane_material = source_material->duplicate();
     pane_material->set_local_to_scene(true);
-    pane_material->set_shader_parameter("black_color", material["black_color"]);
-    pane_material->set_shader_parameter("white_color", material["white_color"]);
-    Array transforms = material["texture_transforms"];
+    pane_material->set_shader_parameter("black_color", material.get("black_color", Color(0.0, 0.0, 0.0, 0.0)));
+    pane_material->set_shader_parameter("white_color", material.get("white_color", Color(1.0, 1.0, 1.0, 1.0)));
+
+    const Dictionary blend_mode = material.get("color_blend_mode", Dictionary());
+
+    const bool additive_blend = 
+        !blend_mode.is_empty() &&
+        int(blend_mode.get("equation", 0)) == 1 &&
+        int(blend_mode.get("source", 0)) == 4 &&
+        int(blend_mode.get("destination", 0)) == 1 &&
+        int(blend_mode.get("logic_operation", 0)) == 0;
+
+    // xy = translation
+    // z  = rotation in radians
+    // w  = additive blend flag
+    Vector4 picture_params(0.0, 0.0, 0.0, additive_blend ? 1.0 : 0.0);
+    Vector2 uv_scale(1.0, 1.0);
+
+    const Array transforms = material.get("texture_transforms", Array());
     if (!transforms.is_empty()) {
-        Dictionary transform = transforms[0];
-        pane_material->set_shader_parameter("uv_translation", transform["translation"]);
-        pane_material->set_shader_parameter("uv_scale", transform["scale"]);
-        pane_material->set_shader_parameter("uv_rotation", Math::deg_to_rad(double(transform["rotation"])));
+        const Dictionary transform = transforms[0];
+        const Vector2 translation = transform.get("translation", Vector2(0.0, 0.0));
+        uv_scale = transform.get("scale", Vector2(1.0, 1.0));
+        const double rotation = transform.get("rotation", 0.0);
+
+        picture_params.x = translation.x;
+        picture_params.y = translation.y;
+        picture_params.z = Math::deg_to_rad(rotation);
     }
+
+    pane_material->set_shader_parameter("picture_params", picture_params);
+    pane_material->set_shader_parameter("uv_scale", uv_scale);
+
     return pane_material;
 }
 

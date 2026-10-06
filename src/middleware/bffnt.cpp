@@ -219,7 +219,7 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 	for (int c = 0; c < 4; ++c) if (channels[c] < 0 || channels[c] > 5) return ERR_UNAVAILABLE;
 	Vector<Ref<Image>> sheets;
 	for (int layer = 0; layer < sheet_count; ++layer) {
-		Ref<Image> image = texture->get_layer_data(layer);
+		Ref<Image> image = texture->get_layer_image(layer);
 		if (image.is_null()) return ERR_FILE_CORRUPT;
 		if (image->is_compressed()) {
 			Error error = image->decompress();
