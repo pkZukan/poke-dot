@@ -1,18 +1,18 @@
-[gd_resource type="AnimationNodeBlendTree" format=3 uid="uid://c5prxotv5la8b"]
+[gd_resource type="AnimationNodeBlendTree" format=3 uid="uid://dljoqbvov0phb"]
 
 [sub_resource type="AnimationNodeOneShot" id="OneShot_attack"]
 fadein_time = 0.1
 fadeout_time = 0.1
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_attack"]
-animation = &"00400_attack01"
+animation = &"01020_ballthrow01"
 
 [sub_resource type="AnimationNodeOneShot" id="OneShot_idlevar"]
 fadein_time = 0.1
 fadeout_time = 0.1
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_idlevar"]
-animation = &"00010_defaultidle01"
+animation = &"00011_def01_idle01"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_jumpdown_loop"]
 animation = &"00153_jumpdown01_loop"
@@ -30,13 +30,13 @@ animation = &"00150_jumpup01_start"
 animation = &"00155_land02"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_idle"]
-animation = &"00000_defaultwait01_loop"
+animation = &"00001_defaultwait01_loop"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_walk"]
-animation = &"00030_walk01_loop"
+animation = &"00051_walk01_000_loop"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_run"]
-animation = &"00100_run01_loop"
+animation = &"00071_run01_000_loop"
 
 [sub_resource type="AnimationNodeBlendSpace1D" id="BlendSpace_locomotion"]
 min_space = 0.0
@@ -88,32 +88,33 @@ animation = &"00300_roar01"
 
 [resource]
 resource_local_to_scene = true
-resource_name = "Pokemon locomotion"
+resource_name = "Trainer locomotion"
+graph_offset = Vector2(-22.090912, -178)
 nodes/output/position = Vector2(1300, -100)
 nodes/Locomotion/node = SubResource("BlendSpace_locomotion")
-nodes/Locomotion/position = Vector2(-200, -300)
+nodes/Locomotion/position = Vector2(-320, -400)
 nodes/JumpUpStart/node = SubResource("Anim_jumpup_start")
-nodes/JumpUpStart/position = Vector2(-200, -160)
+nodes/JumpUpStart/position = Vector2(-380, -180)
 nodes/JumpUpLoop/node = SubResource("Anim_jumpup_loop")
-nodes/JumpUpLoop/position = Vector2(-200, -40)
+nodes/JumpUpLoop/position = Vector2(-380, 0)
 nodes/JumpDownStart/node = SubResource("Anim_jumpdown_start")
-nodes/JumpDownStart/position = Vector2(-200, 80)
+nodes/JumpDownStart/position = Vector2(-400, 180)
 nodes/JumpDownLoop/node = SubResource("Anim_jumpdown_loop")
-nodes/JumpDownLoop/position = Vector2(-200, 200)
+nodes/JumpDownLoop/position = Vector2(-420, 360)
 nodes/Land/node = SubResource("Anim_land")
-nodes/Land/position = Vector2(-200, 320)
+nodes/Land/position = Vector2(-360, 540)
 nodes/Motion/node = SubResource("Transition_motion")
 nodes/Motion/position = Vector2(100, -100)
 nodes/RoarAnim/node = SubResource("Anim_roar")
-nodes/RoarAnim/position = Vector2(100, 120)
+nodes/RoarAnim/position = Vector2(120, 300)
 nodes/Roar/node = SubResource("OneShot_roar")
 nodes/Roar/position = Vector2(400, -100)
 nodes/AttackAnim/node = SubResource("Anim_attack")
-nodes/AttackAnim/position = Vector2(400, 120)
+nodes/AttackAnim/position = Vector2(400, 260)
 nodes/Attack/node = SubResource("OneShot_attack")
 nodes/Attack/position = Vector2(700, -100)
 nodes/IdleVariationAnim/node = SubResource("Anim_idlevar")
-nodes/IdleVariationAnim/position = Vector2(700, 120)
+nodes/IdleVariationAnim/position = Vector2(680, 240)
 nodes/IdleVariation/node = SubResource("OneShot_idlevar")
 nodes/IdleVariation/position = Vector2(1000, -100)
 node_connections = [&"output", 0, &"IdleVariation", &"Motion", 0, &"Locomotion", &"Motion", 1, &"JumpUpStart", &"Motion", 2, &"JumpUpLoop", &"Motion", 3, &"JumpDownStart", &"Motion", 4, &"JumpDownLoop", &"Motion", 5, &"Land", &"Roar", 0, &"Motion", &"Roar", 1, &"RoarAnim", &"Attack", 0, &"Roar", &"Attack", 1, &"AttackAnim", &"IdleVariation", 0, &"Attack", &"IdleVariation", 1, &"IdleVariationAnim"]

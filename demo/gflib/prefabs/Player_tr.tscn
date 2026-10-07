@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bmn7278cpg627"]
 
 [ext_resource type="Script" uid="uid://cr44l78deqhtd" path="res://gflib/scripts/Controller.gd" id="1_40wx8"]
-[ext_resource type="AnimationNodeBlendTree" uid="uid://c5prxotv5la8b" path="res://gflib/animations/locomotion.tres" id="2_bqqab"]
+[ext_resource type="AnimationNodeBlendTree" uid="uid://dljoqbvov0phb" path="res://gflib/animations/locomotion_tr.tres" id="2_40wx8"]
 [ext_resource type="Script" uid="uid://daugln1yhofy4" path="res://gflib/scripts/AnimationController.gd" id="3_l4kq3"]
 
 [node name="Player" type="TrainerCharacter" unique_id=817802278]
@@ -21,7 +21,7 @@ root_node = NodePath("../Model")
 root_motion_track = NodePath("chara_root/chara_root:origin")
 root_motion_local = true
 callback_mode_process = 2
-tree_root = ExtResource("2_bqqab")
+tree_root = ExtResource("2_40wx8")
 anim_player = NodePath("../Model/AnimationPlayer")
 parameters/Locomotion/blend_position = 0.0
 parameters/Motion/current_state = ""

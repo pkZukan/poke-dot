@@ -35,7 +35,7 @@ void PokemonActor::Initialize()
     Ref<AnimationResourceInfo> animInfo = _catalog->get_animations()[0];
     
     String tracn_file = base_path.path_join(animInfo->get_path());
-    tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
+    tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
     LoadActor(_species_path.path_join(_species_mdl), tracn_file);
 }
 
