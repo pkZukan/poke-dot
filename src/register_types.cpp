@@ -15,6 +15,7 @@
 #include "animation_fbs/tracm.h"
 
 #include "gfx2_fbs/trlgt.h"
+#include "cc_fbs/ccdata.h"
 
 #include "catalog_fbs/trpmcatalog.h"
 #include "actors/pokemon_catalog.h"
@@ -92,6 +93,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
 
@@ -217,6 +219,14 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRFloatParameter)
 		GDREGISTER_CLASS(TRVec4Parameter)
 		GDREGISTER_CLASS(TRStringParameter)
+
+		//ccdata
+		GDREGISTER_CLASS(TrinityCharacterCreationData)
+		GDREGISTER_CLASS(TrinityCCDataSomeTable2)
+		GDREGISTER_CLASS(TrinityCCDataEntry)
+		GDREGISTER_CLASS(TrinityCCDataEntry2)
+		GDREGISTER_CLASS(TrinityCCDataEntry3)
+		GDREGISTER_CLASS(TrinityCCDataEntry4)
 
 		//catalog
 		GDREGISTER_CLASS(TRPpokemonCatalog)
@@ -366,6 +376,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
 
@@ -424,6 +435,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
 
