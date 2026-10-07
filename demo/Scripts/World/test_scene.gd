@@ -1,7 +1,7 @@
 @tool
 extends Node
 
-const player_prefab = preload("res://gflib/prefabs/Player.tscn")
+const player_prefab = preload("res://gflib/prefabs/Player_tr.tscn")
 
 func _ready() -> void:
 	var player = player_prefab.instantiate()

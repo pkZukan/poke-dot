@@ -38,6 +38,7 @@ protected:
     String base_path;
 
     void DebugDrawSkeleton();
+    void _add_animation(String anim_file, String name);
 
 private:
     AnimationPlayer* _anim_player = nullptr;
@@ -48,7 +49,6 @@ private:
 
     Skeleton3D* _find_skeleton(Node* node);
     void _setup_animation();
-    void _add_animation(String anim_file, String name);
     void _add_mesh_animation(String tracm_file, String name);
     void _load_animation_parameter(String filepath);
     void _load_animation_resource(String filepath);

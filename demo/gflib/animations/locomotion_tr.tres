@@ -15,19 +15,19 @@ fadeout_time = 0.1
 animation = &"00011_def01_idle01"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_jumpdown_loop"]
-animation = &"00153_jumpdown01_loop"
+animation = &"00213_jumpdown01_loop"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_jumpdown_start"]
-animation = &"00152_jumpdown01_start"
+animation = &"00212_jumpdown01_start"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_jumpup_loop"]
-animation = &"00151_jumpup01_loop"
+animation = &"00211_jumpup01_loop"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_jumpup_start"]
-animation = &"00150_jumpup01_start"
+animation = &"00210_jumpup01_start"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_land"]
-animation = &"00155_land02"
+animation = &"00215_land02"
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_idle"]
 animation = &"00001_defaultwait01_loop"
@@ -84,12 +84,12 @@ fadein_time = 0.1
 fadeout_time = 0.1
 
 [sub_resource type="AnimationNodeAnimation" id="Anim_roar"]
-animation = &"00300_roar01"
+animation = &"00573_surprise01"
 
 [resource]
 resource_local_to_scene = true
 resource_name = "Trainer locomotion"
-graph_offset = Vector2(-22.090912, -178)
+graph_offset = Vector2(-114, -125)
 nodes/output/position = Vector2(1300, -100)
 nodes/Locomotion/node = SubResource("BlendSpace_locomotion")
 nodes/Locomotion/position = Vector2(-320, -400)
