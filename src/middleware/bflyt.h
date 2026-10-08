@@ -59,6 +59,7 @@ public:
 	Error LoadFromBuffer(const PackedByteArray &buffer);
 	Error LoadFromFile(const String &path);
 	Dictionary get_layout() const { return layout.duplicate(true); }
+	const Dictionary &get_layout_ref() const { return layout; }
 
 private:
 	Dictionary layout;

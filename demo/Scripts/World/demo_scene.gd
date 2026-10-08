@@ -3,7 +3,7 @@ extends Node
 
 signal loading_progress(current: int, total: int)
 
-const player_prefab = preload("res://gflib/prefabs/Player.tscn")
+const player_prefab = preload("res://gflib/prefabs/Player_tr.tscn")
 
 @export var run_in_editor: bool = false:
 	set(value):

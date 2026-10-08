@@ -74,23 +74,29 @@ Dictionary TrinityModel::parse_mesh_buffer(
     const PackedByteArray& inds,
     int poly_type, int start, int count)
 {
+    Dictionary result = parse_vertex_buffer(accessor_table, verts);
+    result["Indicies"] = parse_index_buffer(inds, poly_type, start, count);
+    return result;
+}
+
+Dictionary TrinityModel::parse_vertex_buffer(
+    const Ref<VertexAccessors>& accessor_table,
+    const PackedByteArray& verts)
+{
     PackedVector3Array  pos, norm;
     PackedVector2Array  uv, uv2;
     PackedColorArray   colors;
-    PackedInt32Array    indices, blend_inds;
+    PackedInt32Array    blend_inds;
     PackedFloat32Array  blend_weights, tangents;
 
     Array strides = accessor_table->get_Strides();
     Ref<SizeTable> stride_obj = strides[0];
     int stride = stride_obj->get_Size();
+    ERR_FAIL_COND_V(stride <= 0, Dictionary());
 
     Ref<StreamPeerBuffer> stream_vert;
     stream_vert.instantiate();
     stream_vert->set_data_array(verts);
-
-    Ref<StreamPeerBuffer> stream_ind;
-    stream_ind.instantiate();
-    stream_ind->set_data_array(inds);
 
     Array accessors = accessor_table->get("Accessors");
 
@@ -203,10 +209,31 @@ Dictionary TrinityModel::parse_mesh_buffer(
         curr_pos += stride;
     }
 
-    int ind_size = (1 << poly_type);
-    curr_pos = start * ind_size;
+    Dictionary result;
+    result["Pos"]          = pos;
+    result["Norm"]         = norm;
+    result["UV"]           = uv;
+    result["UV2"]          = uv2;
+    result["Color"]        = colors;
+    result["BlendInds"]    = blend_inds;
+    result["BlendWeights"] = blend_weights;
+    result["Tangents"]     = tangents;
+    
+    return result;
+}
+
+PackedInt32Array TrinityModel::parse_index_buffer(const PackedByteArray& inds, int poly_type, int start, int count)
+{
+    ERR_FAIL_COND_V(poly_type < 0 || poly_type > 3 || start < 0 || count < 0, PackedInt32Array());
+    const int ind_size = 1 << poly_type;
+    ERR_FAIL_COND_V((int64_t(start) + count) * ind_size > inds.size(), PackedInt32Array());
+    PackedInt32Array indices;
+    Ref<StreamPeerBuffer> stream_ind;
+    stream_ind.instantiate();
+    stream_ind->set_data_array(inds);
+    int64_t curr_pos = int64_t(start) * ind_size;
     stream_ind->seek(curr_pos);
-    int end = (start + count) * ind_size;
+    const int64_t end = (int64_t(start) + count) * ind_size;
     while (curr_pos < end) {
         switch (poly_type) {
             case 0: indices.push_back(stream_ind->get_u8());  break;
@@ -216,19 +243,7 @@ Dictionary TrinityModel::parse_mesh_buffer(
         }
         curr_pos += ind_size;
     }
-
-    Dictionary result;
-    result["Pos"]          = pos;
-    result["Norm"]         = norm;
-    result["UV"]           = uv;
-    result["UV2"]          = uv2;
-    result["Color"]        = colors;
-    result["Indicies"]     = indices;
-    result["BlendInds"]    = blend_inds;
-    result["BlendWeights"] = blend_weights;
-    result["Tangents"]     = tangents;
-    
-    return result;
+    return indices;
 }
 
 // ---------------------------------------------------------------------------
@@ -336,23 +351,27 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
         String texName = file.get_file().get_basename();
         String tex_name = t->get_Name();
 
-        Ref<BinaryTextureArchive> bntx = ResourceLoader::get_singleton()->load(path.path_join(file), "", ResourceLoader::CACHE_MODE_IGNORE);
-        if (bntx.is_null())
-            continue;
-
-        TypedDictionary<String, BinaryTexture> imgs = bntx->get_textures();
-        if (imgs.is_empty())
-            continue;
-
-        Ref<BinaryTexture> texture_array = imgs[texName];
-        if (texture_array.is_null() || texture_array->get_layers() == 0)
-            continue;
-        Ref<Image> image = texture_array->get_layer_data(0);
-        if (image.is_null())
-            continue;
-        Ref<ImageTexture> img_tex = ImageTexture::create_from_image(image);
-        if (img_tex.is_valid())
-            shdr->set_shader_parameter(tex_name, img_tex);
+        const String source_path = path.path_join(file).simplify_path();
+        const String texture_id = source_path + String("\n") + texName + String("\n0");
+        const String texture_path = String("res://.gflib-textures/") + texture_id.sha256_text() + String(".texture");
+        ResourceLoader *loader = ResourceLoader::get_singleton();
+        Ref<Texture2D> texture = loader->get_cached_ref(texture_path);
+        if (texture.is_null()) {
+            Ref<BinaryTextureArchive> bntx = loader->load(source_path, "", ResourceLoader::CACHE_MODE_REUSE);
+            if (bntx.is_null()) continue;
+            TypedDictionary<String, BinaryTexture> imgs = bntx->get_textures();
+            if (!imgs.has(texName)) continue;
+            Ref<BinaryTexture> texture_array = imgs[texName];
+            if (texture_array.is_null() || texture_array->get_layers() == 0) continue;
+            Ref<Image> image = texture_array->get_layer_image(0);
+            if (image.is_null()) continue;
+            Ref<ImageTexture> img_tex = ImageTexture::create_from_image(image);
+            if (img_tex.is_null()) continue;
+            img_tex->set_meta("source_archive", bntx);
+            img_tex->set_path(texture_path);
+            texture = img_tex;
+        }
+        shdr->set_shader_parameter(tex_name, texture);
     }
 }
 
@@ -519,45 +538,45 @@ void TrinityModel::_build_meshes(
         Array attr_list = mesh_shape->get_Attributes();
         int poly_type = mesh_shape->get_PolygonType();
 
-        for (int sub = 0; sub < mat_list.size(); sub++) 
+        if (mat_list.is_empty()) continue;
+        const Dictionary result = parse_vertex_buffer(attr_list[0], vert_buf);
+        Array vertex_arrays;
+        vertex_arrays.resize(Mesh::ARRAY_MAX);
+        PackedVector3Array pos = result["Pos"];
+        if(!pos.is_empty()) vertex_arrays[Mesh::ARRAY_VERTEX] = pos;
+
+        PackedVector3Array norm = result["Norm"];
+        if(!norm.is_empty()) vertex_arrays[Mesh::ARRAY_NORMAL] = norm;
+
+        PackedVector2Array uv = result["UV"];
+        if(!uv.is_empty()) vertex_arrays[Mesh::ARRAY_TEX_UV] = uv;
+
+        PackedVector2Array uv2 = result["UV2"];
+        if(!uv2.is_empty()) vertex_arrays[Mesh::ARRAY_TEX_UV2] = uv2;
+
+        PackedColorArray colors = result["Color"];
+        if(!colors.is_empty()) vertex_arrays[Mesh::ARRAY_COLOR] = colors;
+
+        PackedInt32Array blend_inds = result["BlendInds"];
+        if(!blend_inds.is_empty()) vertex_arrays[Mesh::ARRAY_BONES] = blend_inds;
+
+        PackedFloat32Array blend_weights = result["BlendWeights"];
+        if(!blend_weights.is_empty()) vertex_arrays[Mesh::ARRAY_WEIGHTS] = blend_weights;
+
+        PackedFloat32Array tangents = result["Tangents"];
+        if(!tangents.is_empty()) vertex_arrays[Mesh::ARRAY_TANGENT] = tangents;
+
+        for (int sub = 0; sub < mat_list.size(); sub++)
         {
             Ref<MaterialInfo> mat = mat_list[sub];
             int poly_offset = mat->get_PolyOffset();
             int poly_count = mat->get_PolyCount();
             String material_name = mat->get_MaterialName();
             String mesh_name = mesh_shape->get_Name();
-            
-            Dictionary result = parse_mesh_buffer(attr_list[0], vert_buf, ind_buf, poly_type, poly_offset, poly_count);
-            result["Indicies"] = _flip_faces(result["Indicies"]);
 
-            Array arr;
-            arr.resize(Mesh::ARRAY_MAX);
-            PackedVector3Array pos = result["Pos"];
-            if(!pos.is_empty()) arr[Mesh::ARRAY_VERTEX] = pos;
-
-            PackedVector3Array norm = result["Norm"];
-            if(!norm.is_empty()) arr[Mesh::ARRAY_NORMAL] = norm;
-
-            PackedVector2Array uv = result["UV"];
-            if(!uv.is_empty()) arr[Mesh::ARRAY_TEX_UV] = uv;
-
-            PackedVector2Array uv2 = result["UV2"];
-            if(!uv2.is_empty()) arr[Mesh::ARRAY_TEX_UV2] = uv2;
-
-            PackedColorArray colors = result["Color"];
-            if(!colors.is_empty()) arr[Mesh::ARRAY_COLOR] = colors;
-
-            PackedInt32Array indices = result["Indicies"];
-            if(!indices.is_empty()) arr[Mesh::ARRAY_INDEX] = indices;
-
-            PackedInt32Array blend_inds = result["BlendInds"];
-            if(!blend_inds.is_empty()) arr[Mesh::ARRAY_BONES] = blend_inds;
-
-            PackedFloat32Array blend_weights = result["BlendWeights"];
-            if(!blend_weights.is_empty()) arr[Mesh::ARRAY_WEIGHTS] = blend_weights;
-
-            PackedFloat32Array tangents = result["Tangents"];
-            if(!tangents.is_empty()) arr[Mesh::ARRAY_TANGENT] = tangents;
+            Array arr = vertex_arrays.duplicate();
+            PackedInt32Array indices = _flip_faces(parse_index_buffer(ind_buf, poly_type, poly_offset, poly_count));
+            if (!indices.is_empty()) arr[Mesh::ARRAY_INDEX] = indices;
 
             Ref<ArrayMesh> arr_mesh;
             arr_mesh.instantiate();

@@ -34,6 +34,8 @@ public:
     );
     AABB BBox;
 private:
+    static Dictionary parse_vertex_buffer(const Ref<VertexAccessors>& accessor_table, const PackedByteArray& verts);
+    static PackedInt32Array parse_index_buffer(const PackedByteArray& inds, int poly_type, int start, int count);
     Dictionary _load_materials(const String& path, const Array& material_files);
     Ref<ShaderMaterial> _build_shader_material(const Ref<MaterialEntry>& mat);
     void _apply_textures(const String& path, const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr);

@@ -19,7 +19,7 @@ inline void ui_warn_once(PackedStringArray &warnings, const String &message) {
     if (!warnings.has(message)) warnings.push_back(message);
 }
 
-class UIFontCache {
+class UIFontResolver {
 public:
     String font_dir = "res://Assets/ui/font/bin/";
 
@@ -28,13 +28,12 @@ public:
     Ref<Font> get(const String &name, PackedStringArray &warnings);
 
 private:
-    Dictionary cache;
     Dictionary archive_fonts;
 };
 
 class UIBuilder {
 public:
-    explicit UIBuilder(UIFontCache &p_fonts) : fonts(p_fonts) {}
+    explicit UIBuilder(UIFontResolver &p_fonts) : fonts(p_fonts) {}
 
     Error build(const Ref<SeadArchive> &archive, const String &arc_path, TrinityPane *&r_root);
 
@@ -63,14 +62,14 @@ private:
     void build_picture(Control *node, const PaneInfo &info, const Dictionary &pane,
             const Array &materials, const PackedStringArray &texture_names, double alpha);
 
-    Polygon2D *add_quad(Control *parent, const String &name, const Rect2 &rect, Dictionary material,
+    Polygon2D *add_quad(Control *parent, const String &name, const Rect2 &rect, const Dictionary &material,
             const PackedStringArray &texture_names, PackedVector2Array uv, const PackedColorArray &colors,
             int texture_flip, double alpha);
     Ref<ShaderMaterial> make_picture_material(const String &texture_name, const Dictionary &material);
     void apply_sampler(Polygon2D *quad, const Dictionary &map);
     bool get_material(const Array &materials, int index, Dictionary &r_material);
 
-    UIFontCache &fonts;
+    UIFontResolver &fonts;
     Ref<Shader> picture_shader;
     Dictionary layouts;
     TrinityPane *root = nullptr;

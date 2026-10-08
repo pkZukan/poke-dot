@@ -1,5 +1,6 @@
 #include "ui_builder.h"
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/hashing_context.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/core/math.hpp>
 #include "middleware/bflyt.h"
@@ -65,7 +66,7 @@ struct UIBuilder::PaneInfo {
     Vector3 rotation;
     Vector2 scale = Vector2(1, 1);
 
-    static PaneInfo from(Dictionary pane) {
+    static PaneInfo from(const Dictionary &pane) {
         PaneInfo info;
         info.type_name = String(pane["type"]);
         if (info.type_name == "pan1") info.type = PAN;
@@ -88,48 +89,65 @@ struct UIBuilder::PaneInfo {
     }
 };
 
-void UIFontCache::reset() {
-    cache.clear();
+void UIFontResolver::reset() {
     archive_fonts.clear();
 }
 
-Error UIFontCache::index_archive(const Ref<SeadArchive> &archive, const PackedStringArray &files) {
+Error UIFontResolver::index_archive(const Ref<SeadArchive> &archive, const PackedStringArray &files) {
     for (const String &file : files) {
         const String extension = file.get_extension();
         if (extension != "fcpx" && extension != "bfcpx") continue;
         const String name = file.get_file().get_basename() + ".bfcpx";
         ERR_FAIL_COND_V_MSG(archive_fonts.has(name), ERR_INVALID_DATA, "Ambiguous composite font name in ARC: " + name);
-        archive_fonts[name] = archive->get_file_data(file);
+        PackedByteArray data = archive->get_file_data(file);
+        Ref<HashingContext> hash;
+        hash.instantiate();
+        Error error = hash->start(HashingContext::HASH_SHA256);
+        if (error != OK) return error;
+        error = hash->update(data);
+        if (error != OK) return error;
+        Dictionary entry;
+        entry["data"] = data;
+        entry["resource_path"] = "res://.gflib-fonts/" + font_dir.simplify_path().sha256_text()
+                + "/" + hash->finish().hex_encode() + ".bfcpx";
+        archive_fonts[name] = entry;
     }
     return OK;
 }
 
-Ref<Font> UIFontCache::get(const String &p_name, PackedStringArray &warnings) {
+Ref<Font> UIFontResolver::get(const String &p_name, PackedStringArray &warnings) {
     String name = p_name;
     if (name.ends_with(".fcpx"))
         name = name.get_basename() + ".bfcpx";
-    if (cache.has(name))
-        return cache[name];
-
+    ResourceLoader *loader = ResourceLoader::get_singleton();
     Ref<Font> font;
-    Error error;
-    if (name.get_extension() == "bfcpx") {
-        Ref<BinaryCompositeFont> composite;
-        composite.instantiate();
-        if (archive_fonts.has(name))
-            error = composite->LoadFromBuffer(archive_fonts[name], font_dir);
-        else
-            error = composite->LoadFromFile(font_dir.path_join(name));
-        if (error == OK) font = composite;
-        for (const String &warning : composite->get_warnings()) ui_warn_once(warnings, warning);
+    if (archive_fonts.has(name)) {
+        Dictionary entry = archive_fonts[name];
+        String resource_path = entry["resource_path"];
+        font = loader->get_cached_ref(resource_path);
+        if (font.is_null()) {
+            Ref<BinaryCompositeFont> composite;
+            composite.instantiate();
+            Error error = composite->LoadFromBuffer(entry["data"], font_dir);
+            if (error != OK) {
+                for (const String &warning : composite->get_warnings()) ui_warn_once(warnings, warning);
+                ui_warn_once(warnings, vformat("Could not load UI font '%s' (error %d).", p_name, error));
+                return Ref<Font>();
+            }
+            composite->set_path(resource_path);
+            font = composite;
+        }
     } else {
-        Ref<BinaryFont> bitmap;
-        bitmap.instantiate();
-        error = bitmap->LoadFromFile(font_dir.path_join(name));
-        if (error == OK) font = bitmap;
+        font = loader->load(font_dir.path_join(name).simplify_path(), "Font", ResourceLoader::CACHE_MODE_REUSE);
     }
-    if (error != OK) ui_warn_once(warnings, vformat("Could not load UI font '%s' (error %d).", p_name, error));
-    cache[name] = font;
+    if (font.is_null()) {
+        ui_warn_once(warnings, vformat("Could not load UI font '%s'.", p_name));
+        return font;
+    }
+    Ref<BinaryCompositeFont> composite = font;
+    if (composite.is_valid()) {
+        for (const String &warning : composite->get_warnings()) ui_warn_once(warnings, warning);
+    }
     return font;
 }
 
@@ -175,9 +193,10 @@ Error UIBuilder::parse_layouts(const Ref<SeadArchive> &archive, const PackedStri
         if (name == arc_path.get_file().get_basename())
             selected = name;
 
-        Array panes = parsed->get_layout()["panes"];
+        const Dictionary &data = parsed->get_layout_ref();
+        const Array panes = data["panes"];
         for (int j = 0; j < panes.size(); ++j) {
-            Dictionary pane = panes[j];
+            const Dictionary pane = panes[j];
             if (pane.has("parts_name"))
                 referenced.push_back(String(pane["parts_name"]).get_file().get_basename());
         }
@@ -237,7 +256,7 @@ bool UIBuilder::build_layout(const String &layout_name, Control *container, Pack
     ancestry.push_back(layout_name);
 
     Ref<BinaryLayout> binary_layout = layouts[layout_name];
-    Dictionary data = binary_layout->get_layout();
+    const Dictionary &data = binary_layout->get_layout_ref();
     const Vector2 native_size = data["size"];
     if (native_size.x <= 0 || native_size.y <= 0) {
         ERR_PRINT("Invalid layout size in: " + layout_name);
@@ -256,15 +275,15 @@ bool UIBuilder::build_layout(const String &layout_name, Control *container, Pack
         container = root;
     }
 
-    Array panes = data["panes"];
-    Array materials = data["materials"];
-    PackedStringArray texture_names = data["textures"];
+    const Array panes = data["panes"];
+    const Array materials = data["materials"];
+    const PackedStringArray texture_names = data["textures"];
     Vector<Control *> layout_nodes;
     Vector<Vector2> layout_sizes;
     Vector<Vector2> layout_pivots;
 
     for (int i = 0; i < panes.size(); ++i) {
-        Dictionary pane = panes[i];
+        const Dictionary pane = panes[i];
         const PaneInfo info = PaneInfo::from(pane);
         if (info.parent < -1 || info.parent >= i) {
             ERR_PRINT("Invalid pane parent index in: " + layout_name);
@@ -565,7 +584,7 @@ bool UIBuilder::get_material(const Array &materials, int index, Dictionary &r_ma
     return true;
 }
 
-Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 &rect, Dictionary material,
+Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 &rect, const Dictionary &material,
         const PackedStringArray &texture_names, PackedVector2Array uv, const PackedColorArray &colors,
         int texture_flip, double alpha) {
     // Reorder BFLYT's TL, TR, BL, BR corners to the polygon winding expected by Godot.
@@ -583,14 +602,14 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
     quad->set_name(name);
     quad->set_polygon(vertices);
 
-    Array maps = material["texture_maps"];
+    const Array maps = material["texture_maps"];
     if (maps.is_empty()) {
         const Color white = material["white_color"];
         PackedColorArray vertex_colors;
         for (int k : order) vertex_colors.push_back(colors.size() == 4 ? white * colors[k] : white);
         quad->set_vertex_colors(vertex_colors);
     } else {
-        Dictionary map = maps[0];
+        const Dictionary map = maps[0];
         const int texture_index = int(map["texture_index"]);
         if (texture_index < 0 || texture_index >= texture_names.size()) {
             ui_warn_once(warnings, vformat("Invalid texture index %d.", texture_index));

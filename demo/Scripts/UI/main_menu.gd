@@ -9,7 +9,6 @@ const TRUIV_PATH := "res://Assets/ui/data/main_menu/view_main_menu_top_00.truiv"
 #Consts
 const menu_entry_names := ["Boxes", "Satchel", "Pokédex", "Mable's Research", "Z-A Royale", "Link Play"]
 
-# Store ui scene instances
 @export var submenu_scenes: Array[PackedScene] = [null, null, null, null, null, null]
 
 #Vars
@@ -32,26 +31,37 @@ func _ready() -> void:
 	configure_entrance(["in", "keep"])
 
 func _initialize_submenus() -> void:
-	for i in mini(submenu_scenes.size(), menu_entry_names.size()):
-		if submenu_scenes[i] == null:
-			continue
-		var instance := submenu_scenes[i].instantiate()
-		var submenu := instance as Control
-		if submenu == null:
-			push_error("Submenu %s must have a Control root." % menu_entry_names[i])
-			instance.free()
-			continue
-		submenu.hide()
-		submenu.process_mode = Node.PROCESS_MODE_DISABLED
-		if submenu.has_signal("back_requested"):
-			submenu.connect("back_requested", _on_submenu_back_requested.bind(submenu))
-		add_child(submenu)
-		submenus[i] = submenu
+	for index in mini(submenu_scenes.size(), menu_entry_names.size()):
+		_load_submenu(index)
+
+func _load_submenu(index: int) -> Control:
+	var cached: Control = submenus.get(index)
+	if is_instance_valid(cached):
+		return cached
+	var scene := submenu_scenes[index]
+	if scene == null:
+		return null
+	var instance := scene.instantiate()
+	var submenu := instance as Control
+	if submenu == null:
+		push_error("Submenu %s must have a Control root." % scene.resource_path)
+		instance.free()
+		return null
+	submenu.hide()
+	submenu.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child(submenu)
+	submenus[index] = submenu
+	if submenu.has_signal("back_requested"):
+		submenu.connect("back_requested", _on_submenu_back_requested.bind(submenu))
+	return submenu
 
 func _on_option_selected(index: int) -> void:
-	if not submenus.has(index) or active_submenu != null:
+	if index < 0 or index >= submenu_scenes.size() or is_instance_valid(active_submenu):
 		return
-	active_submenu = submenus[index]
+	var submenu: Control = submenus.get(index)
+	if not is_instance_valid(submenu):
+		return
+	active_submenu = submenu
 	$canvas.hide()
 	active_submenu.process_mode = Node.PROCESS_MODE_INHERIT
 	active_submenu.show()

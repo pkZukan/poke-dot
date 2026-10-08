@@ -40,7 +40,7 @@ private:
     void on_state_finished(const StringName &animation, const String &root);
     UIStateRuntime state_runtime;
     std::map<String, NodePath> animators;
-    UIFontCache fonts;
+    UIFontResolver fonts;
     PackedStringArray warnings;
     Control *layout = nullptr;
     uint64_t layout_id = 0;
