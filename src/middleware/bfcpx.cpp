@@ -13,7 +13,9 @@ void BinaryCompositeFont::_bind_methods()
 	ClassDB::bind_method(D_METHOD("LoadFromFile", "path"), &BinaryCompositeFont::LoadFromFile);
 	ClassDB::bind_method(D_METHOD("LoadFromBuffer", "buffer", "base_dir"), &BinaryCompositeFont::LoadFromBuffer);
 	ClassDB::bind_method(D_METHOD("load_bfcpx", "path"), &BinaryCompositeFont::load_bfcpx);
+	ClassDB::bind_method(D_METHOD("get_font_files"), &BinaryCompositeFont::get_font_files);
 	ClassDB::bind_method(D_METHOD("get_warnings"), &BinaryCompositeFont::get_warnings);
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "font_files", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_font_files");
 }
 
 bool BinaryCompositeFont::read_name(const Ref<StreamPeerBuffer> &sp, uint64_t offset, String &name)
@@ -108,25 +110,28 @@ Error BinaryCompositeFont::load_outline(const String &path, const Entry &entry, 
 	Ref<FileAccess> file = FileAccess::open(filename, FileAccess::READ);
 	if (file.is_null()) return ERR_FILE_CANT_OPEN;
 	PackedByteArray data = file->get_buffer(file->get_length());
-	if (data.size() < 12) return ERR_FILE_CORRUPT;
+	if (data.size() < BFTTF_HEADER_SIZE + BFTTF_WORD_SIZE) return ERR_FILE_CORRUPT;
 	const uint32_t magic = data.decode_u32(0);
 	uint32_t key = 0;
-	// Switch Toolbox BFTTF.cs / BFTTFutil: big-endian words XORed after an 8-byte header.
-	if (magic == 0x1a879bd9) key = 2785117442U;
-	else if (magic == 0x1e1af836) key = 1231165446U;
-	else if (magic == 0xc1de68f3) key = 2364726489U;
+
+	for (const BfttfXorFormat &format : BFTTF_XOR_FORMATS) {
+		if (magic == format.magic) {
+			key = format.key;
+			break;
+		}
+	}
 	if (key) {
-		if (data.size() % 4) return ERR_FILE_CORRUPT;
+		if (data.size() % BFTTF_WORD_SIZE) return ERR_FILE_CORRUPT;
 		Ref<StreamPeerBuffer> sp;
 		sp.instantiate();
 		sp->set_data_array(data);
 		sp->set_big_endian(true);
-		sp->seek(4);
+		sp->seek(BFTTF_WORD_SIZE);
 		const uint32_t length = sp->get_u32() ^ key;
-		if (length != data.size() - 8) return ERR_FILE_CORRUPT;
-		data = data.slice(8);
+		if (length != data.size() - BFTTF_HEADER_SIZE) return ERR_FILE_CORRUPT;
+		data = data.slice(BFTTF_HEADER_SIZE);
 		uint8_t *bytes = data.ptrw();
-		for (int64_t i = 0; i < data.size(); ++i) bytes[i] ^= uint8_t(key >> (24 - (i % 4) * 8));
+		for (int64_t i = 0; i < data.size(); ++i) bytes[i] ^= uint8_t(key >> ((BFTTF_WORD_SIZE - 1 - i % BFTTF_WORD_SIZE) * 8));
 	}
 	if (data.slice(0, 4).get_string_from_ascii() != "OTTO" && data.decode_u32(0) != 0x00000100) return ERR_FILE_UNRECOGNIZED;
 	Ref<FontFile> source;
@@ -171,6 +176,7 @@ Error BinaryCompositeFont::load_outline(const String &path, const Entry &entry, 
 
 Error BinaryCompositeFont::LoadFromBuffer(const PackedByteArray &buffer, const String &base_dir)
 {
+	font_files.clear();
 	warnings.clear();
 	Ref<StreamPeerBuffer> sp = BinaryFontUtils::open_stream(buffer);
 	if (sp.is_null()) return ERR_FILE_CORRUPT;
@@ -187,9 +193,14 @@ Error BinaryCompositeFont::LoadFromBuffer(const PackedByteArray &buffer, const S
 	HashSet<uint64_t> active;
 	Error error = parse_node(sp, root, entries, active, 0);
 	if (error != OK) return error;
+	for (const Entry &entry : entries) {
+		font_files.push_back(entry.name);
+	}
 	TypedArray<Font> fonts;
 	PackedStringArray loaded_warnings;
 	for (const Entry &entry : entries) {
+		// Retain the filename for inspection, but do not load BFTTF members.
+		if (entry.name.get_extension().to_lower() == "bfttf") continue;
 		Ref<FontFile> font;
 		const String path = base_dir.path_join(entry.name);
 		if (entry.outline) {

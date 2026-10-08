@@ -13,6 +13,7 @@ public:
 	Error LoadFromFile(const String &path);
 	Error LoadFromBuffer(const PackedByteArray &buffer, const String &base_dir);
 	Ref<BinaryCompositeFont> load_bfcpx(const String &path);
+	PackedStringArray get_font_files() const { return font_files; }
 	PackedStringArray get_warnings() const { return warnings; }
 private:
 	struct Entry {
@@ -25,6 +26,23 @@ private:
 		float adjustment = 0;
 		uint32_t flags = 0;
 	};
+
+	struct BfttfXorFormat
+	{
+		uint32_t magic;
+		uint32_t key;
+	};
+
+	// Magic is read as little-endian; the XOR key applies to big-endian words.
+	inline static constexpr BfttfXorFormat BFTTF_XOR_FORMATS[] = {
+		{ 0x1a879bd9U, 0xa6018502U },
+		{ 0x1e1af836U, 0x49621806U },
+		{ 0xc1de68f3U, 0x8cf2dcd9U },
+	};
+	static constexpr int BFTTF_HEADER_SIZE = 8;
+	static constexpr int BFTTF_WORD_SIZE = 4;
+
+	PackedStringArray font_files;
 	PackedStringArray warnings;
 	Error parse_node(const Ref<StreamPeerBuffer> &stream, uint64_t offset, Vector<Entry> &entries, HashSet<uint64_t> &active, int depth);
 	bool read_name(const Ref<StreamPeerBuffer> &stream, uint64_t offset, String &name);

@@ -191,10 +191,14 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
     {
         if (target < 2) 
         {
-            Vector2 offset = material->get_shader_parameter("uv_translation"); offset[target] = value;
-            material->set_shader_parameter("uv_translation", offset);
+            Vector4 params = material->get_shader_parameter("picture_params"); params[target] = value;
+            material->set_shader_parameter("picture_params", params);
         } 
-        else if (target == 2) material->set_shader_parameter("uv_rotation", Math::deg_to_rad(value));
+        else if (target == 2) {
+            Vector4 params = material->get_shader_parameter("picture_params");
+            params.z = Math::deg_to_rad(value);
+            material->set_shader_parameter("picture_params", params);
+        }
         else if (target < 5) 
         {
             Vector2 scale = material->get_shader_parameter("uv_scale"); scale[target - 3] = value;

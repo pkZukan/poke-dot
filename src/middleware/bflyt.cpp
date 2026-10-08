@@ -424,7 +424,8 @@ Variant ResourceFormatLoaderBFLYT::_load(const String &path, const String &, boo
 {
 	Ref<BinaryLayout> bflyt;
 	bflyt.instantiate();
-	bflyt->LoadFromFile(path);
+	Error error = bflyt->LoadFromFile(path);
+	if (error != OK) return error;
 	return bflyt;
 }
 

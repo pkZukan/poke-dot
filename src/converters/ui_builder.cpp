@@ -283,7 +283,8 @@ bool UIBuilder::build_layout(const String &layout_name, Control *container, Pack
 
         Vector2 anchor;
         if (info.parent < 0)
-            anchor = (is_entry ? native_size : container->get_size()) * 0.5;
+            anchor = bool(data.get("draw_from_center", true))
+                    ? (is_entry ? native_size : container->get_size()) * 0.5 : Vector2();
         else
             anchor = layout_pivots[info.parent]
                     + layout_sizes[info.parent] * (pane_origin(info.origin >> 4) - Vector2(0.5, 0.5));
@@ -429,48 +430,129 @@ void UIBuilder::build_window(Control *node, const PaneInfo &info, const Dictiona
         const Array &materials, const PackedStringArray &texture_names, double alpha) {
     const Vector2 size = info.size;
     const Insets stretch = read_insets(pane["window_stretch"], size);
-    const Insets content = read_insets(pane["window_custom_insets"], size);
+    const Insets fallback = read_insets(pane["window_custom_insets"], size);
+    const Array frames = pane["window_frames"];
+    const int count = frames.size();
+    const int flags = pane["window_flags"];
+    const int kind = (flags >> 2) & 3;
+    const bool use_one_material = flags & 1;
+    const bool use_vertex_colors = flags & 2;
+    const bool draw_content = !(flags & 0x10) && kind != 2;
+    const PackedColorArray colors = pane["colors"];
 
-    const real_t x[4] = { 0, real_t(stretch.left), size.x - stretch.right, size.x };
-    const real_t y[4] = { 0, real_t(stretch.top), size.y - stretch.bottom, size.y };
-    const real_t u[4] = { 0, real_t(stretch.left) / MAX(real_t(1), size.x),
-        1 - real_t(stretch.right) / MAX(real_t(1), size.x), 1 };
-    const real_t v[4] = { 0, real_t(stretch.top) / MAX(real_t(1), size.y),
-        1 - real_t(stretch.bottom) / MAX(real_t(1), size.y), 1 };
+    // The custom frame sizes are fallbacks for frames without textures.
+    // Stretch values expand the content into the border; they are not border sizes.
+    auto frame_size = [&](int index) -> Vector2 {
+        if (index >= count) return Vector2();
+        const Dictionary frame = frames[index];
+        const Dictionary material_frame = frames[use_one_material ? 0 : index];
+        const Dictionary material = materials[int(material_frame["material_index"])];
+        const Array maps = material["texture_maps"];
+        if (maps.is_empty()) return Vector2();
+        const Dictionary map = maps[0];
+        const String name = texture_names[int(map["texture_index"])];
+        if (!textures.has(name)) return Vector2();
+        const Ref<Texture2D> texture = textures[name];
+        Vector2 dimensions = texture->get_size();
+        const int flip = frame["texture_flip"];
+        if (flip == 3 || flip == 5) dimensions = Vector2(dimensions.y, dimensions.x);
+        return dimensions;
+    };
+    const Vector2 first_size = frame_size(0);
+    const Vector2 last_size = frame_size(count >= 4 ? 3 : count == 2 ? 1 : 0);
+    const real_t left = CLAMP(first_size.x > 0 ? first_size.x : real_t(fallback.left), real_t(0), size.x);
+    const real_t right = CLAMP(last_size.x > 0 ? last_size.x : real_t(fallback.right), real_t(0), size.x - left);
+    const real_t top = CLAMP(first_size.y > 0 ? first_size.y : real_t(fallback.top), real_t(0), size.y);
+    const real_t bottom = CLAMP(last_size.y > 0 ? last_size.y : real_t(fallback.bottom), real_t(0), size.y - top);
+    const real_t inner_width = size.x - left - right;
+    const real_t inner_height = size.y - top - bottom;
 
     Dictionary content_material;
-    if (get_material(materials, int(pane["material_index"]), content_material)) {
-        Array content_uv_sets = pane["uv_sets"];
-        PackedVector2Array content_uv;
-        if (!content_uv_sets.is_empty()) content_uv = content_uv_sets[0];
+    if (draw_content && get_material(materials, int(pane["material_index"]), content_material)) {
+        const Array uv_sets = pane["uv_sets"];
+        PackedVector2Array uv;
+        if (!uv_sets.is_empty()) uv = uv_sets[0];
+        const bool horizontal = kind == 1;
         add_quad(node, "WindowContent",
-                Rect2(Vector2(content.left, content.top),
-                        Vector2(size.x - content.left - content.right, size.y - content.top - content.bottom)),
-                content_material, texture_names, content_uv, pane["colors"], 0, alpha);
+                Rect2(Vector2(left - stretch.left, horizontal ? 0 : top - stretch.top),
+                        Vector2(inner_width + stretch.left + stretch.right,
+                                horizontal ? size.y : inner_height + stretch.top + stretch.bottom)),
+                content_material, texture_names, uv, colors, 0, alpha);
     }
 
-    Array frames = pane["window_frames"];
-    for (int frame_index = 0; frame_index < frames.size(); ++frame_index) {
-        Dictionary frame = frames[frame_index];
-        Dictionary frame_material;
-        if (!get_material(materials, int(frame["material_index"]), frame_material)) continue;
-        Array frame_maps = frame_material["texture_maps"];
-        if (frame_maps.is_empty()) continue;
-        const int texture_flip = frame["texture_flip"];
-
-        for (int row = 0; row < 3; ++row) {
-            for (int col = 0; col < 3; ++col) {
-                if (row == 1 && col == 1) continue;
-                PackedVector2Array quad_uv;
-                quad_uv.push_back(Vector2(u[col], v[row]));
-                quad_uv.push_back(Vector2(u[col + 1], v[row]));
-                quad_uv.push_back(Vector2(u[col], v[row + 1]));
-                quad_uv.push_back(Vector2(u[col + 1], v[row + 1]));
-                add_quad(node, vformat("WindowFrame%d_%d_%d", frame_index, row, col),
-                        Rect2(Vector2(x[col], y[row]), Vector2(x[col + 1] - x[col], y[row + 1] - y[row])),
-                        frame_material, texture_names, quad_uv, PackedColorArray(), texture_flip, alpha);
+    // Each frame owns one region. UV extents repeat edge textures at their
+    // authored pixel size rather than stretching the entire window texture.
+    auto draw_frame = [&](int index, const Rect2 &rect, const Vector2 &uv_start,
+            const Vector2 &uv_end) {
+        if (rect.size.x <= 0 || rect.size.y <= 0) return;
+        const Dictionary frame = frames[index];
+        const Dictionary material_frame = frames[use_one_material ? 0 : index];
+        Dictionary material;
+        if (!get_material(materials, int(material_frame["material_index"]), material)) return;
+        PackedVector2Array uv;
+        uv.push_back(uv_start);
+        uv.push_back(Vector2(uv_end.x, uv_start.y));
+        uv.push_back(Vector2(uv_start.x, uv_end.y));
+        uv.push_back(uv_end);
+        PackedColorArray frame_colors;
+        if (use_vertex_colors && colors.size() == 4) {
+            const Vector2 corners[4] = {rect.position, rect.position + Vector2(rect.size.x, 0),
+                    rect.position + Vector2(0, rect.size.y), rect.position + rect.size};
+            for (const Vector2 &corner : corners) {
+                const real_t x = size.x > 0 ? corner.x / size.x : 0;
+                const real_t y = size.y > 0 ? corner.y / size.y : 0;
+                frame_colors.push_back(colors[0].lerp(colors[1], x).lerp(colors[2].lerp(colors[3], x), y));
             }
         }
+        add_quad(node, vformat("WindowFrame%d", index), rect, material, texture_names,
+                uv, frame_colors, int(frame["texture_flip"]), alpha);
+    };
+    auto ratio = [](real_t length, real_t tile) { return tile > 0 ? length / tile : real_t(1); };
+
+    if (count == 0) return;
+    if (kind == 1 || kind == 2) {
+        if (count != 1 && count != 2) {
+            ui_warn_once(warnings, "Horizontal window requires one or two frames");
+            return;
+        }
+        if (kind == 1) {
+            draw_frame(0, Rect2(0, 0, left, size.y), Vector2(), Vector2(1, 1));
+            draw_frame(count - 1, Rect2(size.x - right, 0, right, size.y),
+                    Vector2(count == 1 ? 1 : 0, 0), Vector2(count == 1 ? 0 : 1, 1));
+        } else {
+            // No-content windows use two overlapping horizontal strips.
+            draw_frame(0, Rect2(left, 0, size.x - left, size.y),
+                    Vector2(ratio(size.x - left, right), 0), Vector2(0, 1));
+            draw_frame(count - 1, Rect2(0, 0, size.x - right, size.y),
+                    Vector2(), Vector2(ratio(size.x - right, left), 1));
+        }
+    } else if (kind == 0 && (count == 1 || count == 4)) {
+        // Four border strips, each including one corner.
+        draw_frame(0, Rect2(0, 0, size.x - right, top),
+                Vector2(), Vector2(ratio(size.x - right, left), 1));
+        draw_frame(count == 1 ? 0 : 1, Rect2(size.x - right, 0, right, size.y - bottom),
+                Vector2(count == 1 ? 1 : 0, 0), Vector2(count == 1 ? 0 : 1, ratio(size.y - bottom, top)));
+        draw_frame(count == 1 ? 0 : 2, Rect2(0, top, left, size.y - top),
+                Vector2(0, count == 1 ? ratio(size.y - top, bottom) : 1 - ratio(size.y - top, bottom)),
+                Vector2(1, count == 1 ? 0 : 1));
+        draw_frame(count == 1 ? 0 : 3, Rect2(left, size.y - bottom, size.x - left, bottom),
+                Vector2(count == 1 ? ratio(size.x - left, right) : 1 - ratio(size.x - left, right), count == 1 ? 1 : 0),
+                Vector2(count == 1 ? 0 : 1, count == 1 ? 0 : 1));
+    } else if (kind == 0 && count == 8) {
+        draw_frame(0, Rect2(0, 0, left, top), Vector2(), Vector2(1, 1));
+        draw_frame(1, Rect2(size.x - right, 0, right, top), Vector2(), Vector2(1, 1));
+        draw_frame(2, Rect2(0, size.y - bottom, left, bottom), Vector2(), Vector2(1, 1));
+        draw_frame(3, Rect2(size.x - right, size.y - bottom, right, bottom), Vector2(), Vector2(1, 1));
+        draw_frame(4, Rect2(0, top, left, inner_height),
+                Vector2(0, 1 - ratio(inner_height, top)), Vector2(1, 1));
+        draw_frame(5, Rect2(size.x - right, top, right, inner_height),
+                Vector2(), Vector2(1, ratio(inner_height, bottom)));
+        draw_frame(6, Rect2(left, 0, inner_width, top),
+                Vector2(), Vector2(ratio(inner_width, left), 1));
+        draw_frame(7, Rect2(left, size.y - bottom, inner_width, bottom),
+                Vector2(1 - ratio(inner_width, right), 0), Vector2(1, 1));
+    } else {
+        ui_warn_once(warnings, "Unsupported window kind or frame count");
     }
 }
 
@@ -531,9 +613,22 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
         Ref<Texture2D> texture = textures[texture_name];
         PackedVector2Array quad_uv;
         PackedColorArray vertex_colors;
+        // Window texture orientation is an enum, not a bitmask. Transform UV
+        // values around (0.5, 0.5), including coordinates outside the unit tile.
+        if (texture_flip < 0 || texture_flip >= 6) {
+            ui_warn_once(warnings, "Unknown window texture orientation uses no rotation");
+            texture_flip = 0;
+        }
         for (int k : order) {
-            const int uv_index = k ^ ((texture_flip & 1) ? 1 : 0) ^ ((texture_flip & 2) ? 2 : 0);
-            quad_uv.push_back(uv[uv_index] * texture->get_size());
+            Vector2 coord = uv[k];
+            switch (texture_flip) {
+                case 1: coord.x = 1 - coord.x; break;
+                case 2: coord.y = 1 - coord.y; break;
+                case 3: coord = Vector2(coord.y, 1 - coord.x); break;
+                case 4: coord = Vector2(1 - coord.x, 1 - coord.y); break;
+                case 5: coord = Vector2(1 - coord.y, coord.x); break;
+            }
+            quad_uv.push_back(coord * texture->get_size());
             vertex_colors.push_back(colors.size() == 4 ? colors[k] : Color(1, 1, 1, 1));
         }
         quad->set_uv(quad_uv);
@@ -593,15 +688,20 @@ Ref<ShaderMaterial> UIBuilder::make_picture_material(const String &texture_name,
 }
 
 void UIBuilder::apply_sampler(Polygon2D *quad, const Dictionary &map) {
-    const int wrap_s = map["wrap_s"], wrap_t = map["wrap_t"];
-    quad->set_texture_filter(wrap_s < 3 && wrap_t < 3 ? CanvasItem::TEXTURE_FILTER_NEAREST : CanvasItem::TEXTURE_FILTER_LINEAR);
-    if (wrap_s == wrap_t && (wrap_s == 1 || wrap_s == 5)) {
+    const int flags_s = map["wrap_s"], flags_t = map["wrap_t"];
+    const int wrap_s = flags_s & 3, wrap_t = flags_t & 3;
+    const int min_filter = (flags_s >> 2) & 3, mag_filter = (flags_t >> 2) & 3;
+    // CanvasItem has one filter setting for both minification and magnification.
+    quad->set_texture_filter(mag_filter == 0 ? CanvasItem::TEXTURE_FILTER_NEAREST : CanvasItem::TEXTURE_FILTER_LINEAR);
+    if (min_filter != mag_filter)
+        ui_warn_once(warnings, "Different UI min/mag filters use the magnification filter");
+    if (wrap_s == wrap_t && wrap_s == 1) {
         quad->set_texture_repeat(CanvasItem::TEXTURE_REPEAT_ENABLED);
-    } else if (wrap_s == wrap_t && (wrap_s == 2 || wrap_s == 6)) {
+    } else if (wrap_s == wrap_t && wrap_s == 2) {
         quad->set_texture_repeat(CanvasItem::TEXTURE_REPEAT_MIRROR);
     } else {
         quad->set_texture_repeat(CanvasItem::TEXTURE_REPEAT_DISABLED);
-        if (wrap_s != wrap_t || wrap_s == 3 || wrap_s == 7)
+        if (wrap_s != wrap_t || wrap_s == 3)
             ui_warn_once(warnings, "Unsupported sampler wrap combination uses clamp");
     }
 }

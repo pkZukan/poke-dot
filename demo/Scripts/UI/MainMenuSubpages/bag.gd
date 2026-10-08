@@ -86,10 +86,12 @@ func _initialize_text():
 	get_scope("L_gauge_hp_00")._set_text("T_hp_num_02", "0")
 	for i in 4:
 		get_scope("L_skill_%02d" % i)._set_text("T_00", "—")
+	
 	get_scope("L_numselect_00")._set_text("T_num_00", "0")
 	get_scope("L_numselect_00")._set_text("T_slash_00", "/")
 	get_scope("L_numselect_00")._set_text("T_num_01", "0")
 	get_scope("L_numselect_00").get_scope("L_key_00")._set_text("T_option_00", "Confirm")
+	get_scope("L_numselect_00").hide()
 
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
