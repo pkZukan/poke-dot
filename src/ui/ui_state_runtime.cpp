@@ -71,13 +71,14 @@ double UIStateRuntime::sample(const Dictionary &track, double frame) {
     return left["value"];
 }
 
-Error UIStateRuntime::apply(Node *owner, Control *layout, const String &component, const String &state, double frame) {
-    ERR_FAIL_COND_V(!std::isfinite(frame), ERR_INVALID_PARAMETER);
+Error UIStateRuntime::resolve(Node *owner, Control *layout, const String &component, const String &state,
+        String &root, Dictionary &data) {
     if (!initialized) reset(owner, layout); // Rebuild bindings after PackedScene instantiation.
     auto scopes = components.find(component);
     ERR_FAIL_COND_V_MSG(scopes == components.end(), ERR_DOES_NOT_EXIST, "Unknown UI component: " + component);
     ERR_FAIL_COND_V_MSG(scopes->second.size() != 1, ERR_INVALID_PARAMETER, "Ambiguous UI component; use its path relative to Layout: " + component);
     const NodePath &root_path = scopes->second.front();
+    root = String(root_path);
     ERR_FAIL_NULL_V(owner->get_node_or_null(root_path), ERR_DOES_NOT_EXIST);
     auto instance = instances.find(String(root_path));
     ERR_FAIL_COND_V(instance == instances.end(), ERR_DOES_NOT_EXIST);
@@ -93,7 +94,17 @@ Error UIStateRuntime::apply(Node *owner, Control *layout, const String &componen
         ERR_FAIL_COND_V(!animation.has("pai1"), ERR_FILE_CORRUPT);
         animations[name] = animation["pai1"];
     }
-    Dictionary data = animations[name];
+    data = animations[name];
+    return OK;
+}
+
+Error UIStateRuntime::apply(Node *owner, Control *layout, const String &component, const String &state, double frame) {
+    ERR_FAIL_COND_V(!std::isfinite(frame), ERR_INVALID_PARAMETER);
+    String root;
+    Dictionary data;
+    Error error = resolve(owner, layout, component, state, root, data);
+    if (error != OK) return error;
+    auto instance = instances.find(root);
     Array entries = data["entries"];
     for (int i = 0; i < entries.size(); ++i) {
         Dictionary entry = entries[i];

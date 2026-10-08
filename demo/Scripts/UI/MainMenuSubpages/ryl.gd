@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 signal back_requested
 
@@ -17,12 +17,9 @@ func _ready() -> void:
 	
 	_initialize_text()
 	_initialize_state()
+	configure_entrance(["in", "f_in_keep", "keep"])
 
 func _initialize_state() -> void:
-	# Sample the completed entrance
-	apply_state(".", "in", 16.0)
-	apply_state(".", "f_in_keep", 20.0)
-	apply_state(".", "keep")
 	apply_state(".", "reset_ryl")
 	apply_state(".", "ptn_time", 0.0)
 	apply_state(".", "ptn_a_rank", 0.0)

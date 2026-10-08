@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 signal back_requested
 
@@ -17,11 +17,9 @@ func _ready() -> void:
 	
 	_initialize_text()
 	_initialize_state()
+	configure_entrance(["in", "keep"])
 
 func _initialize_state() -> void:
-	# Sample the completed entrance; apply_state does not play animations.
-	apply_state(".", "in", 7.0)
-	apply_state(".", "keep")
 	apply_state(".", "switch_tmc")
 	apply_state(".", "switch_box_reset")
 	apply_state(".", "switch_team_reset")

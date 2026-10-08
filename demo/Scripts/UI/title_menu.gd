@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 const ARC_PATH := "res://Assets/ui/data/title_menu/title_menu_00_eng.arc"
 const TRUIV_PATH := "res://Assets/ui/data/title_menu/view_title_menu_00.truiv"
@@ -9,12 +9,7 @@ func _ready() -> void:
 	if error != OK:
 		push_error("Failed to load title UI: %s" % error_string(error))
 		return
-	# The BFLYT starts transparent, awaiting the entrance BFLAN animation.
-	# Show the static title until animation playback is implemented.
-	for pane_name in ["N_inout_00", "N_inout_01"]:
-		var pane := get_pane(pane_name)
-		if pane != null:
-			pane.modulate.a = 1.0
+	configure_entrance(["in", "keep"])
 
 	$MenuContainer/NewGame.grab_focus()
 	

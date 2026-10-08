@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 signal back_requested
 
@@ -17,18 +17,20 @@ func _ready() -> void:
 	
 	_initialize_text()
 	_initialize_state()
+	configure_entrance(["in", "keep"])
 
 func _initialize_state() -> void:
-	# Sample the completed entrance; apply_state does not play animations.
-	apply_state(".", "in", 3.0)
-	apply_state(".", "keep")
 	apply_state(".", "reset_research")
 	apply_state("L_rlv_00", "gauge", 0.0)
 	apply_state("L_re_info_00", "switch_clear", 0.0)
 	var research_button := get_scope("L_list_re_00").get_scope("L_btn_00")
 	var component := str(get_pane(".").get_path_to(research_button))
 	apply_state(component, "active")
-	apply_state(component, "select")
+
+func _on_entrance_started() -> void:
+	var research_button := get_scope("L_list_re_00").get_scope("L_btn_00")
+	var component := str(get_pane(".").get_path_to(research_button))
+	play_state(component, "select")
 
 func _initialize_text():
 	get_scope("L_rlv_00")._set_text("T_v_next_pt_00", "0")

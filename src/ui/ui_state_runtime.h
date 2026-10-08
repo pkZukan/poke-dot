@@ -28,5 +28,11 @@ class UIStateRuntime {
 public:
     void reset(Node *owner, Control *layout);
     Error apply(Node *owner, Control *layout, const String &component, const String &state, double frame);
+    Error resolve(Node *owner, Control *layout, const String &component, const String &state,
+        String &root, Dictionary &data);
+    String get_component_root(const String &component) const {
+        auto scope = components.find(component);
+        return scope != components.end() && scope->second.size() == 1 ? String(scope->second.front()) : String();
+    }
 };
 }

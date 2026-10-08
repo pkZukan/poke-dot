@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 signal back_requested
 
@@ -17,15 +17,16 @@ func _ready() -> void:
 	
 	_initialize_text()
 	_initialize_state()
+	configure_entrance(["in", "keep"])
 
 func _initialize_state() -> void:
-	# Sample the completed entrance; apply_state does not play animations.
-	apply_state(".", "in", 3.0)
-	apply_state(".", "keep")
 	for i in 5:
 		var component := "L_menu_list_%02d" % i
 		apply_state(component, "active")
-		apply_state(component, "select" if i == 0 else "unselect", 4.0)
+
+func _on_entrance_started() -> void:
+	for i in 5:
+		play_state("L_menu_list_%02d" % i, "select" if i == 0 else "unselect")
 
 func _initialize_text():
 	var entries := ["Link Trade", "Link Battle", "Mystery Gift"]

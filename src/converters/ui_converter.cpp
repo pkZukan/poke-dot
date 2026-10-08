@@ -1,6 +1,9 @@
 #include "ui_converter.h"
 #include "fbs/ui/truiv.h"
 #include <godot_cpp/classes/file_access.hpp>
+#include <godot_cpp/classes/animation.hpp>
+#include <godot_cpp/core/binder_common.hpp>
+#include <cmath>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -10,6 +13,14 @@ void TrinityUI::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("load_ui", "truiv_path", "arc_path", "parent_path"), &TrinityUI::load_ui);
     ClassDB::bind_method(D_METHOD("apply_state", "component", "state", "frame"), &TrinityUI::apply_state, DEFVAL(0.0));
+    ClassDB::bind_method(D_METHOD("play_state", "component", "state", "frame_rate"), &TrinityUI::play_state, DEFVAL(60.0));
+    ClassDB::bind_method(D_METHOD("pause_state", "component", "paused"), &TrinityUI::pause_state, DEFVAL(true));
+    ClassDB::bind_method(D_METHOD("stop_state", "component"), &TrinityUI::stop_state);
+    ClassDB::bind_method(D_METHOD("seek_state", "component", "frame"), &TrinityUI::seek_state);
+    ClassDB::bind_method(D_METHOD("is_state_playing", "component"), &TrinityUI::is_state_playing);
+    ClassDB::bind_method(D_METHOD("get_state_frame", "component"), &TrinityUI::get_state_frame);
+    ClassDB::bind_method(D_METHOD("get_state_animator", "component"), &TrinityUI::get_state_animator);
+    ADD_SIGNAL(MethodInfo("state_finished", PropertyInfo(Variant::STRING, "component"), PropertyInfo(Variant::STRING, "state")));
     ClassDB::bind_method(D_METHOD("get_warnings"), &TrinityUI::get_warnings);
 }
 
@@ -44,6 +55,83 @@ Error TrinityUI::apply_state(const String &component, const String &state, doubl
     return state_runtime.apply(this, root, component, state, frame);
 }
 
+BflanAnimator *TrinityUI::get_state_animator(const String &component) const {
+    String root = state_runtime.get_component_root(component);
+    auto player = animators.find(root);
+    return player == animators.end() ? nullptr : Object::cast_to<BflanAnimator>(get_node_or_null(player->second));
+}
+
+Error TrinityUI::play_state(const String &component, const String &state, double frame_rate) {
+    Control *layout_root = layout_node();
+    ERR_FAIL_NULL_V(layout_root, ERR_UNCONFIGURED);
+    String root;
+    Dictionary data;
+    Error error = state_runtime.resolve(this, layout_root, component, state, root, data);
+    if (error != OK) return error;
+    BflanAnimator *player = get_state_animator(component);
+    bool created = !player;
+    if (created) {
+        player = memnew(BflanAnimator);
+        player->set_name("BflanAnimator");
+        add_child(player, true);
+    }
+    error = player->configure(this, layout_root, component, state, frame_rate);
+    if (error != OK) {
+        if (created) { remove_child(player); memdelete(player); }
+        return error;
+    }
+    if (created) {
+        animators[root] = get_path_to(player);
+        player->connect("animation_finished", callable_mp(this, &TrinityUI::on_state_finished).bind(root));
+    }
+    player->play("clip");
+    player->seek(0.0, true);
+    return OK;
+}
+
+void TrinityUI::on_state_finished(const StringName &animation, const String &root) {
+    auto entry = animators.find(root);
+    if (entry == animators.end()) return;
+    BflanAnimator *player = Object::cast_to<BflanAnimator>(get_node_or_null(entry->second));
+    if (player) emit_signal("state_finished", player->get_component(), player->get_state());
+}
+
+Error TrinityUI::pause_state(const String &component, bool paused) {
+    BflanAnimator *player = get_state_animator(component);
+    if (!player) return ERR_UNCONFIGURED;
+    if (paused) player->pause();
+    else player->play();
+    return OK;
+}
+
+void TrinityUI::stop_state(const String &component) {
+    BflanAnimator *player = get_state_animator(component);
+    if (player) player->stop(true);
+}
+
+Error TrinityUI::seek_state(const String &component, double frame) {
+    ERR_FAIL_COND_V(!std::isfinite(frame) || frame < 0, ERR_INVALID_PARAMETER);
+    BflanAnimator *player = get_state_animator(component);
+    if (!player) return ERR_UNCONFIGURED;
+    Ref<Animation> clip = player->get_animation("clip");
+    double seconds = frame / player->get_frame_rate();
+    double duration = clip->get_length();
+    if (clip->get_loop_mode() != Animation::LOOP_NONE) seconds = std::fmod(seconds, duration);
+    else seconds = MIN(seconds, duration);
+    player->seek(seconds, true);
+    return OK;
+}
+
+bool TrinityUI::is_state_playing(const String &component) const {
+    BflanAnimator *player = get_state_animator(component);
+    return player && player->is_playing();
+}
+
+double TrinityUI::get_state_frame(const String &component) const {
+    BflanAnimator *player = get_state_animator(component);
+    return player ? player->get_frame() : 0;
+}
+
 PackedStringArray TrinityUI::get_warnings() const {
     return get_meta("conversion_warnings", PackedStringArray());
 }
@@ -56,6 +144,15 @@ Ref<Font> TrinityUI::get_font(const String &p_name) {
 }
 
 void TrinityUI::clear_loaded_ui() {
+    for (const auto &entry : animators) {
+        BflanAnimator *player = Object::cast_to<BflanAnimator>(get_node_or_null(entry.second));
+        if (!player) continue;
+        player->stop(true);
+        remove_child(player);
+        player->queue_free();
+    }
+    animators.clear();
+    state_runtime.reset(this, nullptr);
     if (layout_id != 0 && UtilityFunctions::is_instance_id_valid(layout_id)) {
         if (Node *old_parent = layout->get_parent()) old_parent->remove_child(layout);
         layout->queue_free();
@@ -85,7 +182,7 @@ Error TrinityUI::load_ui(const String &truiv_path, const String &arc_path, const
     layout = new_layout;
     layout_id = layout->get_instance_id();
     warnings = builder.warnings;
-    ui_warn_once(warnings, "Static layout only: BFLAN playback, UIKit actions, and game material shaders are not implemented");
+    ui_warn_once(warnings, "UIKit actions and game material shaders are not implemented; BFLAN playback supports the existing pane and material channels.");
 
     layout_parent->add_child(layout);
     Node *scene_owner = layout_parent == this || is_ancestor_of(layout_parent) ? this : layout_parent;

@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 signal back_requested
 
@@ -17,11 +17,9 @@ func _ready() -> void:
 	
 	_initialize_text()
 	_initialize_state()
+	configure_entrance(["in", "keep"])
 
 func _initialize_state() -> void:
-	# Sample the completed entrance; apply_state does not play animations.
-	apply_state(".", "in", 4.0)
-	apply_state(".", "keep")
 	apply_state(".", "noitem_bag")
 	for i in 8:
 		var tab := get_scope("L_tab_00").get_scope("L_icon_%02d" % i)

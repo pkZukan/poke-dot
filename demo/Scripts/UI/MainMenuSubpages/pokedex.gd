@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 signal back_requested
 
@@ -16,14 +16,7 @@ func _ready() -> void:
 	get_pane("N_ofsk_00").hide()
 	
 	_initialize_text()
-	_initialize_state()
-
-func _initialize_state() -> void:
-	# Sample the completed entrance states; apply_state does not play animations.
-	apply_state(".", "in", 3.0)
-	# f_in alone leaves the title transparent. Its continuation reveals it.
-	apply_state(".", "f_in_keep", 33.0)
-	apply_state(".", "keep", 0.0)
+	configure_entrance(["in", "f_in_keep", "keep"])
 
 func _initialize_text():
 	set_seen(0)

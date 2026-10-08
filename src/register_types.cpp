@@ -47,6 +47,7 @@
 #include "middleware/sarc.h"
 #include "middleware/bflyt.h"
 #include "middleware/bflan.h"
+#include "ui/bflan_animator.h"
 #include "middleware/havok_tag.h"
 #include "middleware/bffnt.h"
 #include "middleware/bfcpx.h"
@@ -319,6 +320,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TrinityAnimationConverter)
 		GDREGISTER_CLASS(TrinityModel)
 		GDREGISTER_CLASS(TrinityPane)
+		GDREGISTER_CLASS(BflanAnimator)
 		GDREGISTER_CLASS(TrinityUI)
 
 		//middleware

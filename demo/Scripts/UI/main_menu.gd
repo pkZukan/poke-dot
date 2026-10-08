@@ -1,4 +1,4 @@
-extends TrinityUI
+extends "res://Scripts/UI/animated_ui.gd"
 
 signal option_selected(index: int)
 
@@ -29,6 +29,7 @@ func _ready() -> void:
 	_initialize()
 	_initialize_submenus()
 	option_selected.connect(_on_option_selected)
+	configure_entrance(["in", "keep"])
 
 func _initialize_submenus() -> void:
 	for i in mini(submenu_scenes.size(), menu_entry_names.size()):
@@ -65,9 +66,9 @@ func _return_to_main_menu() -> void:
 		active_submenu.process_mode = Node.PROCESS_MODE_DISABLED
 		active_submenu = null
 	$canvas.show()
+	replay_entrance()
 
 func _initialize() -> void:
-	apply_state(".", "in", 4.0)
 	apply_state(".", "ptn_menu")
 	apply_state(".", "ptn_progress")
 	apply_state(".", "ptn_quest_parts")
@@ -80,7 +81,6 @@ func _initialize() -> void:
 		apply_state(component, "ptn_icon", i)
 		apply_state(component, "ptn_time")
 		apply_state(component, "ptn_inf")
-		apply_state(component, "select" if i == selected_idx else "unselect", 4.0)
 		var button := get_scope(component)
 		for label_name in ["T_00", "T_01"]:
 			button._set_text(label_name, menu_entry_names[i])
@@ -104,10 +104,14 @@ func _initialize() -> void:
 	apply_state("L_opguide_03", "button_plus")
 	_update_cursor()
 
+func _on_entrance_started() -> void:
+	for i in menu_entry_names.size():
+		play_state("L_menu_button_%02d" % i, "select" if i == selected_idx else "unselect")
+
 func _move_selection(direction: int) -> void:
-	apply_state("L_menu_button_%02d" % selected_idx, "unselect", 4.0)
+	play_state("L_menu_button_%02d" % selected_idx, "unselect")
 	selected_idx = wrapi(selected_idx + direction, 0, menu_entry_names.size())
-	apply_state("L_menu_button_%02d" % selected_idx, "select", 4.0)
+	play_state("L_menu_button_%02d" % selected_idx, "select")
 	_update_cursor()
 
 func _update_cursor() -> void:
