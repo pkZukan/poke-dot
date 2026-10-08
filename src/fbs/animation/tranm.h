@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
-#include "animation_fbs/anim_common.h"
+#include "fbs/animation/anim_common.h"
 #include "generated/tranm_generated.h"
 #include <utils.h>
 

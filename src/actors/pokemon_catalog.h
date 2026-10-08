@@ -3,7 +3,7 @@
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/resource.hpp>
-#include "catalog_fbs/trpmcatalog.h"
+#include "fbs/catalog/trpmcatalog.h"
 
 #define CATALOG_PATH "res://Assets/ik_pokemon/catalog/catalog/poke_resource_table.trpmcatalog"
 

@@ -1,5 +1,5 @@
 #include "animation_converter.h"
-#include "animation_fbs/tracm.h"
+#include "fbs/animation/tracm.h"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;

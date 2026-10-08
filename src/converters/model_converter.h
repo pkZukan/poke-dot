@@ -8,12 +8,12 @@
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/script.hpp>
 #include "middleware/bntx.h"
-#include "model_fbs/trmdl.h"
-#include "model_fbs/trskl.h"
-#include "model_fbs/trmsh.h"
-#include "model_fbs/trmmt.h"
-#include "model_fbs/trmtr.h"
-#include "model_fbs/trmbf.h"
+#include "fbs/model/trmdl.h"
+#include "fbs/model/trskl.h"
+#include "fbs/model/trmsh.h"
+#include "fbs/model/trmmt.h"
+#include "fbs/model/trmtr.h"
+#include "fbs/model/trmbf.h"
 
 namespace godot {
 

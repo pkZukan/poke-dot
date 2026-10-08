@@ -3,8 +3,8 @@
 #include <godot_cpp/classes/skeleton3d.hpp>
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
-#include "animation_fbs/tranm.h"
-#include "animation_fbs/tracm.h"
+#include "fbs/animation/tranm.h"
+#include "fbs/animation/tracm.h"
 
 namespace godot {
 

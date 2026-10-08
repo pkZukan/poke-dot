@@ -7,8 +7,8 @@
 #include <godot_cpp/classes/animation_player.hpp>
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
-#include "animation_fbs/tracn.h"
-#include "animation_fbs/tracr.h"
+#include "fbs/animation/tracn.h"
+#include "fbs/animation/tracr.h"
 #include "pokemon_catalog.h"
 #include "actor.h"
 #include <utils.h>

@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "generated/trinity_ObjectTemplate_generated.h"
-#include <scene_fbs/trinity_scene_parser.h>
+#include <fbs/scene/trinity_scene_parser.h>
 #include <utils.h>
 
 namespace godot {
