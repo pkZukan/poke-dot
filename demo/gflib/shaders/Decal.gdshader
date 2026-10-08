@@ -11,11 +11,13 @@ uniform float EmissionIntensity;
 
 uniform vec4 UVScaleOffset;
 
-void vertex() {
+void vertex()
+{
 	//
 }
 
-void fragment() {
+void fragment()
+{
 	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
 	vec4 albedo = texture(BaseColorMap, uvs);
 	ALBEDO = albedo.rgb;
