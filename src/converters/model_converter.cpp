@@ -344,20 +344,6 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
 }
 
 // ---------------------------------------------------------------------------
-// _texture_binding
-// ---------------------------------------------------------------------------
-String TrinityModel::_texture_binding(const Ref<ShaderMaterial>& shdr, const String& tex_name)
-{
-    // Shadow/DepthPrepass sample the material's base color as Texture0.
-    Ref<Shader> shader = shdr->get_shader();
-    if (shader.is_null()) return tex_name;
-    const String shader_path = shader->get_path();
-    if ((shader_path.ends_with("/Shadow.gdshader") || shader_path.ends_with("/DepthPrepass.gdshader")) && tex_name == "BaseColorMap")
-        return "Texture0";
-    return tex_name;
-}
-
-// ---------------------------------------------------------------------------
 // _apply_textures
 // ---------------------------------------------------------------------------
 void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
@@ -389,7 +375,7 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
             img_tex->set_path(texture_path);
             texture = img_tex;
         }
-        shdr->set_shader_parameter(_texture_binding(shdr, tex_name), texture);
+        shdr->set_shader_parameter(tex_name, texture);
     }
 }
 
@@ -443,7 +429,7 @@ void TrinityModel::_apply_samplers(const Ref<MaterialEntry>& mat, Ref<ShaderMate
     Array textures = mat->get_Textures();
     for (int i = 0; i < textures.size(); i++) {
         Ref<TextureEntry> texture = textures[i];
-        int slot = slots.find(_texture_binding(shdr, texture->get_Name()));
+        int slot = slots.find(texture->get_Name());
         if (slot < 0) continue;
         int sampler_id = texture->get_Slot();
         if (sampler_id < 0 || sampler_id >= samps.size()) {

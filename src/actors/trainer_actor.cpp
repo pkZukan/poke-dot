@@ -1,4 +1,5 @@
 #include "trainer_actor.h"
+#include "gflib.h"
 
 #include <godot_cpp/classes/animation.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
@@ -17,7 +18,7 @@ void TrainerActor::_bind_methods() {
 
 void TrainerActor::Initialize()
 {
-    String base_path = "res://Assets/ik_chara";
+    String base_path = GFLib::romfs_path("ik_chara");
     
     _trainer_mdl_path = base_path.path_join("model_cc_ir/tr0001_00_rival_f");
     _trainer_mot_path = base_path.path_join("motion_cc_base/rv/tr0001_00_rival_f");

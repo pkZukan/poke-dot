@@ -23,6 +23,10 @@ config/icon="res://icon.svg"
 
 GameManager="*uid://ca5nc7a5u5qxw"
 
+[gflib]
+
+romfs_root="res://Assets/"
+
 [input]
 
 ui_accept={

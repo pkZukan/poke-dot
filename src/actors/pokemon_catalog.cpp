@@ -1,4 +1,5 @@
 #include "pokemon_catalog.h"
+#include "gflib.h"
 
 using namespace godot;
 
@@ -22,10 +23,14 @@ PokemonCatalog::~PokemonCatalog() {
 
 void PokemonCatalog::load_catalog() 
 {
-    if (!ResourceLoader::get_singleton()->exists(CATALOG_PATH))
-        UtilityFunctions::push_error("PokemonCatalog: file not found: ", CATALOG_PATH);
+    const String path = GFLib::romfs_path(CATALOG_PATH);
+    if (!ResourceLoader::get_singleton()->exists(path))
+    {
+        UtilityFunctions::push_error("PokemonCatalog: file not found: ", path);
+        return;
+    }
 
-    _catalog = ResourceLoader::get_singleton()->load(CATALOG_PATH);
+    _catalog = ResourceLoader::get_singleton()->load(path);
     auto ent = _catalog->get_catalog_table();
     for(int i = 0; i < ent.size(); i++)
     {

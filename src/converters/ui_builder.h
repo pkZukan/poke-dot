@@ -21,7 +21,7 @@ inline void ui_warn_once(PackedStringArray &warnings, const String &message) {
 
 class UIFontResolver {
 public:
-    String font_dir = "res://Assets/ui/font/bin/";
+    String font_dir;
 
     void reset();
     Error index_archive(const Ref<SeadArchive> &archive, const PackedStringArray &files);

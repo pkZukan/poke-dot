@@ -1,4 +1,5 @@
 #include "ui_builder.h"
+#include "gflib.h"
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/hashing_context.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
@@ -91,6 +92,7 @@ struct UIBuilder::PaneInfo {
 
 void UIFontResolver::reset() {
     archive_fonts.clear();
+    font_dir = GFLib::romfs_path("ui/font/bin/");
 }
 
 Error UIFontResolver::index_archive(const Ref<SeadArchive> &archive, const PackedStringArray &files) {

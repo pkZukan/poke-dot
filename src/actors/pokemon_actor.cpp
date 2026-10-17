@@ -1,4 +1,5 @@
 #include "pokemon_actor.h"
+#include "gflib.h"
 
 #include <godot_cpp/classes/animation.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
@@ -16,7 +17,7 @@ void PokemonActor::_bind_methods()
 
 PokemonActor::PokemonActor()
 {
-    base_path = "res://Assets/ik_pokemon/data";
+    base_path = GFLib::romfs_path("ik_pokemon/data");
 }
 
 void PokemonActor::SetInfo(Ref<CatalogEntry> catalog, bool isShiny)

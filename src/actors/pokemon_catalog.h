@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/resource.hpp>
 #include "fbs/catalog/trpmcatalog.h"
 
-#define CATALOG_PATH "res://Assets/ik_pokemon/catalog/catalog/poke_resource_table.trpmcatalog"
+#define CATALOG_PATH "ik_pokemon/catalog/catalog/poke_resource_table.trpmcatalog"
 
 namespace godot
 {

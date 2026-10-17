@@ -55,6 +55,7 @@
 
 #include "field/trcol.h"
 #include "fbs/field/trins.h"
+#include "field/trinity_scene_loader.h"
 
 #include "fbs/ui/truiv.h"
 #include "fbs/ui/uikit/uikit_gauge.h"
@@ -69,6 +70,7 @@
 #include "fbs/ui/uikit/uikit_switch_item.h"
 #include "fbs/ui/uikit/uikit_switch_panel.h"
 
+#include "gflib.h"
 #include "utils.h"
 
 #include <gdextension_interface.h>
@@ -345,6 +347,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//Field
 		GDREGISTER_CLASS(TRCOL)
 		GDREGISTER_CLASS(TRINS)
+		GDREGISTER_CLASS(TrinitySceneLoader)
 
 		//UIkit
 		GDREGISTER_CLASS(TRUIV)
@@ -401,6 +404,10 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
 		//Singletons
+		GDREGISTER_CLASS(GFLib)
+		Engine::get_singleton()->register_singleton("GFLib", memnew(GFLib));
+		GFLib::get_singleton()->load_project_settings();
+
 		GDREGISTER_CLASS(PokemonCatalog)
 		Engine::get_singleton()->register_singleton("PokemonCatalog", memnew(PokemonCatalog));
 
@@ -465,6 +472,12 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 			);
 			Engine::get_singleton()->unregister_singleton("PokemonCatalog");
 			memdelete(catalog);
+		}
+
+		if (Engine::get_singleton()->has_singleton("GFLib")) {
+			Object *gflib = Engine::get_singleton()->get_singleton("GFLib");
+			Engine::get_singleton()->unregister_singleton("GFLib");
+			memdelete(gflib);
 		}
 	}
 }
