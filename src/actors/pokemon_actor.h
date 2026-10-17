@@ -25,6 +25,7 @@ public:
     ~PokemonActor() = default;
 
     void SetInfo(Ref<CatalogEntry> catalog, bool isShiny);
+    void SetShiny(bool isShiny);
 
     void Initialize() override;
 

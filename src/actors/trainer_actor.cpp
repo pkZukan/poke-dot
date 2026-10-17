@@ -12,6 +12,7 @@ using namespace godot;
 
 void TrainerActor::_bind_methods() {
     GETTER_SETTER_BIND(TrainerActor, id, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrainerActor, variation, Variant::STRING, PROPERTY_HINT_NONE)
 
     ClassDB::bind_method(D_METHOD("Initialize"), &TrainerActor::Initialize);
 }
@@ -23,7 +24,7 @@ void TrainerActor::Initialize()
     _trainer_mdl_path = base_path.path_join("model_cc_ir/tr0001_00_rival_f");
     _trainer_mot_path = base_path.path_join("motion_cc_base/rv/tr0001_00_rival_f");
 
-    LoadActor(_trainer_mdl_path.path_join("tr0001_00.trmdl"), _trainer_mot_path.path_join("tr0001_00_base.tracn"));
+    LoadActor(_trainer_mdl_path.path_join("tr0001_00.trmdl"), _trainer_mot_path.path_join("tr0001_00_base.tracn"), variation);
 
     //Quick hack to steal jump anims from player since npcs/rival dont have them
     const String player_motion_path = base_path.path_join("motion_pc/base");

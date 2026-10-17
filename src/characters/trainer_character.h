@@ -25,6 +25,7 @@ public:
 
     void _enter_tree() override;
 
+    GETTER_SETTER_CALLBACK_DEFINE(String, variation)
     GETTER_SETTER_DEFINE(float, step_height)
     GETTER_SETTER_DEFINE(float, max_root_motion_speed)
 
@@ -42,6 +43,7 @@ public:
     void apply_movement(double delta, const Vector3 &direction);
 
 private:
+    String variation;
     float step_height = 0.3f;
     float max_root_motion_speed = 30.0f;
     Ref<BinaryTexture> icon;

@@ -15,6 +15,7 @@ void ActorObj::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("GetAnimationPlayer"), &ActorObj::GetAnimationPlayer);
     ClassDB::bind_method(D_METHOD("GetAnimationList"), &ActorObj::GetAnimationList);
+    ClassDB::bind_method(D_METHOD("GetModel"), &ActorObj::GetModel);
 }
 
 void ActorObj::Initialize()
@@ -22,7 +23,7 @@ void ActorObj::Initialize()
     //
 }
 
-void ActorObj::LoadActor(String mdlFile, String animFile)
+void ActorObj::LoadActor(String mdlFile, String animFile, String variation)
 {
     _cleanup();
     
@@ -31,7 +32,7 @@ void ActorObj::LoadActor(String mdlFile, String animFile)
 
     //Create and add TrinityModel
     _model = memnew(TrinityModel);
-    _model->load_model(base_path, filename);
+    _model->load_model(base_path, filename, variation);
     add_child(_model);
 
     //Create and add AnimationPlayer/AnimationLibrary

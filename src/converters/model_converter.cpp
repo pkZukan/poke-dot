@@ -14,7 +14,13 @@
 using namespace godot;
 
 void TrinityModel::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("load_model", "path", "file"), &TrinityModel::load_model);
+    ClassDB::bind_method(D_METHOD("load_model", "path", "file", "variation"), &TrinityModel::load_model, DEFVAL(String()));
+    ClassDB::bind_method(D_METHOD("get_variations"), &TrinityModel::get_variations);
+    ClassDB::bind_method(D_METHOD("get_variation"), &TrinityModel::get_variation);
+    ClassDB::bind_method(D_METHOD("set_variation", "name"), &TrinityModel::set_variation);
+    ClassDB::bind_method(D_METHOD("get_controls"), &TrinityModel::get_controls);
+    ClassDB::bind_method(D_METHOD("get_control", "name"), &TrinityModel::get_control);
+    ClassDB::bind_method(D_METHOD("set_control", "name", "index"), &TrinityModel::set_control);
     ClassDB::bind_static_method("TrinityModel",
         D_METHOD("parse_mesh_buffer", "accessor_table", "verts", "inds", "poly_type", "start", "count"),
         &TrinityModel::parse_mesh_buffer
@@ -267,6 +273,10 @@ Dictionary TrinityModel::_load_materials(const String& path, const Array& materi
 
     for (int i = 0; i < material_files.size(); i++) {
         Ref<TRMaterial> material = rl->load(path.path_join((String)material_files[i]));
+        if (material.is_null()) {
+            UtilityFunctions::push_warning("Failed to load material file: ", path.path_join((String)material_files[i]));
+            continue;
+        }
         Array mats = material->get_Materials();
         for (int m = 0; m < mats.size(); m++) {
             Ref<MaterialEntry> mat = mats[m];
@@ -523,7 +533,6 @@ PackedInt32Array TrinityModel::_flip_faces(const PackedInt32Array& indices)
 void TrinityModel::_build_meshes(
     const Ref<TRMesh>& mesh,
     const Ref<TRModelBuffer>& buff,
-    const Dictionary& materials,
     Skeleton3D* skl,
     const Ref<Skin>& skin)
 {
@@ -589,13 +598,9 @@ void TrinityModel::_build_meshes(
 
             mi->set_name(mesh_name + "_" + material_name);
             mi->set_mesh(arr_mesh);
-            mi->set_material_override(materials.get(material_name, Variant()));
-            Ref<ShaderMaterial> shader_material = mi->get_material_override();
-            if (shader_material.is_valid()) {
-                Variant cast_shadow = shader_material->get_shader_parameter("CastShadow");
-                if (cast_shadow.get_type() == Variant::INT && int(cast_shadow) == 0)
-                    mi->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
-            }
+            // Materials are assigned by name so variations can swap them later.
+            mi->set_meta("trinity_mesh", mesh_name);
+            mi->set_meta("trinity_material", material_name);
             if(skin.is_valid())
                 mi->set_skin(skin);
             if(skl)
@@ -607,7 +612,7 @@ void TrinityModel::_build_meshes(
 // ---------------------------------------------------------------------------
 // load_model
 // ---------------------------------------------------------------------------
-void TrinityModel::load_model(String path, String file) {
+void TrinityModel::load_model(String path, String file, String variation) {
     ResourceLoader* rl = ResourceLoader::get_singleton();
 
     //Model
@@ -626,8 +631,22 @@ void TrinityModel::load_model(String path, String file) {
     if(!buffPath.is_empty() && FileAccess::file_exists(path.path_join(buffPath)))
         buff = rl->load(path.path_join(buffPath));
 
-    //Material
-    Dictionary materials = _load_materials(path, mdl->get_Materials());
+    //Material, optionally replaced by a TRMMT variation
+    _path = path;
+    _default_material_files = mdl->get_Materials();
+    _variation = variation;
+    _control_values.clear();
+    const String meta_path = path.path_join(file.get_basename() + ".trmmt");
+    if (FileAccess::file_exists(meta_path))
+        _meta = rl->load(meta_path);
+    if (!_variation.is_empty() && _find_variation().is_null()) {
+        UtilityFunctions::push_warning("Model ", file, " has no variation '", _variation, "'");
+        _variation = String();
+    }
+    // "normal" is the base look; using it by default makes its controls available.
+    if (_variation.is_empty() && _meta.is_valid() && _meta->find_variation("normal").is_valid())
+        _variation = "normal";
+    _materials = _load_materials(path, _variation_material_files());
 
     //Skeleton
     Ref<TRSkeleton> skel;
@@ -642,5 +661,205 @@ void TrinityModel::load_model(String path, String file) {
         //print_bone_tree_compact(skl);
     }
     
-    _build_meshes(mesh, buff, materials, skl, skin);
+    _build_meshes(mesh, buff, skl, skin);
+    _assign_materials();
+    _apply_visibility();
+    _apply_controls();
+}
+
+// ---------------------------------------------------------------------------
+// Variations (TRMMT)
+// ---------------------------------------------------------------------------
+static int default_control_index(const Ref<VariationControl> &control)
+{
+    if (control->get_DefaultOverride() >= 0)
+        return control->get_DefaultOverride();
+    return control->get_Rule().get("initial", 0);
+}
+
+Ref<ModelVariation> TrinityModel::_find_variation() const
+{
+    if (_meta.is_null() || _variation.is_empty())
+        return Ref<ModelVariation>();
+    return _meta->find_variation(_variation);
+}
+
+Ref<VariationControl> TrinityModel::_find_control(const String &name) const
+{
+    Ref<ModelVariation> variation = _find_variation();
+    if (variation.is_null())
+        return Ref<VariationControl>();
+    Array controls = variation->get_Controls();
+    for (int i = 0; i < controls.size(); i++) {
+        Ref<VariationControl> control = controls[i];
+        if (control.is_valid() && control->get_Name() == name)
+            return control;
+    }
+    return Ref<VariationControl>();
+}
+
+Array TrinityModel::_variation_material_files() const
+{
+    // Variations without material files keep the model's own materials.
+    Ref<ModelVariation> variation = _find_variation();
+    if (variation.is_null() || variation->get_Materials().is_empty())
+        return _default_material_files;
+    Array files;
+    for (const String &file : variation->get_Materials())
+        files.push_back(file);
+    return files;
+}
+
+void TrinityModel::_assign_materials()
+{
+    for (int i = 0; i < get_child_count(); i++) {
+        MeshInstance3D *mi = Object::cast_to<MeshInstance3D>(get_child(i));
+        if (!mi || !mi->has_meta("trinity_material"))
+            continue;
+        Ref<ShaderMaterial> material = _materials.get(mi->get_meta("trinity_material"), Variant());
+        mi->set_material_override(material);
+        bool cast_shadow = true;
+        if (material.is_valid()) {
+            Variant value = material->get_shader_parameter("CastShadow");
+            cast_shadow = !(value.get_type() == Variant::INT && int(value) == 0);
+        }
+        mi->set_cast_shadows_setting(cast_shadow ? GeometryInstance3D::SHADOW_CASTING_SETTING_ON : GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+    }
+}
+
+void TrinityModel::_apply_control(const Ref<VariationControl> &control, int index)
+{
+    Dictionary materials = control->get_MaterialValues();
+    Array material_names = materials.keys();
+    for (int m = 0; m < material_names.size(); m++) {
+        Ref<ShaderMaterial> material = _materials.get(material_names[m], Variant());
+        if (material.is_null())
+            continue;
+        Dictionary params = materials[material_names[m]];
+        Array param_names = params.keys();
+        for (int p = 0; p < param_names.size(); p++) {
+            Array values = params[param_names[p]];
+            if (index >= values.size())
+                continue;
+            const StringName name = param_names[p];
+            Variant value = values[index];
+            // Match the type already on the material (vec4 uniforms, bool options).
+            Variant current = material->get_shader_parameter(name);
+            if (current.get_type() == Variant::VECTOR4 && value.get_type() == Variant::VECTOR3) {
+                Vector3 v = value;
+                value = Vector4(v.x, v.y, v.z, Vector4(current).w);
+            } else if (current.get_type() == Variant::BOOL && value.get_type() == Variant::INT) {
+                value = int(value) != 0;
+            }
+            material->set_shader_parameter(name, value);
+        }
+    }
+}
+
+void TrinityModel::_apply_controls()
+{
+    Ref<ModelVariation> variation = _find_variation();
+    if (variation.is_null())
+        return;
+    Array controls = variation->get_Controls();
+    for (int i = 0; i < controls.size(); i++) {
+        Ref<VariationControl> control = controls[i];
+        if (control.is_null() || !control->get_TableDriven())
+            continue;
+        _apply_control(control, _control_values.get(control->get_Name(), default_control_index(control)));
+    }
+}
+
+void TrinityModel::_apply_visibility()
+{
+    Ref<ModelVariation> variation = _find_variation();
+    Dictionary variation_visibility = variation.is_valid() ? variation->get_MeshVisibility() : Dictionary();
+    Array controls = variation.is_valid() ? variation->get_Controls() : Array();
+
+    for (int i = 0; i < get_child_count(); i++) {
+        MeshInstance3D *mi = Object::cast_to<MeshInstance3D>(get_child(i));
+        if (!mi || !mi->has_meta("trinity_mesh"))
+            continue;
+        const String mesh = mi->get_meta("trinity_mesh");
+        bool visible = variation_visibility.get(mesh, true);
+        for (int c = 0; c < controls.size() && visible; c++) {
+            Ref<VariationControl> control = controls[c];
+            if (control.is_null() || !control->get_TableDriven())
+                continue;
+            Dictionary table = control->get_MeshVisibility();
+            if (!table.has(mesh))
+                continue;
+            Array values = table[mesh];
+            const int index = _control_values.get(control->get_Name(), default_control_index(control));
+            if (index < values.size())
+                visible = values[index];
+        }
+        mi->set_visible(visible);
+    }
+}
+
+PackedStringArray TrinityModel::get_variations() const
+{
+    PackedStringArray names;
+    if (_meta.is_null())
+        return names;
+    Array variations = _meta->get_Variations();
+    for (int i = 0; i < variations.size(); i++) {
+        Ref<ModelVariation> variation = variations[i];
+        if (variation.is_valid())
+            names.push_back(variation->get_Name());
+    }
+    return names;
+}
+
+void TrinityModel::set_variation(const String &p_name)
+{
+    // An empty name selects the base look, as in load_model.
+    String name = p_name;
+    if (name.is_empty() && _meta.is_valid() && _meta->find_variation("normal").is_valid())
+        name = "normal";
+    if (name == _variation)
+        return;
+    if (!name.is_empty() && (_meta.is_null() || _meta->find_variation(name).is_null())) {
+        UtilityFunctions::push_warning("Model has no variation '", name, "'");
+        return;
+    }
+    _variation = name;
+    _materials = _load_materials(_path, _variation_material_files());
+    _assign_materials();
+    _apply_visibility();
+    _apply_controls();
+}
+
+Dictionary TrinityModel::get_controls() const
+{
+    Dictionary controls;
+    Ref<ModelVariation> variation = _find_variation();
+    if (variation.is_null())
+        return controls;
+    Array list = variation->get_Controls();
+    for (int i = 0; i < list.size(); i++) {
+        Ref<VariationControl> control = list[i];
+        if (control.is_valid() && control->get_TableDriven())
+            controls[control->get_Name()] = control->get_VariationCount();
+    }
+    return controls;
+}
+
+int TrinityModel::get_control(const String &name) const
+{
+    Ref<VariationControl> control = _find_control(name);
+    if (control.is_null())
+        return -1;
+    return _control_values.get(name, default_control_index(control));
+}
+
+void TrinityModel::set_control(const String &name, int index)
+{
+    Ref<VariationControl> control = _find_control(name);
+    ERR_FAIL_COND_MSG(control.is_null() || !control->get_TableDriven(), "Model has no table control '" + name + "'");
+    ERR_FAIL_INDEX_MSG(index, control->get_VariationCount(), "Control '" + name + "' index out of range");
+    _control_values[name] = index;
+    _apply_control(control, index);
+    _apply_visibility();
 }

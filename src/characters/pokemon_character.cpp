@@ -53,13 +53,7 @@ void PokemonCharacter::_initialize()
 
     _actor = memnew(PokemonActor);
     _actor->SetInfo(catEnt, is_shiny);
-    Ref<BinaryTextureArchive> icon_archive = ResourceLoader::get_singleton()->load(_actor->GetIconPath());
-    if (icon_archive.is_valid())
-    {
-        TypedDictionary<String, BinaryTexture> textures = icon_archive->get_textures();
-        if (textures.size() == 1)
-            icon = textures.values()[0];
-    }
+    _load_icon();
 
     _col = memnew(CollisionShape3D);
     _col_shape.instantiate();
@@ -76,6 +70,18 @@ void PokemonCharacter::_initialize()
     _col->set_position(bounds.get_center());
 
     emit_signal("character_rebuilt");
+}
+
+void PokemonCharacter::_load_icon()
+{
+    icon.unref();
+    Ref<BinaryTextureArchive> icon_archive = ResourceLoader::get_singleton()->load(_actor->GetIconPath());
+    if (icon_archive.is_valid())
+    {
+        TypedDictionary<String, BinaryTexture> textures = icon_archive->get_textures();
+        if (textures.size() == 1)
+            icon = textures.values()[0];
+    }
 }
 
 Node3D *PokemonCharacter::get_model() const

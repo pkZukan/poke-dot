@@ -35,8 +35,17 @@ public:
 
     void setterCallback(String setterName)
     {
-        if (is_inside_tree())
-            _initialize();
+        if (!is_inside_tree())
+            return;
+        // Shiny only swaps materials and the icon; other changes rebuild the model.
+        if (setterName == "is_shiny" && _actor)
+        {
+            _actor->SetShiny(is_shiny);
+            _load_icon();
+            notify_property_list_changed();
+            return;
+        }
+        _initialize();
     }
 
     Vector3 GetRootMotionPos();
@@ -62,6 +71,7 @@ private:
     Ref<BoxShape3D> _col_shape;
 
     void _initialize();
+    void _load_icon();
     void _cleanup();
     void _try_step_up(const Vector3& motion);
 };

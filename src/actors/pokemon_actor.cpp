@@ -26,6 +26,13 @@ void PokemonActor::SetInfo(Ref<CatalogEntry> catalog, bool isShiny)
     _isShiny = isShiny;
 }
 
+void PokemonActor::SetShiny(bool isShiny)
+{
+    _isShiny = isShiny;
+    if (TrinityModel *model = GetModel())
+        model->set_variation(_isShiny ? "rare" : "");
+}
+
 void PokemonActor::Initialize()
 {
     if(!_catalog.is_valid()) return;
@@ -37,7 +44,7 @@ void PokemonActor::Initialize()
     
     String tracn_file = base_path.path_join(animInfo->get_path());
     tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
-    LoadActor(_species_path.path_join(_species_mdl), tracn_file);
+    LoadActor(_species_path.path_join(_species_mdl), tracn_file, _isShiny ? "rare" : "");
 }
 
 String PokemonActor::GetIconPath()

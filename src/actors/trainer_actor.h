@@ -25,11 +25,13 @@ public:
     ~TrainerActor() = default;
 
     GETTER_SETTER_DEFINE(int, id)
+    GETTER_SETTER_DEFINE(String, variation)
 
     void Initialize() override;
 
 private:
     int id = 0;
+    String variation;
 
     String _trainer_mdl_path;
     String _trainer_mot_path;

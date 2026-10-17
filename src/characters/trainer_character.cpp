@@ -13,6 +13,7 @@ TrainerCharacter::TrainerCharacter()
 
 void TrainerCharacter::_bind_methods() 
 {
+    GETTER_SETTER_BIND(TrainerCharacter, variation, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TrainerCharacter, step_height, Variant::FLOAT, PROPERTY_HINT_RANGE, "0,1,0.01,or_greater,suffix:m")
     GETTER_SETTER_BIND(TrainerCharacter, max_root_motion_speed, Variant::FLOAT, PROPERTY_HINT_RANGE, "0,100,0.1,or_greater,suffix:m/s")
 
@@ -34,6 +35,7 @@ void TrainerCharacter::_initialize()
     _cleanup();
 
     _actor = memnew(TrainerActor);
+    _actor->set_variation(variation);
     
     _col = memnew(CollisionShape3D);
     _col_shape.instantiate();

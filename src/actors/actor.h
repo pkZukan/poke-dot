@@ -25,10 +25,11 @@ public:
 
     virtual void Initialize();
     void _cleanup();
-    virtual void LoadActor(String mdlFile, String animFile);
+    virtual void LoadActor(String mdlFile, String animFile, String variation = String());
 
     virtual AnimationPlayer* GetAnimationPlayer() { return _anim_player; }
     virtual Skeleton3D* GetSkeleton() { return _skeleton; }
+    TrinityModel* GetModel() { return _model; }
 
     virtual TypedArray<StringName> GetAnimationList();
     virtual AABB GetBBox();
