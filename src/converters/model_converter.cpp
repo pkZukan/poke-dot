@@ -333,6 +333,20 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
 }
 
 // ---------------------------------------------------------------------------
+// _texture_binding
+// ---------------------------------------------------------------------------
+String TrinityModel::_texture_binding(const Ref<ShaderMaterial>& shdr, const String& tex_name)
+{
+    // Shadow/DepthPrepass sample the material's base color as Texture0.
+    Ref<Shader> shader = shdr->get_shader();
+    if (shader.is_null()) return tex_name;
+    const String shader_path = shader->get_path();
+    if ((shader_path.ends_with("/Shadow.gdshader") || shader_path.ends_with("/DepthPrepass.gdshader")) && tex_name == "BaseColorMap")
+        return "Texture0";
+    return tex_name;
+}
+
+// ---------------------------------------------------------------------------
 // _apply_textures
 // ---------------------------------------------------------------------------
 void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
@@ -364,10 +378,7 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
             img_tex->set_path(texture_path);
             texture = img_tex;
         }
-        String binding_name = tex_name;
-        const String shader_path = shdr->get_shader()->get_path();
-        if ((shader_path.ends_with("/Shadow.gdshader") || shader_path.ends_with("/DepthPrepass.gdshader")) && tex_name == "BaseColorMap") binding_name = "Texture0";
-        shdr->set_shader_parameter(binding_name, texture);
+        shdr->set_shader_parameter(_texture_binding(shdr, tex_name), texture);
     }
 }
 
@@ -389,124 +400,39 @@ void TrinityModel::_apply_params(const Ref<MaterialEntry>& mat, Ref<ShaderMateri
     apply("IntParams");
 }
 
+// ---------------------------------------------------------------------------
+// _apply_samplers
+// ---------------------------------------------------------------------------
 void TrinityModel::_apply_samplers(const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
 {
-    // TextureEntry::Slot stores a sampler ID, not a shader texture location.
-    // These locations match sample_trinity slots in the ported shader families.
+    // A texture's sample_trinity slot is its index among the shader's 2D
+    // texture uniforms, in declaration order (see trinity_sampler.gdshaderinc).
     Ref<Shader> shader = shdr->get_shader();
     if (shader.is_null()) return;
-    const String shader_path = shader->get_path();
-    PackedStringArray names;
-    if (shader_path.ends_with("/IkCharacter.gdshader") ||
-            shader_path.ends_with("/IkCharacterTransparent.gdshader") ||
-            shader_path.ends_with("/IkCharacterTransparentInner.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "OcclusionMap",
-            "SpecularMaskMap", "ShadowingColorMap", "ShadowingColorMaskMap",
-            "RimLightMaskMap", "LocalReflectionMap", "LayerMaskMap", "ParallaxMap",
-            "HighlightMaskMap", "EyelidShadowMaskMap", "OpacityMap1"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Unlit.gdshader")) {
-        names.push_back("BaseColorMap");
-        names.push_back("LayerMaskMap");
-        names.push_back("DisplacementMap");
-        names.push_back("BaseColorMap1");
-        names.push_back("OpacityMap");
-        names.push_back("OpacityMap1");
-    } else if (shader_path.ends_with("/FresnelBlend.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "MetallicMap", "RoughnessMap", "AOMap", "EmissionColorMap", "LayerMaskMap", "HighlightMaskMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/FresnelEffect.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "NormalMap", "NormalMap1", "EmissionNormalMap", "EmissionColorMap", "AOMap", "FresnelMaskMap", "FresnelNoiseMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/SSS.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "RoughnessMap", "AOMap", "SSSMaskMap", "LayerMaskMap", "OpacityMap1", "LayerMaskMap1", "LayerMaskMap2", "LayerMaskMap3", "ColorTableMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/TransparentSSS.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "RoughnessMap", "AOMap", "SSSMaskMap", "LayerMaskMap", "EmissionColorMap", "ParallaxMap", "LightMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Iridescence.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "MetallicMap", "RoughnessMap", "AOMap", "EmissionColorMap", "LayerMaskMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Hair.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "HairFlowMap", "MetallicMap", "RoughnessMap", "DiscardMaskMap", "ColorTableMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/EyeClearCoat.gdshader")) {
-        const char *slots[] = {"BaseColorMap1", "NormalMap1", "UpperEyelidColorMap", "LowerEyelidColorMap", "HighlightMaskMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Effect.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "BaseColorMap2", "NormalMap", "MetallicMap", "RoughnessMap", "EmissionColorMap", "FlowMap", "ParallaxMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/BGJewel.gdshader") || shader_path.ends_with("/PokemonEffect.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "PackedMap", "EmissionNormalMap", "EmissionColorMap", "FresnelNoiseMap", "FresnelMaskMap", "BaseColorMap1", "LayerMaskMap", "OpacityMap1", "UpperEyelidColorMap", "LowerEyelidColorMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/DepthPrepass.gdshader")) {
-        const char *slots[] = {"Texture0", "BaseColorMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Shadow.gdshader")) {
-        const char *slots[] = {"Texture0", "BaseColorMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/AlphaClipHeight.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "RoughnessMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/BGTransparent.gdshader")) {
-        const char *slots[] = {"BaseColorMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/IkTransparent.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "MetallicMap", "RoughnessMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Decal.gdshader")) {
-        const char *slots[] = {"BaseColorMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/IkZoneStatue.gdshader")) {
-        const char *slots[] = {"ScanMap", "NoiseMap1", "AmbientSphereMap", "DotPatternMap", "NoiseMap2", "GradientMap2"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/IkHologramOpaque.gdshader")) {
-        const char *slots[] = {"AlbedoColorMap", "DitherPatternMap", "OutlineMaskMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/SkySimple.gdshader")) {
-        const char *slots[] = {"MoonColorMap", "MoonNormalMap", "TopCloudsShapeMap", "TopCloudsBreakupMap", "NightStarsMap", "NightStarsMaskMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/IkStandard.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "PackedMap", "WindowGradientMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/GroundVertexBlend3MT.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "NormalMap", "PackedMap", "RoughnessMap", "BaseColorMap1", "NormalMap1", "PackedMap1", "RoughnessMap1", "BaseColorMap2", "NormalMap2", "PackedMap2", "RoughnessMap2"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/BuildingTilingColorAdjust.gdshader")) {
-        const char *slots[] = {"PackedMap", "NormalMap", "BaseColorMap1", "NormalMap1", "GrayAlbedoMap", "EmissionMaskMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Water.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "NormalMap", "NormalMap1", "FlowMap", "FoamMaskMap"};
-        for (const char *name : slots) names.push_back(name);
-    } else if (shader_path.ends_with("/Standard.gdshader") || shader_path.ends_with("/InsideEmissionParallax.gdshader") || shader_path.ends_with("/BGLayer.gdshader") || shader_path.ends_with("/BGWind.gdshader") || shader_path.ends_with("/Transparent.gdshader") || shader_path.ends_with("/GrassTransparent.gdshader") || shader_path.ends_with("/NonDirectional.gdshader") || shader_path.ends_with("/Eye.gdshader")) {
-        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "NormalMap", "NormalMap1", "NormalMap2", "MetallicMap", "RoughnessMap", "RoughnessMap1", "AOMap", "AOMap1", "AOMap2", "LayerMaskMap", "ParallaxMap", "EmissionColorMap", "LightMap", "WindMaskMap", "PackedMap", "DetailMaskMap", "RoughnessMap2", "OpacityMap1", "ColorTableMap"};
-        for (const char *name : slots) names.push_back(name);
-        if (shader_path.ends_with("/InsideEmissionParallax.gdshader")) names.push_back("InsideEmissionParallaxIntensityMap");
-        if (shader_path.ends_with("/BGLayer.gdshader")) {
-            names.push_back("MetallicMap1"); names.push_back("EmissionColorMap1");
-        }
-        if (shader_path.ends_with("/Eye.gdshader")) {
-            names.push_back("UpperEyelidColorMap"); names.push_back("LowerEyelidColorMap");
-            names.push_back("HighlightMaskMap"); names.push_back("EyelidShadowMaskMap");
-        }
-    } else {
-        return;
+    PackedStringArray slots;
+    for (const Variant &entry : shader->get_shader_uniform_list()) {
+        Dictionary uniform = entry;
+        if (int(uniform["type"]) == Variant::OBJECT && String(uniform["hint_string"]) == "Texture2D")
+            slots.push_back(uniform["name"]);
     }
-    Array samps = mat->get_Samplers();
+    if (slots.is_empty()) return;
+
+    // Missing textures use shader defaults without border-color darkening.
     PackedInt32Array repeat_u, repeat_v;
     PackedColorArray borders;
-    repeat_u.resize(names.size());
-    repeat_v.resize(names.size());
-    borders.resize(names.size());
-    // Missing textures use shader defaults without border-color darkening.
+    repeat_u.resize(slots.size());
+    repeat_v.resize(slots.size());
+    borders.resize(slots.size());
     repeat_u.fill(7);
     repeat_v.fill(7);
     borders.fill(Color(0, 0, 0, 0));
+
+    // TextureEntry::Slot stores a sampler ID, not a shader texture location.
+    Array samps = mat->get_Samplers();
     Array textures = mat->get_Textures();
     for (int i = 0; i < textures.size(); i++) {
         Ref<TextureEntry> texture = textures[i];
-        int slot = names.find(texture->get_Name());
-        if ((shader_path.ends_with("/Shadow.gdshader") || shader_path.ends_with("/DepthPrepass.gdshader")) && texture->get_Name() == "BaseColorMap") slot = 0;
+        int slot = slots.find(_texture_binding(shdr, texture->get_Name()));
         if (slot < 0) continue;
         int sampler_id = texture->get_Slot();
         if (sampler_id < 0 || sampler_id >= samps.size()) {

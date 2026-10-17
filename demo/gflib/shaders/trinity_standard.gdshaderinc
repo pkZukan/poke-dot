@@ -10,18 +10,12 @@ uniform float FresnelAngleBias;
 uniform int UvsetType;
 #endif
 #ifdef BG_LAYER
-uniform sampler2D MetallicMap1 : hint_default_white, repeat_enable;
-uniform sampler2D EmissionColorMap1 : source_color, hint_default_white, repeat_enable;
 uniform bool EnableMetallicMap1;
 uniform bool EnableEmissionColorMap1;
 uniform float LayerMaskLevelMin;
 uniform float LayerMaskLevelMax = 1.0;
 #endif
 #ifdef EYE_MATERIAL
-uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D HighlightMaskMap : hint_default_black, repeat_enable;
-uniform sampler2D EyelidShadowMaskMap : hint_default_black, repeat_enable;
 uniform int EyelidType;
 uniform int UVTransformMode;
 uniform int EnableIrisRefraction;
@@ -55,7 +49,6 @@ vec2 eye_uv(vec2 uv, vec4 transform, float rotation) {
 #endif
 
 #ifdef INSIDE_EMISSION_PARALLAX
-uniform sampler2D InsideEmissionParallaxIntensityMap : source_color, hint_default_black, repeat_enable;
 uniform float InsideEmissionParallaxHeight;
 uniform float InsideEmissionParallaxOffset;
 uniform float InsideEmissionParallaxIntensity;
@@ -108,6 +101,20 @@ uniform sampler2D DetailMaskMap : hint_default_white, repeat_enable;
 uniform sampler2D RoughnessMap2 : hint_default_white, repeat_enable;
 uniform sampler2D OpacityMap1 : hint_default_white, repeat_enable;
 uniform sampler2D ColorTableMap : source_color, hint_default_white, repeat_enable;
+// Variant textures follow the shared ones so sample_trinity slots stay stable.
+#ifdef BG_LAYER
+uniform sampler2D MetallicMap1 : hint_default_white, repeat_enable;
+uniform sampler2D EmissionColorMap1 : source_color, hint_default_white, repeat_enable;
+#endif
+#ifdef INSIDE_EMISSION_PARALLAX
+uniform sampler2D InsideEmissionParallaxIntensityMap : source_color, hint_default_black, repeat_enable;
+#endif
+#ifdef EYE_MATERIAL
+uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
+uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
+uniform sampler2D HighlightMaskMap : hint_default_black, repeat_enable;
+uniform sampler2D EyelidShadowMaskMap : hint_default_black, repeat_enable;
+#endif
 #ifdef EYE_MATERIAL
 uniform int sampler_repeat_u[25];
 uniform int sampler_repeat_v[25];

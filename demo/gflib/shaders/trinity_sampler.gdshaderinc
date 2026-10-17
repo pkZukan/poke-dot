@@ -17,6 +17,9 @@ vec2 trinity_uv_axis(float uv, int mode, float half_texel) {
     return vec2(clamp(uv, half_texel, 1.0 - half_texel), coverage);
 }
 
+// slot is the texture's index among the shader's sampler2D uniforms in
+// declaration order, skipping screen/depth textures; TrinityModel derives the
+// same order from the shader's uniform list to fill the sampler_* arrays.
 vec4 sample_trinity(sampler2D tex, vec2 uv, int slot) {
     vec2 half_texel = 0.5 / vec2(textureSize(tex, 0));
     vec2 u = trinity_uv_axis(uv.x, sampler_repeat_u[slot], half_texel.x);
