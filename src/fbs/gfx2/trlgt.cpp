@@ -96,6 +96,55 @@ Ref<TRLightCurve4> read_curve4(const Titan::gfx2::LightCurve4 *source)
     result->set_z(read_curve(source->z())); result->set_w(read_curve(source->w()));
     return result;
 }
+
+Ref<BoundMatrix> read_matrix(const Titan::gfx2::BoundMatrix *mat)
+{
+    Ref<BoundMatrix> matrix;
+    if (!mat) return matrix;
+    matrix.instantiate();
+    auto x = mat->x();
+    auto y = mat->y();
+    auto z = mat->z();
+    matrix->set_x(x ? Vector4(x->x(), x->y(), x->z(), 0) : Vector4(1, 1, 1, 0));
+    if(y) matrix->set_y(Vector4(y->x(), y->y(), y->z(), 0));
+    if(z) matrix->set_z(Vector4(z->x(), z->y(), z->z(), 0));
+    return matrix;
+}
+
+Array read_float_params(const flatbuffers::Vector<flatbuffers::Offset<Titan::gfx2::FloatParameter>> *fps)
+{
+    Array fpArr;
+    if (!fps) return fpArr;
+    for (const auto *fp : *fps)
+    {
+        if(!fp) continue;
+        Ref<TRFloatParameter> param;
+        param.instantiate();
+        param->set_param_name(Utils::toGodotString(fp->param_name()));
+        param->set_param_val(fp->param_val());
+        param->set_curve(read_curve(fp->curve()));
+        fpArr.push_back(param);
+    }
+    return fpArr;
+}
+
+Array read_vec4_params(const flatbuffers::Vector<flatbuffers::Offset<Titan::gfx2::Vec4Parameter>> *vps)
+{
+    Array vpArr;
+    if (!vps) return vpArr;
+    for (const auto *vp : *vps)
+    {
+        if(!vp) continue;
+        Ref<TRVec4Parameter> param;
+        param.instantiate();
+        param->set_param_name(Utils::toGodotString(vp->param_name()));
+        auto v = vp->value();
+        param->set_curve(read_curve4(vp->curve()));
+        if(v) param->set_value(Vector4(v->x(), v->y(), v->z(), v->w()));
+        vpArr.push_back(param);
+    }
+    return vpArr;
+}
 }
 
 float TRLightCurve::sample(double time) const 
@@ -179,20 +228,7 @@ Error TRLGT::LoadFromFile(String file)
         light->set_Name(Utils::toGodotString(l->name()));
         light->set_Type(Utils::toGodotString(l->type()));
 
-        // Matrix
-        auto mat = l->matrix();
-        if(mat)
-        {
-            Ref<BoundMatrix> matrix;
-            matrix.instantiate();
-            auto x = mat->x();
-            auto y = mat->y();
-            auto z = mat->z();
-            matrix->set_x(x ? Vector4(x->x(), x->y(), x->z(), 0) : Vector4(1, 1, 1, 0));
-            if(y) matrix->set_y(Vector4(y->x(), y->y(), y->z(), 0));
-            if(z) matrix->set_z(Vector4(z->x(), z->y(), z->z(), 0));
-            light->set_Matrix(matrix);
-        }
+        light->set_Matrix(read_matrix(l->matrix()));
 
         if (auto curves = l->transform_curve()) {
             light->set_scale_curve(read_curve4(curves->scale()));
@@ -200,44 +236,8 @@ Error TRLGT::LoadFromFile(String file)
             light->set_translation_curve(read_curve4(curves->translation()));
         }
 
-        // Float params
-        auto fps = l->float_params();
-        if(fps)
-        {
-            Array fpArr;
-            for(int j = 0; j < fps->size(); j++)
-            {
-                auto fp = fps->Get(j);
-                if(!fp) continue;
-                Ref<TRFloatParameter> param;
-                param.instantiate();
-                param->set_param_name(Utils::toGodotString(fp->param_name()));
-                param->set_param_val(fp->param_val());
-                param->set_curve(read_curve(fp->curve()));
-                fpArr.push_back(param);
-            }
-            light->set_float_params(fpArr);
-        }
-
-        // Vec4 params
-        auto vps = l->vec4_params();
-        if(vps)
-        {
-            Array vpArr;
-            for(int j = 0; j < vps->size(); j++)
-            {
-                auto vp = vps->Get(j);
-                if(!vp) continue;
-                Ref<TRVec4Parameter> param;
-                param.instantiate();
-                param->set_param_name(Utils::toGodotString(vp->param_name()));
-                auto v = vp->value();
-                param->set_curve(read_curve4(vp->curve()));
-                if(v) param->set_value(Vector4(v->x(), v->y(), v->z(), v->w()));
-                vpArr.push_back(param);
-            }
-            light->set_vec4_params(vpArr);
-        }
+        if (l->float_params()) light->set_float_params(read_float_params(l->float_params()));
+        if (l->vec4_params()) light->set_vec4_params(read_vec4_params(l->vec4_params()));
 
         // String params
         auto sps = l->string_params();

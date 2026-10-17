@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <cstring>
 
 using namespace godot;
 
@@ -97,7 +98,11 @@ float Utils::half_to_float(uint16_t half)
             break;
     }
 
-    return s << 31 | e << 23 | f;
+    // Reinterpret the assembled IEEE-754 bits; returning the integer would convert its value.
+    uint32_t bits = s << 31 | e << 23 | f;
+    float result;
+    memcpy(&result, &bits, sizeof(result));
+    return result;
 }
 
 String Utils::read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end_pos)

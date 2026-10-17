@@ -105,6 +105,7 @@ Dictionary TrinityModel::parse_vertex_buffer(
     int blend_inds_attr = -1, blend_weights_attr = -1, tangent_attr = -1;
     int color_attr = -1;
     String color_type;
+    String blend_weights_type;
 
     for (int a = 0; a < accessors.size(); a++) {
         Ref<Resource> attrib = accessors[a];
@@ -125,7 +126,10 @@ Dictionary TrinityModel::parse_vertex_buffer(
         }
         else if (attr_name == "BLEND_INDICES" && blend_inds_attr == -1) blend_inds_attr = attr_pos;
         else if (attr_name == "TANGENT" && tangent_attr == -1) tangent_attr = attr_pos;
-        else if (attr_name == "BLEND_WEIGHTS" && blend_weights_attr == -1) blend_weights_attr = attr_pos;
+        else if (attr_name == "BLEND_WEIGHTS" && blend_weights_attr == -1) {
+            blend_weights_attr = attr_pos;
+            blend_weights_type = attrib->get("Type");
+        }
     }
 
     int curr_pos = 0;
@@ -187,10 +191,17 @@ Dictionary TrinityModel::parse_vertex_buffer(
         }
         if (blend_weights_attr != -1) {
             stream_vert->seek(curr_pos + blend_weights_attr);
-            float w1 = Utils::half_to_float(stream_vert->get_u16());
-            float w2 = Utils::half_to_float(stream_vert->get_u16());
-            float w3 = Utils::half_to_float(stream_vert->get_u16());
-            float w4 = Utils::half_to_float(stream_vert->get_u16());
+            // Weights are normally RGBA_16_UNORM; read whatever the accessor declares.
+            auto read_weight = [&]() -> float {
+                if (blend_weights_type == "RGBA_16_UNORM") return stream_vert->get_u16() / 65535.0f;
+                if (blend_weights_type == "RGBA_8_UNORM") return stream_vert->get_u8() / 255.0f;
+                if (blend_weights_type == "RGBA_16_FLOAT") return Utils::half_to_float(stream_vert->get_u16());
+                return stream_vert->get_float();
+            };
+            float w1 = read_weight();
+            float w2 = read_weight();
+            float w3 = read_weight();
+            float w4 = read_weight();
             float total = w1 + w2 + w3 + w4;
             if (total > 0.0f) 
             {

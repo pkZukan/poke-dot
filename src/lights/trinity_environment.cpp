@@ -1,12 +1,14 @@
 #include "trinity_environment.h"
 #include "middleware/bntx.h"
 
-#include <godot_cpp/classes/procedural_sky_material.hpp>
-#include <godot_cpp/classes/sky.hpp>
+#include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/core/object.hpp>
 #include <algorithm>
+#include <cfloat>
 #include <cmath>
+#include <utility>
 
 using namespace godot;
 
@@ -34,7 +36,7 @@ void TrinityEnvironment::_bind_methods()
     ClassDB::bind_method(D_METHOD("set_camera_path", "path"), &TrinityEnvironment::set_camera_path);
     ClassDB::bind_method(D_METHOD("get_camera_path"), &TrinityEnvironment::get_camera_path);
 
-    ClassDB::bind_method(D_METHOD("set_layer", "name", "light", "priority", "weight"), &TrinityEnvironment::set_layer, DEFVAL(0), DEFVAL(1.0));
+    ClassDB::bind_method(D_METHOD("set_layer", "name", "light", "priority", "weight", "additive"), &TrinityEnvironment::set_layer, DEFVAL(0), DEFVAL(1.0), DEFVAL(false));
     ClassDB::bind_method(D_METHOD("set_layer_weight", "name", "weight"), &TrinityEnvironment::set_layer_weight);
     ClassDB::bind_method(D_METHOD("remove_layer", "name"), &TrinityEnvironment::remove_layer);
     ClassDB::bind_method(D_METHOD("clear_layers"), &TrinityEnvironment::clear_layers);
@@ -67,10 +69,74 @@ Vector3 xyz(Vector4 v)
     return Vector3(v.x, v.y, v.z);
 }
 
-bool discrete(const String &name)
+void rgb_to_hsv(float r, float g, float b, float &h, float &s, float &v)
 {
-    return name.contains("Enable") || name.ends_with("Mode") || name.ends_with("Type") ||
-        name.ends_with("Quality") || name == "CategoryLabel";
+    float k = 0.f;
+
+    if (g < b)
+    {
+        std::swap(g, b);
+        k = -1.f;
+    }
+
+    if (r < g)
+    {
+        std::swap(r, g);
+        k = -2.f / 6.f - k;
+    }
+
+    const float chroma = r - (g < b ? g : b);
+    h = std::fabs(k + (g - b) / (6.f * chroma + 1e-20f));
+    s = chroma / (r + 1e-20f);
+    v = r;
+}
+
+Vector3 hsv_to_rgb(float h, float s, float v)
+{
+    if (s < FLT_EPSILON)
+        return Vector3(v, v, v);
+
+    h = std::fmod(h, 1.0f) / (60.0f / 360.0f);
+    int i = static_cast<int>(h);
+    float f = h - static_cast<float>(i);
+    float p = v * (1.0f - s);
+    float q = v * (1.0f - s * f);
+    float t = v * (1.0f - s * (1.0f - f));
+
+    switch (i)
+    {
+        case 0: return Vector3(v, t, p);
+        case 1: return Vector3(q, v, p);
+        case 2: return Vector3(p, v, t);
+        case 3: return Vector3(p, q, v);
+        case 4: return Vector3(t, p, v);
+        default: return Vector3(v, p, q);
+    }
+}
+
+Vector4 offset_color(Vector4 current, Vector4 offset)
+{
+    float h, s, v;
+    rgb_to_hsv(current.x, current.y, current.z, h, s, v);
+    Vector3 rgb = hsv_to_rgb(h + offset.x, s + offset.y, v + offset.z);
+    return Vector4(rgb.x, rgb.y, rgb.z, current.w + offset.w);
+}
+
+// Resets every stored property of `to` to the value in `from`, so properties the
+// light stack stops driving fall back to the user's baseline resource.
+void copy_properties(const Object *from, Object *to)
+{
+    Array properties = from->get_property_list();
+
+    for (int i = 0; i < properties.size(); ++i)
+    {
+        Dictionary property = properties[i];
+        StringName name = property["name"];
+
+        if ((int(property["usage"]) & PROPERTY_USAGE_STORAGE) && name != StringName("resource_path") &&
+            name != StringName("script"))
+            to->set(name, from->get(name));
+    }
 }
 }
 
@@ -134,7 +200,7 @@ void TrinityEnvironment::set_camera_path(const NodePath &path)
     apply();
 }
 
-void TrinityEnvironment::set_layer(const StringName &name, const Ref<TRLGT> &light, int priority, double weight)
+void TrinityEnvironment::set_layer(const StringName &name, const Ref<TRLGT> &light, int priority, double weight, bool additive)
 {
     ERR_FAIL_COND_MSG(!std::isfinite(weight) || weight < 0 || weight > 1, "Layer weight must be in [0, 1].");
     ERR_FAIL_COND(light.is_null());
@@ -145,11 +211,12 @@ void TrinityEnvironment::set_layer(const StringName &name, const Ref<TRLGT> &lig
             layer.light = light;
             layer.priority = priority;
             layer.weight = weight;
+            layer.additive = additive;
             apply();
             return;
         }
 
-    layers.push_back({name, light, priority, weight});
+    layers.push_back({name, light, priority, weight, additive});
     apply();
 }
 
@@ -180,7 +247,11 @@ void TrinityEnvironment::clear_layers()
     apply();
 }
 
-void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double weight)
+// Applies one light file at a fixed transition progress (`weight`):
+// override layers lerp each parameter they contain from the stack below;
+// additive (offset) layers add weight * delta, and only to parameters that
+// already exist below.
+void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double weight, bool additive)
 {
     if (resource.is_null() || weight <= 0)
         return;
@@ -198,7 +269,8 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
         Dictionary entry = effective_state.get(name, Dictionary());
         entry["name"] = name;
 
-        if (!entry.has("type") || (weight >= 0.5 && !light->get_Type().is_empty()))
+        // A light keeps the type it was first defined with (normally by the master).
+        if (!entry.has("type"))
             entry["type"] = light->get_Type();
 
         Dictionary floats = entry.get("floats", Dictionary());
@@ -218,10 +290,17 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
             String key = p->get_param_name();
             double value = p->sample(time_of_day);
 
-            if (floats.has(key))
+            if (additive)
+            {
+                if (!floats.has(key))
+                    continue;
+
+                value = double(floats[key]) + value * weight;
+            }
+            else if (floats.has(key))
             {
                 double old = floats[key];
-                value = discrete(key) ? (weight >= 0.5 ? value : old) : old + (value - old) * weight;
+                value = old + (value - old) * weight;
             }
 
             floats[key] = value;
@@ -239,7 +318,14 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
             String key = p->get_param_name();
             Vector4 value = p->sample(time_of_day);
 
-            if (vectors.has(key))
+            if (additive)
+            {
+                if (!vectors.has(key))
+                    continue;
+
+                value = offset_color(vectors[key], value * weight);
+            }
+            else if (vectors.has(key))
                 value = Vector4(vectors[key]).lerp(value, weight);
 
             vectors[key] = value;
@@ -254,12 +340,10 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
             if (p.is_null())
                 continue;
 
-            if (!textures.has(p->get_map_name()) || weight >= 0.5)
-            {
-                String file = p->get_map_file();
-                textures[p->get_map_name()] = file;
-                texture_paths[p->get_map_name()] = (file.is_absolute_path() ? file : resource->get_path().get_base_dir().path_join(file)).simplify_path();
-            }
+            // Textures aren't interpolated; a layer's textures replace those below as soon as it applies.
+            String file = p->get_map_file();
+            textures[p->get_map_name()] = file;
+            texture_paths[p->get_map_name()] = (file.is_absolute_path() ? file : resource->get_path().get_base_dir().path_join(file)).simplify_path();
         }
 
         Ref<BoundMatrix> matrix = light->sample_matrix(time_of_day);
@@ -269,12 +353,24 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
             Vector3 scale = xyz(matrix->get_x());
             Vector3 translation = xyz(matrix->get_z());
 
-            // Ikkaku LightFileImpl uses FromYawPitchRoll(y, x, z): YXZ.
+            // Static rotations are YXZ Euler angles; curve-driven rotations are ZYX.
             Quaternion rotation = Basis::from_euler(
                 xyz(matrix->get_y()),
                 light->get_rotation_curve().is_valid() ? EULER_ORDER_ZYX : EULER_ORDER_YXZ).get_rotation_quaternion();
 
-            if (entry.has("rotation"))
+            if (additive)
+            {
+                // Offsets transition from an identity SRT and are then combined
+                // with the current transform (which defaults to identity too).
+                scale = Vector3(1, 1, 1).lerp(scale, weight);
+                rotation = Quaternion().slerp(rotation, weight);
+                translation = Vector3().lerp(translation, weight);
+
+                scale += Vector3(entry.get("scale", Vector3(1, 1, 1)));
+                rotation = Quaternion(entry.get("rotation", Quaternion())) * rotation;
+                translation += Vector3(entry.get("translation", Vector3()));
+            }
+            else if (entry.has("rotation"))
             {
                 rotation = Quaternion(entry["rotation"]).slerp(rotation, weight);
                 scale = Vector3(entry["scale"]).lerp(scale, weight);
@@ -310,7 +406,25 @@ Dictionary TrinityEnvironment::find_type(const String &type) const
     return Dictionary();
 }
 
-double TrinityEnvironment::number(const Dictionary &light, const String &name, double fallback)
+// Selectable lights are matched by their CategoryLabel (default 0), not
+// by name; a later light with the same label replaces an earlier one.
+Dictionary TrinityEnvironment::find_category(int category) const
+{
+    Dictionary found;
+    Array names = effective_state.keys();
+
+    for (int i = 0; i < names.size(); ++i)
+    {
+        Dictionary entry = effective_state[names[i]];
+
+        if (String(entry.get("type", "")) == "Selectable" && int(number(entry, "CategoryLabel", 0)) == category)
+            found = entry;
+    }
+
+    return found;
+}
+
+double TrinityEnvironment::number(const Dictionary &light, const String &name, double fallback) const
 {
     Dictionary values = light.get("floats", Dictionary());
 
@@ -320,7 +434,7 @@ double TrinityEnvironment::number(const Dictionary &light, const String &name, d
     return values[name];
 }
 
-Color TrinityEnvironment::color(const Dictionary &light, const String &name, Color fallback, bool source_is_linear)
+Color TrinityEnvironment::color(const Dictionary &light, const String &name, Color fallback, bool source_is_linear) const
 {
     Dictionary values = light.get("vectors", Dictionary());
 
@@ -331,8 +445,8 @@ Color TrinityEnvironment::color(const Dictionary &light, const String &name, Col
 
     // Alpha means different things across Ikkaku parameters, so it is never used as
     // transparency/energy for native light colors (Selectable Color.w can be 0).
-    // Sky/fog vectors are passed through directly by the source binders, while
-    // Directional/Selectable Color is converted from sRGB with ToLinearColor().
+    // Sky/fog vectors are used as stored, while Directional/Selectable Color is
+    // authored in sRGB.
     // Godot's native light properties already do that conversion; don't undo it for lights.
     Color value(v.x, v.y, v.z, 1);
     return source_is_linear ? value.linear_to_srgb() : value;
@@ -462,6 +576,105 @@ void TrinityEnvironment::apply_probe_ambient(const Ref<Environment> &environment
     environment->set_ambient_light_sky_contribution(0);
 }
 
+// Failures are cached too, so a missing file isn't retried on every time-of-day step.
+Ref<Texture2D> TrinityEnvironment::load_texture(const String &path)
+{
+    if (texture_cache.has(path))
+        return texture_cache[path];
+
+    texture_cache[path] = Variant();
+    ResourceLoader *loader = ResourceLoader::get_singleton();
+
+    if (path.is_empty() || !loader->exists(path))
+        return Ref<Texture2D>();
+
+    Ref<BinaryTextureArchive> archive = loader->load(path);
+
+    if (archive.is_null())
+        return Ref<Texture2D>();
+
+    auto textures = archive->get_textures();
+    Ref<BinaryTexture> texture = archive->GetTexture(path.get_file().get_basename());
+
+    if (texture.is_null() && textures.size() == 1)
+        texture = textures.values()[0];
+
+    if (texture.is_null() || texture->get_layers() == 0)
+        return Ref<Texture2D>();
+
+    Ref<Image> image = texture->get_layer_image(0);
+
+    if (image.is_null())
+        return Ref<Texture2D>();
+
+    Ref<Texture2D> result = ImageTexture::create_from_image(image);
+    texture_cache[path] = result;
+    return result;
+}
+
+// Uniform names match the Sky light's parameters; fallbacks match project.godot.
+void TrinityEnvironment::update_sky(const Dictionary &sky_data)
+{
+    RenderingServer *rs = RenderingServer::get_singleton();
+
+    static const struct { const char *name; double fallback; } floats[] = {
+        {"SkyHorizonFalloff", 1.0}, {"SkyCloudRim", 1.0}, {"SkyCloudsFadeOut", -0.3},
+        {"SkyTopCloudSpeed", 1.0}, {"SkyTopBreakupSpeed", 1.0}, {"SkyTopPlaneHeight", 1.0},
+        {"SkyTopPlaneHorizon", 1.0}, {"SkyTopPlaneTiling", 1.0}, {"SkyTopCloudCoverage", 1.0},
+        {"SkySunRadius", 1.0}, {"SkySunShine", 1.0}, {"SkySunBrightness", 1.0},
+        {"SkyMoonScale", 1.0}, {"SkyMoonPhase", 1.0}, {"SkyMoonShadingRotation", 1.0},
+        {"SkyMoonBrightness", 1.0}, {"SkyStarsTiling", 1.0}, {"SkyStarsHorizonLift", 1.0},
+        {"SkyStarsIntensity", 0.0}, {"SkyStarsMaskTiling", 1.0}, {"SkyStarsMaskSpeed", 0.0},
+        {"SkyFogIntensity", 1.0}, {"SkyFogOffset", 1.0}, {"SkyFogGradation", 1.0},
+        {"ScatteringFogFactor", 0.7},
+    };
+
+    for (const auto &f : floats)
+        rs->global_shader_parameter_set(f.name, number(sky_data, f.name, f.fallback));
+
+    // Used as stored; no sRGB conversion.
+    static const char *colors[] = {
+        "SkyZenithColor", "SkyHorizonColor", "SkyCloudColor", "SkyCloudColorRim", "SkySunTintColor", "SkyFogColor",
+    };
+    Dictionary vectors = sky_data.get("vectors", Dictionary());
+
+    for (const char *name : colors)
+        rs->global_shader_parameter_set(name, Vector4(vectors.get(name, Vector4(1, 1, 1, 1))));
+
+    // ScatteringFogColor.w scales the whole color (including w, which then gates the term).
+    Vector4 scattering = vectors.get("ScatteringFogColor", Vector4(1, 1, 1, 0));
+    scattering *= scattering.w;
+
+    Dictionary global_paths = find_type("Global").get("texture_paths", Dictionary());
+    Ref<Texture2D> lut = load_texture(global_paths.get("AtmosphereLUT", ""));
+
+    if (lut.is_null())
+        scattering.w = 0;
+
+    rs->global_shader_parameter_set("AtmosphereLUT", lut);
+    rs->global_shader_parameter_set("ScatteringFogColor", scattering);
+
+    // Pitch is in units of 90 degrees (positive = below the horizon), yaw in units of 180.
+    auto direction = [](double pitch, double yaw) {
+        pitch *= 0.5 * Math_PI;
+        yaw *= Math_PI;
+        return Vector3(std::sin(yaw) * std::cos(pitch), -std::sin(pitch), std::cos(yaw) * std::cos(pitch));
+    };
+
+    Vector3 sun = direction(number(sky_data, "SkySunPitch", 0), number(sky_data, "SkySunYaw", 0));
+
+    if (number(sky_data, "SkySunUseDirectionalLight", 0) > 0)
+    {
+        // Toward the light: DirectionalMain shines along its -Z.
+        Quaternion rotation = find_type("Directional").get("rotation", Quaternion());
+        sun = rotation.xform(Vector3(0, 0, 1));
+    }
+
+    rs->global_shader_parameter_set("SkySunDirection", sun);
+    rs->global_shader_parameter_set("SkyMoonDirection",
+        direction(number(sky_data, "SkyMoonPitch", 0), number(sky_data, "SkyMoonYaw", 0)));
+}
+
 void TrinityEnvironment::detach_targets()
 {
     WorldEnvironment *world = instance<WorldEnvironment>(bound_world_id);
@@ -490,6 +703,8 @@ void TrinityEnvironment::detach_targets()
     original_camera_attributes.unref();
     applied_environment.unref();
     applied_attributes.unref();
+    baseline_environment.unref();
+    baseline_attributes.unref();
 }
 
 void TrinityEnvironment::apply()
@@ -500,13 +715,13 @@ void TrinityEnvironment::apply()
     applying = true;
     effective_state.clear();
 
-    resolve_resource(master_light, 1.0);
+    resolve_resource(master_light, 1.0, false);
 
     auto ordered = layers;
     std::stable_sort(ordered.begin(), ordered.end(), [](const Layer &a, const Layer &b) { return a.priority < b.priority; });
 
     for (const auto &layer : ordered)
-        resolve_resource(layer.light, layer.weight);
+        resolve_resource(layer.light, layer.weight, layer.additive);
 
     if (is_inside_tree())
     {
@@ -573,23 +788,29 @@ void TrinityEnvironment::apply_render_state()
             bound_camera_id = camera->get_instance_id();
             original_camera_attributes = camera->get_attributes();
         }
+
+        baseline_environment = original_environment;
+
+        if (baseline_environment.is_null())
+            baseline_environment.instantiate();
+
+        baseline_attributes = camera ? original_camera_attributes : original_world_attributes;
+
+        if (baseline_attributes.is_null())
+            baseline_attributes.instantiate();
+
+        // Created once per binding so time-of-day steps don't allocate new RIDs.
+        applied_environment.instantiate();
+        applied_attributes.instantiate();
     }
 
-    Ref<Environment> env;
-    if (original_environment.is_valid())
-        env = original_environment->duplicate(true);
-    else
-        env.instantiate();
+    Ref<Environment> env = applied_environment;
+    Ref<CameraAttributesPractical> attributes = applied_attributes;
+
+    copy_properties(baseline_environment.ptr(), env.ptr());
+    copy_properties(baseline_attributes.ptr(), attributes.ptr());
 
     env->set_glow_enabled(false);
-
-    Ref<CameraAttributesPractical> attributes;
-    Ref<CameraAttributesPractical> baseline = camera ? original_camera_attributes : original_world_attributes;
-
-    if (baseline.is_valid())
-        attributes = baseline->duplicate(true);
-    else
-        attributes.instantiate();
 
     Dictionary global = find_type("Global");
 
@@ -642,18 +863,7 @@ void TrinityEnvironment::apply_render_state()
 
     if (!sky_data.is_empty())
     {
-        Ref<ProceduralSkyMaterial> material;
-        material.instantiate();
-        material->set_sky_top_color(color(sky_data, "SkyZenithColor", Color(0.3, 0.4, 0.6)));
-
-        Color horizon = color(sky_data, "SkyHorizonColor", Color(0.65, 0.7, 0.8));
-        material->set_sky_horizon_color(horizon);
-        material->set_ground_horizon_color(horizon);
-
-        Ref<Sky> sky;
-        sky.instantiate();
-        sky->set_material(material);
-        env->set_sky(sky);
+        update_sky(sky_data);
 
         // SkyEnable selects Ikkaku sky shading; it is not a visibility flag.
         env->set_background(number(sky_data, "SkyVisible", 1) > 0 ? Environment::BG_SKY : Environment::BG_COLOR);
@@ -692,13 +902,9 @@ void TrinityEnvironment::apply_render_state()
     }
 
     Dictionary directional = find_type("Directional");
-    Dictionary selected = lighting_category >= 0
-        ? Dictionary(effective_state.get("dir_" + String::num_int64(lighting_category), Dictionary()))
-        : Dictionary();
-
-    if (String(selected.get("type", "")) != "Selectable")
-        selected = Dictionary();
-
+    // Direction (time-curved) comes from DirectionalMain; per-category color and
+    // intensity (also time-curved) come from the Selectable light with that label.
+    Dictionary selected = lighting_category >= 0 ? find_category(lighting_category) : Dictionary();
     Dictionary shading = selected.is_empty() ? directional : selected;
 
     sun->set_visible(!shading.is_empty());
@@ -726,30 +932,12 @@ void TrinityEnvironment::apply_render_state()
     sun->set_param(Light3D::PARAM_SHADOW_NORMAL_BIAS, MAX(0.0, number(shading, "ShadowNormalBias", 1.0)));
     sun->set_param(Light3D::PARAM_SHADOW_BIAS, MAX(0.0, number(shading, "ShadowDepthBias", 0.1)));
 
-    // Keep the camera RID across layer updates: replacing it would restart eye
-    // adaptation every frame during a weather/time transition.
-    if (applied_attributes.is_valid())
-    {
-        Array properties = attributes->get_property_list();
+    if (world->get_environment() != env)
+        world->set_environment(env);
 
-        for (int i = 0; i < properties.size(); ++i)
-        {
-            Dictionary property = properties[i];
-            StringName name = property["name"];
+    if (world->get_camera_attributes() != attributes)
+        world->set_camera_attributes(attributes);
 
-            if ((int(property["usage"]) & PROPERTY_USAGE_STORAGE) && name != StringName("resource_path") && name != StringName("script"))
-                applied_attributes->set(name, attributes->get(name));
-        }
-
-        attributes = applied_attributes;
-    }
-
-    applied_environment = env;
-    applied_attributes = attributes;
-
-    world->set_environment(env);
-    world->set_camera_attributes(attributes);
-
-    if (camera)
+    if (camera && camera->get_attributes() != attributes)
         camera->set_attributes(attributes);
 }

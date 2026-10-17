@@ -7,6 +7,7 @@
 #include <godot_cpp/classes/world_environment.hpp>
 #include <godot_cpp/classes/directional_light3d.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/classes/texture2d.hpp>
 #include <vector>
 
 namespace godot {
@@ -18,11 +19,15 @@ class TrinityEnvironment : public Node3D {
         Ref<TRLGT> light;
         int priority = 0;
         double weight = 1.0;
+        // Weather offset files (light/offset/offset_*) hold deltas that are
+        // added onto the stack below instead of blended toward.
+        bool additive = false;
     };
     Ref<TRLGT> master_light;
     std::vector<Layer> layers;
     Dictionary effective_state;
     Dictionary diffuse_probe_cache;
+    Dictionary texture_cache;
     NodePath world_environment_path;
     NodePath camera_path;
     bool enabled = true;
@@ -39,15 +44,20 @@ class TrinityEnvironment : public Node3D {
     Ref<CameraAttributes> original_camera_attributes;
     Ref<Environment> applied_environment;
     Ref<CameraAttributesPractical> applied_attributes;
+    Ref<Environment> baseline_environment;
+    Ref<CameraAttributesPractical> baseline_attributes;
 
-    void resolve_resource(const Ref<TRLGT> &resource, double weight);
+    void resolve_resource(const Ref<TRLGT> &resource, double weight, bool additive);
     Dictionary find_type(const String &type) const;
-    double number(const Dictionary &light, const String &name, double fallback);
-    Color color(const Dictionary &light, const String &name, Color fallback, bool source_is_linear = true);
+    Dictionary find_category(int category) const;
+    double number(const Dictionary &light, const String &name, double fallback) const;
+    Color color(const Dictionary &light, const String &name, Color fallback, bool source_is_linear = true) const;
     void detach_targets();
     void apply_render_state();
     bool probe_average(const Dictionary &probe, Color &average);
     void apply_probe_ambient(const Ref<Environment> &environment);
+    Ref<Texture2D> load_texture(const String &path);
+    void update_sky(const Dictionary &sky_data);
 
 protected:
     static void _bind_methods();
@@ -69,7 +79,7 @@ public:
     void set_camera_path(const NodePath &path);
     NodePath get_camera_path() const { return camera_path; }
 
-    void set_layer(const StringName &name, const Ref<TRLGT> &light, int priority = 0, double weight = 1.0);
+    void set_layer(const StringName &name, const Ref<TRLGT> &light, int priority = 0, double weight = 1.0, bool additive = false);
     void set_layer_weight(const StringName &name, double weight);
     void remove_layer(const StringName &name);
     void clear_layers();
