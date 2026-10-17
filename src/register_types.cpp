@@ -141,16 +141,15 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(IntExtra)
 		GDREGISTER_CLASS(FloatParameter)
 		GDREGISTER_CLASS(Float4Parameter)
-		GDREGISTER_CLASS(MaterialTable)
-		GDREGISTER_CLASS(MaterialProperty)
-		GDREGISTER_CLASS(MaterialSwitch)
+		GDREGISTER_CLASS(VariationControl)
+		GDREGISTER_CLASS(ModelVariation)
 
 		//Model
 		GDREGISTER_CLASS(TRModel)
 		GDREGISTER_CLASS(TRMesh)
 		GDREGISTER_CLASS(TRModelBuffer)
 		GDREGISTER_CLASS(TRSkeleton)
-		GDREGISTER_CLASS(TRModelMaterialTable)
+		GDREGISTER_CLASS(TRModelMeta)
 		GDREGISTER_CLASS(TRMaterial)
 
 		//anim_common

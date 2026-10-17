@@ -3,78 +3,79 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/file_access.hpp>
-#include <godot_cpp/classes/mesh_instance3d.hpp>
-#include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "generated/trmmt_generated.h"
 #include <utils.h>
 
 namespace godot {
 
-class MaterialProperty : public Resource {
-    GDCLASS(MaterialProperty, Resource)
+class VariationControl : public Resource {
+    GDCLASS(VariationControl, Resource)
 protected:
 	static void _bind_methods();
 public:
-	MaterialProperty(){}
-	~MaterialProperty(){}
-    
+	VariationControl(){}
+	~VariationControl(){}
+
 	GETTER_SETTER_DEFINE(String, Name)
+	GETTER_SETTER_DEFINE(int, FrameMin)
+	GETTER_SETTER_DEFINE(int, FrameMax)
+	GETTER_SETTER_DEFINE(int, DefaultOverride)
+	GETTER_SETTER_DEFINE(PackedByteArray, Tracm)
+	GETTER_SETTER_DEFINE(Dictionary, Rule)
+	GETTER_SETTER_DEFINE(bool, TableDriven)
+	GETTER_SETTER_DEFINE(int, VariationCount)
+	GETTER_SETTER_DEFINE(Dictionary, MaterialValues)
+	GETTER_SETTER_DEFINE(Dictionary, MeshVisibility)
 
 private:
     String Name;
+    int FrameMin = 0;
+    int FrameMax = 0;
+    int DefaultOverride = -1;
+    PackedByteArray Tracm;
+    Dictionary Rule;
+    bool TableDriven = false;
+    int VariationCount = 0;
+    Dictionary MaterialValues; 
+    Dictionary MeshVisibility; 
 };
 
-class MaterialSwitch : public Resource {
-    GDCLASS(MaterialSwitch, Resource)
+class ModelVariation : public Resource {
+    GDCLASS(ModelVariation, Resource)
 protected:
 	static void _bind_methods();
 public:
-	MaterialSwitch(){}
-	~MaterialSwitch(){}
-    
+	ModelVariation(){}
+	~ModelVariation(){}
+
 	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(uint8_t, Flag)
+	GETTER_SETTER_DEFINE(PackedStringArray, Materials)
+	GETTER_SETTER_DEFINE(Dictionary, MeshVisibility)
+	GETTER_SETTER_DEFINE(Array, Controls)
 
 private:
     String Name;
-    uint8_t Flag;
+    PackedStringArray Materials;
+    Dictionary MeshVisibility;
+	Array Controls;
 };
 
-class MaterialTable : public Resource {
-    GDCLASS(MaterialTable, Resource)
+class TRModelMeta : public Resource {
+    GDCLASS(TRModelMeta, Resource)
 protected:
 	static void _bind_methods();
 public:
-	MaterialTable(){}
-	~MaterialTable(){}
-    
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(PackedStringArray, MatNames)
-	GETTER_SETTER_DEFINE(Array, MaterialSwitches)
-	GETTER_SETTER_DEFINE(Array, MaterialProperties)
-
-private:
-    String Name;
-    PackedStringArray MatNames;
-	Array MaterialSwitches;
-	Array MaterialProperties;
-};
-
-class TRModelMaterialTable : public Resource {
-    GDCLASS(TRModelMaterialTable, Resource)
-protected:
-	static void _bind_methods();
-public:
-	TRModelMaterialTable(){}
-	~TRModelMaterialTable(){}
+	TRModelMeta(){}
+	~TRModelMeta(){}
 
     void LoadFromFile(String file);
+    Ref<ModelVariation> find_variation(const String &name) const;
 
-	GETTER_SETTER_DEFINE(Array, MaterialTables)
+	GETTER_SETTER_DEFINE(Array, Variations)
 
 private:
-    Array MaterialTables;
+    Array Variations;
 };
 
 class ResourceFormatLoaderTRMMT : public ResourceFormatLoader {

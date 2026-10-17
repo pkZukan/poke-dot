@@ -4,48 +4,148 @@ namespace Titan.Model;
 
 file_extension "trmmt";
 
-table MaterialSwitches 
+table RuleCopy
 {
-    material_name: string;
-    material_flag: uint8;
+    source: string;
 }
 
-table MaterialMapper 
+table RuleCopyIfPresent
 {
-    mesh_name: string;
-    material_name: string;
-    layer_name: string;
+    probe: string;
+    source: string;
 }
 
-table EmbeddedTRACM 
+table RuleCase
 {
-    bytebuffer: [uint8];
+    match: int;
+    result: int;
 }
 
-//Appears only on Arceus?
-table MaterialProperties 
+table RuleSwitch
+{
+    source: string;
+    cases: [RuleCase];
+}
+
+union RuleCondition
+{
+    RuleCopy,
+    RuleCopyIfPresent,
+    RuleSwitch,
+}
+
+table ControlRule
 {
     name: string;
-    mappers: [MaterialMapper];
-    res_2: uint32;
-    unk_3: uint32;
+    upper: int;
+    initial: int;
+    condition: RuleCondition;
+}
+
+table FloatSeries
+{
+    name: string;
+    values: [float];
+}
+
+table Vec3Series
+{
+    name: string;
+    values: [Titan.Math.Vec3];
+}
+
+table Vec4Series
+{
+    name: string;
+    values: [Titan.Math.Vec4];
+}
+
+table IntSeries
+{
+    name: string;
+    values: [int];
+}
+
+table BoolSeries
+{
+    name: string;
+    values: [bool];
+}
+
+table MaterialSeries
+{
+    material: string;
+    floats: [FloatSeries];
+    vec3s: [Vec3Series];
+    vec4s: [Vec4Series];
+    ints: [IntSeries];
+}
+
+table VariationTable
+{
+    count: int;
+    materials: [MaterialSeries];
+    mesh_visibility: [BoolSeries];
+}
+
+table CurveTarget
+{
+    mesh: string;
+    material: string;
+    attribute: string;
+}
+
+table MeshTarget
+{
+    mesh: string;
+}
+
+table DeformerTarget
+{
+    deformer: string;
+}
+
+table EmbeddedTRACM
+{
+    bytebuffer: [uint8] (force_align: 4);
+}
+
+table VariationControl
+{
+    name: string;
+    curve_targets: [CurveTarget];
+    frame_min: int;
+    frame_max: int;
     tracm: EmbeddedTRACM;
-    res_5: [uint32];
+    mesh_targets: [MeshTarget];
+    deformer_targets: [DeformerTarget];
+    rule: ControlRule;
+    default_override: int = -1;
+    table_driven: bool;
+    variations: VariationTable;
 }
 
-table MMT 
+table MeshToggle
+{
+    mesh: string;
+    visible: bool;
+}
+
+table ModelVariation
 {
     name: string;
-    material_name: [string];
-    material_switches: [MaterialSwitches];
-    material_properties: [MaterialProperties];
-} 
+    materials: [string];
+    mesh_visibility: [MeshToggle];
+    controls: [VariationControl];
+    tracm_path: string;
+}
 
-table TRMMT 
+table TRMMT
 {
-    res_0: uint32;
-    res_1: uint32;
-    material: [MMT];
+    version: uint32 = 2;
+    model_path: string;
+    variations: [ModelVariation];
+    rule_path: string;
 }
 
 root_type TRMMT;
