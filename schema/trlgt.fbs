@@ -2,23 +2,38 @@ include "common.fbs";
 
 namespace Titan.gfx2;
 
+enum LightCurveInterpolation:uint { Constant, Linear, TangentAuto, TangentBreak, TangentUser }
+
+table LightCurveKey {
+    time:float;
+    value:float;
+    tangent_left:float;
+    tangent_right:float;
+    interpolation:LightCurveInterpolation;
+}
+table LightCurve { keys:[LightCurveKey]; }
+table LightCurve4 { x:LightCurve; y:LightCurve; z:LightCurve; w:LightCurve; }
+table LightTransformCurve { scale:LightCurve4; rotation:LightCurve4; translation:LightCurve4; }
+
 table BoundMatrix 
 {
-    x: Titan.Math.Vec4;
-    y: Titan.Math.Vec4;
-    z: Titan.Math.Vec4;
+    x: Titan.Math.Vec3; // scale
+    y: Titan.Math.Vec3; // Euler rotation, radians
+    z: Titan.Math.Vec3; // translation
 }
 
 table Vec4Parameter 
 {
     param_name: string;
     value: Titan.Math.Vec4;
+    curve: LightCurve4;
 }
 
 table FloatParameter 
 {
     param_name: string;
-    param_val: float; 
+    param_val: float;
+    curve: LightCurve;
 }
 
 table StringParameter 
@@ -35,6 +50,7 @@ table Light
     float_params: [FloatParameter];
     vec4_params: [Vec4Parameter];
     string_params: [StringParameter];
+    transform_curve: LightTransformCurve;
 }
 
 table TRLGT

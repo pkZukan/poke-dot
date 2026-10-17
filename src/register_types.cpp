@@ -15,6 +15,7 @@
 #include "fbs/animation/tracm.h"
 
 #include "fbs/gfx2/trlgt.h"
+#include "lights/trinity_environment.h"
 #include "fbs/cc/ccdata.h"
 
 #include "fbs/catalog/trpmcatalog.h"
@@ -214,12 +215,15 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(AnimationChannelParamTrigger)
 
 		//trlgt
+		GDREGISTER_CLASS(TRLightCurve)
+		GDREGISTER_CLASS(TRLightCurve4)
 		GDREGISTER_CLASS(TRLGT)
 		GDREGISTER_CLASS(TRLight)
 		GDREGISTER_CLASS(BoundMatrix)
 		GDREGISTER_CLASS(TRFloatParameter)
 		GDREGISTER_CLASS(TRVec4Parameter)
 		GDREGISTER_CLASS(TRStringParameter)
+		GDREGISTER_CLASS(TrinityEnvironment)
 
 		//ccdata
 		GDREGISTER_CLASS(TrinityCharacterCreationData)

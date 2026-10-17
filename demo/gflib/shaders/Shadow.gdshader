@@ -1,28 +1,21 @@
 shader_type spatial;
+render_mode unshaded, shadows_disabled, blend_premul_alpha, depth_draw_always;
 
-uniform sampler2D BaseColorMap : source_color;
-uniform sampler2D NormalMap : hint_normal;
-uniform sampler2D RoughnessMap;
-uniform sampler2D AOMap;
-uniform sampler2D SSSMaskMap;
+uniform sampler2D Texture0 : source_color, hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 
-uniform bool EnableBaseColorMap;
-uniform bool EnableNormalMap;
-uniform bool EnableRoughnessMap;
-uniform bool EnableAOMap;
-uniform bool EnableSSSMaskMap;
-uniform int NumMaterialLayer;
-uniform bool EnableVertexSubLayer;
-uniform bool EnableCustomLayer;
-uniform int LightReceiveType;
+uniform int sampler_repeat_u[2];
+uniform int sampler_repeat_v[2];
+uniform vec4 sampler_border_color[2];
+#include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
 
-void vertex() {
-	//
-}
+uniform bool EnableAlphaTest;
+
+uniform float DiscardValue = 0.5;
 
 void fragment() {
-	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
-	ALBEDO = texture(BaseColorMap, uvs).rgb;
-	ALPHA = 0.0f;
-	NORMAL_MAP = texture(NormalMap, uvs).rgb;
+    if (EnableAlphaTest && sample_trinity(Texture0, vec2(UV.x, 1.0 - UV.y), 0).a < DiscardValue) discard;
+    ALBEDO = vec3(0.0);
+    ALPHA = 0.0;
 }

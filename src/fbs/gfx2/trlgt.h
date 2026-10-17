@@ -11,6 +11,31 @@
 
 namespace godot {
 
+class TRLightCurve : public Resource {
+    GDCLASS(TRLightCurve, Resource)
+protected:
+    static void _bind_methods();
+public:
+    GETTER_SETTER_DEFINE(Array, keys)
+    float sample(double time) const;
+private:
+    Array keys;
+};
+
+class TRLightCurve4 : public Resource {
+    GDCLASS(TRLightCurve4, Resource)
+protected:
+    static void _bind_methods();
+public:
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve>, x)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve>, y)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve>, z)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve>, w)
+    Vector4 sample(double time) const;
+private:
+    Ref<TRLightCurve> x, y, z, w;
+};
+
 class TRFloatParameter : public Resource {
     GDCLASS(TRFloatParameter, Resource)
 protected:
@@ -20,10 +45,13 @@ public:
     ~TRFloatParameter(){}
     GETTER_SETTER_DEFINE(String, param_name)
     GETTER_SETTER_DEFINE(float, param_val)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve>, curve)
+    float sample(double time) const { return curve.is_valid() ? curve->sample(time) : param_val; }
 
 private:
     String param_name;
-    float param_val;
+    float param_val = 0.0f;
+    Ref<TRLightCurve> curve;
 };
 
 class TRVec4Parameter : public Resource {
@@ -35,10 +63,13 @@ public:
     ~TRVec4Parameter(){}
     GETTER_SETTER_DEFINE(String, param_name)
     GETTER_SETTER_DEFINE(Vector4, value)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve4>, curve)
+    Vector4 sample(double time) const { return curve.is_valid() ? curve->sample(time) : value; }
 
 private:
     String param_name;
     Vector4 value;
+    Ref<TRLightCurve4> curve;
 };
 
 class TRStringParameter : public Resource {
@@ -87,6 +118,10 @@ public:
     GETTER_SETTER_DEFINE(Array, float_params)
     GETTER_SETTER_DEFINE(Array, vec4_params)
     GETTER_SETTER_DEFINE(Array, string_params)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve4>, scale_curve)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve4>, rotation_curve)
+    GETTER_SETTER_DEFINE(Ref<TRLightCurve4>, translation_curve)
+    Ref<BoundMatrix> sample_matrix(double time) const;
 
 private:
     String Name;
@@ -95,6 +130,7 @@ private:
     Array float_params;
     Array vec4_params;
     Array string_params;
+    Ref<TRLightCurve4> scale_curve, rotation_curve, translation_curve;
 };
 
 class TRLGT : public Resource {
@@ -105,13 +141,13 @@ public:
 	TRLGT(){}
 	~TRLGT(){}
 
-    void LoadFromFile(String file);
+    Error LoadFromFile(String file);
 	
     GETTER_SETTER_DEFINE(uint32_t, version)
     GETTER_SETTER_DEFINE(Array, lights)
 
 private:
-    uint32_t version;
+    uint32_t version = 0;
     Array lights;
 };
 
@@ -124,6 +160,7 @@ public:
 	~ResourceFormatLoaderTRLGT(){}
 
 	virtual PackedStringArray _get_recognized_extensions() const override;
+    String _get_resource_type(const String &path) const override;
 	virtual bool _handles_type(const StringName &p_type) const override;
 	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
 };

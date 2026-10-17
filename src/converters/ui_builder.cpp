@@ -622,8 +622,6 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
             memdelete(quad);
             return nullptr;
         }
-        if (maps.size() > 1)
-            ui_warn_once(warnings, "Additional UI material texture maps are not converted");
         if (uv.size() != 4) {
             ui_warn_once(warnings, "Picture without usable UV coordinates; using the full texture");
             uv = default_uv();
@@ -653,7 +651,39 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
         quad->set_uv(quad_uv);
         quad->set_vertex_colors(vertex_colors);
         quad->set_texture(texture);
-        quad->set_material(make_picture_material(texture_name, material));
+        Ref<ShaderMaterial> picture_material = make_picture_material(texture_name, material);
+        const Array combiners = material.get("texture_combiners", Array());
+        const Array generators = material.get("texture_coordinate_generators", Array());
+        
+        bool has_alpha_mask = false;
+        if (maps.size() > 1 && !combiners.is_empty() && generators.size() > 1) {
+            const Dictionary combiner = combiners[0], generator = generators[1];
+            const Dictionary mask_map = maps[1];
+            const int mask_index = int(mask_map["texture_index"]);
+            if (int(combiner["color_mode"]) == 0 && int(combiner["alpha_mode"]) == 1 &&
+                    int(generator["source"]) == 0 && mask_index >= 0 && mask_index < texture_names.size()) {
+                const String mask_name = texture_names[mask_index];
+                if (textures.has(mask_name) && texture_materials.has(mask_name)) {
+                    Ref<ShaderMaterial> mask_material = texture_materials[mask_name];
+                    picture_material->set_shader_parameter("alpha_mask", textures[mask_name]);
+                    picture_material->set_shader_parameter("mask_channel_sources", mask_material->get_shader_parameter("channel_sources"));
+                    picture_material->set_shader_parameter("mask_wrap", Vector2i(int(mask_map["wrap_s"]) & 3, int(mask_map["wrap_t"]) & 3));
+                    picture_material->set_shader_parameter("mask_nearest", (int(mask_map["wrap_t"]) >> 2 & 3) == 0);
+                    const Array transforms = material.get("texture_transforms", Array());
+                    if (transforms.size() > 1) {
+                        const Dictionary transform = transforms[1];
+                        const Vector2 translation = transform["translation"];
+                        picture_material->set_shader_parameter("mask_transform", Vector3(translation.x, translation.y, Math::deg_to_rad(double(transform["rotation"]))));
+                        picture_material->set_shader_parameter("mask_scale", transform["scale"]);
+                    }
+                    picture_material->set_shader_parameter("has_alpha_mask", true);
+                    has_alpha_mask = true;
+                }
+            }
+        }
+        if (maps.size() > (has_alpha_mask ? 2 : 1))
+            ui_warn_once(warnings, "Additional UI material texture combiners are not converted");
+        quad->set_material(picture_material);
         apply_sampler(quad, map);
     }
 

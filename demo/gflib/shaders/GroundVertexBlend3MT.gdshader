@@ -1,149 +1,100 @@
 shader_type spatial;
 
-uniform sampler2D BaseColorMap : source_color;
-uniform sampler2D BaseColorMap1 : source_color;
-uniform sampler2D NormalMap : hint_normal;
-uniform sampler2D NormalMap1 : hint_normal;
-uniform sampler2D NormalMap2 : hint_normal;
-uniform sampler2D MetallicMap;
-uniform sampler2D RoughnessMap;
-uniform sampler2D RoughnessMap1;
-uniform sampler2D AOMap;
-uniform sampler2D AOMap1;
-uniform sampler2D AOMap2;
-uniform sampler2D LayerMaskMap;
-uniform sampler2D ParallaxMap;
-uniform sampler2D EmissionColorMap;
-uniform sampler2D LightMap;
-uniform sampler2D WindMaskMap;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, repeat_enable;
+uniform sampler2D PackedMap : hint_default_white, repeat_enable;
+uniform sampler2D RoughnessMap : hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
+uniform sampler2D NormalMap1 : hint_normal, repeat_enable;
+uniform sampler2D PackedMap1 : hint_default_white, repeat_enable;
+uniform sampler2D RoughnessMap1 : hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap2 : source_color, hint_default_white, repeat_enable;
+uniform sampler2D NormalMap2 : hint_normal, repeat_enable;
+uniform sampler2D PackedMap2 : hint_default_white, repeat_enable;
+uniform sampler2D RoughnessMap2 : hint_default_white, repeat_enable;
 
-uniform bool EnableBaseColorMap;
-uniform bool EnableNormalMap;
-uniform bool EnableParallaxMap;
-uniform bool EnableMetallicMap;
+uniform int sampler_repeat_u[12];
+uniform int sampler_repeat_v[12];
+uniform vec4 sampler_border_color[12];
+#include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
+
+uniform int NumMaterialLayer = 1;
+
+uniform bool EnablePackedMap = true;
 uniform bool EnableRoughnessMap;
-uniform bool EnableEmissionColorMap;
-uniform bool EnableAOMap;
-uniform bool EnableAlphaTest;
-uniform bool EnableLightMap;
-uniform int NumMaterialLayer;
-uniform int BillboardType;
-uniform int WindReceiverType;
-uniform bool EnableWindMaskMap;
-uniform bool EnableBaseColorMap1;
-uniform bool EnableNormalMap1;
-uniform bool EnableNormalMap2;
-uniform bool EnableRoughnessMap1;
-uniform bool EnableAOMap1;
-uniform bool EnableAOMap2;
-uniform int LayerMaskSource;
-uniform int LayerMaskSwizzle;
-uniform int LayerBaseMaskSource;
+uniform bool EnableMetallicValue;
 uniform bool EnableVertexBaseColor;
-uniform int NumDetailLayer;
-uniform bool EnableDepthFade;
-uniform bool ReceiveShadow;
-uniform bool EnableDeferredRendering;
-uniform int InstancingType;
-uniform bool EnableGrassCollisionMap;
-uniform int NumRequiredUV;
-uniform bool EnableLerpBaseColorEmission;
-uniform int LayerBlendType;
-uniform bool EnableTriplanar;
-uniform bool EnablePackedMap;
-uniform bool EnableDisplacementMap;
+uniform bool EnableVertexSelectedChannel;
+uniform bool EnableWorldXzUv;
 
-//Float
-uniform float EmissionIntensity;
+uniform float VertexColorIntensity = 1.0;
+uniform float LayerMaskScale1 = 1.0;
 
-//Float4
-uniform vec4 UVScaleOffset;
-uniform vec4 EmissionColor;
+uniform int VertexColorChannel;
+uniform int VertexColorChannel1 = 1;
 
-void vertex() {
-	//
-}
+uniform float Contrast = 1.0;
+uniform float Contrast1 = 1.0;
+uniform float Influence;
+uniform float Influence1;
 
-vec2 xform_uvs(vec2 uvs, vec4 scale_off)
-{
-	vec2 v = scale_off.xy * (uvs - scale_off.zw);
-	return vec2(v.x, 1.0 - v.y);
-}
+varying vec3 ground_world_position;
 
-vec2 get_uv(vec2 uvs) 
-{
-    return xform_uvs(uvs, UVScaleOffset);
-}
+uniform float Tiling = 1.0;
+uniform float NormalIntensity = 1.0;
+uniform float RoughnessIntensity = 1.0;
+uniform float MetallicIntensity = 0.0;
+uniform float Tiling1 = 1.0;
+uniform float NormalIntensity1 = 1.0;
+uniform float RoughnessIntensity1 = 1.0;
+uniform float MetallicIntensity1 = 0.0;
+uniform float Tiling2 = 1.0;
+uniform float NormalIntensity2 = 1.0;
+uniform float RoughnessIntensity2 = 1.0;
+uniform float MetallicIntensity2 = 0.0;
 
+
+void vertex() { ground_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
 void fragment() {
-	vec2 uvs = get_uv(UV);
-	
-	vec4 layerMask = texture(LayerMaskMap, uvs);
-	layerMask = mix(vec4(0.0), layerMask, vec4(1.0));
-	
-	//Albedo
-	vec4 base_col = vec4(1, 1, 1, 1);
-	if (EnableBaseColorMap)
-	{
-		vec4 baseColMap = texture(BaseColorMap, uvs);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.r);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.g);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.b);
-		base_col.rgb = mix(base_col.rgb, baseColMap.rgb, layerMask.a);
-	}
-		
-	//Albedo
-	if (EnableBaseColorMap1)
-	{
-		vec4 baseColMap1 = texture(BaseColorMap1, uvs);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.r);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.g);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.b);
-		base_col.rgb = mix(base_col.rgb, baseColMap1.rgb, layerMask.a);
-	}
-	
-	//Normal
-	vec3 norm = vec3(1,1,1);
-	if(EnableNormalMap)
-		norm *= texture(NormalMap, uvs).rgb;
-	if(EnableNormalMap1)
-		norm *= texture(NormalMap1, uvs).rgb;
-	if(EnableNormalMap2)
-		norm *= texture(NormalMap2, uvs).rgb;
-		
-	//Emission
-	vec3 emission = texture(EmissionColorMap, uvs).rgb;
-	emission *= EmissionIntensity;
-
-	//Metallic
-	float metallic = 0.0;
-    if (EnableMetallicMap) {
-        metallic = texture(MetallicMap, uvs).r;
+    vec2 source_uv = EnableWorldXzUv ? ground_world_position.xz : UV;
+    vec3 colors[3]; vec3 normals[3]; vec3 packed[3]; float metals[3];
+    vec2 uv0 = material_uv(source_uv, vec4(Tiling, Tiling, 0.0, 0.0));
+    colors[0] = sample_trinity(BaseColorMap, uv0, 0).rgb;
+    normals[0] = material_normal_strength(material_normal(sample_trinity(NormalMap, uv0, 1), 1.0), NormalIntensity);
+    packed[0] = EnablePackedMap ? sample_trinity(PackedMap, uv0, 2).rgb : vec3(1.0, 1.0, EnableRoughnessMap ? sample_trinity(RoughnessMap, uv0, 3).r : 0.0);
+    packed[0].g *= RoughnessIntensity;
+    metals[0] = EnableMetallicValue ? MetallicIntensity : 0.0;
+    vec2 uv1 = material_uv(source_uv, vec4(Tiling1, Tiling1, 0.0, 0.0));
+    colors[1] = sample_trinity(BaseColorMap1, uv1, 4).rgb;
+    normals[1] = material_normal_strength(material_normal(sample_trinity(NormalMap1, uv1, 5), 1.0), NormalIntensity1);
+    packed[1] = EnablePackedMap ? sample_trinity(PackedMap1, uv1, 6).rgb : vec3(1.0, 1.0, EnableRoughnessMap ? sample_trinity(RoughnessMap1, uv0, 7).r : 0.0);
+    packed[1].g *= RoughnessIntensity1;
+    metals[1] = EnableMetallicValue ? MetallicIntensity1 : 0.0;
+    vec2 uv2 = material_uv(source_uv, vec4(Tiling2, Tiling2, 0.0, 0.0));
+    colors[2] = sample_trinity(BaseColorMap2, uv2, 8).rgb;
+    normals[2] = material_normal_strength(material_normal(sample_trinity(NormalMap2, uv2, 9), 1.0), NormalIntensity2);
+    packed[2] = EnablePackedMap ? sample_trinity(PackedMap2, uv2, 10).rgb : vec3(1.0, 1.0, EnableRoughnessMap ? sample_trinity(RoughnessMap2, uv0, 11).r : 0.0);
+    packed[2].g *= RoughnessIntensity2;
+    metals[2] = EnableMetallicValue ? MetallicIntensity2 : 0.0;
+    vec3 color = colors[0], normal_ts = normals[0], orh = packed[0];
+    float metal = metals[0];
+    if (NumMaterialLayer > 2) {
+        float phase = pow(clamp(COLOR[clamp(VertexColorChannel, 0, 3)], 0.0, 1.0), max(Contrast, 0.00001));
+        float weight = material_contrast(clamp(phase * 2.0 + packed[0].b - 1.0, 0.0, 1.0), Influence);
+        color = mix(colors[2], color, weight); normal_ts = mix(normals[2], normal_ts, weight); orh = mix(packed[2], orh, weight);
+        metal = mix(metals[2], metal, phase);
     }
-	
-	//Roughness
-	float roughness = 0.0;
-	if(EnableRoughnessMap)
-		roughness = mix(roughness, texture(RoughnessMap, uvs).r, layerMask.r);
-	if(EnableRoughnessMap1)
-		roughness = mix(roughness, texture(RoughnessMap1, uvs).r, layerMask.r);
-		
-	float specular = 0.5;
+    if (NumMaterialLayer > 1) {
+        int channel = EnableVertexSelectedChannel ? VertexColorChannel : VertexColorChannel1;
+        float phase = clamp(pow(clamp(COLOR[clamp(channel, 0, 3)], 0.0, 1.0), max(Contrast1, 0.00001)), 0.0, LayerMaskScale1);
+        float weight = material_contrast(clamp(phase * 2.0 + packed[1].b - 1.0, 0.0, 1.0), Influence1);
+        color = mix(color, colors[1], weight); normal_ts = mix(normal_ts, normals[1], weight); orh = mix(orh, packed[1], weight);
+        metal = mix(metal, metals[1], phase);
+    }
+    ALBEDO = color;
+    if (EnableVertexBaseColor) ALBEDO *= mix(vec3(1.0), COLOR.rgb, VertexColorIntensity);
+    NORMAL_MAP = normalize(normal_ts) * 0.5 + 0.5;
+    AO = orh.r; ROUGHNESS = orh.g; METALLIC = metal;
 
-	//AO
-    float ao = 1.0;
-    if (EnableAOMap)
-        ao *= pow(texture(AOMap, uvs).r, 0.001);
-	if (EnableAOMap1)
-        ao *= pow(texture(AOMap1, uvs).r, 0.001);
-	if (EnableAOMap2)
-        ao *= pow(texture(AOMap2, uvs).r, 0.001);
-	
-	ALBEDO = base_col.rgb * COLOR.rgb;
-	NORMAL_MAP = norm;
-	METALLIC = metallic;
-	ROUGHNESS = roughness;
-	SPECULAR = specular;
-	EMISSION = emission;
-	AO = ao;
 }

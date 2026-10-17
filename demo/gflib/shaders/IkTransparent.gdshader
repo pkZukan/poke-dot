@@ -1,116 +1,46 @@
 shader_type spatial;
+render_mode blend_mix, cull_disabled;
 
-uniform sampler2D BaseColorMap : source_color;
-uniform sampler2D NormalMap : hint_normal;
-uniform sampler2D PackedMap;
-uniform sampler2D EmissionColorMap;
-uniform sampler2D MetallicMap;
-uniform sampler2D RoughnessMap;
-uniform sampler2D AOMap;
-uniform sampler2D WindowGradientMap;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, repeat_enable;
+uniform sampler2D MetallicMap : hint_default_white, repeat_enable;
+uniform sampler2D RoughnessMap : hint_default_white, repeat_enable;
 
-uniform bool EnableBaseColorMap;
+uniform int sampler_repeat_u[4];
+uniform int sampler_repeat_v[4];
+uniform vec4 sampler_border_color[4];
+#include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
+
+uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
-uniform bool EnableParallaxMap;
 uniform bool EnableMetallicMap;
 uniform bool EnableRoughnessMap;
-uniform bool EnableEmissionColorMap;
-uniform bool EnableAOMap;
-uniform bool EnablePackedMap;
-uniform bool EnableVertexBaseColor;
+uniform bool EnableAlphaTest;
+uniform bool EnableBasecolorParameter;
+uniform bool EnableBasecolorEmissive;
 
-uniform int CastShadow;
-uniform int ReceiveShadow;
-uniform int CategoryLabel;
-uniform int EnableGlobalWeather;
-uniform int EnableDistanceDither;
+uniform vec4 BaseColor = vec4(1.0);
+uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
 
-//Float
+uniform float Transparency = 1.0;
+uniform float DiscardValue = 0.5;
+uniform float NormalHeight = 1.0;
+uniform float Metallic;
+uniform float Roughness = 0.5;
 uniform float EmissionIntensity;
-uniform float VertexColorIntensity;
-
-//Float4
-uniform vec4 UVScaleOffset;
-uniform vec4 EmissionColor;
-
-void vertex() {
-	//
-}
-
-vec2 xform_uvs(vec2 uvs, vec4 scale_off)
-{
-	vec2 v = scale_off.xy * (uvs - scale_off.zw);
-	return vec2(v.x, 1.0 - v.y);
-}
-
-vec2 get_uv(vec2 uvs) 
-{
-    return xform_uvs(uvs, UVScaleOffset);
-}
 
 void fragment() {
-	vec2 base_uv = get_uv(UV);
-	vec2 uvs = base_uv;
-
-	//Parallax (no dedicated height map uniform, so PackedMap.a is assumed to store height)
-	if (EnableParallaxMap) {
-		vec3 view_dir = normalize(normalize(-VERTEX) * mat3(TANGENT, BINORMAL, NORMAL));
-		float height = texture(PackedMap, base_uv).a;
-		uvs = base_uv + view_dir.xy * (height - 0.5) * 0.04;
-	}
-	
-	//Albedo
-	vec4 base_col = vec4(1);
-	base_col = texture(BaseColorMap, uvs);
-	
-	//Normal
-	vec4 norm = vec4(1);
-	if(EnableNormalMap)
-		norm *= texture(NormalMap, uvs);
-	
-	//Packed
-	vec4 packed = vec4(1);
-	if(EnablePackedMap)
-		packed *= texture(PackedMap, uvs);
-	
-	//Emission
-	vec3 emission = vec3(1);
-	if(EnableEmissionColorMap)
-		emission *= (texture(EmissionColorMap, uvs).rgb * EmissionIntensity);
-
-	//Metallic
-	float metallic = 0.0;
-    if (EnableMetallicMap) {
-        metallic = texture(MetallicMap, uvs).r;
-    }
-	
-	//AO
-    float ao = 1.0;
-    if (EnableAOMap)
-        ao *= pow(texture(AOMap, uvs).r, 0.001);
-
-	//Roughness
-	float roughness = 1.0;
-	if (EnableRoughnessMap)
-		roughness = texture(RoughnessMap, uvs).r;
-
-	float specular = 0.5;
-
-	ALBEDO = base_col.rgb;
-	if (EnableVertexBaseColor)
-		ALBEDO *= COLOR.rgb * VertexColorIntensity;
-
-
-	NORMAL_MAP = norm.rgb;
-	//SPECULAR = specular;
-	//EMISSION = emission;
-	METALLIC = metallic;
-	ROUGHNESS = roughness;
-	AO = ao;
-
-	if (EnableDistanceDither > 0) {
-		float dither = fract(sin(dot(FRAGCOORD.xy, vec2(12.9898, 78.233))) * 43758.5453);
-		ALPHA = base_col.a;
-		ALPHA_SCISSOR_THRESHOLD = dither;
-	}
+    vec2 uv = material_uv(UV, UVScaleOffset);
+    vec4 color = EnableBaseColorMap ? sample_trinity(BaseColorMap, uv, 0) : vec4(1.0);
+    if (EnableBasecolorParameter) color *= BaseColor;
+    float alpha = clamp(color.a, 1.0 - Transparency, 1.0);
+    if (EnableAlphaTest && alpha < DiscardValue) discard;
+    if (EnableNormalMap) NORMAL_MAP = material_normal(sample_trinity(NormalMap, uv, 1), NormalHeight) * 0.5 + 0.5;
+    
+    ALBEDO = color.rgb;
+    METALLIC = EnableMetallicMap ? sample_trinity(MetallicMap, uv, 2).r : Metallic;
+    ROUGHNESS = EnableRoughnessMap ? sample_trinity(RoughnessMap, uv, 3).r : Roughness;
+    EMISSION = EnableBasecolorEmissive ? color.rgb * color.a * EmissionIntensity : vec3(0.0);
+    ALPHA = alpha;
 }

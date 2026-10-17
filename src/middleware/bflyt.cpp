@@ -181,14 +181,36 @@ bool BinaryLayout::parse_material(BflytUtils::Reader &r, uint64_t offset, uint32
 		transforms.push_back(transform);
 	}
 	material["texture_transforms"] = transforms;
-	const bool has_color_blend_mode = flags & (1u << 10);
-	const uint32_t later_material_data = flags & 0xFFFFE800u;
-	if (has_color_blend_mode && later_material_data == 0 && r.has(r.end - 4, 4)) {
+	
+	uint64_t cursor = offset + header + maps.size() * 4 + transforms.size() * 20;
+	const uint32_t generator_count = (flags >> 4) & 3;
+	const uint32_t generator_size = version >= 0x08000000 ? 16 : 8;
+	const uint32_t combiner_count = (flags >> 6) & 7;
+	ERR_FAIL_COND_V_MSG(!r.has(cursor, generator_count * generator_size + combiner_count * 4), false, "Truncated material combiners");
+	Array generators;
+	for (uint32_t i = 0; i < generator_count; ++i, cursor += generator_size) {
+		Dictionary generator;
+		generator["type"] = r.number(cursor, 1);
+		generator["source"] = r.number(cursor + 1, 1);
+		generators.push_back(generator);
+	}
+	material["texture_coordinate_generators"] = generators;
+	Array combiners;
+	for (uint32_t i = 0; i < combiner_count; ++i, cursor += 4) {
+		Dictionary combiner;
+		combiner["color_mode"] = r.number(cursor, 1);
+		combiner["alpha_mode"] = r.number(cursor + 1, 1);
+		combiners.push_back(combiner);
+	}
+	material["texture_combiners"] = combiners;
+	if (flags & (1u << 9)) cursor += 8; // Alpha compare: function, padding, reference.
+	if (flags & (1u << 10)) {
+		ERR_FAIL_COND_V_MSG(!r.has(cursor, 4), false, "Truncated material blend mode");
 		Dictionary blend_mode;
-		blend_mode["equation"] = r.number(r.end - 4, 1);
-		blend_mode["source"] = r.number(r.end - 3, 1);
-		blend_mode["destination"] = r.number(r.end - 2, 1);
-		blend_mode["logic_operation"] = r.number(r.end - 1, 1);
+		blend_mode["equation"] = r.number(cursor, 1);
+		blend_mode["source"] = r.number(cursor + 1, 1);
+		blend_mode["destination"] = r.number(cursor + 2, 1);
+		blend_mode["logic_operation"] = r.number(cursor + 3, 1);
 		material["color_blend_mode"] = blend_mode;
 	}
 	material["raw_data"] = r.data.slice(offset, r.end);

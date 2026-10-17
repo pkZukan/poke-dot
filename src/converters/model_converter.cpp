@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/stream_peer_buffer.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/shader.hpp>
+#include "shader_options.gen.h"
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/skin.hpp>
@@ -278,63 +279,55 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
     Array shaders = mat->get_Shaders();
     Ref<ShaderEntry> shader = shaders[0];
     String shader_name = shader->get_Name();
+    // These legacy material names select front/back transparent passes of
+    // the retail IkCharacter family, rather than separate retail archives.
+    const String option_shader_name = (shader_name == "IkCharacterTransparent" ||
+        shader_name == "IkCharacterTransparentInner") ? String("IkCharacter") :
+        (shader_name == "GrassTransparent" ? String("Transparent") : shader_name);
 
     sm->set_name(mat->get_Name());
     sm->set_shader(ResourceLoader::get_singleton()->load(
         "res://gflib/shaders/" + shader_name + ".gdshader"
     ));
 
+    Ref<Shader> godot_shader = sm->get_shader();
+    if (godot_shader.is_null()) return sm;
+    Dictionary uniform_types;
+    for (const Variant &entry : godot_shader->get_shader_uniform_list()) {
+        Dictionary uniform = entry;
+        uniform_types[uniform["name"]] = uniform["type"];
+    }
+    auto set_option = [&](const String &name, int value) {
+        if (!uniform_types.has(name)) return;
+        if (int(uniform_types[name]) == Variant::BOOL)
+            sm->set_shader_parameter(name, value != 0);
+        else
+            sm->set_shader_parameter(name, value);
+    };
+    
+    for (const auto &choice : TrinityShaderOptions::choices) {
+        if (option_shader_name == choice.shader && choice.is_default)
+            set_option(choice.option, choice.value);
+    }
     Array string_params = shader->get_StringParams();
     for (int i = 0; i < string_params.size(); i++) {
         Ref<ShaderStringParam> v = string_params[i];
-        String name  = v->get_Name();
-        String val   = v->get_Value();
-
-        if (val.is_valid_int())
-            sm->set_shader_parameter(name, val.to_int());
-        else if (val.to_lower() == "true")
-            sm->set_shader_parameter(name, true);
-        else if (val.to_lower() == "false")
-            sm->set_shader_parameter(name, false);
-        else if (shader_name == "IkCharacter")
-        {
-            // Explicit port enums for the symbolic eye options in TRMTR.
-            if (name == "EyelidType" && val == "None")
-                sm->set_shader_parameter(name, 0);
-            else if (name == "EnableIrisRefraction") {
-                if (val == "None") sm->set_shader_parameter(name, 0);
-                else if (val == "Ng") sm->set_shader_parameter(name, 1);
-                else if (val == "Ncc") sm->set_shader_parameter(name, 2);
+        const String name = v->get_Name();
+        const String val = v->get_Value();
+        bool resolved = false;
+        for (const auto &choice : TrinityShaderOptions::choices) {
+            if (option_shader_name == choice.shader && name == choice.option && val == choice.name) {
+                set_option(name, choice.value);
+                resolved = true;
+                break;
             }
         }
-        else if (shader_name == "Standard")
-        {
-            // Translate symbolic material options to Standard.gdshader's port
-            // enums. These strings otherwise never reach the integer uniforms.
-            Dictionary options;
-            if (name == "LayerMaskSource") {
-                options["Texture"] = 0;
-                options["VertexColor"] = 1;
-            } else if (name == "LayerMaskSwizzle") {
-                options["RGBA"] = 0;
-                options["RRRR"] = 1;
-                options["GGGG"] = 2;
-                options["BBBB"] = 3;
-                options["AAAA"] = 4;
-            } else if (name == "LayerBaseMaskSource") {
-                options["One"] = 0;
-                options["BaseColorAlpha"] = 1;
-            } else if (name == "LayerBlendType") {
-                options["Mix"] = 0;
-                options["Add"] = 1;
-                options["Multiply"] = 2;
-            } else if (name == "WindReceiverType") {
-                options["None"] = 0;
-                options["SimpleLeaf"] = 1;
-            }
-            if (options.has(val))
-                sm->set_shader_parameter(name, options[val]);
-        }
+        if (resolved) continue;
+        if (val.is_valid_int()) set_option(name, val.to_int());
+        else if (val.to_lower() == "true") set_option(name, 1);
+        else if (val.to_lower() == "false") set_option(name, 0);
+        else if (uniform_types.has(name))
+            UtilityFunctions::push_warning("Unknown shader option: ", shader_name, ".", name, " = ", val);
     }
     return sm;
 }
@@ -371,7 +364,10 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
             img_tex->set_path(texture_path);
             texture = img_tex;
         }
-        shdr->set_shader_parameter(tex_name, texture);
+        String binding_name = tex_name;
+        const String shader_path = shdr->get_shader()->get_path();
+        if ((shader_path.ends_with("/Shadow.gdshader") || shader_path.ends_with("/DepthPrepass.gdshader")) && tex_name == "BaseColorMap") binding_name = "Texture0";
+        shdr->set_shader_parameter(binding_name, texture);
     }
 }
 
@@ -396,21 +392,103 @@ void TrinityModel::_apply_params(const Ref<MaterialEntry>& mat, Ref<ShaderMateri
 void TrinityModel::_apply_samplers(const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
 {
     // TextureEntry::Slot stores a sampler ID, not a shader texture location.
-    // These locations match the shared sampling calls in the two shaders.
+    // These locations match sample_trinity slots in the ported shader families.
     Ref<Shader> shader = shdr->get_shader();
     if (shader.is_null()) return;
     const String shader_path = shader->get_path();
     PackedStringArray names;
-    if (shader_path.ends_with("/IkCharacter.gdshader")) {
+    if (shader_path.ends_with("/IkCharacter.gdshader") ||
+            shader_path.ends_with("/IkCharacterTransparent.gdshader") ||
+            shader_path.ends_with("/IkCharacterTransparentInner.gdshader")) {
         const char *slots[] = {"BaseColorMap", "NormalMap", "OcclusionMap",
             "SpecularMaskMap", "ShadowingColorMap", "ShadowingColorMaskMap",
             "RimLightMaskMap", "LocalReflectionMap", "LayerMaskMap", "ParallaxMap",
-            "HighlightMaskMap", "EyelidShadowMaskMap"};
+            "HighlightMaskMap", "EyelidShadowMaskMap", "OpacityMap1"};
         for (const char *name : slots) names.push_back(name);
     } else if (shader_path.ends_with("/Unlit.gdshader")) {
         names.push_back("BaseColorMap");
         names.push_back("LayerMaskMap");
         names.push_back("DisplacementMap");
+        names.push_back("BaseColorMap1");
+        names.push_back("OpacityMap");
+        names.push_back("OpacityMap1");
+    } else if (shader_path.ends_with("/FresnelBlend.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "MetallicMap", "RoughnessMap", "AOMap", "EmissionColorMap", "LayerMaskMap", "HighlightMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/FresnelEffect.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "NormalMap", "NormalMap1", "EmissionNormalMap", "EmissionColorMap", "AOMap", "FresnelMaskMap", "FresnelNoiseMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/SSS.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "RoughnessMap", "AOMap", "SSSMaskMap", "LayerMaskMap", "OpacityMap1", "LayerMaskMap1", "LayerMaskMap2", "LayerMaskMap3", "ColorTableMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/TransparentSSS.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "RoughnessMap", "AOMap", "SSSMaskMap", "LayerMaskMap", "EmissionColorMap", "ParallaxMap", "LightMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Iridescence.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "MetallicMap", "RoughnessMap", "AOMap", "EmissionColorMap", "LayerMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Hair.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "HairFlowMap", "MetallicMap", "RoughnessMap", "DiscardMaskMap", "ColorTableMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/EyeClearCoat.gdshader")) {
+        const char *slots[] = {"BaseColorMap1", "NormalMap1", "UpperEyelidColorMap", "LowerEyelidColorMap", "HighlightMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Effect.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "BaseColorMap2", "NormalMap", "MetallicMap", "RoughnessMap", "EmissionColorMap", "FlowMap", "ParallaxMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/BGJewel.gdshader") || shader_path.ends_with("/PokemonEffect.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "PackedMap", "EmissionNormalMap", "EmissionColorMap", "FresnelNoiseMap", "FresnelMaskMap", "BaseColorMap1", "LayerMaskMap", "OpacityMap1", "UpperEyelidColorMap", "LowerEyelidColorMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/DepthPrepass.gdshader")) {
+        const char *slots[] = {"Texture0", "BaseColorMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Shadow.gdshader")) {
+        const char *slots[] = {"Texture0", "BaseColorMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/AlphaClipHeight.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "RoughnessMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/BGTransparent.gdshader")) {
+        const char *slots[] = {"BaseColorMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/IkTransparent.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "MetallicMap", "RoughnessMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Decal.gdshader")) {
+        const char *slots[] = {"BaseColorMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/IkZoneStatue.gdshader")) {
+        const char *slots[] = {"ScanMap", "NoiseMap1", "AmbientSphereMap", "DotPatternMap", "NoiseMap2", "GradientMap2"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/IkHologramOpaque.gdshader")) {
+        const char *slots[] = {"AlbedoColorMap", "DitherPatternMap", "OutlineMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/SkySimple.gdshader")) {
+        const char *slots[] = {"MoonColorMap", "MoonNormalMap", "TopCloudsShapeMap", "TopCloudsBreakupMap", "NightStarsMap", "NightStarsMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/IkStandard.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "PackedMap", "WindowGradientMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/GroundVertexBlend3MT.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "NormalMap", "PackedMap", "RoughnessMap", "BaseColorMap1", "NormalMap1", "PackedMap1", "RoughnessMap1", "BaseColorMap2", "NormalMap2", "PackedMap2", "RoughnessMap2"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/BuildingTilingColorAdjust.gdshader")) {
+        const char *slots[] = {"PackedMap", "NormalMap", "BaseColorMap1", "NormalMap1", "GrayAlbedoMap", "EmissionMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Water.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "NormalMap", "NormalMap1", "FlowMap", "FoamMaskMap"};
+        for (const char *name : slots) names.push_back(name);
+    } else if (shader_path.ends_with("/Standard.gdshader") || shader_path.ends_with("/InsideEmissionParallax.gdshader") || shader_path.ends_with("/BGLayer.gdshader") || shader_path.ends_with("/BGWind.gdshader") || shader_path.ends_with("/Transparent.gdshader") || shader_path.ends_with("/GrassTransparent.gdshader") || shader_path.ends_with("/NonDirectional.gdshader") || shader_path.ends_with("/Eye.gdshader")) {
+        const char *slots[] = {"BaseColorMap", "BaseColorMap1", "NormalMap", "NormalMap1", "NormalMap2", "MetallicMap", "RoughnessMap", "RoughnessMap1", "AOMap", "AOMap1", "AOMap2", "LayerMaskMap", "ParallaxMap", "EmissionColorMap", "LightMap", "WindMaskMap", "PackedMap", "DetailMaskMap", "RoughnessMap2", "OpacityMap1", "ColorTableMap"};
+        for (const char *name : slots) names.push_back(name);
+        if (shader_path.ends_with("/InsideEmissionParallax.gdshader")) names.push_back("InsideEmissionParallaxIntensityMap");
+        if (shader_path.ends_with("/BGLayer.gdshader")) {
+            names.push_back("MetallicMap1"); names.push_back("EmissionColorMap1");
+        }
+        if (shader_path.ends_with("/Eye.gdshader")) {
+            names.push_back("UpperEyelidColorMap"); names.push_back("LowerEyelidColorMap");
+            names.push_back("HighlightMaskMap"); names.push_back("EyelidShadowMaskMap");
+        }
     } else {
         return;
     }
@@ -428,6 +506,7 @@ void TrinityModel::_apply_samplers(const Ref<MaterialEntry>& mat, Ref<ShaderMate
     for (int i = 0; i < textures.size(); i++) {
         Ref<TextureEntry> texture = textures[i];
         int slot = names.find(texture->get_Name());
+        if ((shader_path.ends_with("/Shadow.gdshader") || shader_path.ends_with("/DepthPrepass.gdshader")) && texture->get_Name() == "BaseColorMap") slot = 0;
         if (slot < 0) continue;
         int sampler_id = texture->get_Slot();
         if (sampler_id < 0 || sampler_id >= samps.size()) {

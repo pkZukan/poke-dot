@@ -1,24 +1,20 @@
 shader_type spatial;
+render_mode unshaded, shadows_disabled, blend_premul_alpha, depth_draw_always;
 
-uniform sampler2D BaseColorMap : source_color;
-uniform sampler2D NormalMap : hint_normal;
+uniform sampler2D Texture0 : source_color, hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 
-uniform float VertexColorIntensity;
-uniform float DiscardValue;
-uniform float NormalHeight;
-uniform float Metallic;
-uniform float Roughness;
-uniform float EmissionIntensity;
+uniform int sampler_repeat_u[2];
+uniform int sampler_repeat_v[2];
+uniform vec4 sampler_border_color[2];
+#include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
 
-uniform vec4 UVScaleOffset;
-
-void vertex() {
-	//
-}
+uniform bool EnableAlphaTest;
+uniform float DiscardValue = 0.5;
 
 void fragment() {
-	vec2 uvs = vec2(UV.x, 1.0 - UV.y); //Flip
-	vec4 albedo = texture(BaseColorMap, uvs);
-	ALBEDO = albedo.rgb;
-	ALPHA = albedo.a;
+    if (EnableAlphaTest && sample_trinity(Texture0, vec2(UV.x, 1.0 - UV.y), 0).a < DiscardValue) discard;
+    ALBEDO = vec3(0.0);
+    ALPHA = 0.0;
 }

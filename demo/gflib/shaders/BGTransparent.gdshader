@@ -1,51 +1,43 @@
 shader_type spatial;
+render_mode unshaded, blend_mix, cull_disabled;
 
-uniform sampler2D BaseColorMap : source_color;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 
-uniform bool EnableBaseColorMap;
-uniform bool EnableAlphaTest;
-uniform int NumMaterialLayer;
-uniform int BillboardType;
-uniform bool EnableOpacityFalloff;
-uniform int LayerMaskSource;
-uniform int NumDetailLayer;
-uniform int NumRequiredUV;
-uniform int LayerBlendType;
-uniform bool EnableDepthFade;
+uniform int sampler_repeat_u[1];
+uniform int sampler_repeat_v[1];
+uniform vec4 sampler_border_color[1];
+#include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
+#include "trinity_refraction.gdshaderinc"
+
+uniform bool EnableBaseColorMap = true;
 uniform bool EnableVertexColor;
+uniform bool EnableDepthFade;
+uniform bool EnableOpacityFalloff;
+uniform vec4 BaseColor = vec4(1.0);
+uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
+uniform vec4 UVScaleOffset1 = vec4(1.0, 1.0, 0.0, 0.0);
+uniform float DepthFadeDistance = 1.0;
+uniform float NearLength;
+uniform float FarLength = 100.0;
+uniform float OpacityNear = 1.0;
+uniform float OpacityFar = 1.0;
 
-//Float
-uniform float EmissionIntensity;
-
-//Float4
-uniform vec4 UVScaleOffset;
-uniform vec4 EmissionColor;
-
-void vertex() {
-	//
-}
-
-vec2 xform_uvs(vec2 uvs, vec4 scale_off)
-{
-	vec2 v = scale_off.xy * (uvs - scale_off.zw);
-	return vec2(v.x, 1.0 - v.y);
-}
-
-vec2 get_uv(vec2 uvs) 
-{
-    return xform_uvs(uvs, UVScaleOffset);
-}
 
 void fragment() {
-	vec2 uvs = get_uv(UV);
-	
-	//Albedo
-	vec4 base_col = vec4(1, 1, 1, 1);
-	if (EnableBaseColorMap)
-	{
-		base_col = texture(BaseColorMap, uvs);
-	}
-	
-	ALBEDO = base_col.rgb * COLOR.rgb;
-	ALPHA = 1.0;
+    vec4 color = BaseColor;
+    if (EnableBaseColorMap) {
+        color.rgb = sample_trinity(BaseColorMap, material_uv(UV, UVScaleOffset), 0).rgb;
+        color.a = sample_trinity(BaseColorMap, material_uv(UV, UVScaleOffset1), 0).a;
+    }
+
+    if (EnableVertexColor) 
+        color *= COLOR;
+    if (EnableDepthFade) 
+        color.a *= trinity_depth_fade(SCREEN_UV, -VERTEX.z, DepthFadeDistance, INV_PROJECTION_MATRIX);
+    if (EnableOpacityFalloff) 
+        color.a *= mix(OpacityNear, OpacityFar, clamp((-VERTEX.z - NearLength) / max(FarLength - NearLength, 0.00001), 0.0, 1.0));
+
+    ALBEDO = color.rgb;
+    ALPHA = color.a;
 }

@@ -1,116 +1,51 @@
 shader_type spatial;
 
-uniform sampler2D BaseColorMap : source_color;
-uniform sampler2D NormalMap : hint_normal;
-uniform sampler2D PackedMap;
-uniform sampler2D EmissionColorMap;
-uniform sampler2D MetallicMap;
-uniform sampler2D RoughnessMap;
-uniform sampler2D AOMap;
-uniform sampler2D WindowGradientMap;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, repeat_enable;
+uniform sampler2D PackedMap : hint_default_white, repeat_enable;
+uniform sampler2D WindowGradientMap : source_color, hint_default_white, repeat_enable;
 
-uniform bool EnableBaseColorMap;
-uniform bool EnableNormalMap;
-uniform bool EnableParallaxMap;
-uniform bool EnableMetallicMap;
-uniform bool EnableRoughnessMap;
-uniform bool EnableEmissionColorMap;
-uniform bool EnableAOMap;
-uniform bool EnablePackedMap;
+uniform int sampler_repeat_u[4];
+uniform int sampler_repeat_v[4];
+uniform vec4 sampler_border_color[4];
+#include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
+
+uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
+uniform vec4 UVScaleOffsetWindow = vec4(1.0, 1.0, 0.0, 0.0);
+
+uniform float NormalHeight = 1.0;
+uniform float WindowSeed;
+uniform float WindowTurnOn;
+uniform float WindowSaturation;
+uniform float WindowIntensity;
+
 uniform bool EnableVertexBaseColor;
 
-uniform int CastShadow;
-uniform int ReceiveShadow;
-uniform int CategoryLabel;
-uniform int EnableGlobalWeather;
-uniform int EnableDistanceDither;
-
-//Float
-uniform float EmissionIntensity;
-uniform float VertexColorIntensity;
-
-//Float4
-uniform vec4 UVScaleOffset;
-uniform vec4 EmissionColor;
-
-void vertex() {
-	//
-}
-
-vec2 xform_uvs(vec2 uvs, vec4 scale_off)
-{
-	vec2 v = scale_off.xy * (uvs - scale_off.zw);
-	return vec2(v.x, 1.0 - v.y);
-}
-
-vec2 get_uv(vec2 uvs) 
-{
-    return xform_uvs(uvs, UVScaleOffset);
-}
+uniform float VertexColorIntensity = 1.0;
 
 void fragment() {
-	vec2 base_uv = get_uv(UV);
-	vec2 uvs = base_uv;
-
-	//Parallax (no dedicated height map uniform, so PackedMap.a is assumed to store height)
-	if (EnableParallaxMap) {
-		vec3 view_dir = normalize(normalize(-VERTEX) * mat3(TANGENT, BINORMAL, NORMAL));
-		float height = texture(PackedMap, base_uv).a;
-		uvs = base_uv + view_dir.xy * (height - 0.5) * 0.04;
-	}
-	
-	//Albedo
-	vec4 base_col = vec4(1);
-	base_col = texture(BaseColorMap, uvs);
-	
-	//Normal
-	vec4 norm = vec4(1);
-	if(EnableNormalMap)
-		norm *= texture(NormalMap, uvs);
-	
-	//Packed
-	vec4 packed = vec4(1);
-	if(EnablePackedMap)
-		packed *= texture(PackedMap, uvs);
-	
-	//Emission
-	vec3 emission = vec3(1);
-	if(EnableEmissionColorMap)
-		emission *= (texture(EmissionColorMap, uvs).rgb * EmissionIntensity);
-
-	//Metallic
-	float metallic = 0.0;
-    if (EnableMetallicMap) {
-        metallic = texture(MetallicMap, uvs).r;
-    }
-	
-	//AO
-    float ao = 1.0;
-    if (EnableAOMap)
-        ao *= pow(texture(AOMap, uvs).r, 0.001);
-
-	//Roughness
-	float roughness = 1.0;
-	if (EnableRoughnessMap)
-		roughness = texture(RoughnessMap, uvs).r;
-
-	float specular = 0.5;
-
-	ALBEDO = base_col.rgb;
-	if (EnableVertexBaseColor)
-		ALBEDO *= COLOR.rgb * VertexColorIntensity;
-
-
-	NORMAL_MAP = norm.rgb;
-	//SPECULAR = specular;
-	//EMISSION = emission;
-	METALLIC = metallic;
-	ROUGHNESS = roughness;
-	AO = ao;
-
-	if (EnableDistanceDither > 0) {
-		float dither = fract(sin(dot(FRAGCOORD.xy, vec2(12.9898, 78.233))) * 43758.5453);
-		ALPHA = base_col.a;
-		ALPHA_SCISSOR_THRESHOLD = dither;
-	}
+    vec2 uv = material_uv(UV, UVScaleOffset);
+    vec3 packed = sample_trinity(PackedMap, uv, 2).rgb;
+    vec2 cell = floor(-material_uv(UV2, UVScaleOffsetWindow));
+    float wave = sin(dot(cell, vec2(7.3322, 31.22566)));
+    float x = fract(wave * WindowSeed);
+    float y = fract(wave * WindowSeed * 0.1376);
+    float z = fract(sin(dot(cell, vec2(12.62, 44.7))) * WindowSeed * 0.5);
+    float coordinate = fract(WindowSeed * wave * wave) * x;
+    vec3 window = sample_trinity(WindowGradientMap, vec2(coordinate, 0.5), 3).rgb;
+    float turn_on = 0.5 - WindowTurnOn;
+    float modifier = round(clamp(x * y - turn_on, 0.0, 1.0));
+    float screen_factor = round(x - turn_on);
+    modifier = clamp(screen_factor, modifier, 1.0);
+    window *= modifier * clamp(screen_factor, 0.15, 1.0);
+    window = material_saturation(window, WindowSaturation) * x * z * WindowIntensity * packed.r;
+    ALBEDO = sample_trinity(BaseColorMap, uv, 0).rgb;
+    if (EnableVertexBaseColor) ALBEDO *= mix(vec3(1.0), COLOR.rgb, VertexColorIntensity);
+    
+    NORMAL_MAP = material_normal(sample_trinity(NormalMap, uv, 1), NormalHeight) * 0.5 + 0.5;
+    METALLIC = packed.b;
+    ROUGHNESS = packed.g;
+    AO = 1.0;
+    EMISSION = window;
 }

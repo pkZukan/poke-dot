@@ -1,26 +1,7 @@
 [gd_scene format=3 uid="uid://catth7mjjf5fi"]
 
 [ext_resource type="Script" uid="uid://vodqcc4vqvb5" path="res://Scripts/World/demo_scene.gd" id="1_3tqv8"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1bvp3"]
-sky_energy_multiplier = 0.36
-sun_angle_max = 10.86
-sun_curve = 0.07500003
-energy_multiplier = 3.08
-
-[sub_resource type="Sky" id="Sky_ie00b"]
-sky_material = SubResource("ProceduralSkyMaterial_1bvp3")
-
-[sub_resource type="Environment" id="Environment_0xm2m"]
-background_mode = 2
-sky = SubResource("Sky_ie00b")
-ambient_light_source = 3
-tonemap_mode = 3
-ssil_enabled = true
-
-[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_0xm2m"]
-
-[sub_resource type="Compositor" id="Compositor_h2yge"]
+[ext_resource type="TRLGT" uid="uid://ddbuueb7at1rg" path="res://Assets/light/master/master/master.trlgt" id="2_hymn2"]
 
 [node name="WorldContainer" type="Node3D" unique_id=1974166111]
 script = ExtResource("1_3tqv8")
@@ -31,10 +12,9 @@ light_energy = 0.348
 shadow_enabled = true
 shadow_blur = 2.656
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1923990555]
-environment = SubResource("Environment_0xm2m")
-camera_attributes = SubResource("CameraAttributesPractical_0xm2m")
-compositor = SubResource("Compositor_h2yge")
-
 [node name="Spawn" type="Node3D" parent="." unique_id=536453065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -790.2946, 2.562284, -891.9895)
+
+[node name="TrinityEnvironment" type="TrinityEnvironment" parent="." unique_id=2001243489]
+master_light = ExtResource("2_hymn2")
+use_native_bloom = true

@@ -2,26 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dqsjhfd1va246" path="res://Scripts/World/test_scene.gd" id="1_acdkv"]
 [ext_resource type="Texture2D" uid="uid://bowlsnjar6ov0" path="res://icon.svg" id="2_2xts1"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_6chjh"]
-sky_energy_multiplier = 0.36
-sun_angle_max = 10.86
-sun_curve = 0.07500003
-energy_multiplier = 3.08
-
-[sub_resource type="Sky" id="Sky_1bvp3"]
-sky_material = SubResource("ProceduralSkyMaterial_6chjh")
-
-[sub_resource type="Environment" id="Environment_phepx"]
-background_mode = 2
-sky = SubResource("Sky_1bvp3")
-ambient_light_source = 3
-tonemap_mode = 3
-ssil_enabled = true
-
-[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_orl8w"]
-
-[sub_resource type="Compositor" id="Compositor_8xpg0"]
+[ext_resource type="TRLGT" uid="uid://ddbuueb7at1rg" path="res://Assets/light/master/master/master.trlgt" id="3_ptwdb"]
 
 [sub_resource type="QuadMesh" id="QuadMesh_ws83t"]
 
@@ -42,11 +23,6 @@ light_energy = 0.348
 shadow_enabled = true
 shadow_blur = 2.656
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=640649907]
-environment = SubResource("Environment_phepx")
-camera_attributes = SubResource("CameraAttributesPractical_orl8w")
-compositor = SubResource("Compositor_8xpg0")
-
 [node name="Platform" type="MeshInstance3D" parent="." unique_id=584753562]
 transform = Transform3D(10, 0, 0, 0, -4.371139e-07, 10, 0, -10, -4.371139e-07, 0, 0, 0)
 mesh = SubResource("QuadMesh_ws83t")
@@ -61,3 +37,6 @@ shape = SubResource("BoxShape3D_ws83t")
 
 [node name="Spawn" type="Node3D" parent="." unique_id=693115844]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05996704, 0)
+
+[node name="TrinityEnvironment" type="TrinityEnvironment" parent="." unique_id=1924857007]
+master_light = ExtResource("3_ptwdb")
