@@ -6,6 +6,10 @@ extends AnimationTree
 ## TrainerCharacter: walk/run blending, facing, jump/fall/land states and
 ## one-shot actions. Each OneShot node "X" in the graph plays the Animation
 ## node "XAnim" and can be triggered with play_action(&"X").
+##
+## Flying Pokémon ship a second clip set numbered 2xxxx that mirrors the ground
+## set (20030_walk01_loop for 00030_walk01_loop). set_flying() swaps the graph
+## onto those clips where they exist.
 
 const LOCOMOTION := &"Locomotion"
 const IDLE_VARIATION := &"IdleVariation"
@@ -30,6 +34,15 @@ const STATE_INPUT := {
 
 # Played inside a OneShot node "X" by convention.
 const ONE_SHOT_CLIP_SUFFIX := "Anim"
+
+# Stand-ins for clips a model lacks, matched on the name after the number.
+# Mega forms only ship the battle stance.
+const ALTERNATE_CLIPS := {
+	"defaultwait01_loop": ["battlewait01_loop"],
+}
+# Clip sets by leading digit: 0xxxx ground, 2xxxx flying, 1xxxx other. Models
+# that never touch the ground (Zubat, Gastly, ...) only ship 2xxxx or 1xxxx.
+const CLIP_SETS := ["0", "2", "1"]
 
 @export_range(0.0, 1.0, 0.01) var locomotion_blend_time: float = 0.15
 @export_range(0.0, 30.0, 0.1, "or_greater") var turn_speed: float = 12.0
@@ -57,6 +70,11 @@ var _graph_template: AnimationNodeBlendTree
 var _lengths := {}
 # OneShot node name -> the Animation node it plays.
 var _one_shots := {}
+var _flying := false
+# [AnimationNodeAnimation, ground clip, flight clip] for clips with a flying twin.
+var _flight_clips: Array = []
+# Locomotion already runs on the flying set: the model has no ground set.
+var _always_flying := false
 
 func _ready() -> void:
 	_character = get_parent()
@@ -74,6 +92,9 @@ func _anim_name(graph: AnimationNodeBlendTree, node_name: StringName) -> StringN
 
 func _bind_character() -> void:
 	active = false
+	_flying = false
+	_flight_clips.clear()
+	_always_flying = false
 	_model = _character.get_model()
 	_player = _character.get_animation_player()
 	_character.configure_animation_tree(self)
@@ -94,30 +115,42 @@ func _bind_character() -> void:
 	_lengths.clear()
 	var keys: Array = STATE_INPUT.keys() + _one_shots.keys()
 	for key in keys:
-		var anim := _anim_name(graph, _one_shots.get(key, key))
-		if anim != &"" and _player.has_animation(anim):
+		var anim := _available_clip(_anim_name(graph, _one_shots.get(key, key)))
+		if anim != &"":
 			_lengths[key] = _player.get_animation(anim).length
 
-	var loco_clips: Array[StringName] = []
+	# The lowest locomotion point (the standing wait) stands in for any
+	# other missing clip.
+	var fallback := &""
 	if graph.has_node(LOCOMOTION):
 		var loco := graph.get_node(LOCOMOTION) as AnimationNodeBlendSpace1D
+		var lowest := INF
 		for i in loco.get_blend_point_count():
 			var clip := loco.get_blend_point_node(i) as AnimationNodeAnimation
-			if clip and _player.has_animation(clip.animation):
-				loco_clips.append(clip.animation)
-	if loco_clips.is_empty():
+			var anim := _available_clip(clip.animation) if clip else &""
+			if anim != &"" and loco.get_blend_point_position(i) < lowest:
+				lowest = loco.get_blend_point_position(i)
+				fallback = anim
+	if fallback == &"":
 		push_warning("Character has no locomotion animations")
 		return
-	var fallback := loco_clips[0]
-	var walk_fallback := loco_clips[1] if loco_clips.size() > 1 else fallback
 
 	for node_name in _graph_nodes(graph):
 		var node := graph.get_node(node_name)
 		if node is AnimationNodeAnimation:
 			_resolve_clip(node, fallback)
 		elif node is AnimationNodeBlendSpace1D:
-			for i in node.get_blend_point_count():
-				_resolve_clip(node.get_blend_point_node(i) as AnimationNodeAnimation, walk_fallback)
+			_resolve_blend_space(node)
+
+	for clip in _clip_nodes(graph):
+		var flight := _flight_clip_name(clip.animation)
+		if flight != &"" and _player.has_animation(flight):
+			_flight_clips.append([clip, clip.animation, flight])
+	var loco := graph.get_node(LOCOMOTION) as AnimationNodeBlendSpace1D
+	for i in loco.get_blend_point_count():
+		var clip := loco.get_blend_point_node(i) as AnimationNodeAnimation
+		if clip and String(clip.animation).begins_with("2"):
+			_always_flying = true
 
 	_input = Vector2.ZERO
 	_running = false
@@ -144,14 +177,104 @@ func _graph_nodes(graph: AnimationNodeBlendTree) -> Array[StringName]:
 	return names
 
 
+# Every Animation node, including blend space points.
+func _clip_nodes(graph: AnimationNodeBlendTree) -> Array[AnimationNodeAnimation]:
+	var clips: Array[AnimationNodeAnimation] = []
+	for node_name in _graph_nodes(graph):
+		var node := graph.get_node(node_name)
+		if node is AnimationNodeAnimation:
+			clips.append(node)
+		elif node is AnimationNodeBlendSpace1D:
+			for i in node.get_blend_point_count():
+				var clip := node.get_blend_point_node(i) as AnimationNodeAnimation
+				if clip:
+					clips.append(clip)
+	return clips
+
+
+# 00030_walk01_loop -> 20030_walk01_loop; empty for names outside the 0xxxx set.
+func _flight_clip_name(clip: StringName) -> StringName:
+	var name := String(clip)
+	if name.length() > 6 and name[0] == "0" and name.substr(0, 5).is_valid_int() and name[5] == "_":
+		return StringName("2" + name.substr(1))
+	return &""
+
+
+## True when the model has a flying clip set: ground clips with 2xxxx twins, or
+## a model that only ships the flying set (Zubat, Beedrill, ...).
+func has_flight_animations() -> bool:
+	return _always_flying or not _flight_clips.is_empty()
+
+
+## Switches locomotion onto the flying clip set (where it exists) and keeps the
+## character out of the jump/fall states while airborne.
+func set_flying(flying: bool) -> void:
+	if flying == _flying:
+		return
+	_flying = flying
+	for entry in _flight_clips:
+		entry[0].animation = entry[2] if flying else entry[1]
+	_cancel_action()
+	_landing_remaining = 0.0
+	_airborne = false
+
+
 ## OneShot actions available in the current graph, e.g. [&"Roar", &"Attack"].
 func get_actions() -> Array:
 	return _one_shots.keys()
 
 
+# The clip itself, else a stand-in from ALTERNATE_CLIPS, preferring the clip's
+# own set and then the other sets; empty when the model has none of them.
+func _available_clip(clip: StringName) -> StringName:
+	if _player.has_animation(clip):
+		return clip
+	var name := String(clip)
+	if name.length() < 7 or name[5] != "_":
+		return &""
+	var sets: Array = [name[0]]
+	for set_digit in CLIP_SETS:
+		if set_digit != name[0]:
+			sets.append(set_digit)
+	var anims := _player.get_animation_list()
+	for set_digit in sets:
+		var same := StringName(set_digit + name.substr(1))
+		if _player.has_animation(same):
+			return same
+		for alternate in ALTERNATE_CLIPS.get(name.substr(6), []):
+			for anim in anims:
+				if anim.length() > 6 and anim[0] == set_digit and anim.substr(6) == alternate:
+					return StringName(anim)
+	return &""
+
+
 func _resolve_clip(clip: AnimationNodeAnimation, fallback: StringName) -> void:
-	if clip != null and not _player.has_animation(clip.animation):
-		clip.animation = fallback
+	if clip == null:
+		return
+	var anim := _available_clip(clip.animation)
+	clip.animation = anim if anim != &"" else fallback
+
+
+# Missing points take the nearest available point's clip, so a missing wait
+# borrows walk rather than run.
+func _resolve_blend_space(space: AnimationNodeBlendSpace1D) -> void:
+	var available := {}
+	for i in space.get_blend_point_count():
+		var clip := space.get_blend_point_node(i) as AnimationNodeAnimation
+		var anim := _available_clip(clip.animation) if clip else &""
+		if anim != &"":
+			clip.animation = anim
+			available[i] = anim
+	for i in space.get_blend_point_count():
+		var clip := space.get_blend_point_node(i) as AnimationNodeAnimation
+		if clip == null or available.has(i):
+			continue
+		var nearest := INF
+		for j in available:
+			var distance := absf(space.get_blend_point_position(j) - space.get_blend_point_position(i))
+			if distance < nearest:
+				nearest = distance
+				clip.animation = available[j]
 
 
 func set_movement(input: Vector2, running: bool) -> void:
@@ -207,14 +330,15 @@ func update_animation(delta: float) -> void:
 	_blend = move_toward(_blend, target, delta / locomotion_blend_time) if locomotion_blend_time > 0.0 else target
 	set(BLEND_PARAM, _blend)
 
-	if moving and _character.is_on_floor() and _action_remaining <= 0.0:
+	if moving and (_flying or _character.is_on_floor()) and _action_remaining <= 0.0:
 		movement_direction = Vector3(-_input.x, 0, _input.y).normalized()
 		_model.rotation.y = lerp_angle(
 			_model.rotation.y, atan2(movement_direction.x, movement_direction.z),
 			1.0 - exp(-maxf(turn_speed, 0.0) * delta)
 		)
 
-	var airborne = not _character.is_on_floor() or _character.velocity.y > 0.0
+	# Flight plays locomotion (hover, fly-walk, fly-run) instead of jump/fall.
+	var airborne = not _flying and (not _character.is_on_floor() or _character.velocity.y > 0.0)
 	var falling = _character.velocity.y <= 0.0
 	var state := GROUND
 	if airborne:

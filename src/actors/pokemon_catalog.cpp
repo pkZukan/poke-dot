@@ -1,5 +1,6 @@
 #include "pokemon_catalog.h"
 #include "gflib.h"
+#include <godot_cpp/classes/file_access.hpp>
 
 using namespace godot;
 
@@ -8,6 +9,7 @@ PokemonCatalog* PokemonCatalog::_singleton = nullptr;
 void PokemonCatalog::_bind_methods() 
 {
     ClassDB::bind_method(D_METHOD("GetCatalogEntry"), &PokemonCatalog::GetCatalogEntry);
+    ClassDB::bind_method(D_METHOD("GetPersonalData", "species", "form"), &PokemonCatalog::GetPersonalData);
 }
 
 PokemonCatalog::PokemonCatalog() {
@@ -23,6 +25,8 @@ PokemonCatalog::~PokemonCatalog() {
 
 void PokemonCatalog::load_catalog() 
 {
+    _load_personal();
+
     const String path = GFLib::romfs_path(CATALOG_PATH);
     if (!ResourceLoader::get_singleton()->exists(path))
     {
@@ -48,6 +52,8 @@ void PokemonCatalog::unload_catalog()
 {
     _catalog_map.clear();
     _catalog.unref();
+    _personal_map.clear();
+    _personal.unref();
 }
 
 Ref<CatalogEntry> PokemonCatalog::GetCatalogEntry(int species, uint8_t form, uint8_t gender)
@@ -58,4 +64,37 @@ Ref<CatalogEntry> PokemonCatalog::GetCatalogEntry(int species, uint8_t form, uin
         return Ref<CatalogEntry>();
     }
     return _catalog->get_catalog_table()[_catalog_map[key]];
+}
+
+Ref<TRPersonalData> PokemonCatalog::GetPersonalData(int species, int form)
+{
+    const uint32_t key = (uint32_t(species) << 16) | uint32_t(form);
+    if (_personal.is_null() || !_personal_map.has(key)) {
+        UtilityFunctions::push_error("PokemonCatalog: no personal data for species ", species, " form ", form);
+        return Ref<TRPersonalData>();
+    }
+    return _personal->get_entries()[_personal_map[key]];
+}
+
+void PokemonCatalog::_load_personal()
+{
+    const String path = GFLib::romfs_path(PERSONAL_PATH);
+    if (!FileAccess::file_exists(path))
+    {
+        UtilityFunctions::push_error("PokemonCatalog: file not found: ", path);
+        return;
+    }
+
+    _personal = ResourceLoader::get_singleton()->load(path);
+    if (_personal.is_null())
+        return;
+    // Forms are separate entries, so index by species and form together.
+    Array entries = _personal->get_entries();
+    for (int i = 0; i < entries.size(); i++)
+    {
+        Ref<TRPersonalData> entry = entries[i];
+        Ref<TRSpeciesInfo> info = entry.is_valid() ? entry->get_species() : Ref<TRSpeciesInfo>();
+        if (info.is_valid())
+            _personal_map[(uint32_t(info->get_species_index()) << 16) | uint32_t(info->get_species_form())] = i;
+    }
 }

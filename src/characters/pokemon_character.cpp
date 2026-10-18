@@ -29,6 +29,7 @@ void PokemonCharacter::_bind_methods()
     ClassDB::bind_method(D_METHOD("GetRootMotionPos"), &PokemonCharacter::GetRootMotionPos);
 
     ClassDB::bind_method(D_METHOD("get_model"), &PokemonCharacter::get_model);
+    ClassDB::bind_method(D_METHOD("get_personal"), &PokemonCharacter::get_personal);
     ClassDB::bind_method(D_METHOD("get_animation_player"), &PokemonCharacter::get_animation_player);
     ClassDB::bind_method(D_METHOD("configure_animation_tree", "tree"), &PokemonCharacter::configure_animation_tree);
     ClassDB::bind_method(D_METHOD("apply_movement", "delta", "direction"), &PokemonCharacter::apply_movement, DEFVAL(Vector3(0, 0, 1)));
@@ -87,6 +88,11 @@ void PokemonCharacter::_load_icon()
 Node3D *PokemonCharacter::get_model() const
 {
     return _actor;
+}
+
+Ref<TRPersonalData> PokemonCharacter::get_personal() const
+{
+    return _actor ? _actor->GetPersonal() : Ref<TRPersonalData>();
 }
 
 AnimationPlayer *PokemonCharacter::get_animation_player() const

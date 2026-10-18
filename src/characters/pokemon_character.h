@@ -51,6 +51,7 @@ public:
     Vector3 GetRootMotionPos();
 
     Node3D *get_model() const;
+    Ref<TRPersonalData> get_personal() const;
     AnimationPlayer *get_animation_player() const;
     void configure_animation_tree(AnimationTree *tree);
     void apply_movement(double delta, const Vector3 &direction);

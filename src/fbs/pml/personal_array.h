@@ -158,13 +158,34 @@ class TRPersonalData : public Resource {
 protected:
     static void _bind_methods();
 public:
+    enum Types {
+        NORMAL,
+        FIGHTING,
+        FLYING,
+        POISON,
+        GROUND,
+        ROCK,
+        BUG,
+        GHOST,
+        STEEL,
+        FIRE,
+        WATER,
+        GRASS,
+        ELECTRIC,
+        PSYCHIC,
+        ICE,
+        DRAGON,
+        DARK,
+        FAIRY,
+    };
+
     TRPersonalData(){}
     ~TRPersonalData(){}
     GETTER_SETTER_DEFINE(Ref<TRSpeciesInfo>, species)
     GETTER_SETTER_DEFINE(bool, is_present)
     GETTER_SETTER_DEFINE(Ref<TRZukanData>, dex)
-    GETTER_SETTER_DEFINE(int, type1)
-    GETTER_SETTER_DEFINE(int, type2)
+    GETTER_SETTER_DEFINE(Types, type1)
+    GETTER_SETTER_DEFINE(Types, type2)
     GETTER_SETTER_DEFINE(int, ability1)
     GETTER_SETTER_DEFINE(int, ability2)
     GETTER_SETTER_DEFINE(int, ability3)
@@ -190,8 +211,8 @@ private:
     Ref<TRSpeciesInfo> species;
     bool is_present;
     Ref<TRZukanData> dex;
-    int type1;
-    int type2;
+    Types type1 = NORMAL;
+    Types type2 = NORMAL;
     int ability1;
     int ability2;
     int ability3;
@@ -250,3 +271,5 @@ public:
 };
 
 }
+
+VARIANT_ENUM_CAST(godot::TRPersonalData::Types);

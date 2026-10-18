@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://feiijofpwsso"]
 
-[ext_resource type="Script" path="res://Scripts/Player/player_controller.gd" id="1_frlub"]
+[ext_resource type="Script" uid="uid://bsk0dmjw66dnl" path="res://Scripts/Player/player_controller.gd" id="1_frlub"]
 [ext_resource type="Script" uid="uid://daugln1yhofy4" path="res://gflib/scripts/CharacterAnimator.gd" id="2_animation"]
 [ext_resource type="AnimationNodeBlendTree" uid="uid://c5prxotv5la8b" path="res://gflib/animations/locomotion.tres" id="3_graph"]
 

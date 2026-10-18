@@ -13,6 +13,7 @@ using namespace godot;
 void PokemonActor::_bind_methods() 
 {
     ClassDB::bind_method(D_METHOD("Initialize"), &PokemonActor::Initialize);
+    ClassDB::bind_method(D_METHOD("GetPersonal"), &PokemonActor::GetPersonal);
 }
 
 PokemonActor::PokemonActor()
@@ -24,6 +25,8 @@ void PokemonActor::SetInfo(Ref<CatalogEntry> catalog, bool isShiny)
 {
     _catalog = catalog;
     _isShiny = isShiny;
+    Ref<SpeciesResourceInfo> info = _catalog.is_valid() ? _catalog->get_species_info() : Ref<SpeciesResourceInfo>();
+    _personal = info.is_valid() ? PokemonCatalog::get_singleton()->GetPersonalData(info->get_species(), info->get_form()) : Ref<TRPersonalData>();
 }
 
 void PokemonActor::SetShiny(bool isShiny)

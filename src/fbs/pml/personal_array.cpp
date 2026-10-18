@@ -69,8 +69,32 @@ void TRPersonalData::_bind_methods()
     GETTER_SETTER_BIND(TRPersonalData, species, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRSpeciesInfo")
     GETTER_SETTER_BIND(TRPersonalData, is_present, Variant::BOOL, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRPersonalData, dex, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRZukanData")
-    GETTER_SETTER_BIND(TRPersonalData, type1, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRPersonalData, type2, Variant::INT, PROPERTY_HINT_NONE)
+    BIND_ENUM_CONSTANT(NORMAL)
+    BIND_ENUM_CONSTANT(FIGHTING)
+    BIND_ENUM_CONSTANT(FLYING)
+    BIND_ENUM_CONSTANT(POISON)
+    BIND_ENUM_CONSTANT(GROUND)
+    BIND_ENUM_CONSTANT(ROCK)
+    BIND_ENUM_CONSTANT(BUG)
+    BIND_ENUM_CONSTANT(GHOST)
+    BIND_ENUM_CONSTANT(STEEL)
+    BIND_ENUM_CONSTANT(FIRE)
+    BIND_ENUM_CONSTANT(WATER)
+    BIND_ENUM_CONSTANT(GRASS)
+    BIND_ENUM_CONSTANT(ELECTRIC)
+    BIND_ENUM_CONSTANT(PSYCHIC)
+    BIND_ENUM_CONSTANT(ICE)
+    BIND_ENUM_CONSTANT(DRAGON)
+    BIND_ENUM_CONSTANT(DARK)
+    BIND_ENUM_CONSTANT(FAIRY)
+
+    const String type_names = "Normal,Fighting,Flying,Poison,Ground,Rock,Bug,Ghost,Steel,Fire,Water,Grass,Electric,Psychic,Ice,Dragon,Dark,Fairy";
+    ClassDB::bind_method(D_METHOD("get_type1"), &TRPersonalData::get_type1);
+    ClassDB::bind_method(D_METHOD("set_type1", "type"), &TRPersonalData::set_type1);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "type1", PROPERTY_HINT_ENUM, type_names, PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_CLASS_IS_ENUM, "TRPersonalData.Types"), "set_type1", "get_type1");
+    ClassDB::bind_method(D_METHOD("get_type2"), &TRPersonalData::get_type2);
+    ClassDB::bind_method(D_METHOD("set_type2", "type"), &TRPersonalData::set_type2);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "type2", PROPERTY_HINT_ENUM, type_names, PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_CLASS_IS_ENUM, "TRPersonalData.Types"), "set_type2", "get_type2");
     GETTER_SETTER_BIND(TRPersonalData, ability1, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRPersonalData, ability2, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRPersonalData, ability3, Variant::INT, PROPERTY_HINT_NONE)
@@ -136,8 +160,8 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
         pdata->set_dex(dex);
     }
 
-    pdata->set_type1(ent->type1());
-    pdata->set_type2(ent->type2());
+    pdata->set_type1(TRPersonalData::Types(ent->type1()));
+    pdata->set_type2(TRPersonalData::Types(ent->type2()));
     pdata->set_ability1(ent->ability1());
     pdata->set_ability2(ent->ability2());
     pdata->set_ability3(ent->ability3());

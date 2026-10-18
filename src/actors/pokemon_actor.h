@@ -30,11 +30,13 @@ public:
     void Initialize() override;
 
     String GetIconPath();
+    Ref<TRPersonalData> GetPersonal() const { return _personal; }
 
 private:
     bool _isShiny = false;
     String _species_path, _species_str;
     Ref<CatalogEntry> _catalog;
+    Ref<TRPersonalData> _personal;
 };
 
 } // namespace godot

@@ -4,8 +4,10 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/resource.hpp>
 #include "fbs/catalog/trpmcatalog.h"
+#include "fbs/pml/personal_array.h"
 
 #define CATALOG_PATH "ik_pokemon/catalog/catalog/poke_resource_table.trpmcatalog"
+#define PERSONAL_PATH "avalon/data/personal_array.bin"
 
 namespace godot
 {
@@ -25,6 +27,7 @@ public:
     void load_catalog();
     void unload_catalog();
     Ref<CatalogEntry> GetCatalogEntry(int species, uint8_t form, uint8_t gender);
+    Ref<TRPersonalData> GetPersonalData(int species, int form);
 
 protected:
     static void _bind_methods();
@@ -32,5 +35,9 @@ protected:
 private:
     Ref<TRPpokemonCatalog> _catalog;
     HashMap<uint64_t, int> _catalog_map;
+    Ref<TRPersonalArray> _personal;
+    HashMap<uint32_t, int> _personal_map;
+
+    void _load_personal();
 };
 } //namespace godot
