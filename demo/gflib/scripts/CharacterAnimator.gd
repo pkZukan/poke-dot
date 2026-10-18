@@ -1,5 +1,11 @@
 @tool
+class_name TrinityCharacterAnimator
 extends AnimationTree
+
+## Drives a locomotion graph (see gflib/animations) for a PokemonCharacter or
+## TrainerCharacter: walk/run blending, facing, jump/fall/land states and
+## one-shot actions. Each OneShot node "X" in the graph plays the Animation
+## node "XAnim" and can be triggered with play_action(&"X").
 
 const LOCOMOTION := &"Locomotion"
 const IDLE_VARIATION := &"IdleVariation"
@@ -8,8 +14,6 @@ const JUMP_LOOP := &"JumpUpLoop"
 const FALL_START := &"JumpDownStart"
 const FALL_LOOP := &"JumpDownLoop"
 const LAND := &"Land"
-const ROAR := &"Roar"
-const ATTACK := &"Attack"
 
 const BLEND_PARAM := &"parameters/Locomotion/blend_position"
 const TRANSITION_PARAM := &"parameters/Motion/transition_request"
@@ -24,12 +28,8 @@ const STATE_INPUT := {
 	LAND: &"land",
 }
 
-# Which Animation node plays inside each OneShot.
-const ONE_SHOT_CLIPS := {
-	ROAR: &"RoarAnim",
-	ATTACK: &"AttackAnim",
-	IDLE_VARIATION: &"IdleVariationAnim",
-}
+# Played inside a OneShot node "X" by convention.
+const ONE_SHOT_CLIP_SUFFIX := "Anim"
 
 @export_range(0.0, 1.0, 0.01) var locomotion_blend_time: float = 0.15
 @export_range(0.0, 30.0, 0.1, "or_greater") var turn_speed: float = 12.0
@@ -55,6 +55,8 @@ var _player: AnimationPlayer
 var _graph_template: AnimationNodeBlendTree
 
 var _lengths := {}
+# OneShot node name -> the Animation node it plays.
+var _one_shots := {}
 
 func _ready() -> void:
 	_character = get_parent()
@@ -83,10 +85,16 @@ func _bind_character() -> void:
 	tree_root = _graph_template.duplicate(true)
 	var graph := tree_root as AnimationNodeBlendTree
 
+	_one_shots.clear()
+	for node_name in _graph_nodes(graph):
+		var clip_node := StringName(node_name + ONE_SHOT_CLIP_SUFFIX)
+		if graph.get_node(node_name) is AnimationNodeOneShot and graph.has_node(clip_node):
+			_one_shots[node_name] = clip_node
+
 	_lengths.clear()
-	var keys: Array = STATE_INPUT.keys() + ONE_SHOT_CLIPS.keys()
+	var keys: Array = STATE_INPUT.keys() + _one_shots.keys()
 	for key in keys:
-		var anim := _anim_name(graph, ONE_SHOT_CLIPS.get(key, key))
+		var anim := _anim_name(graph, _one_shots.get(key, key))
 		if anim != &"" and _player.has_animation(anim):
 			_lengths[key] = _player.get_animation(anim).length
 
@@ -103,11 +111,8 @@ func _bind_character() -> void:
 	var fallback := loco_clips[0]
 	var walk_fallback := loco_clips[1] if loco_clips.size() > 1 else fallback
 
-	for prop in graph.get_property_list():
-		var prop_name: String = prop.name
-		if not (prop_name.begins_with("nodes/") and prop_name.ends_with("/node")):
-			continue
-		var node := graph.get_node(StringName(prop_name.get_slice("/", 1)))
+	for node_name in _graph_nodes(graph):
+		var node := graph.get_node(node_name)
 		if node is AnimationNodeAnimation:
 			_resolve_clip(node, fallback)
 		elif node is AnimationNodeBlendSpace1D:
@@ -130,6 +135,20 @@ func _bind_character() -> void:
 	active = true
 
 
+func _graph_nodes(graph: AnimationNodeBlendTree) -> Array[StringName]:
+	var names: Array[StringName] = []
+	for prop in graph.get_property_list():
+		var prop_name: String = prop.name
+		if prop_name.begins_with("nodes/") and prop_name.ends_with("/node"):
+			names.append(StringName(prop_name.get_slice("/", 1)))
+	return names
+
+
+## OneShot actions available in the current graph, e.g. [&"Roar", &"Attack"].
+func get_actions() -> Array:
+	return _one_shots.keys()
+
+
 func _resolve_clip(clip: AnimationNodeAnimation, fallback: StringName) -> void:
 	if clip != null and not _player.has_animation(clip.animation):
 		clip.animation = fallback
@@ -147,7 +166,7 @@ func play_action(action: StringName, interruptible: bool = false) -> void:
 		return
 	if _action_remaining > 0.0 and not _action_interruptible:
 		return
-	if not ONE_SHOT_CLIPS.has(action):
+	if not _one_shots.has(action):
 		return
 	var duration := _clip_length(action)
 	if duration <= 0.0:
@@ -164,7 +183,7 @@ func _one_shot_param(action: StringName) -> StringName:
 
 
 func _cancel_action() -> void:
-	if _action_remaining > 0.0 and ONE_SHOT_CLIPS.has(_action_state):
+	if _action_remaining > 0.0 and _one_shots.has(_action_state):
 		set(_one_shot_param(_action_state), AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
 	_action_remaining = 0.0
 
@@ -178,7 +197,8 @@ func _available_state(key: StringName) -> StringName:
 	return STATE_INPUT[key] if _lengths.has(key) else GROUND
 
 
-# Called once by Controller, after input/jump handling and before native physics.
+# Called once per physics frame by TrinityCharacterController, after jump
+# handling and before native physics.
 func update_animation(delta: float) -> void:
 	if not active:
 		return

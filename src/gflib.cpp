@@ -29,11 +29,6 @@ GFLib::~GFLib()
         singleton = nullptr;
 }
 
-String GFLib::romfs_path(const String &relative)
-{
-    return singleton ? singleton->romfs_root.path_join(relative) : relative;
-}
-
 void GFLib::load_project_settings()
 {
     ProjectSettings *settings = ProjectSettings::get_singleton();
@@ -49,6 +44,11 @@ void GFLib::load_project_settings()
     settings->add_property_info(info);
 
     romfs_root = settings->get_setting(ROMFS_ROOT_SETTING);
+}
+
+String GFLib::romfs_path(const String &relative)
+{
+    return singleton ? singleton->romfs_root.path_join(relative) : relative;
 }
 
 void GFLib::set_romfs_root(const String &path)

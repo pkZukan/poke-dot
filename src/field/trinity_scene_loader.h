@@ -4,6 +4,7 @@
 #include "fbs/scene/components/trinity_SceneObject.h"
 #include "fbs/scene/components/trinity_CollisionComponent.h"
 #include "fbs/scene/components/trinity_ModelInstancerComponent.h"
+#include "field/trinity_map_replace.h"
 #include <godot_cpp/classes/node3d.hpp>
 #include <vector>
 
@@ -21,6 +22,9 @@ class TrinitySceneLoader : public Node3D {
     };
     String scene_path;
     int models_per_frame = 3;
+    Dictionary story_state;
+    bool use_map_replace = true;
+    Ref<TrinityMapReplace> map_replace;
     uint64_t content_id = 0;
     std::vector<ModelJob> queue;
     size_t queue_pos = 0;
@@ -43,6 +47,10 @@ public:
     void set_models_per_frame(int count) { models_per_frame = MAX(count, 1); }
     int get_models_per_frame() const { return models_per_frame; }
     Callable get_load_button();
+    void set_story_state(const Dictionary &state) { story_state = state; }
+    Dictionary get_story_state() const { return story_state; }
+    void set_use_map_replace(bool enabled) { use_map_replace = enabled; }
+    bool get_use_map_replace() const { return use_map_replace; }
 
     void load_scene();
     void clear();

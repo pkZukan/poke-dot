@@ -15,7 +15,7 @@ shadow_blur = 2.656
 [node name="Spawn" type="Node3D" parent="." unique_id=536453065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -790.2946, 2.562284, -891.9895)
 
-[node name="SceneLoader" type="TrinitySceneLoader" parent="."]
+[node name="SceneLoader" type="TrinitySceneLoader" parent="." unique_id=43022155]
 scene_path = "res://Assets/world/ik_scene/field/area/t1/sub_scene/field_/field_0.trscn"
 
 [node name="TrinityEnvironment" type="TrinityEnvironment" parent="." unique_id=2001243489]

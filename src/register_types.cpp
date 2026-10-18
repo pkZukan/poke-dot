@@ -55,7 +55,9 @@
 
 #include "field/trcol.h"
 #include "fbs/field/trins.h"
+#include "fbs/bfbs.h"
 #include "field/trinity_scene_loader.h"
+#include "field/trinity_map_replace.h"
 
 #include "fbs/ui/truiv.h"
 #include "fbs/ui/uikit/uikit_gauge.h"
@@ -113,6 +115,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
@@ -347,6 +350,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		//Field
 		GDREGISTER_CLASS(TRCOL)
 		GDREGISTER_CLASS(TRINS)
+		GDREGISTER_CLASS(FlatbufferSchema)
+		GDREGISTER_CLASS(TrinityMapReplace)
 		GDREGISTER_CLASS(TrinitySceneLoader)
 
 		//UIkit
@@ -400,6 +405,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
@@ -463,6 +469,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 

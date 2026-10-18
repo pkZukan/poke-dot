@@ -585,6 +585,13 @@ void TrinityModel::_build_meshes(
             String material_name = mat->get_MaterialName();
             String mesh_name = mesh_shape->get_Name();
 
+            // Occluders only feed the game's depth prepass; drawn here they
+            // hide whatever they enclose.
+            Ref<ShaderMaterial> surface_material = _materials.get(material_name, Variant());
+            if (surface_material.is_valid() && surface_material->get_shader().is_valid() &&
+                surface_material->get_shader()->get_path().get_file() == "DepthPrepass.gdshader")
+                continue;
+
             Array arr = vertex_arrays.duplicate();
             PackedInt32Array indices = _flip_faces(parse_index_buffer(ind_buf, poly_type, poly_offset, poly_count));
             if (!indices.is_empty()) arr[Mesh::ARRAY_INDEX] = indices;
@@ -675,6 +682,72 @@ static int default_control_index(const Ref<VariationControl> &control)
     if (control->get_DefaultOverride() >= 0)
         return control->get_DefaultOverride();
     return control->get_Rule().get("initial", 0);
+}
+
+PackedStringArray TrinityModel::get_variations() const
+{
+    PackedStringArray names;
+    if (_meta.is_null())
+        return names;
+    Array variations = _meta->get_Variations();
+    for (int i = 0; i < variations.size(); i++) {
+        Ref<ModelVariation> variation = variations[i];
+        if (variation.is_valid())
+            names.push_back(variation->get_Name());
+    }
+    return names;
+}
+
+void TrinityModel::set_variation(const String &p_name)
+{
+    // An empty name selects the base look, as in load_model.
+    String name = p_name;
+    if (name.is_empty() && _meta.is_valid() && _meta->find_variation("normal").is_valid())
+        name = "normal";
+    if (name == _variation)
+        return;
+    if (!name.is_empty() && (_meta.is_null() || _meta->find_variation(name).is_null())) {
+        UtilityFunctions::push_warning("Model has no variation '", name, "'");
+        return;
+    }
+    _variation = name;
+    _materials = _load_materials(_path, _variation_material_files());
+    _assign_materials();
+    _apply_visibility();
+    _apply_controls();
+}
+
+Dictionary TrinityModel::get_controls() const
+{
+    Dictionary controls;
+    Ref<ModelVariation> variation = _find_variation();
+    if (variation.is_null())
+        return controls;
+    Array list = variation->get_Controls();
+    for (int i = 0; i < list.size(); i++) {
+        Ref<VariationControl> control = list[i];
+        if (control.is_valid() && control->get_TableDriven())
+            controls[control->get_Name()] = control->get_VariationCount();
+    }
+    return controls;
+}
+
+int TrinityModel::get_control(const String &name) const
+{
+    Ref<VariationControl> control = _find_control(name);
+    if (control.is_null())
+        return -1;
+    return _control_values.get(name, default_control_index(control));
+}
+
+void TrinityModel::set_control(const String &name, int index)
+{
+    Ref<VariationControl> control = _find_control(name);
+    ERR_FAIL_COND_MSG(control.is_null() || !control->get_TableDriven(), "Model has no table control '" + name + "'");
+    ERR_FAIL_INDEX_MSG(index, control->get_VariationCount(), "Control '" + name + "' index out of range");
+    _control_values[name] = index;
+    _apply_control(control, index);
+    _apply_visibility();
 }
 
 Ref<ModelVariation> TrinityModel::_find_variation() const
@@ -796,70 +869,4 @@ void TrinityModel::_apply_visibility()
         }
         mi->set_visible(visible);
     }
-}
-
-PackedStringArray TrinityModel::get_variations() const
-{
-    PackedStringArray names;
-    if (_meta.is_null())
-        return names;
-    Array variations = _meta->get_Variations();
-    for (int i = 0; i < variations.size(); i++) {
-        Ref<ModelVariation> variation = variations[i];
-        if (variation.is_valid())
-            names.push_back(variation->get_Name());
-    }
-    return names;
-}
-
-void TrinityModel::set_variation(const String &p_name)
-{
-    // An empty name selects the base look, as in load_model.
-    String name = p_name;
-    if (name.is_empty() && _meta.is_valid() && _meta->find_variation("normal").is_valid())
-        name = "normal";
-    if (name == _variation)
-        return;
-    if (!name.is_empty() && (_meta.is_null() || _meta->find_variation(name).is_null())) {
-        UtilityFunctions::push_warning("Model has no variation '", name, "'");
-        return;
-    }
-    _variation = name;
-    _materials = _load_materials(_path, _variation_material_files());
-    _assign_materials();
-    _apply_visibility();
-    _apply_controls();
-}
-
-Dictionary TrinityModel::get_controls() const
-{
-    Dictionary controls;
-    Ref<ModelVariation> variation = _find_variation();
-    if (variation.is_null())
-        return controls;
-    Array list = variation->get_Controls();
-    for (int i = 0; i < list.size(); i++) {
-        Ref<VariationControl> control = list[i];
-        if (control.is_valid() && control->get_TableDriven())
-            controls[control->get_Name()] = control->get_VariationCount();
-    }
-    return controls;
-}
-
-int TrinityModel::get_control(const String &name) const
-{
-    Ref<VariationControl> control = _find_control(name);
-    if (control.is_null())
-        return -1;
-    return _control_values.get(name, default_control_index(control));
-}
-
-void TrinityModel::set_control(const String &name, int index)
-{
-    Ref<VariationControl> control = _find_control(name);
-    ERR_FAIL_COND_MSG(control.is_null() || !control->get_TableDriven(), "Model has no table control '" + name + "'");
-    ERR_FAIL_INDEX_MSG(index, control->get_VariationCount(), "Control '" + name + "' index out of range");
-    _control_values[name] = index;
-    _apply_control(control, index);
-    _apply_visibility();
 }

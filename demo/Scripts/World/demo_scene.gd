@@ -2,7 +2,7 @@ extends Node
 
 signal loading_progress(current: int, total: int)
 
-const player_prefab = preload("res://gflib/prefabs/Player.tscn")
+const player_prefab = preload("res://Scenes/Player/Player.tscn")
 
 @onready var scene_loader: TrinitySceneLoader = $SceneLoader
 

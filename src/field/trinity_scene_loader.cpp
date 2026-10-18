@@ -28,6 +28,10 @@ void TrinitySceneLoader::_bind_methods()
     ClassDB::bind_method(D_METHOD("set_models_per_frame", "count"), &TrinitySceneLoader::set_models_per_frame);
     ClassDB::bind_method(D_METHOD("get_models_per_frame"), &TrinitySceneLoader::get_models_per_frame);
     ClassDB::bind_method(D_METHOD("get_load_button"), &TrinitySceneLoader::get_load_button);
+    ClassDB::bind_method(D_METHOD("set_story_state", "state"), &TrinitySceneLoader::set_story_state);
+    ClassDB::bind_method(D_METHOD("get_story_state"), &TrinitySceneLoader::get_story_state);
+    ClassDB::bind_method(D_METHOD("set_use_map_replace", "enabled"), &TrinitySceneLoader::set_use_map_replace);
+    ClassDB::bind_method(D_METHOD("get_use_map_replace"), &TrinitySceneLoader::get_use_map_replace);
 
     ClassDB::bind_method(D_METHOD("load_scene"), &TrinitySceneLoader::load_scene);
     ClassDB::bind_method(D_METHOD("clear"), &TrinitySceneLoader::clear);
@@ -35,98 +39,13 @@ void TrinitySceneLoader::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_content"), &TrinitySceneLoader::get_content);
 
     ADD_PROPERTY(PropertyInfo(Variant::STRING, "scene_path", PROPERTY_HINT_FILE, "*.trscn"), "set_scene_path", "get_scene_path");
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "story_state"), "set_story_state", "get_story_state");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_map_replace"), "set_use_map_replace", "get_use_map_replace");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "models_per_frame", PROPERTY_HINT_RANGE, "1,64,1,or_greater"), "set_models_per_frame", "get_models_per_frame");
     ADD_PROPERTY(PropertyInfo(Variant::CALLABLE, "load_in_editor", PROPERTY_HINT_TOOL_BUTTON, "Load Scene,Reload", PROPERTY_USAGE_EDITOR), "", "get_load_button");
 
     ADD_SIGNAL(MethodInfo("loading_progress", PropertyInfo(Variant::INT, "current"), PropertyInfo(Variant::INT, "total")));
     ADD_SIGNAL(MethodInfo("loading_finished"));
-}
-
-void TrinitySceneLoader::_notification(int what)
-{
-    switch (what)
-    {
-        case NOTIFICATION_READY:
-            // Overriding _process turns processing on; only run while loading.
-            set_process(loading);
-            break;
-        case NOTIFICATION_EDITOR_PRE_SAVE:
-            // The packer skips unowned nodes along with their whole subtree,
-            // so content loaded in the editor never ends up in the .tscn.
-            if (Node3D *content = get_content())
-                content->set_owner(nullptr);
-            break;
-        case NOTIFICATION_EDITOR_POST_SAVE:
-            if (Node3D *content = get_content())
-                set_editor_owner(content);
-            break;
-    }
-}
-
-Callable TrinitySceneLoader::get_load_button()
-{
-    return callable_mp(this, &TrinitySceneLoader::load_scene);
-}
-
-Node3D *TrinitySceneLoader::get_content() const
-{
-    return content_id ? Object::cast_to<Node3D>(ObjectDB::get_instance(content_id)) : nullptr;
-}
-
-void TrinitySceneLoader::set_editor_owner(Node *node, bool recursive)
-{
-    if (!Engine::get_singleton()->is_editor_hint() || !is_inside_tree())
-        return;
-    Node *root = get_tree()->get_edited_scene_root();
-    if (!root)
-        return;
-    node->set_owner(root);
-    if (!recursive)
-        return;
-    for (int i = 0; i < node->get_child_count(); i++)
-        set_editor_owner(node->get_child(i), true);
-}
-
-void TrinitySceneLoader::clear()
-{
-    queue.clear();
-    queue_pos = 0;
-    loading = false;
-    set_process(false);
-    if (Node3D *content = get_content())
-        memdelete(content);
-    content_id = 0;
-}
-
-void TrinitySceneLoader::load_scene()
-{
-    // Reloading replaces the previous content instead of stacking a second copy.
-    clear();
-    Node3D *content = load_scene_file(scene_path, this);
-    content_id = content ? content->get_instance_id() : 0;
-    // Finish from _process even with an empty queue so callers can await it.
-    loading = true;
-    set_process(true);
-}
-
-void TrinitySceneLoader::_process(double delta)
-{
-    const size_t total = queue.size();
-    for (int i = 0; i < models_per_frame && queue_pos < total; i++)
-    {
-        const ModelJob &job = queue[queue_pos++];
-        if (FileAccess::file_exists(job.dir.path_join(job.file)))
-            instantiate_model(job);
-        emit_signal("loading_progress", (int64_t)queue_pos, (int64_t)total);
-    }
-    if (queue_pos < total)
-        return;
-
-    queue.clear();
-    queue_pos = 0;
-    loading = false;
-    set_process(false);
-    emit_signal("loading_finished");
 }
 
 Node3D *TrinitySceneLoader::load_scene_file(const String &file, Node3D *parent)
@@ -161,6 +80,10 @@ void TrinitySceneLoader::load_entry(const Ref<TRScene> &entry, Node3D *parent, c
     {
         Ref<TRSubScene> sub = data;
         if (sub.is_null())
+            return;
+        // Story-dependent variants of the same spot; load only the active one.
+        const String scene_name = sub->get_FileName().get_file().get_basename();
+        if (use_map_replace && map_replace.is_valid() && !map_replace->is_scene_active(scene_name, story_state))
             return;
         // Sub scenes are stored with a _0 suffix: foo.trscn -> foo_0.trscn.
         const String path = base_dir.path_join(sub->get_FileName()).simplify_path();
@@ -341,4 +264,97 @@ void TrinitySceneLoader::instantiate_model(const ModelJob &job)
         parent->add_child(instance);
         set_editor_owner(instance, true);
     }
+}
+
+void TrinitySceneLoader::set_editor_owner(Node *node, bool recursive)
+{
+    if (!Engine::get_singleton()->is_editor_hint() || !is_inside_tree())
+        return;
+    Node *root = get_tree()->get_edited_scene_root();
+    if (!root)
+        return;
+    node->set_owner(root);
+    if (!recursive)
+        return;
+    for (int i = 0; i < node->get_child_count(); i++)
+        set_editor_owner(node->get_child(i), true);
+}
+
+void TrinitySceneLoader::_notification(int what)
+{
+    switch (what)
+    {
+        case NOTIFICATION_READY:
+            // Overriding _process turns processing on; only run while loading.
+            set_process(loading);
+            break;
+        case NOTIFICATION_EDITOR_PRE_SAVE:
+            // The packer skips unowned nodes along with their whole subtree,
+            // so content loaded in the editor never ends up in the .tscn.
+            if (Node3D *content = get_content())
+                content->set_owner(nullptr);
+            break;
+        case NOTIFICATION_EDITOR_POST_SAVE:
+            if (Node3D *content = get_content())
+                set_editor_owner(content);
+            break;
+    }
+}
+
+Callable TrinitySceneLoader::get_load_button()
+{
+    return callable_mp(this, &TrinitySceneLoader::load_scene);
+}
+
+void TrinitySceneLoader::load_scene()
+{
+    // Reloading replaces the previous content instead of stacking a second copy.
+    clear();
+    if (use_map_replace && map_replace.is_null())
+    {
+        map_replace.instantiate();
+        if (map_replace->load(TrinityMapReplace::default_path()) != OK)
+            map_replace.unref();
+    }
+    Node3D *content = load_scene_file(scene_path, this);
+    content_id = content ? content->get_instance_id() : 0;
+    // Finish from _process even with an empty queue so callers can await it.
+    loading = true;
+    set_process(true);
+}
+
+void TrinitySceneLoader::clear()
+{
+    queue.clear();
+    queue_pos = 0;
+    loading = false;
+    set_process(false);
+    if (Node3D *content = get_content())
+        memdelete(content);
+    content_id = 0;
+}
+
+Node3D *TrinitySceneLoader::get_content() const
+{
+    return content_id ? Object::cast_to<Node3D>(ObjectDB::get_instance(content_id)) : nullptr;
+}
+
+void TrinitySceneLoader::_process(double delta)
+{
+    const size_t total = queue.size();
+    for (int i = 0; i < models_per_frame && queue_pos < total; i++)
+    {
+        const ModelJob &job = queue[queue_pos++];
+        if (FileAccess::file_exists(job.dir.path_join(job.file)))
+            instantiate_model(job);
+        emit_signal("loading_progress", (int64_t)queue_pos, (int64_t)total);
+    }
+    if (queue_pos < total)
+        return;
+
+    queue.clear();
+    queue_pos = 0;
+    loading = false;
+    set_process(false);
+    emit_signal("loading_finished");
 }

@@ -39,4 +39,5 @@ shape = SubResource("BoxShape3D_ws83t")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05996704, 0)
 
 [node name="TrinityEnvironment" type="TrinityEnvironment" parent="." unique_id=1924857007]
+time_of_day = 0.0
 master_light = ExtResource("3_ptwdb")
