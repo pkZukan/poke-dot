@@ -70,7 +70,6 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 	const uint32_t version = sp->get_u32();
 	const uint32_t file_size = sp->get_u32();
 	const uint16_t block_count = sp->get_u16();
-	// Switch Toolbox BXFNT: NX starts at 4.1 and stores sheets in a BNTX array.
 	if (version != 0x04010000) return ERR_UNAVAILABLE;
 	if (header_size < 20 || file_size != buffer.size()) return ERR_FILE_CORRUPT;
 
@@ -95,10 +94,10 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 	sp->seek(finf);
 	const uint8_t font_type = sp->get_u8();
 	const int height = sp->get_u8();
-	const int width = sp->get_u8(); // nominal width
+	const int width = sp->get_u8();
 	const int ascent = sp->get_u8();
 	const int line_feed = sp->get_16();
-	sp->get_u16(); // alternate glyph index
+	sp->get_u16();
 	const GlyphWidth default_width{sp->get_8(), sp->get_u8(), sp->get_8()};
 	const uint8_t encoding = sp->get_u8();
 	const uint32_t tglp = sp->get_u32();
@@ -112,10 +111,10 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 	const int cell_width = sp->get_u8();
 	const int cell_height = sp->get_u8();
 	const int sheet_count = sp->get_u8();
-	sp->get_u8(); // maximum character width
+	sp->get_u8();
 	const uint32_t sheet_size = sp->get_u32();
 	const int baseline = sp->get_16();
-	sp->get_u16(); // texture format is described by the embedded BNTX
+	sp->get_u16();
 	const int columns = sp->get_u16();
 	const int rows = sp->get_u16();
 	const int sheet_width = sp->get_u16();
@@ -204,7 +203,6 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 		}
 	}
 
-	// Let the BNTX archive parser own its container and entry metadata.
 	PackedByteArray texture_data = buffer.slice(data_offset, data_offset + data_size);
 	Ref<BinaryTextureArchive> texture_archive;
 	texture_archive.instantiate();
@@ -233,7 +231,7 @@ Error BinaryFont::parse(const PackedByteArray &buffer, const Vector<Vector2i> &r
 			for (int c = 0; c < 4; ++c) dst[i + c] = source[channels[c]];
 		}
 		Ref<Image> font_sheet = Image::create_from_data(sheet_width, sheet_height, false, Image::FORMAT_RGBA8, pixels);
-		// NX font sheets are stored upside down (Switch Toolbox GetBitmapFont).
+		// NX font sheets are stored bottom-up; Godot images are top-down.
 		font_sheet->flip_y();
 		sheets.push_back(font_sheet);
 	}

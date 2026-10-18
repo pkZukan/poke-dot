@@ -188,7 +188,6 @@ bool BinaryLayoutAnimation::parse_track(BflytUtils::Reader &r, uint64_t p, Dicti
 	uint32_t curve = r.number(p + 2, 1), count = r.number(p + 4, 2);
 	track["curve_type"] = curve;
 	uint64_t offset = r.number(p + 8, 4);
-	// Unknown curves retain their bytes in the enclosing raw section.
 	track["supported"] = curve == 1 || curve == 2;
 	if (curve != 1 && curve != 2) return r.valid;
 	uint64_t stride = curve == 2 ? 12 : 8;

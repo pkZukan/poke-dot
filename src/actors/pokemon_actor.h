@@ -31,6 +31,11 @@ public:
 
     String GetIconPath();
     Ref<TRPersonalData> GetPersonal() const { return _personal; }
+    Ref<CatalogEntry> GetCatalogEntry() const { return _catalog; }
+
+    Array GetEvolutions() const;
+    int FindLevelUpEvolution(int level) const;
+    bool Evolve(int index);
 
 private:
     bool _isShiny = false;

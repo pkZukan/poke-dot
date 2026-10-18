@@ -286,12 +286,9 @@ public:
 				for (uint32_t i = 0; i < num; i++)
 					interfaces.push_back(HavokTypeBodyInterfaceEntry(sp));
 			}
-			//if(opts & OptionalFlags::HAS_ATTRIBUTES)
-			//	attribs = HavokUtils::read_var32(sp);
 		}
 	}
 
-	// Typedef-like Havok types may store their layout only on a parent type.
 	void InheritLayout(const HavokTypeBodyEntry &parent)
 	{
 		if (!(opts & HAS_FORMAT) && (parent.opts & HAS_FORMAT))
@@ -367,8 +364,6 @@ struct HavokSection
 	}
 };
 
-// ---- Cursor-based read layer ----
-
 struct HavokContext
 {
 	Ref<HavokItem> item;
@@ -396,7 +391,6 @@ struct HavokCursor
 	HavokTypeBodyEntry::Kind kind = HavokTypeBodyEntry::Kind::VOID;
 	HavokTypeBodyEntry body;
 
-	// only meaningful when kind == ARRAY
 	uint32_t arrCount = 0, arrElemType = 0, arrStride = 0, arrOffset = 0;
 
 	bool IsNull() const { return !valid; }
@@ -430,7 +424,6 @@ public:
 
 	TreeItem* get_tree_item() { return tree->get_root(); }
 
-	// cursor-based reads
 	HavokContext BuildContext();
 	HavokCursor Root(uint32_t itemIdx, HavokContext &ctx);
 	Vector<HavokMeshSection> GetGeometrySections();
@@ -441,15 +434,12 @@ public:
 private:
 	Tree* tree;
 
-	// dump path
 	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx);
 	void ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, uint32_t idx, HashSet<uint32_t> &visiting);
 	void WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth, Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy, Ref<HavokData> data, HashSet<uint32_t> &visiting, bool is_inherited = false);
 
-	// shared lookup helpers
 	int32_t FindItemByTypeName(Ref<HavokItem> item, Ref<HavokTypeNameDescriptor> tna, Ref<HavokStrings> tst, const String &typeName);
 
-	// chunk parsing
 	void parse_section(Ref<StreamPeerBuffer> sp, TreeItem *parent);
 	TreeItem* parse_tag0(Ref<StreamPeerBuffer> sp, uint32_t size);
 	TreeItem* parse_sdkv(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint32_t size);

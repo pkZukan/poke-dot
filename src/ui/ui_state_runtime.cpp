@@ -22,10 +22,14 @@ void UIStateRuntime::index(Node *owner, Control *node, Instance *instance)
         NodePath path = owner->get_path_to(node);
         instance->panes[String(pane["name"])].push_back(path);
 
-        Node *picture = node->get_node_or_null("Picture");
+        // Pictures own one material quad; windows own one per content and frame.
+        for (int i = 0; i < node->get_child_count(); ++i)
+        {
+            Polygon2D *quad = Object::cast_to<Polygon2D>(node->get_child(i));
 
-        if (picture && picture->has_meta("material_name"))
-            instance->materials[String(picture->get_meta("material_name"))].push_back(path);
+            if (quad && quad->has_meta("material_name"))
+                instance->materials[String(quad->get_meta("material_name"))].push_back(owner->get_path_to(quad));
+        }
     }
 
     for (int i = 0; i < node->get_child_count(); ++i)
@@ -177,12 +181,15 @@ Error UIStateRuntime::apply(Node *owner, Control *layout, const String &componen
 
         for (const NodePath &path : targets->second)
         {
-            Control *pane = Object::cast_to<Control>(owner->get_node_or_null(path));
+            Node *target = owner->get_node_or_null(path);
+            Polygon2D *picture = Object::cast_to<Polygon2D>(target);
+            Control *pane = Object::cast_to<Control>(picture ? picture->get_parent() : target);
 
             if (!pane)
                 continue;
 
-            Polygon2D *picture = Object::cast_to<Polygon2D>(pane->get_node_or_null("Picture"));
+            if (!picture)
+                picture = Object::cast_to<Polygon2D>(pane->get_node_or_null("Picture"));
             Array tags = entry["tags"];
 
             for (int j = 0; j < tags.size(); ++j)
@@ -225,17 +232,25 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
                 color.a = value / 255.0;
                 pane->set_modulate(color);
             }
-            else if (picture)
-            {
-                Color color = picture->get_self_modulate();
-                color.a = value / 255.0;
-                picture->set_self_modulate(color);
-            }
             else
             {
+                // Uninfluenced alpha only covers the pane's own content: its Label text or the
+                // picture/window quads the builder adds as direct Polygon2D children.
                 Color color = pane->get_self_modulate();
                 color.a = value / 255.0;
                 pane->set_self_modulate(color);
+
+                for (int i = 0; i < pane->get_child_count(); ++i)
+                {
+                    Polygon2D *quad = Object::cast_to<Polygon2D>(pane->get_child(i));
+
+                    if (!quad)
+                        continue;
+
+                    Color quad_color = quad->get_self_modulate();
+                    quad_color.a = value / 255.0;
+                    quad->set_self_modulate(quad_color);
+                }
             }
         }
         else if (Object::cast_to<Label>(pane) && target < 4)
@@ -290,7 +305,7 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
     {
         const bool mask = int(track["index"]) == 1;
 
-        if (mask && !bool(material->get_shader_parameter("has_alpha_mask")))
+        if (mask && !bool(material->get_shader_parameter("has_texture1")))
             return;
 
         if (target < 3)
@@ -299,9 +314,9 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
 
             if (mask)
             {
-                Vector3 params = material->get_shader_parameter("mask_transform");
+                Vector3 params = material->get_shader_parameter("texture1_transform");
                 params[target] = parameter_value;
-                material->set_shader_parameter("mask_transform", params);
+                material->set_shader_parameter("texture1_transform", params);
             }
             else
             {
@@ -312,7 +327,7 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
         }
         else if (target < 5)
         {
-            const String parameter = mask ? "mask_scale" : "uv_scale";
+            const String parameter = mask ? "texture1_scale" : "uv_scale";
             Vector2 scale = material->get_shader_parameter(parameter);
             scale[target - 3] = value;
             material->set_shader_parameter(parameter, scale);
@@ -334,11 +349,11 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
 
         if (int(track["index"]) == 1)
         {
-            if (!bool(material->get_shader_parameter("has_alpha_mask")))
+            if (!bool(material->get_shader_parameter("has_texture1")))
                 return;
 
-            material->set_shader_parameter("alpha_mask", available[name]);
-            material->set_shader_parameter("mask_channel_sources", source->get_shader_parameter("channel_sources"));
+            material->set_shader_parameter("texture1", available[name]);
+            material->set_shader_parameter("texture1_channel_sources", source->get_shader_parameter("channel_sources"));
             return;
         }
 

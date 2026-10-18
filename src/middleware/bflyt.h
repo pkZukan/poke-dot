@@ -70,6 +70,9 @@ private:
 	bool parse_strings(BflytUtils::Reader &r, const BflytSection &section, PackedStringArray &strings);
 	bool parse_mat1(BflytUtils::Reader &r, const BflytSection &section, BflytContext &ctx);
 	bool parse_material(BflytUtils::Reader &r, uint64_t offset, uint32_t version, Dictionary &material);
+	bool parse_usd1(BflytUtils::Reader &r, const BflytSection &section, BflytContext &ctx);
+	bool parse_system_data(BflytUtils::Reader &r, uint64_t p, Dictionary &pane);
+	bool parse_procedural_shape(BflytUtils::Reader &r, uint64_t p, Dictionary &shape);
 	bool parse_pas1(BflytContext &ctx);
 	bool parse_pae1(BflytContext &ctx);
 	bool parse_pane(BflytUtils::Reader &r, const BflytSection &section, BflytContext &ctx);

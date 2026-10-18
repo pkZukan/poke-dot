@@ -75,7 +75,7 @@ table PersonalData {
     unk_flag: uint8;
     yield_info: StatInfo;
     stats: StatInfo;
-    evo_table: EvoData;
+    evo_table: [EvoData];
     technical_machines: [uint16];
     egg_moves: [uint16];
     reminder_moves: [uint16];

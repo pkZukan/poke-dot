@@ -202,7 +202,7 @@ public:
     GETTER_SETTER_DEFINE(int, unk_flag)
     GETTER_SETTER_DEFINE(Ref<TRStatInfo>, yield_info)
     GETTER_SETTER_DEFINE(Ref<TRStatInfo>, stats)
-    GETTER_SETTER_DEFINE(Ref<TREvoData>, evo_table)
+    GETTER_SETTER_DEFINE(Array, evo_table)
     GETTER_SETTER_DEFINE(Array, technical_machines)
     GETTER_SETTER_DEFINE(Array, egg_moves)
     GETTER_SETTER_DEFINE(Array, reminder_moves)
@@ -229,7 +229,7 @@ private:
     int unk_flag;
     Ref<TRStatInfo> yield_info;
     Ref<TRStatInfo> stats;
-    Ref<TREvoData> evo_table;
+    Array evo_table;
     Array technical_machines;
     Array egg_moves;
     Array reminder_moves;

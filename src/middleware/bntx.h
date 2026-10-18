@@ -173,7 +173,6 @@ struct BRTData
 	}
 };
 
-// One named BNTX entry. The entry may contain multiple image layers.
 class BinaryTexture : public Texture2DArray {
     GDCLASS(BinaryTexture, Texture2DArray)
 

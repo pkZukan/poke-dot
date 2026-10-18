@@ -14,6 +14,11 @@ void PokemonActor::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("Initialize"), &PokemonActor::Initialize);
     ClassDB::bind_method(D_METHOD("GetPersonal"), &PokemonActor::GetPersonal);
+    ClassDB::bind_method(D_METHOD("GetCatalogEntry"), &PokemonActor::GetCatalogEntry);
+    ClassDB::bind_method(D_METHOD("GetEvolutions"), &PokemonActor::GetEvolutions);
+    ClassDB::bind_method(D_METHOD("FindLevelUpEvolution", "level"), &PokemonActor::FindLevelUpEvolution);
+    ClassDB::bind_method(D_METHOD("Evolve", "index"), &PokemonActor::Evolve);
+    ADD_SIGNAL(MethodInfo("evolved", PropertyInfo(Variant::INT, "previous_species"), PropertyInfo(Variant::INT, "previous_form")));
 }
 
 PokemonActor::PokemonActor()
@@ -48,6 +53,57 @@ void PokemonActor::Initialize()
     String tracn_file = base_path.path_join(animInfo->get_path());
     tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
     LoadActor(_species_path.path_join(_species_mdl), tracn_file, _isShiny ? "rare" : "");
+}
+
+Array PokemonActor::GetEvolutions() const
+{
+    Array evolutions;
+    if (_personal.is_null())
+        return evolutions;
+    const Array table = _personal->get_evo_table();
+    for (int i = 0; i < table.size(); i++)
+    {
+        Ref<TREvoData> evo = table[i];
+        if (evo.is_valid() && evo->get_species() != 0)
+            evolutions.push_back(evo);
+    }
+    return evolutions;
+}
+
+int PokemonActor::FindLevelUpEvolution(int level) const
+{
+    const Array evolutions = GetEvolutions();
+    for (int i = 0; i < evolutions.size(); i++)
+    {
+        Ref<TREvoData> evo = evolutions[i];
+        if (evo->get_method() == 4 && level >= evo->get_level())
+            return i;
+    }
+    return -1;
+}
+
+bool PokemonActor::Evolve(int index)
+{
+    const Array evolutions = GetEvolutions();
+    ERR_FAIL_INDEX_V_MSG(index, evolutions.size(), false, "PokemonActor: no evolution at that index");
+    Ref<TREvoData> evo = evolutions[index];
+    Ref<SpeciesResourceInfo> current = _catalog->get_species_info();
+
+    // Keep the gender model when the evolution has one; otherwise use its default model.
+    PokemonCatalog *catalog = PokemonCatalog::get_singleton();
+    uint8_t gender = current->get_gender();
+    if (!catalog->HasCatalogEntry(evo->get_species(), evo->get_form(), gender))
+        gender = 0;
+    Ref<CatalogEntry> target = catalog->GetCatalogEntry(evo->get_species(), evo->get_form(), gender);
+    if (target.is_null())
+        return false;
+
+    const int previous_species = current->get_species();
+    const int previous_form = current->get_form();
+    SetInfo(target, _isShiny);
+    Initialize();
+    emit_signal("evolved", previous_species, previous_form);
+    return true;
 }
 
 String PokemonActor::GetIconPath()

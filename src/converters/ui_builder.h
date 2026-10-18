@@ -52,7 +52,7 @@ private:
 
     Control *create_pane_node(const PaneInfo &info, const String &layout_name, Control *parent);
     void apply_transform(Control *node, const PaneInfo &info, const Vector2 &anchor);
-    double apply_alpha_and_visibility(Control *node, const PaneInfo &info, double parent_alpha);
+    double apply_alpha_and_visibility(Control *node, const PaneInfo &info);
 
     bool build_part(Control *node, const Dictionary &pane, const PackedStringArray &ancestry);
     void build_text(Label *label, const PaneInfo &info, const Dictionary &pane,
@@ -62,15 +62,22 @@ private:
     void build_picture(Control *node, const PaneInfo &info, const Dictionary &pane,
             const Array &materials, const PackedStringArray &texture_names, double alpha);
 
+    void apply_procedural_shape(Polygon2D *quad, const Vector2 &size, const Dictionary &shape);
     Polygon2D *add_quad(Control *parent, const String &name, const Rect2 &rect, const Dictionary &material,
             const PackedStringArray &texture_names, PackedVector2Array uv, const PackedColorArray &colors,
             int texture_flip, double alpha);
+    // Matches the blend mode values in ui_picture.gdshader's picture_params.w.
+    enum BlendMode { BLEND_ALPHA, BLEND_ADD, BLEND_ADD_ONE, BLEND_PREMULTIPLIED, BLEND_MULTIPLY };
+    int blend_mode_of(const Dictionary &material);
     Ref<ShaderMaterial> make_picture_material(const String &texture_name, const Dictionary &material);
+    void apply_texture1_projection(const Ref<ShaderMaterial> &shader_material, const Dictionary &material,
+            const Array &generators, const Vector2 &pane_size, const Vector2 &texture_size);
     void apply_sampler(Polygon2D *quad, const Dictionary &map);
     bool get_material(const Array &materials, int index, Dictionary &r_material);
 
     UIFontResolver &fonts;
     Ref<Shader> picture_shader;
+    Ref<Shader> multiply_shader;
     Dictionary layouts;
     TrinityPane *root = nullptr;
 };

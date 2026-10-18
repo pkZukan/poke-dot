@@ -111,7 +111,7 @@ void TRPersonalData::_bind_methods()
     GETTER_SETTER_BIND(TRPersonalData, unk_flag, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRPersonalData, yield_info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRStatInfo")
     GETTER_SETTER_BIND(TRPersonalData, stats, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRStatInfo")
-    GETTER_SETTER_BIND(TRPersonalData, evo_table, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TREvoData")
+    GETTER_SETTER_BIND(TRPersonalData, evo_table, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TREvoData")
     GETTER_SETTER_BIND(TRPersonalData, technical_machines, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
     GETTER_SETTER_BIND(TRPersonalData, egg_moves, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
     GETTER_SETTER_BIND(TRPersonalData, reminder_moves, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")
@@ -232,20 +232,26 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
     }
 
     // EvoData
-    auto ed = ent->evo_table();
-    if(ed)
+    auto evos = ent->evo_table();
+    if(evos)
     {
-        Ref<TREvoData> evo_table;
-        evo_table.instantiate();
-        evo_table->set_level(ed->level());
-        evo_table->set_method(ed->method());
-        evo_table->set_arg(ed->arg());
-        evo_table->set_res0(ed->res0());
-        evo_table->set_res1(ed->res1());
-        evo_table->set_res2(ed->res2());
-        evo_table->set_species(ed->species());
-        evo_table->set_form(ed->form());
-        pdata->set_evo_table(evo_table);
+        Array evoArr;
+        for(int j = 0; j < evos->size(); j++)
+        {
+            auto ed = evos->Get(j);
+            Ref<TREvoData> evo;
+            evo.instantiate();
+            evo->set_level(ed->level());
+            evo->set_method(ed->method());
+            evo->set_arg(ed->arg());
+            evo->set_res0(ed->res0());
+            evo->set_res1(ed->res1());
+            evo->set_res2(ed->res2());
+            evo->set_species(ed->species());
+            evo->set_form(ed->form());
+            evoArr.push_back(evo);
+        }
+        pdata->set_evo_table(evoArr);
     }
 
     // Technical Machines

@@ -90,7 +90,7 @@ struct SFNTHeader {
 	SFNTHeader(Ref<StreamPeerBuffer> sp) {
 		magic = sp->get_string(4);
 		header_size = sp->get_u16();
-		sp->get_u16(); // reserved / unused
+		sp->get_u16();
 	}
 };
 

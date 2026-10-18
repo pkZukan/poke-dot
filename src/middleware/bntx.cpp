@@ -54,7 +54,6 @@ std::pair<int, std::pair<int, int>> blk_dims[] = {
 
 PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo info, PackedByteArray data, bool toSwizzle)
 {
-    // Look up bytes-per-pixel; default to 4 to avoid UB on unknown formats
     uint32_t bpp = 4;
     for (int i = 0; i < (int)(sizeof(bpps) / sizeof(bpps[0])); i++) {
         if (bpps[i].first == (info.Format >> 8)) {
@@ -63,7 +62,6 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
         }
     }
 
-    // Look up block dimensions for compressed formats
     uint32_t blkWidth = 1, blkHeight = 1;
     for (int i = 0; i < (int)(sizeof(blk_dims) / sizeof(blk_dims[0])); i++) {
         if (blk_dims[i].first == (info.Format >> 8)) {
@@ -73,14 +71,9 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
         }
     }
 
-    // Dimensions in blocks (for compressed formats this shrinks width/height)
     width  = DIV_ROUND_UP(width,  blkWidth);
     height = DIV_ROUND_UP(height, blkHeight);
 
-    // Clamp block_height so it actually fits the image.
-    // Without this, getAddrBlockLinear produces addresses way past surfSize
-    // for small/non-pow2 textures, causing every pixel copy to be silently
-    // skipped and the output image to be blank.
     uint32_t block_height = 1u << info.SizeRange;
     {
         uint32_t height_in_gobs = DIV_ROUND_UP(height, 8);
@@ -97,7 +90,6 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
         surfSize = ROUND_UP(pitch * ROUND_UP(height, block_height * 8), info.Alignment);
     }
 
-    // The linear (un-swizzled) size is always exactly width*height*bpp
     uint32_t linearSize = width * height * bpp;
 
     PackedByteArray result;
@@ -115,17 +107,14 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
             else
                 swizzled = getAddrBlockLinear(x, y, width, bpp, 0, block_height);
 
-            // Bounds-check both the tiled surface and the linear buffer
             if (swizzled + bpp > surfSize)   continue;
             if (linear   + bpp > linearSize) continue;
 
             if (toSwizzle) {
-                // linear -> swizzled: read from data (linear), write to result (swizzled)
                 if (linear + bpp > dataSize) continue;
                 for (uint32_t i = 0; i < bpp; i++)
                     result.set(swizzled + i, data[linear + i]);
             } else {
-                // swizzled -> linear: read from data (swizzled), write to result (linear)
                 if (swizzled + bpp > dataSize) continue;
                 for (uint32_t i = 0; i < bpp; i++)
                     result.set(linear + i, data[swizzled + i]);
@@ -138,9 +127,6 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
 
 uint32_t BinaryTexture::getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t image_width, uint32_t bytes_per_pixel, uint32_t base_address, uint32_t block_height)
 {
-    /*
-        From Tegra X1 TRM
-    */
     uint32_t image_width_in_gobs = DIV_ROUND_UP(image_width * bytes_per_pixel, 64);
 
     uint32_t GOB_address = (base_address
@@ -161,7 +147,6 @@ uint32_t BinaryTexture::getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t imag
 
 Image::Format BinaryTexture::GetGodotImageFormat(int bntx_format)
 {
-    // An unknown format must not be interpreted as uncompressed RGBA8.
     Image::Format fmt = Image::FORMAT_MAX;
     switch (bntx_format)
     {
@@ -187,38 +172,14 @@ Image::Format BinaryTexture::GetGodotImageFormat(int bntx_format)
         case 0x2006: fmt = Image::FORMAT_BPTC_RGBA;   break;
         case 0x2d01: fmt = Image::FORMAT_ASTC_4x4;    break;
         case 0x2d06: fmt = Image::FORMAT_ASTC_4x4;    break;
-        /*case 0x2e01: fmt = Image::FORMAT_ASTC_5x4;     break;
-        case 0x2e06: fmt = Image::FORMAT_ASTC_5x4_HDR; break;
-        case 0x2f01: fmt = Image::FORMAT_ASTC_5x5;     break;
-        case 0x2f06: fmt = Image::FORMAT_ASTC_5x5_HDR; break;
-        case 0x3001: fmt = Image::FORMAT_ASTC_6x5;     break;
-        case 0x3006: fmt = Image::FORMAT_ASTC_6x5_HDR; break;
-        case 0x3101: fmt = Image::FORMAT_ASTC_6x6;     break;
-        case 0x3106: fmt = Image::FORMAT_ASTC_6x6_HDR; break;
-        case 0x3201: fmt = Image::FORMAT_ASTC_8x5;     break;
-        case 0x3206: fmt = Image::FORMAT_ASTC_8x5_HDR; break;
-        case 0x3301: fmt = Image::FORMAT_ASTC_8x6;     break;
-        case 0x3306: fmt = Image::FORMAT_ASTC_8x6_HDR; break;*/
+        // Godot's Image only has the 4x4 and 8x8 ASTC block sizes.
         case 0x3401: fmt = Image::FORMAT_ASTC_8x8;    break;
         case 0x3406: fmt = Image::FORMAT_ASTC_8x8;    break;
-        /*case 0x3501: fmt = Image::FORMAT_ASTC_10x5;    break;
-        case 0x3506: fmt = Image::FORMAT_ASTC_10x5_HDR; break;
-        case 0x3601: fmt = Image::FORMAT_ASTC_10x6;    break;
-        case 0x3606: fmt = Image::FORMAT_ASTC_10x6_HDR; break;
-        case 0x3701: fmt = Image::FORMAT_ASTC_10x8;    break;
-        case 0x3706: fmt = Image::FORMAT_ASTC_10x8_HDR; break;
-        case 0x3801: fmt = Image::FORMAT_ASTC_10x10;   break;
-        case 0x3806: fmt = Image::FORMAT_ASTC_10x10_HDR; break;
-        case 0x3901: fmt = Image::FORMAT_ASTC_12x10;   break;
-        case 0x3906: fmt = Image::FORMAT_ASTC_12x10_HDR; break;
-        case 0x3a01: fmt = Image::FORMAT_ASTC_12x12;   break;
-        case 0x3a06: fmt = Image::FORMAT_ASTC_12x12_HDR; break;*/
     }
 
     return fmt;
 }
 
-// Keep the constructor-parsed headers, checking their byte ranges before reading.
 static bool has_bytes(const Ref<StreamPeerBuffer> &sp, uint64_t offset, uint64_t size)
 {
     uint64_t end = sp->get_size();

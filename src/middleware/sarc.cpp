@@ -33,7 +33,6 @@ void SarcInspectorControl::_on_item_mouse_selected(Vector2 position, MouseButton
     if (!item)
         return;
 
-    // Ignore directories/root.
     if (item->get_child_count() > 0)
         return;
 
@@ -71,7 +70,6 @@ void SarcInspectorControl::_on_item_activated()
         m_active_resource = animation;
     }
 
-    //Set current resource as bntx
     if (file_name.ends_with("bntx")) 
     {
         Ref<BinaryTextureArchive> bntx;
@@ -80,7 +78,6 @@ void SarcInspectorControl::_on_item_activated()
             m_active_resource = bntx;
     }
 
-    //Deffered call to render in inspector
     if (m_active_resource.is_valid())
     {
         if (Engine::get_singleton()->is_editor_hint()) 
@@ -99,7 +96,6 @@ void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
         file_tree->queue_free();
     }
 
-    // Create Tree Widget
     file_tree = memnew(Tree);
     file_tree->set_columns(2);
     file_tree->set_column_titles_visible(true);
@@ -119,7 +115,6 @@ void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
     TreeItem *root = file_tree->create_item();
     root->set_text(0, "archive://");
 
-    // Parse paths into TreeItems
     PackedStringArray files = archive->get_files();
     HashMap<String, TreeItem*> dir_nodes;
 
@@ -135,15 +130,12 @@ void SarcInspectorControl::setup(Ref<SeadArchive> archive) {
             current_path += (j == 0 ? "" : "/") + part;
 
             if (j == parts.size() - 1) {
-                // Leaf Node (File)
                 TreeItem *file_item = file_tree->create_item(current_parent);
                 file_item->set_text(0, part);
                 file_item->set_text(1, vformat("%d bytes", archive->get_file_size(path)));
 
-                //Set metadata
                 file_item->set_metadata(0, path);
             } else {
-                // Directory Node
                 if (!dir_nodes.has(current_path)) {
                     TreeItem *dir_item = file_tree->create_item(current_parent);
                     dir_item->set_text(0, part);
@@ -218,11 +210,9 @@ void SeadArchive::LoadFromFile(String file)
 
     sp->seek(0);
 
-    // SARC header
     SARCHeader hdr(sp);
     ERR_FAIL_COND(hdr.magic != "SARC");
 
-    // SFAT header
 	sp->seek(hdr.header_size);
 	SFATHeader sfat(sp);
 	ERR_FAIL_COND_MSG(sfat.magic != "SFAT", "Unknown SFAT magic");
@@ -238,7 +228,6 @@ void SeadArchive::LoadFromFile(String file)
 		nodes.set(i, SFATNode(sp));
 	}
  
-	// SFNT header
 	const int sfnt_header_offset = node_offset + SFAT_NODE_SIZE * sfat.node_count;
 	sp->seek(sfnt_header_offset);
 	SFNTHeader sfnt(sp);
@@ -249,7 +238,6 @@ void SeadArchive::LoadFromFile(String file)
 	ERR_FAIL_COND_MSG((int)hdr.data_offset < name_table_offset,
 			"File data should not be stored before the name table");
  
-	// Only commit state once everything above has validated successfully.
 	m_data = buf;
 	m_data_offset = hdr.data_offset;
 	m_big_endian = hdr.big_endian;

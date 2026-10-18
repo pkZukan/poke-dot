@@ -23,10 +23,6 @@ Vector2 pane_origin(int flags) {
     return Vector2(origin_fraction(flags & 3), origin_fraction((flags >> 2) & 3));
 }
 
-double effective_alpha_of(const Node *node) {
-    return double(node->get_meta("effective_alpha", 1.0));
-}
-
 struct Insets {
     int left = 0, right = 0, top = 0, bottom = 0;
 };
@@ -221,6 +217,9 @@ Error UIBuilder::parse_layouts(const Ref<SeadArchive> &archive, const PackedStri
 Error UIBuilder::load_textures(const Ref<SeadArchive> &archive, const PackedStringArray &files) {
     picture_shader = ResourceLoader::get_singleton()->load("res://gflib/shaders/ui_picture.gdshader");
     ERR_FAIL_COND_V_MSG(picture_shader.is_null(), ERR_FILE_NOT_FOUND, "UI picture shader not found");
+    // Godot fixes the blend equation per shader, so multiply materials need their own variant.
+    multiply_shader.instantiate();
+    multiply_shader->set_code(picture_shader->get_code().replace("blend_premul_alpha", "blend_mul"));
 
     for (const String &file : files) {
         if (!file.ends_with(".bntx")) continue;
@@ -271,7 +270,6 @@ bool UIBuilder::build_layout(const String &layout_name, Control *container, Pack
         root->set_name("Layout");
         root->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
         root->set_meta("layout_size", native_size);
-        root->set_meta("effective_alpha", 1.0);
         root->set_size(native_size);
         root->set_meta("bflyt", binary_layout);
         container = root;
@@ -302,17 +300,20 @@ bool UIBuilder::build_layout(const String &layout_name, Control *container, Pack
         node->set_meta("layout_name", layout_name);
         if (info.parent < 0) node->set_meta("layout_instance", true);
 
+        // Child translations are relative to the parent's base point, shifted by the parent origin.
+        // A part's root pane is a child of its parts pane, so it follows the same rule.
         Vector2 anchor;
-        if (info.parent < 0)
-            anchor = bool(data.get("draw_from_center", true))
-                    ? (is_entry ? native_size : container->get_size()) * 0.5 : Vector2();
-        else
+        if (info.parent >= 0)
             anchor = layout_pivots[info.parent]
                     + layout_sizes[info.parent] * (pane_origin(info.origin >> 4) - Vector2(0.5, 0.5));
+        else if (!is_entry)
+            anchor = container->get_pivot_offset()
+                    + container->get_size() * (pane_origin(info.origin >> 4) - Vector2(0.5, 0.5));
+        else
+            anchor = bool(data.get("draw_from_center", true)) ? native_size * 0.5 : Vector2();
         apply_transform(node, info, anchor);
 
-        const double parent_alpha = effective_alpha_of(parent);
-        const double alpha = apply_alpha_and_visibility(node, info, parent_alpha);
+        const double alpha = apply_alpha_and_visibility(node, info);
 
         switch (info.type) {
             case PaneInfo::PRT:
@@ -363,15 +364,18 @@ void UIBuilder::apply_transform(Control *node, const PaneInfo &info, const Vecto
     if (info.rotation.x != 0 || info.rotation.y != 0) ui_warn_once(warnings, "3D pane rotations are not rendered");
 }
 
-double UIBuilder::apply_alpha_and_visibility(Control *node, const PaneInfo &info, double parent_alpha) {
+double UIBuilder::apply_alpha_and_visibility(Control *node, const PaneInfo &info) {
     node->set_visible(info.flags & FLAG_VISIBLE);
-    // Godot's modulate cascades to every descendant, unlike BFLYT's per-pane parent-alpha flag.
-    // Resolve inheritance here and apply self_modulate so uninfluenced panes stay independent.
-    const bool influenced = (info.flags & FLAG_ALPHA_INFLUENCED) || info.parent < 0;
-    const double alpha = info.alpha * (influenced ? parent_alpha : 1.0);
-    node->set_meta("effective_alpha", alpha);
-    node->set_self_modulate(Color(1, 1, 1, alpha));
-    return alpha;
+    // BFLYT's influenced-alpha flag sits on the parent: when set, the pane's alpha multiplies
+    // itself and every descendant, which is exactly Godot's cascading modulate. Without it the
+    // alpha only applies to the pane's own content, which maps to self_modulate on that content.
+    // Parts panes always cascade, matching UIStateRuntime's FLVC handling.
+    if ((info.flags & FLAG_ALPHA_INFLUENCED) || info.type == PaneInfo::PRT) {
+        node->set_modulate(Color(1, 1, 1, info.alpha));
+        return 1.0;
+    }
+    node->set_self_modulate(Color(1, 1, 1, info.alpha));
+    return info.alpha;
 }
 
 bool UIBuilder::build_part(Control *node, const Dictionary &pane, const PackedStringArray &ancestry) {
@@ -444,7 +448,43 @@ void UIBuilder::build_picture(Control *node, const PaneInfo &info, const Diction
     if (!uv_sets.is_empty()) uv = uv_sets[0];
     const PackedColorArray colors = pane["colors"];
 
-    add_quad(node, "Picture", Rect2(Vector2(), info.size), material, texture_names, uv, colors, 0, alpha);
+    Polygon2D *quad = add_quad(node, "Picture", Rect2(Vector2(), info.size), material, texture_names, uv, colors, 0, alpha);
+    if (quad && pane.has("procedural_shape"))
+        apply_procedural_shape(quad, info.size, pane["procedural_shape"]);
+}
+
+void UIBuilder::apply_procedural_shape(Polygon2D *quad, const Vector2 &size, const Dictionary &shape) {
+    const int flags = shape["flags"];
+    if (!(flags & 0x20)) return;
+    Ref<ShaderMaterial> material = quad->get_material();
+    if (material.is_null()) {
+        // Untextured pictures draw with vertex colors only; the shader's default texture is white.
+        material.instantiate();
+        material->set_shader(picture_shader);
+        quad->set_material(material);
+    }
+    Vector4 radii = shape["radii"], exponents = shape["exponents"];
+    if (!(flags & 0x40)) {
+        radii = Vector4(radii.x, radii.x, radii.x, radii.x);
+        exponents = Vector4(exponents.x, exponents.x, exponents.x, exponents.x);
+    }
+    material->set_shader_parameter("has_shape", true);
+    material->set_shader_parameter("shape_size", size);
+    material->set_shader_parameter("shape_flags", flags);
+    material->set_shader_parameter("shape_radii", radii);
+    material->set_shader_parameter("shape_exponents", exponents);
+    material->set_shader_parameter("stroke_size", shape["stroke_size"]);
+    material->set_shader_parameter("stroke_color", shape["stroke_color"]);
+    material->set_shader_parameter("inner_shadow_color", shape["inner_shadow_color"]);
+    material->set_shader_parameter("inner_shadow_params", Vector3(Math::deg_to_rad(double(shape["inner_shadow_angle"])),
+            shape["inner_shadow_distance"], shape["inner_shadow_size"]));
+    material->set_shader_parameter("overlay_color", shape["overlay_color"]);
+    material->set_shader_parameter("gradient_stops", shape["gradient_stops"]);
+    const PackedColorArray gradient_colors = shape["gradient_colors"];
+    for (int i = 0; i < gradient_colors.size() && i < 4; ++i)
+        material->set_shader_parameter(vformat("gradient_color%d", i), gradient_colors[i]);
+    material->set_shader_parameter("gradient_angle", Math::deg_to_rad(double(shape["gradient_angle"])));
+    if (flags & 0x10) ui_warn_once(warnings, "Procedural shape drop shadows are not rendered");
 }
 
 void UIBuilder::build_window(Control *node, const PaneInfo &info, const Dictionary &pane,
@@ -657,33 +697,46 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
         const Array combiners = material.get("texture_combiners", Array());
         const Array generators = material.get("texture_coordinate_generators", Array());
         
-        bool has_alpha_mask = false;
+        // The first combiner stage merges texture 0 with texture 1; later stages
+        // (indirect warps, third textures) are not converted.
+        bool has_texture1 = false;
         if (maps.size() > 1 && !combiners.is_empty() && generators.size() > 1) {
             const Dictionary combiner = combiners[0], generator = generators[1];
-            const Dictionary mask_map = maps[1];
-            const int mask_index = int(mask_map["texture_index"]);
-            if (int(combiner["color_mode"]) == 0 && int(combiner["alpha_mode"]) == 1 &&
-                    int(generator["source"]) == 0 && mask_index >= 0 && mask_index < texture_names.size()) {
-                const String mask_name = texture_names[mask_index];
-                if (textures.has(mask_name) && texture_materials.has(mask_name)) {
-                    Ref<ShaderMaterial> mask_material = texture_materials[mask_name];
-                    picture_material->set_shader_parameter("alpha_mask", textures[mask_name]);
-                    picture_material->set_shader_parameter("mask_channel_sources", mask_material->get_shader_parameter("channel_sources"));
-                    picture_material->set_shader_parameter("mask_wrap", Vector2i(int(mask_map["wrap_s"]) & 3, int(mask_map["wrap_t"]) & 3));
-                    picture_material->set_shader_parameter("mask_nearest", (int(mask_map["wrap_t"]) >> 2 & 3) == 0);
+            const Dictionary map1 = maps[1];
+            const int color_mode = combiner["color_mode"], alpha_mode = combiner["alpha_mode"];
+            const int index1 = int(map1["texture_index"]);
+            auto supported = [](int mode) { return mode == 0 || mode == 1 || mode == 2 || mode == 3 || mode == 5 || mode == 8; };
+            // Coordinate sources: 0 the pane's first UV set, 4 a projection over the pane.
+            const int source = generator["source"];
+            if (!supported(color_mode) || !supported(alpha_mode)) {
+                ui_warn_once(warnings, vformat("Unsupported UI combiner modes %d/%d draw only the first texture", color_mode, alpha_mode));
+            } else if (source != 0 && source != 4) {
+                ui_warn_once(warnings, vformat("Unsupported UI texture coordinate source %d draws only the first texture", source));
+            } else if (index1 >= 0 && index1 < texture_names.size()) {
+                const String name1 = texture_names[index1];
+                if (textures.has(name1) && texture_materials.has(name1)) {
+                    Ref<ShaderMaterial> material1 = texture_materials[name1];
+                    if (source == 4)
+                        apply_texture1_projection(picture_material, material, generators, parent->get_size(),
+                                Ref<Texture2D>(textures[name1])->get_size());
+                    picture_material->set_shader_parameter("texture1", textures[name1]);
+                    picture_material->set_shader_parameter("texture1_channel_sources", material1->get_shader_parameter("channel_sources"));
+                    picture_material->set_shader_parameter("texture1_wrap", Vector2i(int(map1["wrap_s"]) & 3, int(map1["wrap_t"]) & 3));
+                    picture_material->set_shader_parameter("texture1_nearest", (int(map1["wrap_t"]) >> 2 & 3) == 0);
+                    picture_material->set_shader_parameter("combiner_modes", Vector2i(color_mode, alpha_mode));
                     const Array transforms = material.get("texture_transforms", Array());
                     if (transforms.size() > 1) {
                         const Dictionary transform = transforms[1];
                         const Vector2 translation = transform["translation"];
-                        picture_material->set_shader_parameter("mask_transform", Vector3(translation.x, translation.y, Math::deg_to_rad(double(transform["rotation"]))));
-                        picture_material->set_shader_parameter("mask_scale", transform["scale"]);
+                        picture_material->set_shader_parameter("texture1_transform", Vector3(translation.x, translation.y, Math::deg_to_rad(double(transform["rotation"]))));
+                        picture_material->set_shader_parameter("texture1_scale", transform["scale"]);
                     }
-                    picture_material->set_shader_parameter("has_alpha_mask", true);
-                    has_alpha_mask = true;
+                    picture_material->set_shader_parameter("has_texture1", true);
+                    has_texture1 = true;
                 }
             }
         }
-        if (maps.size() > (has_alpha_mask ? 2 : 1))
+        if (maps.size() > (has_texture1 ? 2 : 1) || combiners.size() > 1)
             ui_warn_once(warnings, "Additional UI material texture combiners are not converted");
         quad->set_material(picture_material);
         apply_sampler(quad, map);
@@ -693,6 +746,25 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
     quad->set_self_modulate(Color(1, 1, 1, alpha));
     parent->add_child(quad);
     return quad;
+}
+
+void UIBuilder::apply_texture1_projection(const Ref<ShaderMaterial> &shader_material, const Dictionary &material,
+        const Array &generators, const Vector2 &pane_size, const Vector2 &texture_size) {
+    // Projection parameters are stored in order for the generators that project (sources 3 and up).
+    int projection_index = 0;
+    for (int i = 0; i < 1 && i < generators.size(); ++i)
+        if (int(Dictionary(generators[i])["source"]) >= 3) ++projection_index;
+    const Array projections = material.get("texture_projections", Array());
+    const Dictionary projection = projection_index < projections.size() ? Dictionary(projections[projection_index]) : Dictionary();
+    // Flags: 0x01 fit layout size, 0x02 fit pane size, 0x04 follow pane scale and rotation.
+    const int flags = projection.get("flags", 2);
+    if (flags & 1) ui_warn_once(warnings, "Layout-fitted texture projections use the texture size");
+    const Vector2 scale = projection.get("scale", Vector2(1, 1));
+    const Vector2 size = (flags & 2) ? pane_size : texture_size;
+    shader_material->set_shader_parameter("texture1_projected", true);
+    shader_material->set_shader_parameter("texture1_projection_center", pane_size * 0.5);
+    shader_material->set_shader_parameter("texture1_projection_size", size * scale);
+    shader_material->set_shader_parameter("texture1_projection_offset", projection.get("translation", Vector2()));
 }
 
 Ref<ShaderMaterial> UIBuilder::make_picture_material(const String &texture_name, const Dictionary &material)
@@ -705,19 +777,16 @@ Ref<ShaderMaterial> UIBuilder::make_picture_material(const String &texture_name,
     pane_material->set_shader_parameter("black_color", material.get("black_color", Color(0.0, 0.0, 0.0, 0.0)));
     pane_material->set_shader_parameter("white_color", material.get("white_color", Color(1.0, 1.0, 1.0, 1.0)));
 
-    const Dictionary blend_mode = material.get("color_blend_mode", Dictionary());
-
-    const bool additive_blend = 
-        !blend_mode.is_empty() &&
-        int(blend_mode.get("equation", 0)) == 1 &&
-        int(blend_mode.get("source", 0)) == 4 &&
-        int(blend_mode.get("destination", 0)) == 1 &&
-        int(blend_mode.get("logic_operation", 0)) == 0;
+    const int blend = blend_mode_of(material);
+    if (blend == BLEND_MULTIPLY) {
+        pane_material->set_shader(multiply_shader);
+        pane_material->set_shader_parameter("channel_sources", source_material->get_shader_parameter("channel_sources"));
+    }
 
     // xy = translation
     // z  = rotation in radians
-    // w  = additive blend flag
-    Vector4 picture_params(0.0, 0.0, 0.0, additive_blend ? 1.0 : 0.0);
+    // w  = blend mode (see ui_picture.gdshader)
+    Vector4 picture_params(0.0, 0.0, 0.0, blend);
     Vector2 uv_scale(1.0, 1.0);
 
     const Array transforms = material.get("texture_transforms", Array());
@@ -736,6 +805,26 @@ Ref<ShaderMaterial> UIBuilder::make_picture_material(const String &texture_name,
     pane_material->set_shader_parameter("uv_scale", uv_scale);
 
     return pane_material;
+}
+
+int UIBuilder::blend_mode_of(const Dictionary &material) {
+    const Dictionary blend_mode = material.get("color_blend_mode", Dictionary());
+    if (blend_mode.is_empty()) return BLEND_ALPHA;
+    // Equations: 0 disable, 1 add, 2 subtract, 3 reverse subtract, 4 min, 5 max.
+    // Factors: 0 zero, 1 one, 2 dst color, 3 inv dst color, 4 src alpha, 5 inv src alpha,
+    // 6 dst alpha, 7 inv dst alpha, 8 src color, 9 inv src color.
+    const int equation = blend_mode.get("equation", 0);
+    const int source = blend_mode.get("source", 0), destination = blend_mode.get("destination", 0);
+    if (int(blend_mode.get("logic_operation", 0)) == 0 && equation == 1) {
+        if (source == 4 && destination == 5) return BLEND_ALPHA;
+        if (source == 4 && destination == 1) return BLEND_ADD;
+        if (source == 1 && destination == 1) return BLEND_ADD_ONE;
+        if (source == 1 && destination == 5) return BLEND_PREMULTIPLIED;
+        if ((source == 0 && destination == 8) || (source == 2 && destination == 0)) return BLEND_MULTIPLY;
+    }
+    ui_warn_once(warnings, vformat("Unsupported UI blend mode (equation %d, source %d, destination %d) uses alpha blending",
+            equation, source, destination));
+    return BLEND_ALPHA;
 }
 
 void UIBuilder::apply_sampler(Polygon2D *quad, const Dictionary &map) {

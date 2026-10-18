@@ -149,8 +149,7 @@ func set_research_exp(current_exp: int, required_exp: int) -> void:
 	var progress := 0.0
 	if required_exp > 0:
 		progress = clampf(float(current_exp) / float(required_exp), 0.0, 1.0)
-	# The authored gauge spans frames 0–100. Its ring also requires wnd1
-	# rendering and secondary-texture transforms, not yet supported by TrinityUI.
+	# The authored gauge spans frames 0–100.
 	apply_state("L_mr_gauge_00", "gauge", progress * 100.0)
 
 func set_quest(name: String, desc: String):

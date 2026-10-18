@@ -27,6 +27,7 @@ public:
     void load_catalog();
     void unload_catalog();
     Ref<CatalogEntry> GetCatalogEntry(int species, uint8_t form, uint8_t gender);
+    bool HasCatalogEntry(int species, uint8_t form, uint8_t gender) const;
     Ref<TRPersonalData> GetPersonalData(int species, int form);
 
 protected:

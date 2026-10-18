@@ -33,7 +33,6 @@ private:
 		uint32_t key;
 	};
 
-	// Magic is read as little-endian; the XOR key applies to big-endian words.
 	inline static constexpr BfttfXorFormat BFTTF_XOR_FORMATS[] = {
 		{ 0x1a879bd9U, 0xa6018502U },
 		{ 0x1e1af836U, 0x49621806U },

@@ -30,6 +30,7 @@ void PokemonCharacter::_bind_methods()
 
     ClassDB::bind_method(D_METHOD("get_model"), &PokemonCharacter::get_model);
     ClassDB::bind_method(D_METHOD("get_personal"), &PokemonCharacter::get_personal);
+    ClassDB::bind_method(D_METHOD("Evolve", "index"), &PokemonCharacter::Evolve, DEFVAL(0));
     ClassDB::bind_method(D_METHOD("get_animation_player"), &PokemonCharacter::get_animation_player);
     ClassDB::bind_method(D_METHOD("configure_animation_tree", "tree"), &PokemonCharacter::configure_animation_tree);
     ClassDB::bind_method(D_METHOD("apply_movement", "delta", "direction"), &PokemonCharacter::apply_movement, DEFVAL(Vector3(0, 0, 1)));
@@ -65,11 +66,29 @@ void PokemonCharacter::_initialize()
     add_child(_col);
 
     _actor->Initialize();
+    _actor->connect("evolved", callable_mp(this, &PokemonCharacter::_on_actor_evolved));
+    _fit_collision();
 
+    emit_signal("character_rebuilt");
+}
+
+void PokemonCharacter::_fit_collision()
+{
     const AABB bounds = _actor->GetBBox();
     _col_shape->set_size(bounds.get_size());
     _col->set_position(bounds.get_center());
+}
 
+void PokemonCharacter::_on_actor_evolved(int previous_species, int previous_form)
+{
+    // The actor already swapped its model; sync the exported identity without a rebuild.
+    Ref<SpeciesResourceInfo> info = _actor->GetCatalogEntry()->get_species_info();
+    species = info->get_species();
+    form = info->get_form();
+    gender = info->get_gender();
+    _load_icon();
+    _fit_collision();
+    notify_property_list_changed();
     emit_signal("character_rebuilt");
 }
 
@@ -93,6 +112,13 @@ Node3D *PokemonCharacter::get_model() const
 Ref<TRPersonalData> PokemonCharacter::get_personal() const
 {
     return _actor ? _actor->GetPersonal() : Ref<TRPersonalData>();
+}
+
+bool PokemonCharacter::Evolve(int index)
+{
+    if (!_actor || _actor->GetEvolutions().is_empty())
+        return false;
+    return _actor->Evolve(index);
 }
 
 AnimationPlayer *PokemonCharacter::get_animation_player() const

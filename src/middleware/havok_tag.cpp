@@ -15,8 +15,6 @@ void HavokTag::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_tree_item"), &HavokTag::get_tree_item);
 }
 
-// ---------------- Loading / chunk parsing ----------------
-
 void HavokTag::LoadFromFile(String file)
 {
 	PackedByteArray buf = FileAccess::get_file_as_bytes(file);
@@ -212,8 +210,6 @@ TreeItem* HavokTag::parse_tpad(Ref<StreamPeerBuffer> sp, TreeItem *parent, uint3
 	return node;
 }
 
-// ---------------- Shared utils ----------------
-
 String HavokUtils::ResolveTemplateParam(Ref<HavokStrings> tst, Ref<HavokTypeNameDescriptor> tna, const HavokTypeNameParamEntry &p)
 {
 	String pname = tst->Strings[p.nameIdx];
@@ -288,8 +284,6 @@ uint32_t HavokUtils::read_var32(Ref<StreamPeerBuffer> sp, uint32_t *bytes_read)
 	if (bytes_read) *bytes_read = local_bytes_read;
 	return result;
 }
-
-// ---------------- Debug dump path (WalkMembers / ParseItemEntry / GetObject) ----------------
 
 void HavokTag::WalkMembers(uint32_t typeIdx, uint32_t base_offset, int depth,
 	Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<HavokStrings> fst,
@@ -456,8 +450,6 @@ void HavokTag::ParseItemEntry(Ref<HavokItem> item, Ref<HavokStrings> tst, Ref<Ha
 	}
 }
 
-// ---------------- Cursor-based read layer ----------------
-
 bool HavokTag::ResolveTypeKind(uint32_t typeIdx, Ref<HavokTypeNameDescriptor> tna, Ref<HavokTypeBodyDescriptor> tbdy,
 	HavokTypeBodyEntry::Kind &kind, HavokTypeBodyEntry &body)
 {
@@ -467,9 +459,6 @@ bool HavokTag::ResolveTypeKind(uint32_t typeIdx, Ref<HavokTypeNameDescriptor> tn
 	if (bodyIdx < 0)
 		return false;
 	body = tbdy->Entries[bodyIdx];
-	// hkUint32, hkReal, etc. can omit format/size and inherit them from
-	// their underlying type. In particular, a zero-sized hkUint32 makes
-	// sectionOffset appear to be an empty inline array during mesh decoding.
 	uint32_t parentIdx = body.parentIndex;
 	for (int depth = 0; parentIdx != 0; depth++)
 	{
@@ -685,8 +674,6 @@ String HavokCursor::AsString() const
 	return Utils::read_null_terminated_string(ctx->data->Buffer);
 }
 
-// ---------------- Mesh extraction ----------------
-
 Vector<HavokMeshSection> HavokTag::GetGeometrySections()
 {
 	Vector<HavokMeshSection> sections;
@@ -705,7 +692,6 @@ Vector<HavokMeshSection> HavokTag::GetGeometrySections()
 	float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f;
 	if (!bitScale16Inv.IsNull())
 	{
-		// hkVector4 inherits an inline float array; use its element cursors.
 		scale_x = (float)bitScale16Inv[0].AsFloat();
 		scale_y = (float)bitScale16Inv[1].AsFloat();
 		scale_z = (float)bitScale16Inv[2].AsFloat();
@@ -780,8 +766,8 @@ Vector<HavokMeshSection> HavokTag::GetGeometrySections()
 			if (a >= vertexCount || b >= vertexCount || c >= vertexCount || d >= vertexCount)
 				continue;
 
-			// Emit Godot's clockwise front faces, reversing Havok's winding
-			// for both triangles so rendering and concave collision agree.
+			// Godot's front faces are clockwise; reverse Havok's winding so rendering
+			// and concave collision agree.
 			out.faceIndices.push_back((int32_t)a);
 			out.faceIndices.push_back((int32_t)c);
 			out.faceIndices.push_back((int32_t)b);

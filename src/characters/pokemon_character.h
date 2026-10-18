@@ -52,6 +52,7 @@ public:
 
     Node3D *get_model() const;
     Ref<TRPersonalData> get_personal() const;
+    bool Evolve(int index);
     AnimationPlayer *get_animation_player() const;
     void configure_animation_tree(AnimationTree *tree);
     void apply_movement(double delta, const Vector3 &direction);
@@ -72,6 +73,8 @@ private:
     Ref<BoxShape3D> _col_shape;
 
     void _initialize();
+    void _on_actor_evolved(int previous_species, int previous_form);
+    void _fit_collision();
     void _load_icon();
     void _cleanup();
     void _try_step_up(const Vector3& motion);

@@ -70,7 +70,7 @@ Error BinaryCompositeFont::parse_node(const Ref<StreamPeerBuffer> &sp, uint64_t 
 	} else if (type == 1) {
 		if (!has_bytes(sp, offset, 32)) return ERR_FILE_CORRUPT;
 		const float size = sp->get_float();
-		sp->get_u32(); // outline set flags
+		sp->get_u32();
 		const uint32_t count = sp->get_u32();
 		const uint64_t records = offset + sp->get_u32();
 		if (!Math::is_finite(size) || size <= 0 || size > 512 || !count || count > 1024 ||
@@ -82,11 +82,11 @@ Error BinaryCompositeFont::parse_node(const Ref<StreamPeerBuffer> &sp, uint64_t 
 			entry.size = size;
 			entry.adjustment = sp->get_float();
 			entry.scale = sp->get_float();
-			sp->get_float(); // reserved in the bundled assets
+			sp->get_float();
 			const uint64_t name = offset + sp->get_u32();
 			entry.flags = sp->get_u32();
 			entry.advance_scale = sp->get_float();
-			sp->get_u32(); // rasterization settings; not mapped to Godot hinting
+			sp->get_u32();
 			sp->get_u32();
 			const uint32_t range_count = sp->get_u32();
 			const uint64_t ranges = offset + sp->get_u32();
@@ -144,8 +144,8 @@ Error BinaryCompositeFont::load_outline(const String &path, const Entry &entry, 
 		return OK;
 	}
 
-	// A bitmap FontFile provides exact character coverage for a restricted member.
-	// Keeping the original outline data would let TextServer select excluded glyphs.
+	// Godot fallback fonts can't be limited to character ranges or scaled, so such members are
+	// rebuilt as bitmap FontFiles; keeping the outline data would let TextServer pick excluded glyphs.
 	const int size = MAX(1, int(Math::round(entry.size)));
 	const int raster_size = MAX(1, int(Math::round(entry.size * entry.scale)));
 	const Vector2i raster(raster_size, 0);
@@ -199,7 +199,6 @@ Error BinaryCompositeFont::LoadFromBuffer(const PackedByteArray &buffer, const S
 	TypedArray<Font> fonts;
 	PackedStringArray loaded_warnings;
 	for (const Entry &entry : entries) {
-		// Retain the filename for inspection, but do not load BFTTF members.
 		if (entry.name.get_extension().to_lower() == "bfttf") continue;
 		Ref<FontFile> font;
 		const String path = base_dir.path_join(entry.name);
@@ -224,9 +223,9 @@ Error BinaryCompositeFont::LoadFromBuffer(const PackedByteArray &buffer, const S
 	set_data(PackedByteArray());
 	set_allow_system_fallback(false);
 	set_fallbacks(fonts);
-	// Bitmap composites retain their native, potentially non-square cell size.
-	// Outline fonts use a square em; symbol fallbacks must not replace the
-	// nominal dimensions of the bitmap font used for the layout's text.
+	// Godot fonts have one size, but Nintendo bitmap cells can be non-square. Expose the
+	// bitmap member's cell size so the UI builder can compensate; square-em outline
+	// fallbacks must not override it.
 	Vector2 nominal_size(1, 1);
 	for (int i = 0; i < fonts.size(); ++i) {
 		Ref<Font> member = fonts[i];

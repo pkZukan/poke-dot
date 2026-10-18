@@ -66,6 +66,11 @@ Ref<CatalogEntry> PokemonCatalog::GetCatalogEntry(int species, uint8_t form, uin
     return _catalog->get_catalog_table()[_catalog_map[key]];
 }
 
+bool PokemonCatalog::HasCatalogEntry(int species, uint8_t form, uint8_t gender) const
+{
+    return _catalog_map.has(((uint64_t)species << 16) | ((uint64_t)form << 8) | (uint64_t)gender);
+}
+
 Ref<TRPersonalData> PokemonCatalog::GetPersonalData(int species, int form)
 {
     const uint32_t key = (uint32_t(species) << 16) | uint32_t(form);

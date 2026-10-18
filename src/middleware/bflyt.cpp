@@ -16,8 +16,6 @@ void BinaryLayout::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "layout", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY), "", "get_layout");
 }
 
-// ---------------- Loading / chunk parsing ----------------
-
 Error BinaryLayout::LoadFromBuffer(const PackedByteArray &buffer)
 {
 	layout.clear();
@@ -93,12 +91,12 @@ bool BinaryLayout::parse_section(BflytUtils::Reader &r, const BflytSection &sect
 	if (tag == "txl1") return parse_strings(r, section, ctx.textures);
 	if (tag == "fnl1") return parse_strings(r, section, ctx.fonts);
 	if (tag == "mat1") return parse_mat1(r, section, ctx);
+	if (tag == "usd1") return parse_usd1(r, section, ctx);
 	if (tag == "pas1") return parse_pas1(ctx);
 	if (tag == "pae1") return parse_pae1(ctx);
 	if (tag == "pan1" || tag == "pic1" || tag == "txt1" || tag == "wnd1" || tag == "bnd1" ||
 		tag == "prt1" || tag == "ali1" || tag == "scr1" || tag == "cpt1")
 		return parse_pane(r, section, ctx);
-	// Preserve unsupported sections for inspection and future parsers.
 	return true;
 }
 
@@ -203,7 +201,7 @@ bool BinaryLayout::parse_material(BflytUtils::Reader &r, uint64_t offset, uint32
 		combiners.push_back(combiner);
 	}
 	material["texture_combiners"] = combiners;
-	if (flags & (1u << 9)) cursor += 8; // Alpha compare: function, padding, reference.
+	if (flags & (1u << 9)) cursor += 8;
 	if (flags & (1u << 10)) {
 		ERR_FAIL_COND_V_MSG(!r.has(cursor, 4), false, "Truncated material blend mode");
 		Dictionary blend_mode;
@@ -212,9 +210,108 @@ bool BinaryLayout::parse_material(BflytUtils::Reader &r, uint64_t offset, uint32
 		blend_mode["destination"] = r.number(cursor + 2, 1);
 		blend_mode["logic_operation"] = r.number(cursor + 3, 1);
 		material["color_blend_mode"] = blend_mode;
+		cursor += 4;
 	}
+	if (flags & (1u << 12)) cursor += 4;
+	if (flags & (1u << 14)) cursor += 12;
+	Array projections;
+	for (uint32_t i = 0; i < ((flags >> 15) & 3); ++i, cursor += 20) {
+		ERR_FAIL_COND_V_MSG(!r.has(cursor, 20), false, "Truncated material texture projection");
+		Dictionary projection;
+		projection["translation"] = r.vec2(cursor);
+		projection["scale"] = r.vec2(cursor + 8);
+		projection["flags"] = r.number(cursor + 16, 1);
+		projections.push_back(projection);
+	}
+	material["texture_projections"] = projections;
 	material["raw_data"] = r.data.slice(offset, r.end);
 	return true;
+}
+
+bool BinaryLayout::parse_usd1(BflytUtils::Reader &r, const BflytSection &section, BflytContext &ctx)
+{
+	if (ctx.last_pane < 0) return true;
+	const uint64_t p = section.offset;
+	ERR_FAIL_COND_V_MSG(!r.has(p + 8, 4), false, "Truncated usd1");
+	const uint32_t count = r.number(p + 8, 2);
+	ERR_FAIL_COND_V_MSG(!r.has(p + 12, uint64_t(count) * 12), false, "Truncated usd1 entries");
+	Dictionary pane = ctx.panes[ctx.last_pane];
+	Dictionary user_data;
+	for (uint32_t i = 0; i < count && r.valid; ++i)
+	{
+		const uint64_t entry = p + 12 + uint64_t(i) * 12;
+		const String name = r.cstring(entry + r.number(entry, 4));
+		const uint64_t data = entry + r.number(entry + 4, 4);
+		const uint32_t length = r.number(entry + 8, 2);
+		switch (r.number(entry + 10, 1))
+		{
+			case 0:
+				user_data[name] = r.string(data, length);
+				break;
+			case 1:
+			{
+				PackedInt32Array values;
+				for (uint32_t j = 0; j < length; ++j) values.push_back(int32_t(r.number(data + j * 4, 4)));
+				user_data[name] = values;
+				break;
+			}
+			case 2:
+			{
+				PackedFloat32Array values;
+				for (uint32_t j = 0; j < length; ++j) values.push_back(r.real(data + j * 4));
+				user_data[name] = values;
+				break;
+			}
+			case 3:
+				if (!parse_system_data(r, data, pane)) return false;
+				break;
+		}
+	}
+	if (!user_data.is_empty()) pane["user_data"] = user_data;
+	return r.valid;
+}
+
+bool BinaryLayout::parse_system_data(BflytUtils::Reader &r, uint64_t p, Dictionary &pane)
+{
+	const uint32_t count = r.number(p + 2, 2);
+	for (uint32_t i = 0; i < count && r.valid; ++i)
+	{
+		const uint64_t item = p + r.number(p + 4 + uint64_t(i) * 4, 4);
+		if (r.number(item, 4) != 6) continue;
+		Dictionary shape;
+		if (!parse_procedural_shape(r, item, shape)) return false;
+		pane["procedural_shape"] = shape;
+	}
+	return r.valid;
+}
+
+bool BinaryLayout::parse_procedural_shape(BflytUtils::Reader &r, uint64_t p, Dictionary &shape)
+{
+	ERR_FAIL_COND_V_MSG(!r.has(p, 0xf0), false, "Truncated procedural shape");
+	auto color = [&](uint64_t at) {
+		return Color(r.real(at) / 255.0, r.real(at + 4) / 255.0, r.real(at + 8) / 255.0, r.real(at + 12) / 255.0);
+	};
+	auto vec4 = [&](uint64_t at) { return Vector4(r.real(at), r.real(at + 4), r.real(at + 8), r.real(at + 12)); };
+	shape["flags"] = r.number(p + 4, 1);
+	shape["exponents"] = vec4(p + 0x1c);
+	shape["radii"] = vec4(p + 0x2c);
+	shape["stroke_size"] = r.real(p + 0x3c);
+	shape["stroke_color"] = color(p + 0x40);
+	shape["inner_shadow_color"] = color(p + 0x50);
+	shape["inner_shadow_angle"] = r.real(p + 0x60);
+	shape["inner_shadow_distance"] = r.real(p + 0x64);
+	shape["inner_shadow_size"] = r.real(p + 0x68);
+	shape["overlay_color"] = color(p + 0x6c);
+	shape["gradient_stops"] = vec4(p + 0x7c);
+	PackedColorArray gradient_colors;
+	for (int i = 0; i < 4; ++i) gradient_colors.push_back(color(p + 0x8c + i * 16));
+	shape["gradient_colors"] = gradient_colors;
+	shape["gradient_angle"] = r.real(p + 0xcc);
+	shape["drop_shadow_color"] = color(p + 0xd0);
+	shape["drop_shadow_angle"] = r.real(p + 0xe0);
+	shape["drop_shadow_distance"] = r.real(p + 0xe4);
+	shape["drop_shadow_size"] = r.real(p + 0xe8);
+	return r.valid;
 }
 
 bool BinaryLayout::parse_pas1(BflytContext &ctx)
@@ -264,7 +361,7 @@ bool BinaryLayout::parse_pane_payload(BflytUtils::Reader &r, const BflytSection 
 	if (section.tag == "wnd1") return parse_wnd1(r, section, pane);
 	if (section.tag == "prt1") return parse_prt1(r, section, pane);
 	if (section.tag == "txt1") return parse_txt1(r, section, pane);
-	if (section.tag == "ali1" || section.tag == "scr1" || section.tag == "cpt1")
+	if (section.tag == "ali1" || section.tag == "cpt1")
 		return parse_unrendered_pane(section, ctx);
 	return true;
 }
@@ -311,8 +408,6 @@ bool BinaryLayout::parse_txt1(BflytUtils::Reader &r, const BflytSection &section
 bool BinaryLayout::parse_wnd1(BflytUtils::Reader &r, const BflytSection &section, Dictionary &pane)
 {
 	const uint64_t p = section.offset;
-	// WND1 stores four stretch insets, four custom insets, frame metadata,
-	// then relative offsets to its content region and frame table.
 	ERR_FAIL_COND_V_MSG(!r.has(p + 84, 28), false, "Truncated window pane");
 	PackedInt32Array stretch;
 	PackedInt32Array custom_insets;
@@ -435,8 +530,6 @@ bool BinaryLayout::validate_references(const BflytContext &ctx)
 	return true;
 }
 
-// ---------------- Resource loader ----------------
-
 String ResourceFormatLoaderBFLYT::_get_resource_type(const String &path) const
 {
 	return path.get_extension().to_lower() == "bflyt" ? "BinaryLayout" : "";
@@ -462,8 +555,6 @@ bool ResourceFormatLoaderBFLYT::_handles_type(const StringName &type) const
 {
 	return type == StringName("BinaryLayout");
 }
-
-// ---------------- Shared utils ----------------
 
 bool BflytUtils::Reader::has(uint64_t p, uint64_t n)
 {
