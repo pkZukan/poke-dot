@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode blend_mix, cull_disabled;
+render_mode blend_premul_alpha, cull_disabled;
 
 uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 uniform sampler2D NormalMap : hint_normal, repeat_enable;
@@ -11,6 +11,7 @@ uniform int sampler_repeat_v[4];
 uniform vec4 sampler_border_color[4];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
@@ -42,5 +43,7 @@ void fragment() {
     METALLIC = EnableMetallicMap ? sample_trinity(MetallicMap, uv, 2).r : Metallic;
     ROUGHNESS = EnableRoughnessMap ? sample_trinity(RoughnessMap, uv, 3).r : Roughness;
     EMISSION = EnableBasecolorEmissive ? color.rgb * color.a * EmissionIntensity : vec3(0.0);
-    ALPHA = alpha;
+    vec2 blend_state = trinity_blend(alpha, 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
 }

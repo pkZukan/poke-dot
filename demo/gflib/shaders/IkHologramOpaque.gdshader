@@ -23,8 +23,11 @@ uniform float ScanlineIntensity = 0.0;
 uniform float TransitionLight = 0.0;
 
 uniform vec4 OutlineColor = vec4(1.0, 1.0, 1.0, 1.0);
-uniform vec3 MaterialLightDirection = vec3(0.0, 1.0, 0.0);
+// Model-space shading direction and Y spin in degrees, applied in the vertex stage.
+uniform vec4 LightingOffset = vec4(0.0, 1.0, 0.0, 0.0);
+uniform float SpinRotation;
 varying vec3 procedural_world;
+varying vec3 hologram_light;
 
 vec3 SG_sgglitch(vec2 _uv, vec2 _glitch_speed, float _time, float _glitch_tex, float _glitch_alpha)
 {
@@ -73,8 +76,15 @@ float FresnelEffect(vec3 Normal, vec3 ViewDir, float Power) {
   return pow((1.0 - clamp(dot(normalize(Normal), normalize(ViewDir)), 0.0, 1.0)), Power);
 }
 
-void vertex() { 
-  procedural_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; 
+void vertex() {
+  float spin = radians(SpinRotation);
+  mat3 rotation = mat3(vec3(cos(spin), 0.0, -sin(spin)), vec3(0.0, 1.0, 0.0), vec3(sin(spin), 0.0, cos(spin)));
+  VERTEX = rotation * VERTEX;
+  NORMAL = rotation * NORMAL;
+  TANGENT = rotation * TANGENT;
+  BINORMAL = rotation * BINORMAL;
+  procedural_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+  hologram_light = normalize(mat3(MODEL_MATRIX) * LightingOffset.xyz);
 }
 
 void fragment() {
@@ -93,11 +103,12 @@ void fragment() {
   vec3 dithered_color = mix(glitched_base_color, ShiftHueDegrees(glitched_base_color, 20.0), dither_pattern_sample.ggg);
   dithered_color = mix(dithered_color, ShiftHueDegrees(glitched_base_color, -20.0), dither_pattern_sample.bbb);
 
-  float dark_factor = FresnelEffect(NORMAL, normalize(MaterialLightDirection), 2.0);
+  vec3 world_normal = (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz;
+  float dark_factor = FresnelEffect(world_normal, hologram_light, 2.0);
   dark_factor = SG_SGCheapContrast(dark_factor, DarkShadingContrast) * dither_pattern_sample.r;
   vec3 dark_color = mix(dithered_color, dithered_color * DarkPartIntensity, vec3(dark_factor));
 
-  float light_factor = FresnelEffect(NORMAL, normalize(MaterialLightDirection), 0.25);
+  float light_factor = FresnelEffect(world_normal, hologram_light, 0.25);
   light_factor = SG_SGCheapContrast(light_factor, LightShadingContrast);
   light_factor = (1.0 - light_factor) * (1.0 - dither_pattern_sample.r);
   vec3 hologram_color = mix(dark_color, dithered_color * LightPartIntensity, vec3(light_factor) * AlbedoIntensity);

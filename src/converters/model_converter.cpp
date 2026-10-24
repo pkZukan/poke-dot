@@ -3,6 +3,7 @@
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/stream_peer_buffer.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/classes/cubemap.hpp>
 #include <godot_cpp/classes/shader.hpp>
 #include "shader_options.gen.h"
 #include <godot_cpp/classes/mesh_instance3d.hpp>
@@ -306,9 +307,17 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
         shader_name == "IkCharacterTransparentInner") ? String("IkCharacter") :
         (shader_name == "GrassTransparent" ? String("Transparent") : shader_name);
 
+    // Godot fixes blending per shader, so blended materials of opaque shader
+    // families use the transparent pass built from the same equations.
+    const String alpha_type = mat->get_AlphaType();
+    const bool blended = alpha_type == "Blend" || alpha_type == "Add" || alpha_type == "BlendPreMultiAlpha";
+    String shader_file = shader_name;
+    if (blended && shader_name == "Standard") shader_file = "Transparent";
+    else if (blended && shader_name == "IkCharacter") shader_file = "IkCharacterTransparent";
+
     sm->set_name(mat->get_Name());
     sm->set_shader(ResourceLoader::get_singleton()->load(
-        "res://gflib/shaders/" + shader_name + ".gdshader"
+        "res://gflib/shaders/" + shader_file + ".gdshader"
     ));
 
     Ref<Shader> godot_shader = sm->get_shader();
@@ -350,6 +359,15 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
         else if (uniform_types.has(name))
             UtilityFunctions::push_warning("Unknown shader option: ", shader_name, ".", name, " = ", val);
     }
+    // NVN takes the blend state from the material; transparent shaders rebuild
+    // it from this value (see trinity_blend.gdshaderinc).
+    if (uniform_types.has("TrinityAlphaType")) {
+        int alpha_mode = 1; // Blend
+        if (alpha_type == "Opaque") alpha_mode = 0;
+        else if (alpha_type == "Add") alpha_mode = 2;
+        else if (alpha_type == "BlendPreMultiAlpha") alpha_mode = 3;
+        sm->set_shader_parameter("TrinityAlphaType", alpha_mode);
+    }
     return sm;
 }
 
@@ -358,18 +376,30 @@ Ref<ShaderMaterial> TrinityModel::_build_shader_material(const Ref<MaterialEntry
 // ---------------------------------------------------------------------------
 void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>& mat, Ref<ShaderMaterial> shdr) 
 {
+    // Retail probe maps are cube arrays; shaders declare them as samplerCube.
+    PackedStringArray cubemaps;
+    Ref<Shader> shader = shdr->get_shader();
+    if (shader.is_valid()) {
+        for (const Variant &entry : shader->get_shader_uniform_list()) {
+            Dictionary uniform = entry;
+            if (int(uniform["type"]) == Variant::OBJECT && String(uniform["hint_string"]) == "Cubemap")
+                cubemaps.push_back(uniform["name"]);
+        }
+    }
+
     Array textures = mat->get_Textures();
     for (int i = 0; i < textures.size(); i++) {
         Ref<TextureEntry> t = textures[i];
         String file = t->get_File();
         String texName = file.get_file().get_basename();
         String tex_name = t->get_Name();
+        const bool is_cubemap = cubemaps.has(tex_name);
 
         const String source_path = path.path_join(file).simplify_path();
-        const String texture_id = source_path + String("\n") + texName + String("\n0");
+        const String texture_id = source_path + String("\n") + texName + String(is_cubemap ? "\ncube" : "\n0");
         const String texture_path = String("res://.gflib-textures/") + texture_id.sha256_text() + String(".texture");
         ResourceLoader *loader = ResourceLoader::get_singleton();
-        Ref<Texture2D> texture = loader->get_cached_ref(texture_path);
+        Ref<Texture> texture = loader->get_cached_ref(texture_path);
         if (texture.is_null()) {
             Ref<BinaryTextureArchive> bntx = loader->load(source_path, "", ResourceLoader::CACHE_MODE_REUSE);
             if (bntx.is_null()) continue;
@@ -377,13 +407,35 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
             if (!imgs.has(texName)) continue;
             Ref<BinaryTexture> texture_array = imgs[texName];
             if (texture_array.is_null() || texture_array->get_layers() == 0) continue;
-            Ref<Image> image = texture_array->get_layer_image(0);
-            if (image.is_null()) continue;
-            Ref<ImageTexture> img_tex = ImageTexture::create_from_image(image);
-            if (img_tex.is_null()) continue;
-            img_tex->set_meta("source_archive", bntx);
-            img_tex->set_path(texture_path);
-            texture = img_tex;
+            if (is_cubemap) {
+                if (texture_array->get_layers() < 6) continue;
+                TypedArray<Image> faces;
+                for (int face = 0; face < 6; face++) {
+                    Ref<Image> image = texture_array->get_layer_image(face);
+                    if (image.is_null()) break;
+                    image = image->duplicate();
+                    // Shaders sample the probe at blurred mip levels, but the
+                    // archive loader only keeps mip 0.
+                    if (image->is_compressed()) image->decompress();
+                    image->generate_mipmaps();
+                    faces.push_back(image);
+                }
+                if (faces.size() != 6) continue;
+                Ref<Cubemap> cubemap;
+                cubemap.instantiate();
+                if (cubemap->create_from_images(faces) != OK) continue;
+                cubemap->set_meta("source_archive", bntx);
+                cubemap->set_path(texture_path);
+                texture = cubemap;
+            } else {
+                Ref<Image> image = texture_array->get_layer_image(0);
+                if (image.is_null()) continue;
+                Ref<ImageTexture> img_tex = ImageTexture::create_from_image(image);
+                if (img_tex.is_null()) continue;
+                img_tex->set_meta("source_archive", bntx);
+                img_tex->set_path(texture_path);
+                texture = img_tex;
+            }
         }
         shdr->set_shader_parameter(tex_name, texture);
     }

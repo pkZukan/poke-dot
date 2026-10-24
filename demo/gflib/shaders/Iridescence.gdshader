@@ -12,6 +12,7 @@ uniform int sampler_repeat_u[7];
 uniform int sampler_repeat_v[7];
 uniform vec4 sampler_border_color[7];
 #include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
@@ -168,11 +169,7 @@ void fragment() {
             vec2 raw = UVIndexLayerMask != 0 && NumRequiredUV > 1 ? UV2 : UV;
             vec2 mask_uv = UVIndexLayerMask < 0 ? primary_uv : vec2(raw.x, 1.0 - raw.y);
             if (EnableLayerMaskUVTransform) {
-                raw = vec2(mask_uv.x, 1.0 - mask_uv.y) - UVCenterRotationLayerMask.xy;
-                float angle = radians(UVCenterRotationLayerMask.z);
-                raw = mat2(vec2(cos(angle), sin(angle)), vec2(-sin(angle), cos(angle))) * raw;
-                vec2 st = (raw - UVScaleOffsetLayerMask.zw) * UVScaleOffsetLayerMask.xy + UVCenterRotationLayerMask.xy;
-                mask_uv = vec2(st.x, 1.0 - st.y);
+                mask_uv = material_layer_mask_uv(vec2(mask_uv.x, 1.0 - mask_uv.y), UVScaleOffsetLayerMask, UVCenterRotationLayerMask);
             }
             mask = sample_trinity(LayerMaskMap, mask_uv, 6);
         } else if (LayerMaskSource == 2) mask = COLOR;
@@ -221,7 +218,8 @@ void fragment() {
     ALBEDO = base.rgb;
     METALLIC = metallic;
     ROUGHNESS = roughness;
-    SPECULAR = clamp(Reflectance * reflectance / 0.08, 0.0, 1.0);
+    // Retail forward shading uses a fixed 0.04 F0 here, not Reflectance.
+    SPECULAR = material_specular(0.04 * reflectance);
     EMISSION = emission;
     AO = ao;
 }

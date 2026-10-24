@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, blend_mix, cull_disabled;
+render_mode unshaded, blend_premul_alpha, cull_disabled;
 
 uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 
@@ -9,6 +9,8 @@ uniform vec4 sampler_border_color[1];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
 #include "trinity_refraction.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
+#include "trinity_billboard.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableVertexColor;
@@ -23,6 +25,12 @@ uniform float FarLength = 100.0;
 uniform float OpacityNear = 1.0;
 uniform float OpacityFar = 1.0;
 
+void vertex() {
+    if (BillboardType == 1) {
+        MODELVIEW_MATRIX = trinity_billboard(MODELVIEW_MATRIX, MODEL_MATRIX, VIEW_MATRIX);
+        MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+    }
+}
 
 void fragment() {
     vec4 color = BaseColor;
@@ -39,5 +47,7 @@ void fragment() {
         color.a *= mix(OpacityNear, OpacityFar, clamp((-VERTEX.z - NearLength) / max(FarLength - NearLength, 0.00001), 0.0, 1.0));
 
     ALBEDO = color.rgb;
-    ALPHA = color.a;
+    vec2 blend_state = trinity_blend(color.a, 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
 }

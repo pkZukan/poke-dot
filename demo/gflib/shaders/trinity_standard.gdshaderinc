@@ -1,6 +1,7 @@
 
 #ifdef TRANSPARENT_MATERIAL
 #include "trinity_refraction.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
 uniform int RefractionMode;
 uniform float FresnelAlphaMin = 1.0;
 uniform float FresnelAlphaMax = 1.0;
@@ -8,6 +9,7 @@ uniform float FresnelAngleBias;
 #endif
 #ifdef BG_WIND
 uniform int UvsetType;
+uniform vec4 ScrollUVSpeed;
 #endif
 #ifdef BG_LAYER
 uniform bool EnableMetallicMap1;
@@ -137,6 +139,8 @@ uniform vec4 sampler_border_color[21];
 #endif
 #endif
 #include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
+#include "trinity_billboard.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
@@ -278,6 +282,10 @@ float diffuse_weight(float intensity) {
 #endif
 }
 void vertex() {
+    if (BillboardType == 1) {
+        MODELVIEW_MATRIX = trinity_billboard(MODELVIEW_MATRIX, MODEL_MATRIX, VIEW_MATRIX);
+        MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+    }
     // Approximation retained until the original wind controller is available.
     if (WindReceiverType != 0) {
         float mask = EnableWindMaskMap ? sample_trinity(WindMaskMap, transform_uv(UV, UVScaleOffset), 15).r : 1.0;
@@ -327,6 +335,9 @@ void fragment() {
 #ifdef INSIDE_EMISSION_PARALLAX
     if (EnableBaseColorMap) base.a = BaseColor.a;
 #endif
+#ifdef TRANSPARENT_MATERIAL
+    if (EnableBaseColorMap) base.a *= BaseColor.a;
+#endif
     if (EnableAlphaTest && base.a < DiscardValue) discard;
     vec3 base0 = base.rgb;
     vec2 normal_uv = EnableUVScaleOffsetNormal ? transform_uv(UV, UVScaleOffsetNormal) : uv;
@@ -334,7 +345,8 @@ void fragment() {
     normal_uv = EnableEyeClearCoat ? uv : eye_uv(UV, UVScaleOffsetNormal, UVRotationNormal);
 #endif
 #ifdef BG_WIND
-    normal_uv = UvsetType == 0 ? uv : vec2(UV2.x, 1.0 - UV2.y);
+    // UvsetType 0 reads the second UV set, 1 the first; the normal map scrolls.
+    normal_uv = transform_uv(UvsetType == 0 ? UV2 : UV, UVScaleOffsetNormal) + ScrollUVSpeed.xy * TIME;
 #endif
     vec3 normal_ts = EnableNormalMap ? unpack_normal(sample_trinity(NormalMap, normal_uv, 2), NormalHeight) : vec3(0.0, 0.0, 1.0);
     float metallic = EnableMetallicMap ? sample_trinity(MetallicMap, uv, 5).r : Metallic;
@@ -364,10 +376,7 @@ void fragment() {
         if (LayerMaskSource == 1) {
             vec2 mask_uv = UVIndexLayerMask < 0 ? uv : vec2(select_uv(UV, UV2, UVIndexLayerMask).x, 1.0 - select_uv(UV, UV2, UVIndexLayerMask).y);
             if (EnableLayerMaskUVTransform) {
-                vec2 raw = vec2(mask_uv.x, 1.0 - mask_uv.y) - UVCenterRotationLayerMask.xy;
-                float angle = radians(UVCenterRotationLayerMask.z);
-                raw = mat2(vec2(cos(angle), sin(angle)), vec2(-sin(angle), cos(angle))) * raw;
-                mask_uv = transform_uv(raw + UVCenterRotationLayerMask.xy, UVScaleOffsetLayerMask);
+                mask_uv = material_layer_mask_uv(vec2(mask_uv.x, 1.0 - mask_uv.y), UVScaleOffsetLayerMask, UVCenterRotationLayerMask);
             }
             weights = sample_trinity(LayerMaskMap, mask_uv, 11);
         } else if (LayerMaskSource == 2) {
@@ -519,12 +528,17 @@ void fragment() {
     NORMAL_MAP = normalize(normal_ts) * 0.5 + 0.5;
     METALLIC = clamp(metallic, 0.0, 1.0);
     ROUGHNESS = clamp(roughness, 0.0, 1.0);
-    SPECULAR = clamp(Reflectance * reflectance / 0.08, 0.0, 1.0);
+    SPECULAR = material_specular(Reflectance * reflectance);
 
     EMISSION = emission;
     AO = ao;
 #ifdef EYE_MATERIAL
     if (EnableEyeClearCoat) SPECULAR = 0.0;
+#endif
+#ifdef NON_DIRECTIONAL
+    // Retail NonDirectional has no specular term at all.
+    METALLIC = 0.0;
+    SPECULAR = 0.0;
 #endif
 #ifdef TRANSPARENT_MATERIAL
     float opacity = base.a;
@@ -532,6 +546,8 @@ void fragment() {
         float nv = clamp(dot(normalize(mat3(TANGENT, BINORMAL, NORMAL) * normal_ts), VIEW) - FresnelAngleBias, 0.0, 1.0);
         opacity *= FresnelAlphaMin + (FresnelAlphaMax - FresnelAlphaMin) * pow(1.0 - nv, 5.0);
     }
-    ALPHA = opacity;
+    vec2 blend_state = trinity_blend(opacity, 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
 #endif
 }

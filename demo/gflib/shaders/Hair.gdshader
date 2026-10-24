@@ -104,8 +104,9 @@ void fragment() {
     float face = FRONT_FACING ? 1.0 : -1.0;
     vec3 shifted = face * (flow + normal_ts * HairHighlightShift);
     if (dot(shifted, shifted) < 0.000001) shifted = vec3(0.0, face, 0.0);
-    hair_direction = normalize(mat3(TANGENT, BINORMAL, NORMAL) * shifted);
-    if (!FRONT_FACING) NORMAL = -NORMAL;
+    // Retail builds the strand direction from the unflipped geometric normal;
+    // Godot has already flipped NORMAL on back faces.
+    hair_direction = normalize(mat3(TANGENT, BINORMAL, NORMAL * face) * shifted);
     hair_scatter = EnableScatterMap ? sample_trinity(MetallicMap, uv, 3).r : Metallic;
     ALBEDO = base.rgb;
     ROUGHNESS = EnableRoughnessMap ? sample_trinity(RoughnessMap, uv, 4).r : Roughness;

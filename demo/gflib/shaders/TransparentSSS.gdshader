@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode blend_mix, depth_draw_opaque, cull_back;
+render_mode blend_premul_alpha, depth_draw_opaque, cull_back;
 
 uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 uniform sampler2D NormalMap : hint_normal, repeat_enable;
@@ -16,6 +16,8 @@ uniform int sampler_repeat_v[9];
 uniform vec4 sampler_border_color[9];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_sss.gdshaderinc"
+#include "trinity_material.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap = false;
@@ -255,7 +257,9 @@ void fragment() {
         float f = FresnelAlphaMin + (FresnelAlphaMax - FresnelAlphaMin) * pow(1.0 - max(nv - FresnelAngleBias, 0.0), 5.0);
         opacity *= f;
     }
-    ALPHA = opacity;
+    vec2 blend_state = trinity_blend(opacity, 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
     if (EnableLightMap) {
         // Single-slice fallback: the game blends four scene-weighted array slices.
         vec3 lightmap = sample_trinity(LightMap, vec2(UV2.x, 1.0 - UV2.y), 8).rgb;
@@ -268,7 +272,7 @@ void fragment() {
     ALBEDO = base.rgb;
     ROUGHNESS = roughness;
     METALLIC = 0.0;
-    SPECULAR = clamp(trinity_sss_f0 / 0.08, 0.0, 1.0);
+    SPECULAR = material_specular(trinity_sss_f0);
     AO = ao;
     AO_LIGHT_AFFECT = 0.0; // Direct AO is applied in light(); transmission stays unoccluded.
     trinity_sss_ao = ao;

@@ -11,9 +11,10 @@ uniform vec4 sampler_border_color[1];
 
 uniform bool EnableAlphaTest;
 uniform float DiscardValue = 0.5;
+uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
 
 void fragment() {
-    if (EnableAlphaTest && sample_trinity(BaseColorMap, vec2(UV.x, 1.0 - UV.y), 0).a < DiscardValue) discard;
+    if (EnableAlphaTest && sample_trinity(BaseColorMap, material_uv(UV, UVScaleOffset), 0).a < DiscardValue) discard;
     ALBEDO = vec3(0.0);
     ALPHA = 0.0;
 }

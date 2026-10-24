@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode blend_mix, cull_disabled;
+render_mode blend_premul_alpha, cull_disabled;
 uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
 uniform sampler2D NormalMap : hint_normal, repeat_enable;
@@ -12,6 +12,7 @@ uniform vec4 sampler_border_color[6];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
 #include "trinity_refraction.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableBaseColorMap1;
 uniform bool EnableNormalMap;
@@ -98,16 +99,16 @@ void fragment() {
         if (EnableVertexFoamMask) foam_fade = min(foam_fade, 1.0 - COLOR.r);
         float mask = water_sample(FoamMaskMap, material_uv(UV, vec4(FoamMaskUVScale, FoamMaskUVScale, 0.0, 0.0)), offsets * FoamFlowPower, blend, 5).r;
         mask = clamp(mask * FoamMaskIntensity, 0.0, 1.0);
-        float influence = mix(mix(1.0, COLOR.g, FoamWaveInfluence), n.z, FoamNormalInfluence);
+        // The wave term comes from the unported wave animation and is 1 without it.
+        float influence = mix(1.0, normalize(n).z, FoamNormalInfluence);
         float factor = foam_fade * influence;
         mask = 1.0 - clamp((factor - SoftEdgeRatio) / max(FoamEdgeRatio, 0.00001), 0.0, 1.0) * mask;
         float foam = pow(clamp((1.0 - factor) / max(1.0 - SoftEdgeRatio, 0.0001), 0.0, 1.0), max(FoamSharpness, 0.00001));
         base.rgb += max(FoamColor.rgb * foam * mask, vec3(0.0));
         roughness += mask * (1.0 - factor);
-        opacity = water_opacity(opacity, depth_difference * vertical_factor);
+        opacity = water_opacity(opacity * fade, depth_difference * vertical_factor);
     }
     NORMAL_MAP = normalize(n) * 0.5 + 0.5;
-    if (!FRONT_FACING) NORMAL = -NORMAL;
     METALLIC = Metallic; ROUGHNESS = clamp(roughness, 0.0, 1.0);
     ALBEDO = base.rgb; EMISSION = EmissionColor.rgb * EmissionIntensity;
     if (RefractionMode >= 2) {
@@ -116,5 +117,7 @@ void fragment() {
         EMISSION = EMISSION * opacity + textureLod(trinity_scene_color, screen, 0.0).rgb * (1.0 - opacity);
         ALBEDO *= opacity; opacity = 1.0;
     }
-    ALPHA = opacity * (EnableVertexAlpha ? COLOR.a : 1.0);
+    vec2 blend_state = trinity_blend(opacity * (EnableVertexAlpha ? COLOR.a : 1.0), 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
 }

@@ -1,19 +1,24 @@
 
 #ifdef CHARACTER_TRANSPARENT
+#include "trinity_blend.gdshaderinc"
 uniform int RefractionMode;
 uniform bool IgnoreAlbedoAlpha;
 uniform float FresnelAlphaMin = 1.0;
 uniform float FresnelAlphaMax = 1.0;
 uniform float FresnelAngleBias;
+#endif
 uniform bool EnableHolocastEffect;
 uniform vec4 HolocastColor = vec4(1.0);
 uniform float ScanGradationTiling = 1.0;
 uniform float ScanlineTiling = 1.0;
 uniform float ScanlineDepth;
 uniform float ScanlineSpeed;
+// Fixed holocast light direction in degrees, applied in model space.
+uniform float LightPitch;
+uniform float LightYaw;
+uniform float LightRoll;
 varying vec3 character_world_position;
 void vertex() { character_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
-#endif
 uniform sampler2D BaseColorMap  : source_color, hint_default_white, repeat_enable;
 uniform sampler2D NormalMap     : hint_normal, repeat_enable;
 uniform sampler2D OcclusionMap   : hint_default_white, repeat_enable;
@@ -21,18 +26,27 @@ uniform sampler2D SpecularMaskMap  : hint_default_white, repeat_enable;
 uniform sampler2D ShadowingColorMap : hint_default_white, repeat_enable;
 uniform sampler2D ShadowingColorMaskMap         : hint_default_white, repeat_enable;
 uniform sampler2D RimLightMaskMap        : hint_default_white, repeat_enable;
-uniform sampler2D LocalReflectionMap        : hint_default_white, repeat_enable;
 uniform sampler2D LayerMaskMap  : hint_default_black, repeat_enable;
 uniform sampler2D ParallaxMap   : hint_default_black, repeat_enable;
 uniform sampler2D HighlightMaskMap : source_color, hint_default_black, repeat_enable;
 uniform sampler2D EyelidShadowMaskMap      : hint_default_white, repeat_enable;
 uniform sampler2D OpacityMap1 : hint_default_black, repeat_enable;
+uniform sampler2D ColorTableMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
+uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
+uniform sampler2D DiscardMaskMap : hint_default_white, repeat_enable;
+uniform sampler2D IkLayerMaskMap1 : hint_default_black, repeat_enable;
+uniform sampler2D IkLayerMaskMap2 : hint_default_black, repeat_enable;
+uniform sampler2D IkLayerMaskMap3 : hint_default_black, repeat_enable;
+// A probe cubemap in retail; it is not one of the sample_trinity 2D slots.
+uniform samplerCube LocalReflectionMap : hint_default_white;
 
 // Shader slots are resolved by texture name in the material loader.
-uniform int sampler_repeat_u[13];
-uniform int sampler_repeat_v[13];
-uniform vec4 sampler_border_color[13];
+uniform int sampler_repeat_u[19];
+uniform int sampler_repeat_v[19];
+uniform vec4 sampler_border_color[19];
 #include "trinity_sampler.gdshaderinc"
+#include "trinity_material.gdshaderinc"
 
 //Shader strings (as bool)
 uniform bool EnableBaseColorMap;
@@ -53,6 +67,43 @@ uniform bool EnableUVScaleOffsetNormal;
 uniform int NumMaterialLayer = 5;
 
 uniform bool EnableSSSMaskMap;
+uniform bool EnableColorTableMap;
+uniform bool EnableLayerMaskUVTransform;
+uniform vec4 UVScaleOffsetLayerMask = vec4(1.0, 1.0, 0.0, 0.0);
+uniform vec4 UVCenterRotationLayerMask;
+uniform bool EnableVertexSubLayer;
+uniform bool EnableCustomLayer;
+uniform vec4 BaseColorSubLayer1 = vec4(1.0);
+uniform vec4 BaseColorSubLayer2 = vec4(1.0);
+uniform vec4 BaseColorSubLayer3 = vec4(1.0);
+uniform vec4 BaseColorSubLayer4 = vec4(1.0);
+uniform float SubLayerMaskScale1 = 1.0;
+uniform float SubLayerMaskScale2 = 1.0;
+uniform float SubLayerMaskScale3 = 1.0;
+uniform float SubLayerMaskScale4 = 1.0;
+uniform vec4 BaseColorLayer7 = vec4(1.0);
+uniform int BaseColorIndex1 = 1;
+uniform int BaseColorIndex2 = 1;
+uniform int BaseColorIndex3 = 1;
+uniform int BaseColorIndex4 = 1;
+uniform int BaseColorIndex6 = 1;
+uniform int ColorTableDivideNumber = 1;
+uniform float DiscardValue_R;
+uniform float DiscardValue_G;
+uniform float DiscardValue_B;
+uniform float DiscardValue_A;
+uniform float SpecularShiftValue;
+uniform float SecondSpecularWidth;
+uniform float SecondSpecularStrength;
+uniform vec4 BaseColorLayer8 = vec4(1.0);
+uniform vec4 BaseColorLayer9 = vec4(1.0);
+uniform vec4 BaseColorLayer10 = vec4(1.0);
+uniform float MetallicLayer7;
+uniform float MetallicLayer8;
+uniform vec4 UVScaleOffset3 = vec4(1.0, 1.0, 0.0, 0.0);
+uniform vec4 UVScaleOffset4 = vec4(1.0, 1.0, 0.0, 0.0);
+uniform float UVRotation3;
+uniform float UVRotation4;
 
 //Float params
 uniform float SaturationPower = 1.0;
@@ -198,6 +249,11 @@ varying float surface_contrast;
 varying float surface_mask;
 varying float surface_ao;
 varying float surface_emission;
+varying float surface_metallic;
+varying vec3 reflection_color;
+varying float reflection_fresnel;
+varying vec3 hair_binormal;
+varying float hair_strength;
 
 float adjust_contrast(float value, float contrast) {
     return clamp((value - 0.5) * (1.0 + 2.0 * contrast) + 0.5, 0.0, 1.0);
@@ -207,13 +263,17 @@ vec2 get_uv(vec2 uv, int slot) {
     vec4 transform = slot == 1 && EnableUVScaleOffsetNormal ? UVScaleOffsetNormal : UVScaleOffset;
     vec2 center = slot == 1 && EnableUVScaleOffsetNormal ? vec2(0.0) : ((EnableEyeOptions || EnableParallaxMap) ? UVCenter0.xy : vec2(0.0));
     if (EnableEyeOptions && slot == 10) { transform = UVScaleOffset1; center = UVCenter1.xy; }
-    if (EnableEyeOptions && slot == 11) {
-        transform = UVScaleOffset2;
-        float angle = UVRotation2;
-        vec2 v = uv - vec2(0.5);
-        uv = vec2(cos(angle)*v.x - sin(angle)*v.y, sin(angle)*v.x + cos(angle)*v.y) + vec2(0.5);
-    }
     return transform_uv(uv, transform, center);
+}
+// Eyelid maps rotate about the UV center before the scale/offset.
+vec2 eye_srt(vec2 uv, vec4 transform, float rotation) {
+    float c = cos(rotation), s = sin(rotation);
+    vec2 v = uv - vec2(0.5);
+    vec2 result = (vec2(c * v.x + s * v.y, c * v.y - s * v.x) - transform.zw) * transform.xy + vec2(0.5);
+    return vec2(result.x, 1.0 - result.y);
+}
+vec3 color_table(int index, float row) {
+    return sample_trinity(ColorTableMap, vec2((float(index) - 0.5) / float(max(ColorTableDivideNumber, 1)), row), 12).rgb;
 }
 float blend_values(float base, vec4 layers, vec4 weights) {
     return mix(mix(mix(mix(base, layers.r, weights.r), layers.g, weights.g), layers.b, weights.b), layers.a, weights.a);
@@ -256,7 +316,7 @@ void fragment() {
         vec2 offset = vec2(0.0);
         for (int i = 0; i < 14; i++) {
             if (i >= int(floor(steps) + 2.0)) break;
-            current.x = sample_trinity(ParallaxMap, primary_uv + offset, 9).r;
+            current.x = sample_trinity(ParallaxMap, primary_uv + offset, 8).r;
             if (current.x >= current.y) {
                 float diff = current.x - current.y;
                 float old_diff = previous.x - previous.y;
@@ -271,8 +331,9 @@ void fragment() {
     }
     vec2 layer_source = NumRequiredUV > 1 && UVIndexLayerMask == 1 ? UV2 : UV;
     vec2 layer_uv = UVIndexLayerMask < 0 ? primary_uv : vec2(layer_source.x, 1.0 - layer_source.y);
+    if (EnableLayerMaskUVTransform) layer_uv = material_layer_mask_uv(vec2(layer_uv.x, 1.0 - layer_uv.y), UVScaleOffsetLayerMask, UVCenterRotationLayerMask);
     vec4 weights = vec4(0.0);
-    if (NumMaterialLayer > 1) weights = layer_weights(sample_trinity(LayerMaskMap, layer_uv, 8));
+    if (NumMaterialLayer > 1) weights = layer_weights(sample_trinity(LayerMaskMap, layer_uv, 7));
     vec4 texel = vec4(1.0);
     if (EnableBaseColorMap) texel = sample_trinity(BaseColorMap, primary_uv, 0);
     float total = clamp(1.0 - dot(weights, vec4(1.0)), 0.0, 1.0);
@@ -288,6 +349,19 @@ void fragment() {
     for (int i = 0; i < 4; i++) {
         vec4 tint = i == 0 ? BaseColorLayer1 : (i == 1 ? BaseColorLayer2 : (i == 2 ? BaseColorLayer3 : BaseColorLayer4));
         vec3 shade = i == 0 ? ShadowingColorLayer1.rgb : (i == 1 ? ShadowingColorLayer2.rgb : (i == 2 ? ShadowingColorLayer3.rgb : ShadowingColorLayer4.rgb));
+        if (EnableColorTableMap) {
+            // Row 0.25 holds the layer colors, row 0.75 their shadowing colors.
+            int index = i == 0 ? BaseColorIndex1 : (i == 1 ? BaseColorIndex2 : (i == 2 ? BaseColorIndex3 : BaseColorIndex4));
+            tint.rgb = color_table(index, 0.25);
+            shade = color_table(index, 0.75);
+        }
+        if (i == 2 && EnableVertexSubLayer) {
+            // Vertex color channels select sub-colors for the third layer.
+            tint.rgb = mix(tint.rgb, BaseColorSubLayer1.rgb, COLOR.r * SubLayerMaskScale1);
+            tint.rgb = mix(tint.rgb, BaseColorSubLayer2.rgb, COLOR.g * SubLayerMaskScale2);
+            tint.rgb = mix(tint.rgb, BaseColorSubLayer3.rgb, COLOR.b * SubLayerMaskScale3);
+            tint.rgb = mix(tint.rgb, BaseColorSubLayer4.rgb, COLOR.a * SubLayerMaskScale4);
+        }
         if (BaseColorMultiply) tint *= texel;
         if (EnableLerpBaseColorEmission && EnableEmissionLayer) {
             float intensity = i == 0 ? EmissionIntensityLayer1 : (i == 1 ? EmissionIntensityLayer2 : (i == 2 ? EmissionIntensityLayer3 : EmissionIntensityLayer4));
@@ -298,10 +372,15 @@ void fragment() {
         base.rgb = mix(base.rgb, tint.rgb, weights[i]);
         shadow_tint = mix(shadow_tint, shade, weights[i]);
     }
+    if (EnableCustomLayer) {
+        base.rgb = mix(base.rgb, BaseColorLayer5.rgb, sample_trinity(IkLayerMaskMap1, transform_uv(UV, UVScaleOffset1, vec2(0.0)), 16).r);
+        base.rgb = mix(base.rgb, BaseColorLayer6.rgb, sample_trinity(IkLayerMaskMap2, transform_uv(UV, UVScaleOffset2, vec2(0.0)), 17).r);
+        base.rgb = mix(base.rgb, BaseColorLayer7.rgb, sample_trinity(IkLayerMaskMap3, transform_uv(UV, UVScaleOffset3, vec2(0.0)), 18).r);
+    }
     float layer5_weight = 0.0;
     if (NumMaterialLayer > 5) {
         vec2 uv5_source = NumRequiredUV > 1 && UVIndexLayer5 != 0 ? UV2 : UV;
-        layer5_weight = sample_trinity(OpacityMap1, transform_uv(uv5_source, UVScaleOffset5, vec2(0.0)), 12).r * LayerMaskScale5;
+        layer5_weight = sample_trinity(OpacityMap1, transform_uv(uv5_source, UVScaleOffset5, vec2(0.0)), 11).r * LayerMaskScale5;
         vec3 tint = BaseColorLayer5.rgb * (BaseColorMultiply ? texel.rgb : vec3(1.0));
         vec3 shade = ShadowingColorLayer5.rgb;
         if (EnableLerpBaseColorEmission && EnableEmissionLayer) {
@@ -313,13 +392,32 @@ void fragment() {
     }
     float luminance = dot(base.rgb, vec3(0.2126729, 0.7151522, 0.0721750));
     base.rgb = max(mix(vec3(luminance), base.rgb, SaturationPower) * (1.0 - BaseColorDarkness), vec3(0.0));
-    if (EnableAlphaTest && base.a < DiscardValue) discard;
+    if (EnableHairSpecular) {
+        // Hair replaces the alpha test with a channel-weighted mask on the second UV set.
+        vec4 cut = sample_trinity(DiscardMaskMap, transform_uv(UV2, UVScaleOffset, vec2(0.0)), 15);
+        float keep = mix(mix(mix(mix(1.0, cut.r, DiscardValue_R), cut.g, DiscardValue_G), cut.b, DiscardValue_B), cut.a, DiscardValue_A);
+        if (keep < 0.5) discard;
+    } else if (EnableAlphaTest && base.a < DiscardValue) discard;
 
-    if (EnableEyeOptions && RequireEyelidShadowMap) {
-        float eyelid = sample_trinity(EyelidShadowMaskMap, get_uv(UV, 11), 11).r;
-        vec3 tint = mix(vec3(1.0), BaseColorLayer6.rgb, eyelid);
-        base.rgb *= tint;
-        shadow_tint *= tint;
+    if (EnableEyeOptions && (RequireEyelidShadowMap || EyelidType == 1 || EyelidType == 3)) {
+        float eyelid = sample_trinity(EyelidShadowMaskMap, eye_srt(UV, UVScaleOffset2, UVRotation2), 10).r;
+        vec3 lid_color = EnableColorTableMap ? color_table(BaseColorIndex6, 0.25) : BaseColorLayer6.rgb;
+        vec3 lid_shade = EnableColorTableMap ? color_table(BaseColorIndex6, 0.75) : BaseColorLayer6.rgb;
+        base.rgb *= mix(vec3(1.0), lid_color, eyelid);
+        shadow_tint *= mix(vec3(1.0), lid_shade, eyelid);
+    }
+    float upper_lid = 0.0, lower_lid = 0.0;
+    if (EnableEyeOptions && (EyelidType == 1 || EyelidType == 3)) {
+        vec4 lid = sample_trinity(UpperEyelidColorMap, eye_srt(UV, UVScaleOffset3, UVRotation3), 13);
+        upper_lid = lid.a;
+        base.rgb = mix(base.rgb, lid.rgb * BaseColorLayer7.rgb, lid.a);
+        shadow_tint = mix(shadow_tint, lid.rgb * BaseColorLayer9.rgb, lid.a);
+    }
+    if (EnableEyeOptions && (EyelidType == 2 || EyelidType == 3)) {
+        vec4 lid = sample_trinity(LowerEyelidColorMap, eye_srt(UV, UVScaleOffset4, UVRotation4), 14);
+        lower_lid = lid.a;
+        base.rgb = mix(base.rgb, lid.rgb * BaseColorLayer8.rgb, lid.a);
+        shadow_tint = mix(shadow_tint, lid.rgb * BaseColorLayer10.rgb, lid.a);
     }
     vec2 ao_source = NumRequiredUV > 1 && UVIndexAO == 1 ? UV2 : UV;
     vec2 ao_uv = UVIndexAO < 0 ? primary_uv : vec2(ao_source.x, 1.0 - ao_source.y);
@@ -338,10 +436,14 @@ void fragment() {
     surface_offset = offset;
     surface_contrast = contrast;
     surface_mask = spec_mask.r;
-    METALLIC = clamp(blend_values(Metallic, vec4(MetallicLayer1, MetallicLayer2, MetallicLayer3, MetallicLayer4), weights), 0.0, 1.0);
-    METALLIC = mix(METALLIC, MetallicLayer5, layer5_weight);
+    surface_metallic = clamp(blend_values(Metallic, vec4(MetallicLayer1, MetallicLayer2, MetallicLayer3, MetallicLayer4), weights), 0.0, 1.0);
+    surface_metallic = mix(surface_metallic, MetallicLayer5, layer5_weight);
+    surface_metallic = mix(mix(surface_metallic, MetallicLayer7, upper_lid), MetallicLayer8, lower_lid);
+    // Retail metallic only scales the lit color by the probe reflection (see
+    // light()); Godot's metallic would darken diffuse and add IBL specular.
+    METALLIC = 0.0;
     ROUGHNESS = 1.0; // Stylized highlights are evaluated explicitly in light().
-    SPECULAR = clamp(surface_specular / 0.08, 0.0, 1.0);
+    SPECULAR = 0.0;
     rim_mask = sample_trinity(RimLightMaskMap, primary_uv, 6).r;
     vec3 emission = EmissionColor.rgb * EmissionIntensity;
     if (EnableEmissionLayer) {
@@ -352,14 +454,17 @@ void fragment() {
         vec4(EmissionIntensityLayer1, EmissionIntensityLayer2, EmissionIntensityLayer3, EmissionIntensityLayer4), weights) : EmissionIntensity;
     if (EnableEmissionLayer) surface_emission = mix(surface_emission, EmissionIntensityLayer5, layer5_weight);
     if (EnableEyeOptions && EnableHighlight) {
-        float highlight = sample_trinity(HighlightMaskMap, get_uv(UV, 10), 10).r;
+        float highlight = sample_trinity(HighlightMaskMap, get_uv(UV, 10), 9).r;
         base.rgb = mix(base.rgb, EmissionColorLayer5.rgb * EmissionIntensityLayer5, highlight);
         shadow_tint = mix(shadow_tint, EmissionColorLayer5.rgb * EmissionIntensityLayer5, highlight);
     }
     
-    vec3 reflected = reflect(-VIEW, NORMAL);
-    vec2 reflection_uv = vec2(atan(reflected.z, reflected.x) / (2.0 * PI) + 0.5, acos(clamp(reflected.y, -1.0, 1.0)) / PI);
-    emission += sample_trinity(LocalReflectionMap, reflection_uv, 7).rgb * METALLIC * surface_specular;
+    vec3 normal_view = normalize(mat3(normalize(TANGENT), normalize(BINORMAL), normalize(NORMAL)) * normal_ts);
+    vec3 reflected = (INV_VIEW_MATRIX * vec4(reflect(-VIEW, normal_view), 0.0)).xyz;
+    reflection_color = textureLod(LocalReflectionMap, reflected, ReflectionsBlur).rgb;
+    reflection_fresnel = clamp(max(smoothstep(0.3, 0.7, clamp(dot(normal_view, VIEW), 0.0, 1.0)), 0.1), 0.0, 1.0);
+    hair_binormal = normalize(BINORMAL);
+    hair_strength = EnableHairSpecular ? spec_mask.r * SecondSpecularStrength : 0.0;
     if (EnableAuraEffect) {
         float wave = 0.5 + 0.5 * sin(UV.y * AuraColorScale * 2.0 * PI + TIME * AuraColorScrollSpeed);
         float noise = 0.5 + 0.5 * sin(dot(UV, vec2(12.9898, 78.233)) * AuraNoiseScale + TIME * AuraNoiseScrollSpeed);
@@ -369,70 +474,98 @@ void fragment() {
     ALBEDO = base.rgb;
     EMISSION = emission;
 
-#ifdef CHARACTER_TRANSPARENT
-    if (!FRONT_FACING) NORMAL = -NORMAL;
-    float opacity = IgnoreAlbedoAlpha ? BaseColor.a : base.a;
-    // Thin refraction is premultiplied in retail; straight alpha in Godot
-    // yields the same framebuffer product. Apply it only to front faces.
-    if (RefractionMode == 1 && FRONT_FACING) {
-        float nv = max(dot(normalize(mat3(TANGENT, BINORMAL, NORMAL) * normal_ts), VIEW) - FresnelAngleBias, 0.0);
-        opacity *= FresnelAlphaMin + (FresnelAlphaMax - FresnelAlphaMin) * pow(1.0 - clamp(nv, 0.0, 1.0), 5.0);
-    }
-    ALPHA = clamp(opacity, 0.0, 1.0);
     if (EnableHolocastEffect) {
-        float edge = pow(clamp(1.0 - dot(normalize(NORMAL), VIEW), 0.0, 1.0), 3.0);
-        float luma = max(dot(ALBEDO, vec3(0.2126729, 0.7151522, 0.0721750)), edge);
+        // Retail holocast replaces toon lighting with an unlit scanline glow,
+        // shaded by a fixed model-space light direction.
+        float pitch = radians(LightPitch), yaw = radians(LightYaw), roll = radians(LightRoll);
+        float skew = -sin(roll) * sin(pitch);
+        vec3 holo_light = vec3(cos(yaw) * skew - sin(yaw) * cos(pitch), -cos(roll) * sin(pitch), cos(pitch) * cos(yaw) + sin(yaw) * skew);
+        holo_light = normalize(mat3(VIEW_MATRIX) * (mat3(MODEL_MATRIX) * holo_light));
+        float diffuse = dot(normal_view, holo_light) * 0.5 + 0.5;
+        diffuse = clamp(mix(diffuse, diffuse * diffuse, HalfLambertBias), 0.0, 1.0);
+        float shading_width = max(ShadingBias * ShadingBias * ShadowingBias, 0.00001);
+        float shaded_weight = clamp((0.5 * ShadowingBias + 0.5 * shading_width - diffuse) / shading_width, 0.0, 1.0);
+        vec3 shaded = base.rgb * clamp(shadow_tint + vec3(AO), vec3(0.0), vec3(1.0)) * mix(vec3(1.0), shadow_tint, shaded_weight);
+        float edge = pow(1.0 - clamp(dot(normal_view, VIEW), 0.0, 1.0), 3.0);
+        float luma = max(dot(shaded, vec3(0.2126729, 0.7151522, 0.0721750)), edge);
         float scroll = -TIME * ScanlineSpeed;
         vec4 phase = character_world_position.y * vec4(ScanGradationTiling, ScanGradationTiling, ScanlineTiling, ScanlineTiling);
         vec4 seed = sin(sin(phase + vec4(0.5, 0.75, 4.0, 7.8) * scroll) * vec4(20.0, 25.0, 2.1, 3.3));
         float gradation = mix(ScanlineDepth, 1.0, ceil(seed.x) + ceil(seed.y));
-        float scan = 1.0 - clamp(seed.z + seed.w, 0.0, 1.0);
-        scan = mix(gradation, gradation * scan, 0.5);
-        EMISSION += luma * scan * HolocastColor.rgb;
+        float scan = mix(gradation, gradation * (1.0 - clamp(2.0 * seed.z + seed.w - 1.0, 0.0, 1.0)), 0.5);
+        EMISSION = EmissionColor.rgb * EmissionIntensity + luma * scan * HolocastColor.rgb;
         ALBEDO = vec3(0.0);
     }
+
+#ifdef CHARACTER_TRANSPARENT
+    float opacity = IgnoreAlbedoAlpha ? BaseColor.a : base.a;
+    float premultiplied = 1.0;
+    // Thin refraction premultiplies its own output by the Fresnel opacity.
+    if (RefractionMode == 1 && FRONT_FACING) {
+        float nv = max(dot(normal_view, VIEW) - FresnelAngleBias, 0.0);
+        opacity *= FresnelAlphaMin + (FresnelAlphaMax - FresnelAlphaMin) * pow(1.0 - clamp(nv, 0.0, 1.0), 5.0);
+        premultiplied = clamp(opacity, 0.0, 1.0);
+    }
+    vec2 blend_state = trinity_blend(clamp(opacity, 0.0, 1.0), premultiplied);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
 #endif
 }
 void light() {
-    float light_enabled = LIGHT_IS_DIRECTIONAL || EnableAdditionalLight != 0 ? 1.0 : 0.0;
-    float ndotl = dot(NORMAL, LIGHT);
-    float diffuse = ndotl * 0.5 + 0.5;
-    diffuse = clamp(mix(diffuse, diffuse * diffuse, HalfLambertBias), 0.0, 1.0);
-    float attenuation = ReceiveShadow > 0 ? ATTENUATION : 1.0;
-    float shadow = clamp(attenuation + ShadowStrength * ShadowStrength, 0.0, 1.0);
-    vec3 light_color = LIGHT_COLOR / PI * light_enabled;
-    // Godot LIGHT_COLOR already contains PI. Ikkaku's character shader then
-    // divides its source directional RGB by PI again (normalized_light_color).
-    if (LIGHT_IS_DIRECTIONAL) light_color /= PI;
-    float shading_width = max(ShadingBias * ShadingBias * ShadowingBias, 0.00001);
-    float shaded_weight = clamp((0.5 * ShadowingBias + 0.5 * shading_width - diffuse) / shading_width, 0.0, 1.0);
-    vec3 shaded = ALBEDO * clamp(shadow_tint + vec3(surface_ao), vec3(0.0), vec3(1.0));
-    float brightness = max(light_color.r, max(light_color.g, light_color.b)) * diffuse * surface_ao * shadow;
-    float mid_area = adjust_contrast(1.0 - smoothstep(MidAreaShift, 1.0 + MidAreaShift, brightness), MidAreaContrast);
-    float dark_area = adjust_contrast(1.0 - smoothstep(DarkAreaShift, 1.0 + DarkAreaShift, brightness), DarkAreaContrast);
-    vec3 mid_tint = mix(shaded, hue_rotate(shaded, MidAreaHueOffset), mid_area);
-    vec3 dark_tint = hue_rotate(shaded, DarkAreaHueOffset);
-    float gradient = adjust_contrast(smoothstep(ShadowingShift, 1.0 + ShadowingShift, attenuation * (ndotl * 0.5 + 0.5)), ShadowingContrast);
-    vec3 tint = mix(mix(dark_tint, mid_tint, dark_area), mix(mid_tint, dark_tint, dark_area), gradient);
-    tint *= mix(1.0, 0.5, HueShiftAreaValue * mid_area);
-    shaded = mix(shaded, mix(shaded, tint, HueShiftBias), clamp(light_color, vec3(0.0), vec3(1.0)));
-    shaded *= mix(vec3(1.0), shadow_tint, shaded_weight);
-    // Godot multiplies accumulated diffuse by ALBEDO after light().
-    // Supply only the shading ratio here, otherwise the base color is squared.
-    DIFFUSE_LIGHT += shaded / max(ALBEDO, vec3(0.00001)) * light_color * shadow;
+    // Holocast output is fully emissive; it receives no scene lighting.
+    if (!EnableHolocastEffect) {
+        float light_enabled = LIGHT_IS_DIRECTIONAL || EnableAdditionalLight != 0 ? 1.0 : 0.0;
+        float ndotl = dot(NORMAL, LIGHT);
+        float diffuse = ndotl * 0.5 + 0.5;
+        diffuse = clamp(mix(diffuse, diffuse * diffuse, HalfLambertBias), 0.0, 1.0);
+        float attenuation = ReceiveShadow > 0 ? ATTENUATION : 1.0;
+        float shadow = clamp(attenuation + ShadowStrength * ShadowStrength, 0.0, 1.0);
+        vec3 light_color = LIGHT_COLOR / PI * light_enabled;
+        // Godot LIGHT_COLOR already contains PI. Ikkaku's character shader then
+        // divides its source directional RGB by PI again (normalized_light_color).
+        if (LIGHT_IS_DIRECTIONAL) light_color /= PI;
+        float shading_width = max(ShadingBias * ShadingBias * ShadowingBias, 0.00001);
+        float shaded_weight = clamp((0.5 * ShadowingBias + 0.5 * shading_width - diffuse) / shading_width, 0.0, 1.0);
+        vec3 shaded = ALBEDO * clamp(shadow_tint + vec3(surface_ao), vec3(0.0), vec3(1.0));
+        if (hair_strength > 0.0 && LIGHT_IS_DIRECTIONAL) {
+            // Secondary hair highlight: a band along the strand, from a view vector
+            // shifted along world up, brightening the base color.
+            vec3 shifted_view = VIEW + SpecularShiftValue * (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
+            vec3 hair_half = normalize(shifted_view + LIGHT);
+            float band = smoothstep(0.7 - 0.5 * SecondSpecularWidth, 1.4 - 0.5 * SecondSpecularWidth, 1.0 - abs(dot(hair_binormal, hair_half)));
+            shaded *= 1.0 + band * pow(clamp(dot(NORMAL, hair_half), 0.0, 1.0), 4.0) * hair_strength;
+        }
+        float brightness = max(light_color.r, max(light_color.g, light_color.b)) * diffuse * surface_ao * shadow;
+        float mid_area = adjust_contrast(1.0 - smoothstep(MidAreaShift, 1.0 + MidAreaShift, brightness), MidAreaContrast);
+        float dark_area = adjust_contrast(1.0 - smoothstep(DarkAreaShift, 1.0 + DarkAreaShift, brightness), DarkAreaContrast);
+        vec3 mid_tint = mix(shaded, hue_rotate(shaded, MidAreaHueOffset), mid_area);
+        vec3 dark_tint = hue_rotate(shaded, DarkAreaHueOffset);
+        float gradient = adjust_contrast(smoothstep(ShadowingShift, 1.0 + ShadowingShift, attenuation * (ndotl * 0.5 + 0.5)), ShadowingContrast);
+        vec3 tint = mix(mix(dark_tint, mid_tint, dark_area), mix(mid_tint, dark_tint, dark_area), gradient);
+        tint *= mix(1.0, 0.5, HueShiftAreaValue * mid_area);
+        shaded = mix(shaded, mix(shaded, tint, HueShiftBias), clamp(light_color, vec3(0.0), vec3(1.0)));
+        shaded *= mix(vec3(1.0), shadow_tint, shaded_weight);
+        // Godot multiplies accumulated diffuse by ALBEDO after light().
+        // Supply only the shading ratio here, otherwise the base color is squared.
+        // Metallic scales the lit color by the probe reflection instead of
+        // replacing diffuse with specular.
+        vec3 reflection = max(min(mix(clamp(reflection_color, 0.0, 0.25), reflection_color, diffuse) * reflection_fresnel, vec3(1.0)), vec3(DiffusionLevels));
+        vec3 reflection_scale = mix(vec3(1.0), reflection, surface_metallic);
+        DIFFUSE_LIGHT += shaded / max(ALBEDO, vec3(0.00001)) * light_color * shadow * reflection_scale;
 
-    float fresnel = 1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
-    float rim = adjust_contrast(smoothstep(RimLightOffset, 1.0, fresnel), RimLightContrast);
-    float rim_front = rim * smoothstep(-0.4, 0.0, ndotl + fresnel - 1.0) * RimLightIntensity * ndotl * surface_ao;
-    float rim_back = rim * smoothstep(-0.4, 0.0, -ndotl + fresnel - 1.0);
-    float back_weight = rim_back * BackRimLightIntensity;
-    rim_back = mix(back_weight, rim_back, back_weight) * RimLightIntensity;
-    rim = mix(rim_front, rim_back, clamp(-ndotl, 0.0, 1.0)) * rim_mask * max(1.0 - surface_emission, 0.0);
-    vec3 halfway = normalize(LIGHT + VIEW);
-    float spec = pow(clamp(dot(NORMAL, halfway), 0.0, 1.0), 8.0);
-    spec = adjust_contrast(smoothstep(surface_offset, 1.0 + surface_offset, spec), surface_contrast);
-    vec3 specular = light_color * shadow * (spec * surface_specular * surface_mask * surface_ao);
-    // Rim and specular share a bounded highlight; adding both overbrightens it.
-    specular = clamp(max(specular, vec3(rim)), vec3(0.0), vec3(1.0));
-    SPECULAR_LIGHT += specular * clamp(light_color * shadow, vec3(0.0), vec3(1.0)) * light_color * shadow;
+        float fresnel = 1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);
+        float rim = adjust_contrast(smoothstep(RimLightOffset, 1.0, fresnel), RimLightContrast);
+        float rim_front = rim * smoothstep(-0.4, 0.0, ndotl + fresnel - 1.0) * RimLightIntensity * ndotl * surface_ao;
+        float rim_back = rim * smoothstep(-0.4, 0.0, -ndotl + fresnel - 1.0);
+        float back_weight = rim_back * BackRimLightIntensity;
+        rim_back = mix(back_weight, rim_back, back_weight) * RimLightIntensity;
+        rim = mix(rim_front, rim_back, clamp(-ndotl, 0.0, 1.0)) * rim_mask * max(1.0 - surface_emission, 0.0);
+        vec3 halfway = normalize(LIGHT + VIEW);
+        float spec = pow(clamp(dot(NORMAL, halfway), 0.0, 1.0), 8.0);
+        spec = adjust_contrast(smoothstep(surface_offset, 1.0 + surface_offset, spec), surface_contrast);
+        vec3 specular = light_color * shadow * (spec * surface_specular * surface_mask * surface_ao);
+        // Rim and specular share a bounded highlight; adding both overbrightens it.
+        specular = clamp(max(specular, vec3(rim)), vec3(0.0), vec3(1.0));
+        SPECULAR_LIGHT += specular * clamp(light_color * shadow, vec3(0.0), vec3(1.0)) * light_color * shadow * reflection_scale;
+    }
 }

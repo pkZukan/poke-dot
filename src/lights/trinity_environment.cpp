@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
+#include <godot_cpp/classes/shader.hpp>
 #include <godot_cpp/core/object.hpp>
 #include <algorithm>
 #include <cfloat>
@@ -576,6 +577,92 @@ void TrinityEnvironment::apply_probe_ambient(const Ref<Environment> &environment
     environment->set_ambient_light_sky_contribution(0);
 }
 
+// Metallic surfaces get no diffuse light, so without the specular probe they render black.
+// Godot only takes reflections from the Environment sky, so the probe cube is fed through
+// a sky shader; the visible sky stays the SkySimple dome drawn in front of it.
+void TrinityEnvironment::apply_probe_specular(const Ref<Environment> &environment)
+{
+    Dictionary probe = find_type("Probe");
+    Dictionary paths = probe.get("texture_paths", Dictionary());
+    Ref<Cubemap> cubemap = load_cubemap(paths.get("SpecularProbe", ""));
+
+    if (cubemap.is_null())
+        return;
+
+    if (probe_sky.is_null())
+    {
+        Ref<Shader> shader = ResourceLoader::get_singleton()->load("res://gflib/shaders/SpecularProbe.gdshader");
+
+        if (shader.is_null())
+            return;
+
+        probe_sky_material.instantiate();
+        probe_sky_material->set_shader(shader);
+        probe_sky.instantiate();
+        probe_sky->set_material(probe_sky_material);
+        probe_sky->set_radiance_size(Sky::RADIANCE_SIZE_128);
+    }
+
+    Color tint = color(probe, "SpecularProbeColor", Color(1,1,1)).srgb_to_linear();
+
+    probe_sky_material->set_shader_parameter("SpecularProbe", cubemap);
+    probe_sky_material->set_shader_parameter("SpecularProbeColor", Vector3(tint.r, tint.g, tint.b));
+    probe_sky_material->set_shader_parameter("SpecularProbeIntensity", CLAMP(number(probe, "SpecularProbeIntensity", 1), 0.0, 100.0));
+    probe_sky_material->set_shader_parameter("SpecularProbeSaturation", number(probe, "SpecularProbeSaturation", 1));
+
+    environment->set_sky(probe_sky);
+    environment->set_reflection_source(Environment::REFLECTION_SOURCE_SKY);
+}
+
+Ref<Cubemap> TrinityEnvironment::load_cubemap(const String &path)
+{
+    const String key = path + String("\ncube");
+
+    if (texture_cache.has(key))
+        return texture_cache[key];
+
+    texture_cache[key] = Variant();
+    ResourceLoader *loader = ResourceLoader::get_singleton();
+
+    if (path.is_empty() || !loader->exists(path))
+        return Ref<Cubemap>();
+
+    Ref<BinaryTextureArchive> archive = loader->load(path);
+
+    if (archive.is_null())
+        return Ref<Cubemap>();
+
+    auto textures = archive->get_textures();
+    Ref<BinaryTexture> texture = archive->GetTexture(path.get_file().get_basename());
+
+    if (texture.is_null() && textures.size() == 1)
+        texture = textures.values()[0];
+
+    if (texture.is_null() || texture->get_layers() != 6)
+        return Ref<Cubemap>();
+
+    TypedArray<Image> faces;
+
+    for (int face = 0; face < 6; ++face)
+    {
+        Ref<Image> image = texture->get_layer_image(face);
+
+        if (image.is_null())
+            return Ref<Cubemap>();
+
+        faces.push_back(image);
+    }
+
+    Ref<Cubemap> result;
+    result.instantiate();
+
+    if (result->create_from_images(faces) != OK)
+        return Ref<Cubemap>();
+
+    texture_cache[key] = result;
+    return result;
+}
+
 // Failures are cached too, so a missing file isn't retried on every time-of-day step.
 Ref<Texture2D> TrinityEnvironment::load_texture(const String &path)
 {
@@ -870,6 +957,7 @@ void TrinityEnvironment::apply_render_state()
 
         // Source indirect light comes from ProbeMain/GILightCommon, not the visible sky.
         // Godot's default sources would bake the sky color into all diffuse and specular lighting.
+        // apply_probe_ambient/apply_probe_specular re-enable them from the probe.
         env->set_ambient_source(Environment::AMBIENT_SOURCE_DISABLED);
         env->set_reflection_source(Environment::REFLECTION_SOURCE_DISABLED);
     }
@@ -890,6 +978,7 @@ void TrinityEnvironment::apply_render_state()
     }
 
     apply_probe_ambient(env);
+    apply_probe_specular(env);
 
     auto *sun = instance<DirectionalLight3D>(owned_light_id);
 

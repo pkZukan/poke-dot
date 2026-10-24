@@ -29,6 +29,7 @@ uniform bool EnableVertexSelectedChannel;
 uniform bool EnableWorldXzUv;
 
 uniform float VertexColorIntensity = 1.0;
+uniform float UVRotation;
 uniform float LayerMaskScale1 = 1.0;
 
 uniform int VertexColorChannel;
@@ -57,7 +58,12 @@ uniform float MetallicIntensity2 = 0.0;
 
 void vertex() { ground_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
 void fragment() {
-    vec2 source_uv = EnableWorldXzUv ? ground_world_position.xz : UV;
+    vec2 source_uv = UV;
+    if (EnableWorldXzUv) {
+        // UVRotation is in turns.
+        float c = cos(UVRotation * TAU), s = sin(UVRotation * TAU);
+        source_uv = vec2(c * ground_world_position.x - s * ground_world_position.z, s * ground_world_position.x + c * ground_world_position.z);
+    }
     vec3 colors[3]; vec3 normals[3]; vec3 packed[3]; float metals[3];
     vec2 uv0 = material_uv(source_uv, vec4(Tiling, Tiling, 0.0, 0.0));
     colors[0] = sample_trinity(BaseColorMap, uv0, 0).rgb;

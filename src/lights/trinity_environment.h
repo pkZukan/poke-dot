@@ -8,6 +8,9 @@
 #include <godot_cpp/classes/directional_light3d.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/texture2d.hpp>
+#include <godot_cpp/classes/cubemap.hpp>
+#include <godot_cpp/classes/sky.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
 #include <vector>
 
 namespace godot {
@@ -28,6 +31,8 @@ class TrinityEnvironment : public Node3D {
     Dictionary effective_state;
     Dictionary diffuse_probe_cache;
     Dictionary texture_cache;
+    Ref<Sky> probe_sky;
+    Ref<ShaderMaterial> probe_sky_material;
     NodePath world_environment_path;
     NodePath camera_path;
     bool enabled = true;
@@ -56,6 +61,8 @@ class TrinityEnvironment : public Node3D {
     void apply_render_state();
     bool probe_average(const Dictionary &probe, Color &average);
     void apply_probe_ambient(const Ref<Environment> &environment);
+    void apply_probe_specular(const Ref<Environment> &environment);
+    Ref<Cubemap> load_cubemap(const String &path);
     Ref<Texture2D> load_texture(const String &path);
     void update_sky(const Dictionary &sky_data);
 

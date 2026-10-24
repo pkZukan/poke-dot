@@ -12,7 +12,7 @@ uniform vec4 sampler_border_color[4];
 #include "trinity_material.gdshaderinc"
 
 uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
-uniform vec4 UVScaleOffsetWindow = vec4(1.0, 1.0, 0.0, 0.0);
+uniform vec4 UVScaleOffset1 = vec4(1.0, 1.0, 0.0, 0.0);
 
 uniform float NormalHeight = 1.0;
 uniform float WindowSeed;
@@ -27,7 +27,7 @@ uniform float VertexColorIntensity = 1.0;
 void fragment() {
     vec2 uv = material_uv(UV, UVScaleOffset);
     vec3 packed = sample_trinity(PackedMap, uv, 2).rgb;
-    vec2 cell = floor(-material_uv(UV2, UVScaleOffsetWindow));
+    vec2 cell = floor(-material_uv(UV2, UVScaleOffset1));
     float wave = sin(dot(cell, vec2(7.3322, 31.22566)));
     float x = fract(wave * WindowSeed);
     float y = fract(wave * WindowSeed * 0.1376);

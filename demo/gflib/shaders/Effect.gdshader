@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode blend_mix, cull_disabled;
+render_mode blend_premul_alpha, cull_disabled;
 
 uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
 uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
@@ -16,6 +16,8 @@ uniform int sampler_repeat_v[9];
 uniform vec4 sampler_border_color[9];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_refraction.gdshaderinc"
+#include "trinity_material.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
 
 uniform float DepthFadeDistance = 1.0;
 uniform float DiscardValue = 0.5;
@@ -25,6 +27,7 @@ uniform float EmissionIntensity = 1.0;
 uniform float FresnelAlphaMax = 1.0;
 uniform float FresnelAlphaMin = 0.0;
 uniform float Metallic = 0.0;
+uniform float Reflectance = 0.04;
 uniform float NormalHeight = 1.0;
 uniform float RimIntensity = 0.0;
 uniform float RimPower = 1.0;
@@ -35,6 +38,7 @@ uniform vec4 BaseColorLayer1 = vec4(1.0);
 uniform vec4 DissolveEdgeColor = vec4(1.0);
 uniform vec4 EmissionColor = vec4(1.0);
 uniform vec4 RimColor = vec4(1.0);
+uniform vec4 TransmittanceColor = vec4(1.0);
 uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
 uniform int AlphaProcess;
 uniform int ColorProcess = 1;
@@ -77,10 +81,18 @@ uniform float UVRotation2;
 uniform float FlowScaleX;
 uniform float FlowScaleY;
 uniform float ParallaxHeight;
-uniform bool IsTexture1SphereMap;
-uniform bool IsTexture2SphereMap;
+uniform float IsTexture1SphereMap;
+uniform float IsTexture2SphereMap;
 uniform float IndexOfRefraction = 1.333;
 uniform float Thickness = 0.1;
+
+varying vec2 sphere_uv;
+
+void vertex() {
+    // View-space sphere mapping of the reflected view ray.
+    vec3 r = reflect(normalize((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz), normalize(MODELVIEW_NORMAL_MATRIX * NORMAL));
+    sphere_uv = r.xy / max(length(r + vec3(0.0, 0.0, 1.0)), 0.00001) * 0.5 + 0.5;
+}
 
 vec2 effect_uv(vec2 uv, vec4 transform, float rotation) {
     float c = cos(rotation), s = sin(rotation);
@@ -129,20 +141,20 @@ void fragment() {
     vec3 view_ts = VIEW * mat3(normalize(TANGENT), normalize(BINORMAL), normalize(NORMAL));
     if (EnableParallaxMap) color_uv += vec2(view_ts.x, -view_ts.y) / max(abs(view_ts.z), 0.00001) * sample_trinity(ParallaxMap, primary, 8).r * ParallaxHeight;
     if (EnableFlowMap) {
-        vec2 flow = sample_trinity(FlowMap, effect_uv(UV, UVScaleOffset4, 0.0), 7).rg * 2.0 - 1.0;
+        vec2 flow_uv = (UV - UVScaleOffset4.zw) * UVScaleOffset4.xy;
+        vec2 flow = sample_trinity(FlowMap, vec2(flow_uv.x, 1.0 - flow_uv.y), 7).rg * 2.0 - 1.0;
         color_uv += flow * vec2(FlowScaleX, -FlowScaleY);
     }
     vec4 combined = vec4(1.0);
     if (EnableBaseColorMap) combined = effect_channels(sample_trinity(BaseColorMap, color_uv, 0), Texture0ColorChannel, Texture0AlphaChannel);
-    vec2 sphere_uv = normalize(NORMAL).xy * vec2(0.5, -0.5) + vec2(0.5);
     if (EnableBaseColorMap1) {
         vec2 uv1 = effect_uv(UVIndexLayer1 == 1 ? UV2 : UV, UVScaleOffset1, UVRotation1);
-        if (EnableSphereMap && IsTexture1SphereMap) uv1 = sphere_uv;
+        if (EnableSphereMap) uv1 = mix(uv1, sphere_uv, IsTexture1SphereMap);
         combined = effect_blend(combined, effect_channels(sample_trinity(BaseColorMap1, uv1, 1), Texture1ColorChannel, Texture1AlphaChannel), Texture1ColorOp, Texture1AlphaOp);
     }
     if (EnableBaseColorMap2) {
         vec2 uv2 = effect_uv(UVIndexLayer2 == 1 ? UV2 : UV, UVScaleOffset2, UVRotation2);
-        if (EnableSphereMap && IsTexture2SphereMap) uv2 = sphere_uv;
+        if (EnableSphereMap) uv2 = mix(uv2, sphere_uv, IsTexture2SphereMap);
         combined = effect_blend(combined, effect_channels(sample_trinity(BaseColorMap2, uv2, 2), Texture2ColorChannel, Texture2AlphaChannel), Texture2ColorOp, Texture2AlphaOp);
     }
     combined = effect_constants(combined);
@@ -156,26 +168,28 @@ void fragment() {
         NORMAL_MAP = n * 0.5 + 0.5;
     }
     vec3 normal_view = normalize(mat3(TANGENT, BINORMAL, NORMAL) * n);
-    if (!FRONT_FACING) { NORMAL = -NORMAL; normal_view = -normal_view; }
     float nv = clamp(dot(normal_view, VIEW), 0.00001, 1.0);
     float edge = 0.0;
     if (DissolveEdgeWidth > 0.0) edge = 1.0 - smoothstep(DiscardValue, DiscardValue + DissolveEdgeWidth, opacity);
+    else edge = opacity < DiscardValue ? 1.0 : 0.0; // Retail divides by zero width.
     vec3 emission = DissolveEdgeColor.rgb * DissolveEdgeIntensity * edge + RimColor.rgb * RimIntensity * pow(1.0 - nv, max(RimPower, 0.00001));
     float fresnel_alpha = FresnelAlphaMax > FresnelAlphaMin ? smoothstep(FresnelAlphaMin, FresnelAlphaMax, nv) : step(FresnelAlphaMin, nv);
     opacity *= fresnel_alpha;
     if (EnableDepthFade) opacity *= trinity_depth_fade(SCREEN_UV, -VERTEX.z, DepthFadeDistance, INV_PROJECTION_MATRIX);
     ALBEDO = EnableLighting ? combined.rgb : vec3(0.0);
     METALLIC = EnableLighting ? (EnableMetallicMap ? sample_trinity(MetallicMap, primary, 4).r : Metallic) : 0.0;
-    SPECULAR = EnableLighting ? 0.5 : 0.0;
+    SPECULAR = EnableLighting ? material_specular(Reflectance) : 0.0;
     ROUGHNESS = EnableLighting ? (EnableRoughnessMap ? sample_trinity(RoughnessMap, primary, 5).r : Roughness) : 1.0;
     if (EnableLighting) emission += (EnableEmissionColorMap ? sample_trinity(EmissionColorMap, primary, 6).rgb : EmissionColor.rgb) * EmissionIntensity;
     else emission += combined.rgb * EmissionIntensity;
     if (RefractionMode >= 2) {
         vec2 refracted = trinity_refract_uv(VERTEX, normal_view, VIEW, IndexOfRefraction, Thickness, PROJECTION_MATRIX);
-        emission = emission * opacity + textureLod(trinity_scene_color, refracted, 0.0).rgb * (1.0 - opacity);
+        emission = mix(textureLod(trinity_scene_color, refracted, 0.0).rgb * TransmittanceColor.rgb, emission, opacity);
         ALBEDO *= opacity;
         opacity = 1.0;
     }
     EMISSION = emission;
-    ALPHA = clamp(opacity, 0.0, 1.0);
+    vec2 blend_state = trinity_blend(clamp(opacity, 0.0, 1.0), 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
 }

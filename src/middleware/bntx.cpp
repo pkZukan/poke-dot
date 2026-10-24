@@ -186,6 +186,22 @@ static bool has_bytes(const Ref<StreamPeerBuffer> &sp, uint64_t offset, uint64_t
     return offset <= end && size <= end - offset;
 }
 
+// A BC1 block with color0 <= color1 is in 3-color mode, where index 3 is
+// transparent black.
+static bool bc1_has_punch_through(const PackedByteArray &data)
+{
+    const uint8_t *blocks = data.ptr();
+    for (int64_t i = 0; i + 8 <= data.size(); i += 8) {
+        const uint16_t color0 = blocks[i] | (blocks[i + 1] << 8);
+        const uint16_t color1 = blocks[i + 2] | (blocks[i + 3] << 8);
+        if (color0 > color1) continue;
+        const uint32_t indices = blocks[i + 4] | (blocks[i + 5] << 8) | (blocks[i + 6] << 16) | (uint32_t(blocks[i + 7]) << 24);
+        for (int texel = 0; texel < 16; texel++)
+            if (((indices >> (texel * 2)) & 3) == 3) return true;
+    }
+    return false;
+}
+
 Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset)
 {
     ERR_FAIL_COND_V(!has_bytes(sp, info_offset, 160), ERR_FILE_CORRUPT);
@@ -220,6 +236,7 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
         (sources >> 16) & 0xff, (sources >> 24) & 0xff);
 
     TypedArray<Ref<Image>> layers;
+    bool punch_through = false;
     for (int layer = 0; layer < info.ArrayLength; ++layer)
     {
         const uint64_t start = first_mip_start + layer_size * layer;
@@ -233,7 +250,17 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
         image.instantiate();
         image->set_data(info.Width, info.Height, false, format, pixels);
         ERR_FAIL_COND_V(image->is_empty(), ERR_FILE_CORRUPT);
+        if (format == Image::FORMAT_DXT1 && !punch_through)
+            punch_through = bc1_has_punch_through(pixels);
         layers.push_back(image);
+    }
+    // NVN samples BC1 with its 1-bit alpha, but Godot uploads DXT1 as opaque
+    // BC1_RGB, so cutout textures need an uncompressed copy to keep alpha.
+    if (punch_through) {
+        for (int layer = 0; layer < layers.size(); ++layer) {
+            Ref<Image> image = layers[layer];
+            image->decompress();
+        }
     }
 
     layer_images = layers;

@@ -17,6 +17,7 @@ uniform int sampler_repeat_v[11];
 uniform vec4 sampler_border_color[11];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_sss.gdshaderinc"
+#include "trinity_material.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap = false;
@@ -231,11 +232,7 @@ void fragment() {
             mask_uv = vec2(raw.x, 1.0 - raw.y);
         }
         if (EnableLayerMaskUVTransform) {
-            vec2 raw = vec2(mask_uv.x, 1.0 - mask_uv.y) - UVCenterRotationLayerMask.xy;
-            float angle = radians(UVCenterRotationLayerMask.z);
-            raw = mat2(vec2(cos(angle), sin(angle)), vec2(-sin(angle), cos(angle))) * raw;
-            vec2 st = (raw - UVScaleOffsetLayerMask.zw) * UVScaleOffsetLayerMask.xy + UVCenterRotationLayerMask.xy;
-            mask_uv = vec2(st.x, 1.0 - st.y);
+            mask_uv = material_layer_mask_uv(vec2(mask_uv.x, 1.0 - mask_uv.y), UVScaleOffsetLayerMask, UVCenterRotationLayerMask);
         }
         mask = sample_trinity(LayerMaskMap, mask_uv, 5) * vec4(LayerMaskScale1, LayerMaskScale2, LayerMaskScale3, LayerMaskScale4);
         if (NumMaterialLayer < 3) mask.g = 0.0;
@@ -410,7 +407,7 @@ void fragment() {
     ALBEDO = base.rgb;
     ROUGHNESS = roughness;
     METALLIC = 0.0;
-    SPECULAR = clamp(trinity_sss_f0 / 0.08, 0.0, 1.0);
+    SPECULAR = material_specular(trinity_sss_f0);
     AO = ao;
     AO_LIGHT_AFFECT = 0.0; // Direct AO is applied in light(); transmission stays unoccluded.
     trinity_sss_ao = ao;

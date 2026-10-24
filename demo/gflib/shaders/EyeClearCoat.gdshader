@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode blend_mix, cull_disabled, depth_draw_never;
+render_mode blend_premul_alpha, cull_disabled, depth_draw_never;
 
 uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
 uniform sampler2D NormalMap1 : hint_normal, repeat_enable;
@@ -11,6 +11,7 @@ uniform int sampler_repeat_u[5];
 uniform int sampler_repeat_v[5];
 uniform vec4 sampler_border_color[5];
 #include "trinity_sampler.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
 
 uniform int EyelidType;
 uniform int UVTransformMode;
@@ -62,12 +63,13 @@ void fragment() {
         vec2 xy = (sample_trinity(NormalMap1, normal_uv, 1).rg * 2.0 - 1.0) * NormalHeight1;
         NORMAL_MAP = vec3(xy, sqrt(max(0.0, 1.0 - dot(xy, xy)))) * 0.5 + 0.5;
     }
-    if (!FRONT_FACING) NORMAL = -NORMAL;
     ALBEDO = base.rgb;
     METALLIC = MetallicClearCoat;
     ROUGHNESS = RoughnessClearCoat;
     SPECULAR = 0.5; // Godot's dielectric F0 = 0.04 at this setting.
-    ALPHA = base.a;
+    vec2 blend_state = trinity_blend(base.a, 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
     EMISSION = vec3(0.0);
     if (EnableHighlight && RequireHighlightMap) {
         // Highlight mask intentionally omits the UV rotation.

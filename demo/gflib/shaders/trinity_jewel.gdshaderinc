@@ -17,6 +17,8 @@ uniform int sampler_repeat_v[12];
 uniform vec4 sampler_border_color[12];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_refraction.gdshaderinc"
+#include "trinity_blend.gdshaderinc"
+#include "trinity_material.gdshaderinc"
 uniform int RefractionMode;
 uniform bool EnableNormalMap;
 uniform bool EnableAlphaTest;
@@ -97,7 +99,7 @@ void fragment() {
     vec3 base0 = base.rgb;
     if (NumMaterialLayer > 1) {
         vec2 mask_uv = primary;
-        if (EnableLayerMaskUVTransform) mask_uv = jewel_srt(UV, UVScaleOffsetLayerMask, radians(UVCenterRotationLayerMask.z));
+        if (EnableLayerMaskUVTransform) mask_uv = material_layer_mask_uv(vec2(primary.x, 1.0 - primary.y), UVScaleOffsetLayerMask, UVCenterRotationLayerMask);
         vec4 weights = sample_trinity(LayerMaskMap, mask_uv, 8) * vec4(LayerMaskScale1, LayerMaskScale2, LayerMaskScale3, LayerMaskScale4);
         if (NumMaterialLayer < 3) weights.g = 0.0;
         if (NumMaterialLayer < 4) weights.b = 0.0;
@@ -147,9 +149,9 @@ void fragment() {
     float thickness = Thickness, ior = IndexOfRefraction;
 #endif
     mat3 tangent_basis = mat3(TANGENT, BINORMAL, NORMAL);
-    float face = FRONT_FACING ? 1.0 : -1.0;
-    vec3 normal_view = normalize(tangent_basis * normal_ts) * face;
-    vec3 emission_normal = normalize(tangent_basis * emission_ts) * face;
+    // Godot already flips NORMAL on back faces, giving the retail T*x + B*y - N*z.
+    vec3 normal_view = normalize(tangent_basis * normal_ts);
+    vec3 emission_normal = normalize(tangent_basis * emission_ts);
     float nv = clamp(dot(emission_normal, VIEW), 0.00001, 1.0);
     float edge = max(1.0 - nv, 0.0);
     float fresnel = 0.04 + 0.98 * pow(edge, max(color_power, 0.00001));
@@ -165,7 +167,6 @@ void fragment() {
     emission = max(emission, vec3(0.0)) + base.rgb * brightness;
     ALBEDO = base.rgb;
     NORMAL_MAP = normal_ts * 0.5 + 0.5;
-    if (!FRONT_FACING) NORMAL = -NORMAL;
     METALLIC = metallic;
     ROUGHNESS = clamp(roughness, 0.0, 1.0);
     AO = ao;
@@ -186,5 +187,7 @@ void fragment() {
         opacity = 1.0;
     }
     EMISSION = emission;
-    ALPHA = clamp(opacity, 0.0, 1.0);
+    vec2 blend_state = trinity_blend(clamp(opacity, 0.0, 1.0), 1.0);
+    PREMUL_ALPHA_FACTOR = blend_state.x;
+    ALPHA = blend_state.y;
 }
