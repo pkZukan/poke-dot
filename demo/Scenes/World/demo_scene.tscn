@@ -13,5 +13,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -790.2946, 2.562284, -891.989
 scene_path = "res://Assets/world/ik_scene/field/area/t1/sub_scene/field_/field_0.trscn"
 
 [node name="TrinityEnvironment" type="TrinityEnvironment" parent="." unique_id=2001243489]
+time_of_day = 11.75
 master_light = ExtResource("2_hymn2")
 use_native_bloom = true

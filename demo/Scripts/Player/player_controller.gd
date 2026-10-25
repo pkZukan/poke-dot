@@ -61,5 +61,4 @@ func _update_intent(delta: float) -> void:
 	if Input.is_action_just_pressed("roar"):
 		play_action(&"Roar")
 	if Input.is_action_just_pressed("attack"):
-		character.Evolve()
-		#play_action(&"Attack")
+		play_action(&"Attack")

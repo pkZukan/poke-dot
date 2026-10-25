@@ -53,6 +53,7 @@
 #include "middleware/havok_tag.h"
 #include "middleware/bffnt.h"
 #include "middleware/bfcpx.h"
+#include "middleware/wwise.h"
 
 #include "field/trcol.h"
 #include "fbs/field/trins.h"
@@ -113,6 +114,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNK)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
@@ -349,6 +351,9 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(HavokData)
 		GDREGISTER_CLASS(BinaryFont)
 		GDREGISTER_CLASS(BinaryCompositeFont)
+		GDREGISTER_CLASS(WwiseSoundBank)
+		GDREGISTER_CLASS(WwisePackage)
+		GDREGISTER_CLASS(AudioStreamWwise)
 
 		//Field
 		GDREGISTER_CLASS(TRCOL)
@@ -405,6 +410,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNK)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
@@ -430,6 +436,11 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
         ClassDB::register_internal_class<EditorInspectorPluginSARC>();
 		ClassDB::register_internal_class<SARCEditorPlugin>();
 		EditorPlugins::add_by_type<SARCEditorPlugin>();
+
+		ClassDB::register_internal_class<AudioStreamPreviewControl>();
+		ClassDB::register_internal_class<EditorInspectorPluginAudioStreamOgg>();
+		ClassDB::register_internal_class<WwiseEditorPlugin>();
+		EditorPlugins::add_by_type<WwiseEditorPlugin>();
 	}
 }
 
@@ -438,6 +449,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
     if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
     {
         EditorPlugins::remove_by_type<SARCEditorPlugin>();
+        EditorPlugins::remove_by_type<WwiseEditorPlugin>();
     }
 
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
@@ -469,6 +481,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderBNK)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
