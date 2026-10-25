@@ -43,7 +43,7 @@ table FloatParameter {
 
 table IntParameter {
     int_name: string;
-    int_value: int32 = -1;
+    int_value: int32 = 0;
 }
 
 table StringParameter {

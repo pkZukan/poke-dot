@@ -13,6 +13,8 @@ uniform int sampler_repeat_u[7];
 uniform int sampler_repeat_v[7];
 uniform vec4 sampler_border_color[7];
 #include "trinity_sampler.gdshaderinc"
+#define TRINITY_CUSTOM_LIGHT
+#include "trinity_light.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
@@ -115,10 +117,11 @@ void fragment() {
 }
 
 void light() {
-    float nl = dot(NORMAL, LIGHT);
+    float attenuation = TRINITY_ATTENUATION(1);
+    float nl = dot(NORMAL, TRINITY_LIGHT);
     vec3 direction = normalize(hair_direction);
     // Godot multiplies DIFFUSE_LIGHT by ALBEDO after light(); this fiber
     // model already contains sqrt(albedo), so compensate for that multiply.
-    DIFFUSE_LIGHT += hair_diffuse(ALBEDO, nl, hair_scatter) / max(ALBEDO, vec3(0.000001)) * max(nl, 0.0) * LIGHT_COLOR * ATTENUATION;
-    SPECULAR_LIGHT += hair_specular(ALBEDO, ROUGHNESS, direction, LIGHT, VIEW) * max(nl, 0.0) * LIGHT_COLOR * ATTENUATION;
+    DIFFUSE_LIGHT += hair_diffuse(ALBEDO, nl, hair_scatter) / max(ALBEDO, vec3(0.000001)) * max(nl, 0.0) * LIGHT_COLOR * attenuation;
+    SPECULAR_LIGHT += hair_specular(ALBEDO, ROUGHNESS, direction, TRINITY_LIGHT, VIEW) * max(nl, 0.0) * LIGHT_COLOR * attenuation;
 }

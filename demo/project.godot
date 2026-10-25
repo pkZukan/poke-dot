@@ -120,6 +120,22 @@ main_menu={
 
 [shader_globals]
 
+TrinityLightMapGain={
+"type": "vec3",
+"value": Vector3(1, 1, 1)
+}
+TrinityDiffuseProbe={
+"type": "samplerCube",
+"value": ""
+}
+TrinityDiffuseProbeGain={
+"type": "vec3",
+"value": Vector3(1, 1, 1)
+}
+TrinityDiffuseProbeEnabled={
+"type": "bool",
+"value": false
+}
 SkySunDirection={
 "type": "vec3",
 "value": Vector3(0, 0.5, -0.866)
@@ -259,4 +275,28 @@ SkyFogGradation={
 AtmosphereLUT={
 "type": "sampler2D",
 "value": ""
+}
+TrinityWorldShadowMap={
+"type": "sampler2D",
+"value": ""
+}
+TrinityWorldShadowWeights={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+TrinityWorldShadowTransform={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+TrinityWorldShadowParams={
+"type": "vec4",
+"value": Vector4(40, 10, 0, 0)
+}
+TrinitySunShadowDirection={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+TrinitySunShadingDirection={
+"type": "vec3",
+"value": Vector3(0, 1, 0)
 }

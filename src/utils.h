@@ -46,6 +46,7 @@ public:
     static godot::String toGodotString(const flatbuffers::String *str);
 
     static float half_to_float(uint16_t half);
+    static uint16_t float_to_half(float value);
 	static String read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end_pos = UINT64_MAX);
 	static TreeItem* FindTreeItemByName(TreeItem* current, const String& target_name);
 };

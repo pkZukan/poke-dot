@@ -105,6 +105,46 @@ float Utils::half_to_float(uint16_t half)
     return result;
 }
 
+// Round-to-nearest-even; overflow becomes infinity, tiny values become half denormals.
+uint16_t Utils::float_to_half(float value)
+{
+    uint32_t bits;
+    memcpy(&bits, &value, sizeof(bits));
+
+    uint16_t sign = uint16_t(bits >> 16 & 0x8000);
+    uint32_t e = bits >> 23 & Mask(8);
+    uint32_t f = bits & Mask(23);
+
+    if (e == 255)
+        return sign | 0x7C00 | (f ? 0x200 : 0);
+
+    int exponent = int(e) - 127 + 15;
+
+    if (exponent >= 31)
+        return sign | 0x7C00;
+
+    if (exponent <= 0)
+    {
+        if (exponent < -10)
+            return sign;
+
+        f |= Bit(23);
+        uint32_t shift = uint32_t(14 - exponent);
+        uint32_t half = f >> shift;
+        uint32_t rest = f & (Bit(shift) - 1);
+        uint32_t halfway = Bit(shift - 1);
+        if (rest > halfway || (rest == halfway && (half & 1)))
+            half++;
+        return sign | uint16_t(half);
+    }
+
+    uint32_t half = uint32_t(exponent) << 10 | f >> 13;
+    uint32_t rest = f & Mask(13);
+    if (rest > Bit(12) || (rest == Bit(12) && (half & 1)))
+        half++; // a carry into the exponent is still correct, up to infinity
+    return sign | uint16_t(half);
+}
+
 String Utils::read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end_pos)
 {
     if (sp.is_null())

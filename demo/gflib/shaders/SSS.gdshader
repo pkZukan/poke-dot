@@ -18,6 +18,8 @@ uniform vec4 sampler_border_color[11];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_sss.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#define TRINITY_CUSTOM_LIGHT
+#include "trinity_light.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap = false;
@@ -414,8 +416,8 @@ void fragment() {
 }
 
 void light() {
-    float nl = dot(NORMAL, LIGHT);
-    float attenuation = ReceiveShadow > 0 ? ATTENUATION : 1.0;
+    float nl = dot(NORMAL, TRINITY_LIGHT);
+    float attenuation = TRINITY_ATTENUATION(ReceiveShadow);
     vec3 profile = trinity_diffusion_profile(nl, trinity_sss_color);
     DIFFUSE_LIGHT += profile * LIGHT_COLOR * attenuation * trinity_sss_ao / PI;
     float wrap = 0.2588190451;
@@ -423,8 +425,8 @@ void light() {
     DIFFUSE_LIGHT += trinity_transmittance * backlight * LIGHT_COLOR * attenuation / PI;
     float clamped_nl = max(nl, 0.00001);
     float nv = clamp(dot(NORMAL, VIEW), 0.00001, 1.0);
-    vec3 halfway = normalize(LIGHT + VIEW);
+    vec3 halfway = normalize(TRINITY_LIGHT + VIEW);
     float nh = clamp(dot(NORMAL, halfway), 0.0, 1.0);
-    float lh = clamp(dot(LIGHT, halfway), 0.0, 1.0);
+    float lh = clamp(dot(TRINITY_LIGHT, halfway), 0.0, 1.0);
     SPECULAR_LIGHT += trinity_sss_ggx(clamped_nl, nv, nh, lh, ROUGHNESS, trinity_sss_f0, trinity_sss_f90) * LIGHT_COLOR * attenuation * trinity_sss_ao;
 }

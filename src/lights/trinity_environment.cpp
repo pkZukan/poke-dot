@@ -59,6 +59,10 @@ void TrinityEnvironment::_bind_methods()
 
 namespace
 {
+// Shader globals are shared, like the existing sky globals. Only the last
+// controller to publish a probe may clear it when detaching.
+uint64_t active_probe_owner = 0;
+
 template <class T>
 T *instance(uint64_t id)
 {
@@ -548,6 +552,13 @@ bool TrinityEnvironment::probe_average(const Dictionary &probe, Color &average)
 
 void TrinityEnvironment::apply_probe_ambient(const Ref<Environment> &environment)
 {
+    RenderingServer *rs = RenderingServer::get_singleton();
+    active_probe_owner = get_instance_id();
+    rs->global_shader_parameter_set("TrinityDiffuseProbeEnabled", false);
+    Dictionary gi = find_type("GILightCommon");
+    Color lightmap_gain = color(gi, "LightMapColor", Color(1,1,1)).srgb_to_linear() *
+        MAX(0.0, number(gi, "LightMapIntensity", 1));
+    rs->global_shader_parameter_set("TrinityLightMapGain", Vector3(lightmap_gain.r, lightmap_gain.g, lightmap_gain.b));
     Dictionary probe = find_type("Probe");
     Color average;
 
@@ -557,7 +568,6 @@ void TrinityEnvironment::apply_probe_ambient(const Ref<Environment> &environment
     Color tint = color(probe, "DiffuseProbeColor", Color(1,1,1)).srgb_to_linear();
     double energy = CLAMP(number(probe, "DiffuseProbeIntensity", 1), 0.0, 100.0);
 
-    Dictionary gi = find_type("GILightCommon");
     tint *= color(gi, "Color", Color(1,1,1)).srgb_to_linear();
     energy *= CLAMP(number(gi, "Intensity", 1), 0.0, 100.0);
 
@@ -568,12 +578,25 @@ void TrinityEnvironment::apply_probe_ambient(const Ref<Environment> &environment
         energy *= CLAMP(number(gi, "Intensity" + suffix, 1), 0.0, 100.0);
     }
 
-    Color ambient = average * tint;
+    Dictionary paths = probe.get("texture_paths", Dictionary());
+    Ref<Cubemap> diffuse = load_cubemap(paths.get("DiffuseProbe", ""));
+    // Retail's deferred light pass divides the probe irradiance by pi (Lambert);
+    // Godot's ambient and IRRADIANCE are used as-is.
+    Color gain = tint * (energy / Math_PI);
+    set_global_texture("TrinityDiffuseProbe", diffuse);
+    rs->global_shader_parameter_set("TrinityDiffuseProbeGain", Vector3(gain.r, gain.g, gain.b));
+    rs->global_shader_parameter_set("TrinityDiffuseProbeEnabled", diffuse.is_valid());
+
+    // Native materials keep the averaged fallback. Shared Trinity shaders
+    // replace it with directional irradiance through Godot's IRRADIANCE output.
+    Color ambient = average * gain;
     ambient.a = 1;
 
     environment->set_ambient_source(Environment::AMBIENT_SOURCE_COLOR);
     environment->set_ambient_light_color(ambient.linear_to_srgb());
-    environment->set_ambient_light_energy(energy);
+    // Godot also multiplies sky reflections by ambient energy. Bake the diffuse
+    // gain into the fallback color so it cannot rescale the specular probe.
+    environment->set_ambient_light_energy(1.0);
     environment->set_ambient_light_sky_contribution(0);
 }
 
@@ -601,6 +624,8 @@ void TrinityEnvironment::apply_probe_specular(const Ref<Environment> &environmen
         probe_sky.instantiate();
         probe_sky->set_material(probe_sky_material);
         probe_sky->set_radiance_size(Sky::RADIANCE_SIZE_128);
+        // The probe tint follows time-of-day curves, so spread each re-filter over frames.
+        probe_sky->set_process_mode(Sky::PROCESS_MODE_INCREMENTAL);
     }
 
     Color tint = color(probe, "SpecularProbeColor", Color(1,1,1)).srgb_to_linear();
@@ -661,6 +686,71 @@ Ref<Cubemap> TrinityEnvironment::load_cubemap(const String &path)
 
     texture_cache[key] = result;
     return result;
+}
+
+// The LUT is rebuilt only when the PfxCgCurve parameters change (photo filters animate them).
+Ref<ImageTexture3D> TrinityEnvironment::retail_tonemap_lut(const Dictionary &global)
+{
+    PackedFloat64Array key;
+    key.push_back(number(global, "PfxCgCurveEnabled", 0));
+
+    for (const char *name : {"PfxCgToeStrength", "PfxCgToeLength", "PfxCgShoulderStrength",
+        "PfxCgShoulderLength", "PfxCgShoulderAngle", "PfxCgCurveGamma"})
+        key.push_back(number(global, name, 0));
+
+    if (tonemap_lut.is_valid() && key == tonemap_lut_key)
+        return tonemap_lut;
+
+    RetailToneCurve curve;
+
+    if (key[0] > 0)
+        curve = RetailToneCurve::create(key[1], key[2], key[3], key[4], key[5], key[6]);
+
+    tonemap_lut = build_retail_tonemap_lut(curve, 96, RETAIL_TONEMAP_HEADROOM);
+    tonemap_lut_key = key;
+    return tonemap_lut;
+}
+
+// Retail's baked top-down world shadow, applied by trinity_light.gdshaderinc beyond the
+// cascade range. Its RGBA channels hold the sun at the centers of four equal steps across
+// [WorldShadowTimeStart, WorldShadowTimeEnd], which wraps past midnight for moon shadows.
+void TrinityEnvironment::update_world_shadow()
+{
+    RenderingServer *rs = RenderingServer::get_singleton();
+    Dictionary global = find_type("Global");
+    Dictionary directional = find_type("Directional");
+    Dictionary paths = global.get("texture_paths", Dictionary());
+    Ref<Texture2D> map;
+
+    if (number(global, "WorldShadowEnable", 0) > 0)
+        map = load_texture(paths.get("WorldShadowTexture", ""));
+
+    double start = number(directional, "WorldShadowTimeStart", 4);
+    double span = Math::fposmod(number(directional, "WorldShadowTimeEnd", 20) - start, 24.0);
+    double local = Math::fposmod(time_of_day - start, 24.0);
+    double intensity = 0;
+    Vector4 weights;
+
+    if (map.is_valid() && span > 0 && local <= span)
+    {
+        double step = CLAMP(local / span * 4.0 - 0.5, 0.0, 3.0);
+        int index = MIN(int(step), 2);
+        weights[index] = 1.0 - (step - index);
+        weights[index + 1] = step - index;
+        intensity = CLAMP(number(global, "WorldShadowIntensity", 1), 0.0, 1.0);
+        set_global_texture("TrinityWorldShadowMap", map);
+    }
+
+    // Aligned against the field geometry: OrthoSize 500 maps the texture onto X/Z in [-1000, 0].
+    double size = 2.0 * MAX(1.0, number(directional, "WorldShadowOrthoSize", 500));
+    double offset_x = number(global, "WorldShadowPositionOffsetX", 0);
+    double offset_z = number(global, "WorldShadowPositionOffsetZ", 0);
+
+    rs->global_shader_parameter_set("TrinityWorldShadowWeights", weights);
+    rs->global_shader_parameter_set("TrinityWorldShadowTransform",
+        Vector4(1.0 / size, 1.0 / size, offset_x / size + 1.0, offset_z / size + 1.0));
+    rs->global_shader_parameter_set("TrinityWorldShadowParams",
+        Vector4(MAX(0.01, number(global, "WorldShadowFadeDistance", 40)), number(global, "WorldShadowFadePow", 10), intensity, 0));
 }
 
 // Failures are cached too, so a missing file isn't retried on every time-of-day step.
@@ -738,7 +828,7 @@ void TrinityEnvironment::update_sky(const Dictionary &sky_data)
     if (lut.is_null())
         scattering.w = 0;
 
-    rs->global_shader_parameter_set("AtmosphereLUT", lut);
+    set_global_texture("AtmosphereLUT", lut);
     rs->global_shader_parameter_set("ScatteringFogColor", scattering);
 
     // Pitch is in units of 90 degrees (positive = below the horizon), yaw in units of 180.
@@ -762,8 +852,27 @@ void TrinityEnvironment::update_sky(const Dictionary &sky_data)
         direction(number(sky_data, "SkyMoonPitch", 0), number(sky_data, "SkyMoonYaw", 0)));
 }
 
+// Setting a global texture invalidates every material that samples it (tens of thousands
+// in the field), so only push actual changes. Time-of-day updates happen every frame.
+void TrinityEnvironment::set_global_texture(const StringName &name, const Ref<Texture> &texture)
+{
+    if (global_textures.has(name) && Ref<Texture>(global_textures[name]) == texture)
+        return;
+
+    global_textures[name] = texture;
+    RenderingServer::get_singleton()->global_shader_parameter_set(name, texture);
+}
+
 void TrinityEnvironment::detach_targets()
 {
+    if (active_probe_owner == get_instance_id())
+    {
+        RenderingServer *rs = RenderingServer::get_singleton();
+        rs->global_shader_parameter_set("TrinityDiffuseProbeEnabled", false);
+        set_global_texture("TrinityDiffuseProbe", Ref<Texture>());
+        rs->global_shader_parameter_set("TrinityLightMapGain", Vector3(1, 1, 1));
+        active_probe_owner = 0;
+    }
     WorldEnvironment *world = instance<WorldEnvironment>(bound_world_id);
 
     if (world)
@@ -905,28 +1014,44 @@ void TrinityEnvironment::apply_render_state()
     {
         int mode = int(number(global, "PfxTonemapMode", 0));
 
-        // Only None and ACES are currently verified; other source modes keep the baseline.
-        if (mode == 0)
-            env->set_tonemapper(Environment::TONE_MAPPER_LINEAR);
-        else if (mode == 3)
-            env->set_tonemapper(Environment::TONE_MAPPER_ACES);
-
         // Retail composite variant 6 (EyeAdaptation=True) only samples the scene and
         // multiplies RGB by exposure_scale; it never samples the adaptation buffer.
         // Godot's auto-exposure would add brightness gain the source doesn't have.
         bool exposure_enabled = number(global, "PfxEyeAdaptationEnable", 0) > 0;
-        double exposure_scale = number(global, "TMScale", 1.0);
+        double exposure = exposure_enabled ? MAX(0.0, number(global, "TMScale", 1.0)) : 1.0;
 
-        env->set_tonemap_exposure(exposure_enabled ? MAX(0.0, exposure_scale) : 1.0);
+        // Retail ACES (AcesCurveType Filmic1) is a different curve from Godot's ACES fit,
+        // which renders mid grey ~2.8x brighter and clips at 1. It's baked into the color
+        // correction LUT instead, behind the Linear tonemapper with HDR headroom.
+        bool retail_lut = mode == 3 && int(number(global, "PfxAcesCurveType", 0)) == 0;
+        double hdr_scale = retail_lut ? 1.0 / RETAIL_TONEMAP_HEADROOM : 1.0;
+
+        // Only None and ACES are currently verified; other source modes keep the baseline.
+        if (mode == 0)
+            env->set_tonemapper(Environment::TONE_MAPPER_LINEAR);
+        else if (retail_lut)
+        {
+            env->set_tonemapper(Environment::TONE_MAPPER_LINEAR);
+            env->set_adjustment_enabled(true);
+            env->set_adjustment_brightness(1.0);
+            env->set_adjustment_contrast(1.0);
+            env->set_adjustment_saturation(1.0);
+            env->set_adjustment_color_correction(retail_tonemap_lut(global));
+        }
+        else if (mode == 3)
+            env->set_tonemapper(Environment::TONE_MAPPER_ACES);
+
+        env->set_tonemap_exposure(exposure * hdr_scale);
         attributes->set_auto_exposure_enabled(false);
 
         if (use_native_bloom)
         {
+            // Godot thresholds the glow after exposure, so the headroom scale applies to it too.
             env->set_glow_enabled(number(global, "PfxBloomEnable", 0) > 0);
             env->set_glow_blend_mode(Environment::GLOW_BLEND_MODE_ADDITIVE);
             env->set_glow_intensity(MAX(0.0, number(global, "PfxBloomIntensity", 0.3)));
-            env->set_glow_hdr_bleed_threshold(MAX(0.0, number(global, "PfxBloomThreshold", 1.0)));
-            env->set_glow_hdr_luminance_cap(MAX(0.0, number(global, "PfxBloomIntensityMax", 12.0)));
+            env->set_glow_hdr_bleed_threshold(MAX(0.0, number(global, "PfxBloomThreshold", 1.0)) * hdr_scale);
+            env->set_glow_hdr_luminance_cap(MAX(0.0, number(global, "PfxBloomIntensityMax", 12.0)) * hdr_scale);
         }
 
         env->set_ssao_enabled(number(global, "DynamicAOEnable", 0) > 0);
@@ -979,6 +1104,7 @@ void TrinityEnvironment::apply_render_state()
 
     apply_probe_ambient(env);
     apply_probe_specular(env);
+    update_world_shadow();
 
     auto *sun = instance<DirectionalLight3D>(owned_light_id);
 
@@ -997,26 +1123,52 @@ void TrinityEnvironment::apply_render_state()
     Dictionary shading = selected.is_empty() ? directional : selected;
 
     sun->set_visible(!shading.is_empty());
-    sun->set_param(Light3D::PARAM_ENERGY, MAX(0.0, number(shading, "Intensity", 0)));
+    // Retail lights diffuse with Color * Intensity / pi; Godot's energy already gives albedo * energy.
+    sun->set_param(Light3D::PARAM_ENERGY, MAX(0.0, number(shading, "Intensity", 0)) / Math_PI);
     sun->set_color(color(shading, "Color", Color(1, 1, 1), false));
-    sun->set_shadow(false);
+    // Retail always renders the cascade shadows; only ReceiveShadow=0 materials skip them.
+    // ShadowEnableSelfShadow only controls ignoring occluders of the receiver's own category
+    // (within ShadowSelfShadowMaxDistance), which Godot's shadow maps can't express.
+    sun->set_shadow(sun->get_param(Light3D::PARAM_ENERGY) > 0);
 
-    // Godot adapter settings (not a direct TRLGT mapping), tuned for flying above the city.
-    // Shadows fade across the last 40% of the range instead of vanishing near the camera.
-    sun->set_param(Light3D::PARAM_SHADOW_MAX_DISTANCE, 500.0);
-    sun->set_param(Light3D::PARAM_SHADOW_FADE_START, 0.6);
+    // Cascades only cover ShadowFadeDistance; the baked world shadow covers the rest.
+    // Retail fades them out with (d / distance)^ShadowFadePow, Godot linearly from
+    // fade_start, so the fade starts where the retail term reaches 10%.
+    double shadow_distance = MAX(1.0, number(directional, "ShadowFadeDistance", 50));
+    double shadow_fade_pow = MAX(1.0, number(directional, "ShadowFadePow", 10));
+    sun->set_param(Light3D::PARAM_SHADOW_MAX_DISTANCE, shadow_distance);
+    sun->set_param(Light3D::PARAM_SHADOW_FADE_START, std::pow(0.1, 1.0 / shadow_fade_pow));
+
+    // Splits follow ShadowCascadeExponent. ShadowCascadeLevel isn't mapped: Godot only
+    // offers 2 or 4 cascades.
+    double cascade_exponent = MAX(0.1, number(directional, "ShadowCascadeExponent", 1.6));
+    sun->set_shadow_mode(DirectionalLight3D::SHADOW_PARALLEL_4_SPLITS);
+    sun->set_param(Light3D::PARAM_SHADOW_SPLIT_1_OFFSET, std::pow(0.25, cascade_exponent));
+    sun->set_param(Light3D::PARAM_SHADOW_SPLIT_2_OFFSET, std::pow(0.5, cascade_exponent));
+    sun->set_param(Light3D::PARAM_SHADOW_SPLIT_3_OFFSET, std::pow(0.75, cascade_exponent));
 
     sun->set_rotation(Vector3());
     sun->set_position(Vector3());
 
-    if (directional.has("rotation"))
+    // Retail shades with DirectionalMain but casts shadows from ShadowTransform, which is
+    // steeper (54 vs 40 degrees in master). The Godot light follows the shadow caster and
+    // trinity_light.gdshaderinc swaps the shading direction back in for this light.
+    Dictionary shadow = find_type("Shadow");
+    Dictionary caster = shadow.has("rotation") ? shadow : directional;
+
+    if (caster.has("rotation"))
     {
-        sun->set_quaternion(directional["rotation"]);
-        sun->set_position(directional["translation"]);
+        sun->set_quaternion(caster["rotation"]);
+        sun->set_position(caster["translation"]);
     }
 
-    if (!selected.is_empty())
-        sun->set_shadow(number(selected, "ShadowEnableSelfShadow", 0) > 0);
+    // Directions toward the light; a DirectionalLight3D shines along its -Z.
+    bool split_direction = caster.has("rotation") && directional.has("rotation");
+    Vector3 to_caster = Quaternion(caster.get("rotation", Quaternion())).xform(Vector3(0, 0, 1));
+    Vector3 to_shading = Quaternion(directional.get("rotation", Quaternion())).xform(Vector3(0, 0, 1));
+    RenderingServer *rs = RenderingServer::get_singleton();
+    rs->global_shader_parameter_set("TrinitySunShadowDirection", Vector4(to_caster.x, to_caster.y, to_caster.z, split_direction ? 1.0 : 0.0));
+    rs->global_shader_parameter_set("TrinitySunShadingDirection", to_shading);
 
     sun->set_param(Light3D::PARAM_SHADOW_NORMAL_BIAS, MAX(0.0, number(shading, "ShadowNormalBias", 1.0)));
     sun->set_param(Light3D::PARAM_SHADOW_BIAS, MAX(0.0, number(shading, "ShadowDepthBias", 0.1)));

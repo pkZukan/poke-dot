@@ -18,6 +18,8 @@ uniform int sampler_repeat_v[12];
 uniform vec4 sampler_border_color[12];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_ibl.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform int NumMaterialLayer = 1;
 
@@ -101,6 +103,8 @@ void fragment() {
     ALBEDO = color;
     if (EnableVertexBaseColor) ALBEDO *= mix(vec3(1.0), COLOR.rgb, VertexColorIntensity);
     NORMAL_MAP = normalize(normal_ts) * 0.5 + 0.5;
+    IRRADIANCE = trinity_irradiance(normalize(mat3(TANGENT, BINORMAL, NORMAL) * normal_ts), INV_VIEW_MATRIX);
     AO = orh.r; ROUGHNESS = orh.g; METALLIC = metal;
 
+    TRINITY_LIGHT_FRAGMENT;
 }

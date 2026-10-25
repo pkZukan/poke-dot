@@ -309,6 +309,28 @@ void ActorObj::_add_mesh_animation(String tracm_file, String name)
                 }
                 const String path = String(get_path_to(mesh)) + ":material_override:shader_parameter/";
                 TrinityAnimationConverter::add_material_tracks(godot_anim, material, path, types, material_rate);
+
+                // RESET is a built-in anim state that godot can use as a fallback 
+                // to prevent the weird UV issue in some material anims
+                Ref<Animation> reset;
+                if (_anim_lib->has_animation("RESET"))
+                    reset = _anim_lib->get_animation("RESET");
+                else {
+                    reset.instantiate();
+                    _anim_lib->add_animation("RESET", reset);
+                }
+                for (int channel = 0; channel < godot_anim->get_track_count(); ++channel) {
+                    if (godot_anim->track_get_type(channel) != Animation::TYPE_VALUE) continue;
+                    NodePath channel_path = godot_anim->track_get_path(channel);
+                    if (!String(channel_path).begins_with(path) ||
+                        reset->find_track(channel_path, Animation::TYPE_VALUE) >= 0) continue;
+                    Variant initial = mesh->get_indexed(NodePath(channel_path.get_concatenated_subnames()));
+                    if (initial.get_type() == Variant::NIL) continue;
+                    int reset_channel = reset->add_track(Animation::TYPE_VALUE);
+                    reset->track_set_path(reset_channel, channel_path);
+                    reset->value_track_set_update_mode(reset_channel, godot_anim->value_track_get_update_mode(channel));
+                    reset->track_insert_key(reset_channel, 0.0, initial);
+                }
             }
         }
 

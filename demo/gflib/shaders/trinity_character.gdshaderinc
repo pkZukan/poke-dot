@@ -47,6 +47,9 @@ uniform int sampler_repeat_v[19];
 uniform vec4 sampler_border_color[19];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_ibl.gdshaderinc"
+#define TRINITY_CUSTOM_LIGHT
+#include "trinity_light.gdshaderinc"
 
 //Shader strings (as bool)
 uniform bool EnableBaseColorMap;
@@ -460,6 +463,7 @@ void fragment() {
     }
     
     vec3 normal_view = normalize(mat3(normalize(TANGENT), normalize(BINORMAL), normalize(NORMAL)) * normal_ts);
+    IRRADIANCE = trinity_irradiance(normal_view, INV_VIEW_MATRIX);
     vec3 reflected = (INV_VIEW_MATRIX * vec4(reflect(-VIEW, normal_view), 0.0)).xyz;
     reflection_color = textureLod(LocalReflectionMap, reflected, ReflectionsBlur).rgb;
     reflection_fresnel = clamp(max(smoothstep(0.3, 0.7, clamp(dot(normal_view, VIEW), 0.0, 1.0)), 0.1), 0.0, 1.0);
@@ -515,10 +519,10 @@ void light() {
     // Holocast output is fully emissive; it receives no scene lighting.
     if (!EnableHolocastEffect) {
         float light_enabled = LIGHT_IS_DIRECTIONAL || EnableAdditionalLight != 0 ? 1.0 : 0.0;
-        float ndotl = dot(NORMAL, LIGHT);
+        float ndotl = dot(NORMAL, TRINITY_LIGHT);
         float diffuse = ndotl * 0.5 + 0.5;
         diffuse = clamp(mix(diffuse, diffuse * diffuse, HalfLambertBias), 0.0, 1.0);
-        float attenuation = ReceiveShadow > 0 ? ATTENUATION : 1.0;
+        float attenuation = TRINITY_ATTENUATION(ReceiveShadow);
         float shadow = clamp(attenuation + ShadowStrength * ShadowStrength, 0.0, 1.0);
         vec3 light_color = LIGHT_COLOR / PI * light_enabled;
         // Godot LIGHT_COLOR already contains PI. Ikkaku's character shader then
@@ -531,7 +535,7 @@ void light() {
             // Secondary hair highlight: a band along the strand, from a view vector
             // shifted along world up, brightening the base color.
             vec3 shifted_view = VIEW + SpecularShiftValue * (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
-            vec3 hair_half = normalize(shifted_view + LIGHT);
+            vec3 hair_half = normalize(shifted_view + TRINITY_LIGHT);
             float band = smoothstep(0.7 - 0.5 * SecondSpecularWidth, 1.4 - 0.5 * SecondSpecularWidth, 1.0 - abs(dot(hair_binormal, hair_half)));
             shaded *= 1.0 + band * pow(clamp(dot(NORMAL, hair_half), 0.0, 1.0), 4.0) * hair_strength;
         }
@@ -560,7 +564,7 @@ void light() {
         float back_weight = rim_back * BackRimLightIntensity;
         rim_back = mix(back_weight, rim_back, back_weight) * RimLightIntensity;
         rim = mix(rim_front, rim_back, clamp(-ndotl, 0.0, 1.0)) * rim_mask * max(1.0 - surface_emission, 0.0);
-        vec3 halfway = normalize(LIGHT + VIEW);
+        vec3 halfway = normalize(TRINITY_LIGHT + VIEW);
         float spec = pow(clamp(dot(NORMAL, halfway), 0.0, 1.0), 8.0);
         spec = adjust_contrast(smoothstep(surface_offset, 1.0 + surface_offset, spec), surface_contrast);
         vec3 specular = light_color * shadow * (spec * surface_specular * surface_mask * surface_ao);

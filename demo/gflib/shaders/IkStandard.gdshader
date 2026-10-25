@@ -10,6 +10,7 @@ uniform int sampler_repeat_v[4];
 uniform vec4 sampler_border_color[4];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
 uniform vec4 UVScaleOffset1 = vec4(1.0, 1.0, 0.0, 0.0);
@@ -48,4 +49,5 @@ void fragment() {
     ROUGHNESS = packed.g;
     AO = 1.0;
     EMISSION = window;
+    TRINITY_LIGHT_FRAGMENT;
 }

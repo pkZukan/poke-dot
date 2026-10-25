@@ -12,6 +12,7 @@ uniform vec4 sampler_border_color[4];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
 #include "trinity_blend.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
@@ -46,4 +47,5 @@ void fragment() {
     vec2 blend_state = trinity_blend(alpha, 1.0);
     PREMUL_ALPHA_FACTOR = blend_state.x;
     ALPHA = blend_state.y;
+    TRINITY_LIGHT_FRAGMENT;
 }

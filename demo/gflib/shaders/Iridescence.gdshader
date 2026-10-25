@@ -13,6 +13,7 @@ uniform int sampler_repeat_v[7];
 uniform vec4 sampler_border_color[7];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
@@ -35,7 +36,6 @@ uniform int IridescenceType = 1;
 uniform int IridescenceBlendType = 0;
 uniform int IridescenceInterpolateType = 0;
 uniform int UVIndexLayerMask = -1;
-uniform int ReceiveShadow = 1;
 uniform int CastShadow = 1;
 uniform int CategoryLabel = 0;
 uniform int EnableGlobalWeather = 0;
@@ -222,4 +222,5 @@ void fragment() {
     SPECULAR = material_specular(0.04 * reflectance);
     EMISSION = emission;
     AO = ao;
+    TRINITY_LIGHT_FRAGMENT;
 }

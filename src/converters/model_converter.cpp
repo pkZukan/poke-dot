@@ -843,6 +843,8 @@ void TrinityModel::_assign_materials()
             continue;
         Ref<ShaderMaterial> material = _materials.get(mi->get_meta("trinity_material"), Variant());
         mi->set_material_override(material);
+        // Retail field meshes have CastShadow=0 and cast through separate Shadow-shader proxies.
+        // The sky dome and distant terrain are 0 too and would otherwise shadow the whole scene.
         bool cast_shadow = true;
         if (material.is_valid()) {
             Variant value = material->get_shader_parameter("CastShadow");

@@ -140,7 +140,9 @@ uniform vec4 sampler_border_color[21];
 #endif
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_ibl.gdshaderinc"
 #include "trinity_billboard.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
@@ -177,7 +179,6 @@ uniform int WindReceiverType = 0;
 uniform int UVIndexAO = -1;
 uniform int UVIndexLayerMask = -1;
 uniform int CastShadow = 1;
-uniform int ReceiveShadow = 1;
 uniform float Metallic = 0.0;
 uniform float Roughness = 0.2;
 uniform float Reflectance = 0.04;
@@ -496,7 +497,7 @@ void fragment() {
             roughness = mix(roughness, roughness * sample_trinity(RoughnessMap2, detail_uv, 18).r, detail_mask.g);
         }
     }
-    if (EnableLightMap) emission += base.rgb * sample_trinity(LightMap, vec2(UV2.x, 1.0 - UV2.y), 14).rgb * ao;
+    if (EnableLightMap) emission += base.rgb * sample_trinity(LightMap, vec2(UV2.x, 1.0 - UV2.y), 14).rgb * TrinityLightMapGain * ao;
 
 #ifdef EYE_MATERIAL
     if (EnableHighlight && !EnableEyeClearCoat) {
@@ -526,6 +527,7 @@ void fragment() {
 #endif
     ALBEDO = base.rgb;
     NORMAL_MAP = normalize(normal_ts) * 0.5 + 0.5;
+    IRRADIANCE = trinity_irradiance(normalize(mat3(TANGENT, BINORMAL, NORMAL) * normal_ts), INV_VIEW_MATRIX);
     METALLIC = clamp(metallic, 0.0, 1.0);
     ROUGHNESS = clamp(roughness, 0.0, 1.0);
     SPECULAR = material_specular(Reflectance * reflectance);
@@ -550,4 +552,5 @@ void fragment() {
     PREMUL_ALPHA_FACTOR = blend_state.x;
     ALPHA = blend_state.y;
 #endif
+    TRINITY_LIGHT_FRAGMENT;
 }

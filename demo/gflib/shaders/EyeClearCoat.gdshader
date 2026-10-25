@@ -12,6 +12,8 @@ uniform int sampler_repeat_v[5];
 uniform vec4 sampler_border_color[5];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_blend.gdshaderinc"
+#define TRINITY_CUSTOM_LIGHT
+#include "trinity_light.gdshaderinc"
 
 uniform int EyelidType;
 uniform int UVTransformMode;
@@ -79,19 +81,20 @@ void fragment() {
 }
 
 void light() {
-    float nl = max(dot(NORMAL, LIGHT), 0.0);
-    DIFFUSE_LIGHT += nl * LIGHT_COLOR * ATTENUATION / PI;
+    float attenuation = TRINITY_ATTENUATION(1);
+    float nl = max(dot(NORMAL, TRINITY_LIGHT), 0.0);
+    DIFFUSE_LIGHT += nl * LIGHT_COLOR * attenuation / PI;
     if (EnableHighlight && nl > 0.0) {
-        vec3 half_vector = normalize(VIEW + LIGHT);
+        vec3 half_vector = normalize(VIEW + TRINITY_LIGHT);
         float nv = max(dot(NORMAL, VIEW), 0.00001);
         float nh = clamp(dot(NORMAL, half_vector), 0.0, 1.0);
-        float lh = clamp(dot(LIGHT, half_vector), 0.0, 1.0);
+        float lh = clamp(dot(TRINITY_LIGHT, half_vector), 0.0, 1.0);
         float exponent = pow(2048.0, 1.0 - ROUGHNESS);
         vec3 f0 = mix(vec3(0.04), ALBEDO, METALLIC);
         vec3 fresnel = f0 + (vec3(1.0) - f0) * pow(1.0 - lh, 5.0);
         float k = 2.0 / sqrt(PI * (exponent + 2.0));
         float visibility = 1.0 / (mix(nl, 1.0, k) * mix(nv, 1.0, k));
         float distribution = (exponent + 2.0) * 0.5 * pow(nh, exponent);
-        SPECULAR_LIGHT += distribution * fresnel * visibility * nl * LIGHT_COLOR * ATTENUATION / PI;
+        SPECULAR_LIGHT += distribution * fresnel * visibility * nl * LIGHT_COLOR * attenuation / PI;
     }
 }

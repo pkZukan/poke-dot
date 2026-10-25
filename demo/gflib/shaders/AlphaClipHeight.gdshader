@@ -9,6 +9,7 @@ uniform int sampler_repeat_v[3];
 uniform vec4 sampler_border_color[3];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform vec4 UVScaleOffset = vec4(1.0, 1.0, 0.0, 0.0);
 uniform float DiscardValue = 0.5;
@@ -30,4 +31,5 @@ void fragment() {
     NORMAL_MAP = material_normal(sample_trinity(NormalMap, uv, 1), NormalIntensity) * 0.5 + 0.5;
     ROUGHNESS = roughness.r * RoughnessIntensity;
     METALLIC = Metallic;
+    TRINITY_LIGHT_FRAGMENT;
 }

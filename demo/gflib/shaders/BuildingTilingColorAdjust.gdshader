@@ -12,6 +12,7 @@ uniform int sampler_repeat_v[6];
 uniform vec4 sampler_border_color[6];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform bool EnableAlphaTest;
 uniform bool EnableTilingBlend;
@@ -64,4 +65,5 @@ void fragment() {
     ROUGHNESS = packed.g * RoughnessIntensity;
     METALLIC = packed.b * MetallicIntensity;
     EMISSION = EnableEmissionMaskMap ? sample_trinity(EmissionMaskMap, vec2(UV.x, 1.0 - UV.y), 5).rgb * EmissionColor.rgb * EmissionIntensity : vec3(0.0);
+    TRINITY_LIGHT_FRAGMENT;
 }

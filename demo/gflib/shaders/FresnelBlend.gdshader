@@ -72,6 +72,8 @@ uniform vec4 sampler_border_color[8];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
 #include "trinity_sss.gdshaderinc"
+#define TRINITY_CUSTOM_LIGHT
+#include "trinity_light.gdshaderinc"
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableNormalMap;
 uniform bool EnableMetallicMap;
@@ -177,14 +179,14 @@ void fragment() {
 
 // Direct light uses the retail spherical-Gaussian diffusion profile and GGX.
 void light() {
-    float nl = dot(NORMAL, LIGHT);
-    float attenuation = ReceiveShadow > 0 ? ATTENUATION : 1.0;
+    float nl = dot(NORMAL, TRINITY_LIGHT);
+    float attenuation = TRINITY_ATTENUATION(ReceiveShadow);
     DIFFUSE_LIGHT += trinity_diffusion_profile(nl, vec3(fresnel_sss)) * LIGHT_COLOR * attenuation * fresnel_ao / PI;
     float clamped_nl = max(nl, 0.00001);
     float nv = clamp(dot(NORMAL, VIEW), 0.00001, 1.0);
-    vec3 halfway = normalize(LIGHT + VIEW);
+    vec3 halfway = normalize(TRINITY_LIGHT + VIEW);
     float nh = clamp(dot(NORMAL, halfway), 0.0, 1.0);
-    float lh = clamp(dot(LIGHT, halfway), 0.0, 1.0);
+    float lh = clamp(dot(TRINITY_LIGHT, halfway), 0.0, 1.0);
     vec3 f0 = mix(vec3(0.04 * fresnel_reflectance), ALBEDO, METALLIC);
     vec3 specular = vec3(trinity_sss_ggx(clamped_nl, nv, nh, lh, ROUGHNESS, f0.r, fresnel_reflectance).x,
         trinity_sss_ggx(clamped_nl, nv, nh, lh, ROUGHNESS, f0.g, fresnel_reflectance).x,

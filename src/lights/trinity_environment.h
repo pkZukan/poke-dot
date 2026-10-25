@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fbs/gfx2/trlgt.h"
+#include "lights/retail_tonemap.h"
 #include <godot_cpp/classes/node3d.hpp>
 #include <godot_cpp/classes/environment.hpp>
 #include <godot_cpp/classes/camera_attributes_practical.hpp>
@@ -31,6 +32,11 @@ class TrinityEnvironment : public Node3D {
     Dictionary effective_state;
     Dictionary diffuse_probe_cache;
     Dictionary texture_cache;
+    Dictionary global_textures;
+    // Scene-linear range kept by the retail tonemap LUT; retail only gains ~1/255 above it.
+    static constexpr double RETAIL_TONEMAP_HEADROOM = 8.0;
+    Ref<ImageTexture3D> tonemap_lut;
+    PackedFloat64Array tonemap_lut_key;
     Ref<Sky> probe_sky;
     Ref<ShaderMaterial> probe_sky_material;
     NodePath world_environment_path;
@@ -65,6 +71,9 @@ class TrinityEnvironment : public Node3D {
     Ref<Cubemap> load_cubemap(const String &path);
     Ref<Texture2D> load_texture(const String &path);
     void update_sky(const Dictionary &sky_data);
+    void update_world_shadow();
+    void set_global_texture(const StringName &name, const Ref<Texture> &texture);
+    Ref<ImageTexture3D> retail_tonemap_lut(const Dictionary &global);
 
 protected:
     static void _bind_methods();

@@ -14,6 +14,7 @@ uniform int sampler_repeat_u[9];
 uniform int sampler_repeat_v[9];
 uniform vec4 sampler_border_color[9];
 #include "trinity_sampler.gdshaderinc"
+#include "trinity_light.gdshaderinc"
 
 uniform bool EnableBaseColorMap = true;
 uniform bool EnableEmissionColorMap;
@@ -56,7 +57,6 @@ uniform int UVIndexLayer1 = -1;
 uniform int UVIndexLayer2 = -1;
 uniform int NumRequiredUV = 1;
 uniform int CastShadow;
-uniform int ReceiveShadow = 1;
 uniform int CategoryLabel;
 uniform int EnableGlobalWeather;
 uniform int EnableAdditionalLight;
@@ -133,4 +133,5 @@ void fragment() {
     SPECULAR = 0.5;
     AO = ao;
     EMISSION = emission;
+    TRINITY_LIGHT_FRAGMENT;
 }
