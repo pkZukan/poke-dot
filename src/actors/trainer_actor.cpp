@@ -21,10 +21,10 @@ void TrainerActor::Initialize()
 {
     String base_path = GFLib::romfs_path("ik_chara");
     
-    _trainer_mdl_path = base_path.path_join("model_cc_ir/tr0001_00_rival_f");
-    _trainer_mot_path = base_path.path_join("motion_cc_base/rv/tr0001_00_rival_f");
+    _trainer_mdl_path = base_path.path_join("model_uq/tr0013_00_detective");
+    _trainer_mot_path = base_path.path_join("motion_uq/tr0013_00_detective");
 
-    LoadActor(_trainer_mdl_path.path_join("tr0001_00.trmdl"), _trainer_mot_path.path_join("tr0001_00_base.tracn"), variation);
+    LoadActor(_trainer_mdl_path.path_join("tr0013_00.trmdl"), _trainer_mot_path.path_join("tr0013_00_base.tracn"), variation);
 
     //Quick hack to steal jump anims from player since npcs/rival dont have them
     const String player_motion_path = base_path.path_join("motion_pc/base");

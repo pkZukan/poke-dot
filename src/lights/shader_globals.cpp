@@ -1,7 +1,6 @@
 #include "shader_globals.h"
 
-#include <godot_cpp/classes/engine.hpp>
-#include <godot_cpp/classes/rendering_server.hpp>
+#include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/variant/vector3.hpp>
 #include <godot_cpp/variant/vector4.hpp>
 
@@ -15,78 +14,80 @@ std::vector<StringName> owned_globals;
 
 void register_trinity_shader_globals()
 {
-    RenderingServer *rs = RenderingServer::get_singleton();
+    ProjectSettings *settings = ProjectSettings::get_singleton();
     struct Global {
         const char *name;
-        RenderingServer::GlobalShaderParameterType type;
+        const char *type;
         Variant default_value;
     };
-    // Keep these available before any Trinity shaders are loaded, in the editor
-    // as well as at runtime. Textures start unbound until the environment sets them.
+    // RenderingServer is not exposed to extensions at scene initialization yet.
+    // Godot loads these settings into the renderer later during startup.
+    // Textures start unbound until the environment sets them.
     const Global globals[] = {
-        {"TrinityLightMapGain", RenderingServer::GLOBAL_VAR_TYPE_VEC3, Vector3(1, 1, 1)},
-        {"TrinityDiffuseProbe", RenderingServer::GLOBAL_VAR_TYPE_SAMPLERCUBE, Variant()},
-        {"TrinityDiffuseProbeGain", RenderingServer::GLOBAL_VAR_TYPE_VEC3, Vector3(1, 1, 1)},
-        {"TrinityDiffuseProbeEnabled", RenderingServer::GLOBAL_VAR_TYPE_BOOL, false},
-        {"SkySunDirection", RenderingServer::GLOBAL_VAR_TYPE_VEC3, Vector3(0, 0.5, -0.866)},
-        {"SkyMoonDirection", RenderingServer::GLOBAL_VAR_TYPE_VEC3, Vector3(0, 0, 1)},
-        {"SkyZenithColor", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(1, 1, 1, 1)},
-        {"SkyHorizonColor", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(1, 1, 1, 1)},
-        {"SkyCloudColor", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(1, 1, 1, 1)},
-        {"SkyCloudColorRim", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(1, 1, 1, 1)},
-        {"SkySunTintColor", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(1, 1, 1, 1)},
-        {"SkyFogColor", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(1, 1, 1, 1)},
-        {"ScatteringFogColor", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(1, 1, 1, 0)},
-        {"ScatteringFogFactor", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 0.7},
-        {"SkyHorizonFalloff", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyCloudRim", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyCloudsFadeOut", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, -0.3},
-        {"SkyTopCloudSpeed", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyTopBreakupSpeed", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyTopPlaneHeight", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyTopPlaneHorizon", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyTopPlaneTiling", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyTopCloudCoverage", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkySunRadius", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkySunShine", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkySunBrightness", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyMoonScale", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyMoonPhase", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyMoonShadingRotation", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyMoonBrightness", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyStarsTiling", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyStarsHorizonLift", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyStarsIntensity", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 0.0},
-        {"SkyStarsMaskTiling", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyStarsMaskSpeed", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 0.0},
-        {"SkyFogIntensity", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyFogOffset", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"SkyFogGradation", RenderingServer::GLOBAL_VAR_TYPE_FLOAT, 1.0},
-        {"AtmosphereLUT", RenderingServer::GLOBAL_VAR_TYPE_SAMPLER2D, Variant()},
-        {"TrinityWorldShadowMap", RenderingServer::GLOBAL_VAR_TYPE_SAMPLER2D, Variant()},
-        {"TrinityWorldShadowWeights", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(0, 0, 0, 0)},
-        {"TrinityWorldShadowTransform", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(0, 0, 0, 0)},
-        {"TrinityWorldShadowParams", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(40, 10, 0, 0)},
-        {"TrinitySunShadowDirection", RenderingServer::GLOBAL_VAR_TYPE_VEC4, Vector4(0, 0, 0, 0)},
-        {"TrinitySunShadingDirection", RenderingServer::GLOBAL_VAR_TYPE_VEC3, Vector3(0, 1, 0)},
+        {"TrinityLightMapGain", "vec3", Vector3(1, 1, 1)},
+        {"TrinityDiffuseProbe", "samplerCube", String()},
+        {"TrinityDiffuseProbeGain", "vec3", Vector3(1, 1, 1)},
+        {"TrinityDiffuseProbeEnabled", "bool", false},
+        {"SkySunDirection", "vec3", Vector3(0, 0.5, -0.866)},
+        {"SkyMoonDirection", "vec3", Vector3(0, 0, 1)},
+        {"SkyZenithColor", "vec4", Vector4(1, 1, 1, 1)},
+        {"SkyHorizonColor", "vec4", Vector4(1, 1, 1, 1)},
+        {"SkyCloudColor", "vec4", Vector4(1, 1, 1, 1)},
+        {"SkyCloudColorRim", "vec4", Vector4(1, 1, 1, 1)},
+        {"SkySunTintColor", "vec4", Vector4(1, 1, 1, 1)},
+        {"SkyFogColor", "vec4", Vector4(1, 1, 1, 1)},
+        {"ScatteringFogColor", "vec4", Vector4(1, 1, 1, 0)},
+        {"ScatteringFogFactor", "float", 0.7},
+        {"SkyHorizonFalloff", "float", 1.0},
+        {"SkyCloudRim", "float", 1.0},
+        {"SkyCloudsFadeOut", "float", -0.3},
+        {"SkyTopCloudSpeed", "float", 1.0},
+        {"SkyTopBreakupSpeed", "float", 1.0},
+        {"SkyTopPlaneHeight", "float", 1.0},
+        {"SkyTopPlaneHorizon", "float", 1.0},
+        {"SkyTopPlaneTiling", "float", 1.0},
+        {"SkyTopCloudCoverage", "float", 1.0},
+        {"SkySunRadius", "float", 1.0},
+        {"SkySunShine", "float", 1.0},
+        {"SkySunBrightness", "float", 1.0},
+        {"SkyMoonScale", "float", 1.0},
+        {"SkyMoonPhase", "float", 1.0},
+        {"SkyMoonShadingRotation", "float", 1.0},
+        {"SkyMoonBrightness", "float", 1.0},
+        {"SkyStarsTiling", "float", 1.0},
+        {"SkyStarsHorizonLift", "float", 1.0},
+        {"SkyStarsIntensity", "float", 0.0},
+        {"SkyStarsMaskTiling", "float", 1.0},
+        {"SkyStarsMaskSpeed", "float", 0.0},
+        {"SkyFogIntensity", "float", 1.0},
+        {"SkyFogOffset", "float", 1.0},
+        {"SkyFogGradation", "float", 1.0},
+        {"AtmosphereLUT", "sampler2D", String()},
+        {"TrinityWorldShadowMap", "sampler2D", String()},
+        {"TrinityWorldShadowWeights", "vec4", Vector4(0, 0, 0, 0)},
+        {"TrinityWorldShadowTransform", "vec4", Vector4(0, 0, 0, 0)},
+        {"TrinityWorldShadowParams", "vec4", Vector4(40, 10, 0, 0)},
+        {"TrinitySunShadowDirection", "vec4", Vector4(0, 0, 0, 0)},
+        {"TrinitySunShadingDirection", "vec3", Vector3(0, 1, 0)},
     };
 
     for (const Global &global : globals) {
-        const StringName name(global.name);
-        // Type queries are editor-only. On normal startup these defaults are
-        // registered before Godot loads any project shader global overrides.
-        if (Engine::get_singleton()->is_editor_hint() &&
-                rs->global_shader_parameter_get_type(name) != RenderingServer::GLOBAL_VAR_TYPE_MAX)
+        const StringName name(String("shader_globals/") + global.name);
+        if (settings->has_setting(name))
             continue;
-        rs->global_shader_parameter_add(name, global.type, global.default_value);
+        Dictionary value;
+        value["type"] = global.type;
+        value["value"] = global.default_value;
+        settings->set_setting(name, value);
+        settings->set_initial_value(name, value);
         owned_globals.push_back(name);
     }
 }
 
 void unregister_trinity_shader_globals()
 {
-    RenderingServer *rs = RenderingServer::get_singleton();
+    ProjectSettings *settings = ProjectSettings::get_singleton();
     for (const StringName &name : owned_globals)
-        rs->global_shader_parameter_remove(name);
+        settings->set_setting(name, Variant());
     owned_globals.clear();
 }
