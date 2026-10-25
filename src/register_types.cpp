@@ -16,6 +16,7 @@
 
 #include "fbs/gfx2/trlgt.h"
 #include "lights/trinity_environment.h"
+#include "lights/shader_globals.h"
 #include "fbs/cc/ccdata.h"
 
 #include "fbs/catalog/trpmcatalog.h"
@@ -122,6 +123,8 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 void initialize_gen_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) 
 	{
+		register_trinity_shader_globals();
+
 		//model fbs
 		GDREGISTER_CLASS(MeshShape)
 		GDREGISTER_CLASS(ModelBuffer)
@@ -486,6 +489,8 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 			Engine::get_singleton()->unregister_singleton("GFLib");
 			memdelete(gflib);
 		}
+
+		unregister_trinity_shader_globals();
 	}
 }
 

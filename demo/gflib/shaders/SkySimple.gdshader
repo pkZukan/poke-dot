@@ -16,7 +16,7 @@ uniform vec4 sampler_border_color[6];
 
 // The dome is shaded from the Sky light of the active TRLGT stack (time-of-day
 // curves), not from the floats stored in the sky_mat trmtr. These are shared by
-// every sky material, so they're global uniforms (declared in project.godot)
+// every sky material, so they're global uniforms (registered by the extension)
 // named after the TRLGT parameters; TrinityEnvironment updates them.
 global uniform vec3 SkySunDirection;    // toward the sun
 global uniform vec3 SkyMoonDirection;
