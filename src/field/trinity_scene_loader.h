@@ -8,6 +8,7 @@
 #include "fbs/scene/components/trinity_LightApplierComponent.h"
 #include "lights/trinity_environment.h"
 #include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/classes/concave_polygon_shape3d.hpp>
 #include <vector>
 
 namespace godot
@@ -29,6 +30,9 @@ class TrinitySceneLoader : public Node3D
 
     String scene_path;
     int models_per_frame = 3;
+    double max_load_time_ms = 4.0;
+    // Geometry is immutable during a load; all placements share one physics shape.
+    Dictionary collision_shapes;
     Dictionary story_state;
     bool use_map_replace = true;
     Ref<TrinityMapReplace> map_replace;
@@ -36,6 +40,7 @@ class TrinitySceneLoader : public Node3D
     std::vector<ModelJob> queue;
     size_t queue_pos = 0;
     bool loading = false;
+    uint64_t load_generation = 0;
 
     struct LightJob
     {
@@ -57,6 +62,7 @@ class TrinitySceneLoader : public Node3D
     void load_entry(const Ref<TRScene>& entry, Node3D* parent, const String& base_dir,
                     const Ref<TrinityModelInstancerComponent>& instancer);
     Node3D* add_scene_object(const Ref<TrinitySceneObject>& object, const String& name, Node3D* parent);
+    Ref<ConcavePolygonShape3D> load_collision_shape(const String& path);
     void add_collision(const Ref<TrinityCollisionComponent>& component, Node3D* parent);
     void add_light_applier(const Ref<TrinityLightApplierComponent>& component, Node3D* parent,
                            const Ref<TrinityModelInstancerComponent>& instancer);
@@ -88,6 +94,13 @@ public:
     int get_models_per_frame() const
     {
         return models_per_frame;
+    }
+
+    void set_max_load_time_ms(double milliseconds);
+
+    double get_max_load_time_ms() const
+    {
+        return max_load_time_ms;
     }
 
     Callable get_load_button();

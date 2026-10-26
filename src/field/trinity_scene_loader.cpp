@@ -11,7 +11,7 @@
 #include <godot_cpp/classes/scene_tree.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/file_access.hpp>
-#include <godot_cpp/classes/array_mesh.hpp>
+#include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/static_body3d.hpp>
 #include <godot_cpp/classes/collision_shape3d.hpp>
 #include <godot_cpp/classes/concave_polygon_shape3d.hpp>
@@ -28,6 +28,8 @@ void TrinitySceneLoader::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_scene_path"), &TrinitySceneLoader::get_scene_path);
     ClassDB::bind_method(D_METHOD("set_models_per_frame", "count"), &TrinitySceneLoader::set_models_per_frame);
     ClassDB::bind_method(D_METHOD("get_models_per_frame"), &TrinitySceneLoader::get_models_per_frame);
+    ClassDB::bind_method(D_METHOD("set_max_load_time_ms", "milliseconds"), &TrinitySceneLoader::set_max_load_time_ms);
+    ClassDB::bind_method(D_METHOD("get_max_load_time_ms"), &TrinitySceneLoader::get_max_load_time_ms);
     ClassDB::bind_method(D_METHOD("get_load_button"), &TrinitySceneLoader::get_load_button);
     ClassDB::bind_method(D_METHOD("set_story_state", "state"), &TrinitySceneLoader::set_story_state);
     ClassDB::bind_method(D_METHOD("get_story_state"), &TrinitySceneLoader::get_story_state);
@@ -50,6 +52,8 @@ void TrinitySceneLoader::_bind_methods()
         "set_environment_path", "get_environment_path");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "models_per_frame", PROPERTY_HINT_RANGE, "1,64,1,or_greater"),
                  "set_models_per_frame", "get_models_per_frame");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "max_load_time_ms", PROPERTY_HINT_RANGE, "0,100,0.1,or_greater,suffix:ms"),
+                 "set_max_load_time_ms", "get_max_load_time_ms");
     ADD_PROPERTY(PropertyInfo(Variant::CALLABLE, "load_in_editor", PROPERTY_HINT_TOOL_BUTTON, "Load Scene,Reload",
                               PROPERTY_USAGE_EDITOR),
                  "", "get_load_button");
@@ -356,6 +360,61 @@ Node3D* TrinitySceneLoader::add_scene_object(const Ref<TrinitySceneObject>& obje
     return node;
 }
 
+Ref<ConcavePolygonShape3D> TrinitySceneLoader::load_collision_shape(const String& path)
+{
+    if (collision_shapes.has(path))
+    {
+        return collision_shapes[path];
+    }
+
+    Ref<TRCOL> trcol = ResourceLoader::get_singleton()->load(path);
+    if (trcol.is_null() || trcol->get_tag().is_null())
+    {
+        UtilityFunctions::push_warning("Failed to load TRCOL: " + path);
+        return Ref<ConcavePolygonShape3D>();
+    }
+
+    // Physics only needs triangles. Avoid uploading an ArrayMesh to the renderer
+    // and then reading its surface arrays back just to build a collision shape.
+    const Vector<HavokMeshSection> sections = trcol->get_tag()->GetGeometrySections();
+    PackedVector3Array faces;
+    int64_t face_vertex_count = 0;
+    for (int i = 0; i < sections.size(); ++i)
+    {
+        if (!sections[i].vertices.is_empty())
+        {
+            face_vertex_count += (sections[i].faceIndices.size() / 3) * 3;
+        }
+    }
+    faces.resize(face_vertex_count);
+    Vector3* output = faces.ptrw();
+    int64_t offset = 0;
+    for (int i = 0; i < sections.size(); ++i)
+    {
+        const auto& section = sections[i];
+        if (section.vertices.is_empty())
+        {
+            continue;
+        }
+        for (int64_t j = 0; j + 2 < section.faceIndices.size(); j += 3)
+        {
+            output[offset++] = section.vertices[section.faceIndices[j]];
+            output[offset++] = section.vertices[section.faceIndices[j + 1]];
+            output[offset++] = section.vertices[section.faceIndices[j + 2]];
+        }
+    }
+    if (faces.is_empty())
+    {
+        return Ref<ConcavePolygonShape3D>();
+    }
+
+    Ref<ConcavePolygonShape3D> concave;
+    concave.instantiate();
+    concave->set_faces(faces);
+    collision_shapes[path] = concave;
+    return concave;
+}
+
 void TrinitySceneLoader::add_collision(const Ref<TrinityCollisionComponent>& component, Node3D* parent)
 {
     if (component.is_null())
@@ -370,21 +429,14 @@ void TrinitySceneLoader::add_collision(const Ref<TrinityCollisionComponent>& com
     }
 
     const String path = GFLib::romfs_path(shape->get_path());
-    if (!FileAccess::file_exists(path))
+    if (!collision_shapes.has(path) && !FileAccess::file_exists(path))
     {
         UtilityFunctions::push_warning("TRCOL file not found: " + path);
         return;
     }
-    Ref<TRCOL> trcol = ResourceLoader::get_singleton()->load(path);
-    if (trcol.is_null())
+    Ref<ConcavePolygonShape3D> concave = load_collision_shape(path);
+    if (concave.is_null())
     {
-        UtilityFunctions::push_warning("Failed to load TRCOL: " + path);
-        return;
-    }
-    Ref<ArrayMesh> mesh = trcol->get_mesh();
-    if (mesh.is_null())
-    {
-        UtilityFunctions::push_warning("Failed to create TRCOL mesh: " + path);
         return;
     }
 
@@ -403,33 +455,6 @@ void TrinitySceneLoader::add_collision(const Ref<TrinityCollisionComponent>& com
 
     parent->add_child(static_body);
     set_editor_owner(static_body);
-
-    PackedVector3Array faces;
-    for (int s = 0; s < mesh->get_surface_count(); s++)
-    {
-        Array arrays = mesh->surface_get_arrays(s);
-        PackedVector3Array vertices = arrays[Mesh::ARRAY_VERTEX];
-        PackedInt32Array indices = arrays[Mesh::ARRAY_INDEX];
-        if (indices.is_empty())
-        {
-            faces.append_array(vertices);
-            continue;
-        }
-        for (int64_t i = 0; i + 2 < indices.size(); i += 3)
-        {
-            faces.push_back(vertices[indices[i]]);
-            faces.push_back(vertices[indices[i + 1]]);
-            faces.push_back(vertices[indices[i + 2]]);
-        }
-    }
-    if (faces.is_empty())
-    {
-        return;
-    }
-
-    Ref<ConcavePolygonShape3D> concave;
-    concave.instantiate();
-    concave->set_faces(faces);
 
     CollisionShape3D* col_node = memnew(CollisionShape3D);
     col_node->set_name("CollisionShape");
@@ -536,6 +561,12 @@ void TrinitySceneLoader::_notification(int what)
     }
 }
 
+void TrinitySceneLoader::set_max_load_time_ms(double milliseconds)
+{
+    ERR_FAIL_COND_MSG(!std::isfinite(milliseconds) || milliseconds < 0, "Load time budget must be finite and non-negative.");
+    max_load_time_ms = milliseconds;
+}
+
 Callable TrinitySceneLoader::get_load_button()
 {
     return callable_mp(this, &TrinitySceneLoader::load_scene);
@@ -562,8 +593,10 @@ void TrinitySceneLoader::load_scene()
 
 void TrinitySceneLoader::clear()
 {
+    ++load_generation;
     detach_lights();
     light_jobs.clear();
+    collision_shapes.clear();
     queue.clear();
     queue_pos = 0;
     loading = false;
@@ -587,7 +620,9 @@ void TrinitySceneLoader::_process(double delta)
     {
         return;
     }
+    const uint64_t generation = load_generation;
     const size_t total = queue.size();
+    const uint64_t started = Time::get_singleton()->get_ticks_usec();
     for (int i = 0; i < models_per_frame && queue_pos < total; i++)
     {
         const ModelJob& job = queue[queue_pos++];
@@ -596,6 +631,18 @@ void TrinitySceneLoader::_process(double delta)
             instantiate_model(job);
         }
         emit_signal("loading_progress", (int64_t)queue_pos, (int64_t)total);
+        // Progress callbacks may cancel or replace the load, invalidating the queue.
+        if (load_generation != generation)
+        {
+            return;
+        }
+        // A model conversion is atomic: always allow one job, then yield when
+        // the elapsed budget or models_per_frame limit is reached.
+        if (max_load_time_ms > 0 &&
+            double(Time::get_singleton()->get_ticks_usec() - started) >= max_load_time_ms * 1000.0)
+        {
+            break;
+        }
     }
     if (queue_pos < total)
     {

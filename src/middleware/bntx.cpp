@@ -289,7 +289,7 @@ static bool bc1_has_punch_through(const PackedByteArray& data)
     return false;
 }
 
-Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset)
+Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, bool upload_array)
 {
     ERR_FAIL_COND_V(!has_bytes(sp, info_offset, 160), ERR_FILE_CORRUPT);
     sp->seek(info_offset);
@@ -353,8 +353,11 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
     }
 
     layer_images = layers;
-    Error error = create_from_images(layers);
-    ERR_FAIL_COND_V(error != OK, error);
+    if (upload_array)
+    {
+        Error error = create_from_images(layers);
+        ERR_FAIL_COND_V(error != OK, error);
+    }
     return OK;
 }
 
@@ -372,6 +375,16 @@ Error BinaryTextureArchive::LoadFromFile(const String& path)
 }
 
 Error BinaryTextureArchive::LoadFromBuffer(const PackedByteArray& buffer)
+{
+    return load_buffer(buffer, true);
+}
+
+Error BinaryTextureArchive::LoadImagesFromBuffer(const PackedByteArray& buffer)
+{
+    return load_buffer(buffer, false);
+}
+
+Error BinaryTextureArchive::load_buffer(const PackedByteArray& buffer, bool upload_arrays)
 {
     textures.clear();
     ERR_FAIL_COND_V(buffer.size() < 68, ERR_FILE_CORRUPT);
@@ -398,7 +411,7 @@ Error BinaryTextureArchive::LoadFromBuffer(const PackedByteArray& buffer)
         uint64_t offset = sp->get_64();
         Ref<BinaryTexture> texture;
         texture.instantiate();
-        Error error = texture->LoadFromEntry(sp, offset);
+        Error error = texture->LoadFromEntry(sp, offset, upload_arrays);
         if (error != OK)
         {
             return error;

@@ -51,6 +51,11 @@ private:
     Ref<TRLGT> master_light;
     std::vector<Layer> layers;
     Dictionary effective_state;
+    std::vector<size_t> ordered_layer_indices;
+    bool state_dirty = true;
+    bool render_dirty = true;
+    bool layer_order_dirty = true;
+    bool update_queued = false;
     Dictionary diffuse_probe_cache;
     Dictionary texture_cache;
     Dictionary global_textures;
@@ -85,6 +90,8 @@ private:
     Dictionary find_category(int category) const;
     double number(const Dictionary& light, const String& name, double fallback) const;
     Color color(const Dictionary& light, const String& name, Color fallback, bool source_is_linear = true) const;
+    void queue_update(bool resolve = true);
+    void flush_update();
     void detach_targets();
     void apply_render_state();
     bool probe_average(const Dictionary& probe, Color& average);
@@ -158,6 +165,8 @@ public:
     void clear_layers();
     void set_scene_layers(uint64_t owner, const std::vector<SceneLayer>& scene_layers);
     void remove_scene_layers(uint64_t owner);
+    // Force an immediate rebuild, including edits made inside nested TRLGT resources.
+    // Setters otherwise coalesce their changes until the deferred update.
     void apply();
 
     Dictionary get_effective_state() const

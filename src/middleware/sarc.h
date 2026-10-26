@@ -122,6 +122,18 @@ public:
     int get_file_offset(const String& p_name) const;
     PackedByteArray get_file_data(const String& p_name) const;
 
+    // Converted immutable assets live as long as their source archive. Consumers
+    // use namespaced keys; instance-specific materials and nodes stay outside.
+    Variant get_derived_asset(const String& key) const
+    {
+        return derived_assets.get(key, Variant());
+    }
+
+    void cache_derived_asset(const String& key, const Variant& asset)
+    {
+        derived_assets[key] = asset;
+    }
+
 private:
     String read_cstring(const PackedByteArray& data, int offset);
     Dictionary get_file_list() const;
@@ -133,6 +145,7 @@ private:
         uint32_t data_end = 0;
     };
 
+    Dictionary derived_assets;
     PackedByteArray m_data;
     uint32_t m_data_offset = 0;
     bool m_big_endian = false;

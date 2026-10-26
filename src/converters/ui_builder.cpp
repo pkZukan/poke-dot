@@ -282,10 +282,15 @@ Error UIBuilder::parse_layouts(const Ref<SeadArchive>& archive, const PackedStri
     String selected;
     for (const String& file : bflyt_files)
     {
-        Ref<BinaryLayout> parsed;
-        parsed.instantiate();
-        Error result = parsed->LoadFromBuffer(archive->get_file_data(file));
-        ERR_FAIL_COND_V_MSG(result != OK, result, "Could not parse UI layout");
+        const String cache_key = "ui/layout/" + file;
+        Ref<BinaryLayout> parsed = archive->get_derived_asset(cache_key);
+        if (parsed.is_null())
+        {
+            parsed.instantiate();
+            Error result = parsed->LoadFromBuffer(archive->get_file_data(file));
+            ERR_FAIL_COND_V_MSG(result != OK, result, "Could not parse UI layout");
+            archive->cache_derived_asset(cache_key, parsed);
+        }
         const String name = file.get_file().get_basename();
         ERR_FAIL_COND_V_MSG(layouts.has(name), ERR_INVALID_DATA, "Ambiguous UI layout name");
         layouts[name] = parsed;
@@ -330,8 +335,15 @@ Error UIBuilder::load_textures(const Ref<SeadArchive>& archive, const PackedStri
     picture_shader = ResourceLoader::get_singleton()->load("res://gflib/shaders/ui_picture.gdshader");
     ERR_FAIL_COND_V_MSG(picture_shader.is_null(), ERR_FILE_NOT_FOUND, "UI picture shader not found");
     // Godot fixes the blend equation per shader, so multiply materials need their own variant.
-    multiply_shader.instantiate();
-    multiply_shader->set_code(picture_shader->get_code().replace("blend_premul_alpha", "blend_mul"));
+    const String multiply_code = picture_shader->get_code().replace("blend_premul_alpha", "blend_mul");
+    const String shader_key = "ui/multiply_shader/" + multiply_code.sha256_text();
+    multiply_shader = archive->get_derived_asset(shader_key);
+    if (multiply_shader.is_null())
+    {
+        multiply_shader.instantiate();
+        multiply_shader->set_code(multiply_code);
+        archive->cache_derived_asset(shader_key, multiply_shader);
+    }
 
     for (const String& file : files)
     {
@@ -339,35 +351,57 @@ Error UIBuilder::load_textures(const Ref<SeadArchive>& archive, const PackedStri
         {
             continue;
         }
-        Ref<BinaryTextureArchive> texture_archive;
-        texture_archive.instantiate();
-        Error error = texture_archive->LoadFromBuffer(archive->get_file_data(file));
-        if (error != OK)
+        const String cache_key = "ui/textures/" + file;
+        Variant cached = archive->get_derived_asset(cache_key);
+        Dictionary converted;
+        if (cached.get_type() == Variant::DICTIONARY)
         {
-            ERR_PRINT("Failed to load BNTX archive: " + file);
-            return error;
+            converted = cached;
         }
-        Dictionary images = texture_archive->get_textures();
-        Array names = images.keys();
+        else
+        {
+            Ref<BinaryTextureArchive> texture_archive;
+            texture_archive.instantiate();
+            Error error = texture_archive->LoadImagesFromBuffer(archive->get_file_data(file));
+            if (error != OK)
+            {
+                ERR_PRINT("Failed to load BNTX archive: " + file);
+                return error;
+            }
+            const Dictionary images = texture_archive->get_textures();
+            const Array names = images.keys();
+            for (int j = 0; j < names.size(); ++j)
+            {
+                Ref<BinaryTexture> texture_array = images[names[j]];
+                if (texture_array.is_null())
+                {
+                    return ERR_FILE_CORRUPT;
+                }
+                Ref<Image> image = texture_array->get_layer_image(0);
+                if (image.is_null())
+                {
+                    return ERR_FILE_CORRUPT;
+                }
+                Dictionary entry;
+                entry["texture"] = ImageTexture::create_from_image(image);
+                entry["channel_sources"] = texture_array->get_channel_sources();
+                converted[names[j]] = entry;
+            }
+            archive->cache_derived_asset(cache_key, converted);
+        }
+
+        const Array names = converted.keys();
         for (int j = 0; j < names.size(); ++j)
         {
             ERR_FAIL_COND_V_MSG(textures.has(names[j]), ERR_INVALID_DATA,
                                 "Ambiguous texture name across BNTX archives");
-            Ref<BinaryTexture> texture_array = images[names[j]];
-            if (texture_array.is_null() || texture_array->get_layers() == 0)
-            {
-                return ERR_FILE_CORRUPT;
-            }
-            Ref<Image> image = texture_array->get_layer_image(0);
-            if (image.is_null())
-            {
-                return ERR_FILE_CORRUPT;
-            }
-            textures[names[j]] = ImageTexture::create_from_image(image);
+            Dictionary entry = converted[names[j]];
+            textures[names[j]] = entry["texture"];
+            // Animation mutates material uniforms, so create these per UI build.
             Ref<ShaderMaterial> shader_material;
             shader_material.instantiate();
             shader_material->set_shader(picture_shader);
-            shader_material->set_shader_parameter("channel_sources", texture_array->get_channel_sources());
+            shader_material->set_shader_parameter("channel_sources", entry["channel_sources"]);
             texture_materials[names[j]] = shader_material;
         }
     }

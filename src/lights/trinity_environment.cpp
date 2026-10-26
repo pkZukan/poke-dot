@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
+#include <numeric>
 #include <utility>
 
 using namespace godot;
@@ -45,6 +46,7 @@ void TrinityEnvironment::_bind_methods()
     ClassDB::bind_method(D_METHOD("remove_layer", "name"), &TrinityEnvironment::remove_layer);
     ClassDB::bind_method(D_METHOD("clear_layers"), &TrinityEnvironment::clear_layers);
 
+    ClassDB::bind_method(D_METHOD("_flush_update"), &TrinityEnvironment::flush_update);
     ClassDB::bind_method(D_METHOD("apply"), &TrinityEnvironment::apply);
     ClassDB::bind_method(D_METHOD("get_effective_state"), &TrinityEnvironment::get_effective_state);
     ClassDB::bind_method(D_METHOD("get_environment"), &TrinityEnvironment::get_environment);
@@ -186,48 +188,73 @@ void TrinityEnvironment::set_time_of_day(double hours)
 {
     ERR_FAIL_COND_MSG(!std::isfinite(hours), "Time of day must be finite.");
 
-    time_of_day = std::fmod(std::fmod(hours, 24.0) + 24.0, 24.0);
-    apply();
+    const double normalized = std::fmod(std::fmod(hours, 24.0) + 24.0, 24.0);
+    if (time_of_day == normalized)
+    {
+        return;
+    }
+    time_of_day = normalized;
+    queue_update();
 }
 
 void TrinityEnvironment::set_master_light(const Ref<TRLGT>& light)
 {
     master_light = light;
-    apply();
+    queue_update();
 }
 
 void TrinityEnvironment::set_enabled(bool value)
 {
+    if (enabled == value)
+    {
+        return;
+    }
     enabled = value;
-    apply();
+    queue_update(false);
 }
 
 void TrinityEnvironment::set_use_native_bloom(bool value)
 {
+    if (use_native_bloom == value)
+    {
+        return;
+    }
     use_native_bloom = value;
-    apply();
+    queue_update(false);
 }
 
 void TrinityEnvironment::set_lighting_category(int category)
 {
     ERR_FAIL_COND(category < -1 || category > 7);
 
+    if (lighting_category == category)
+    {
+        return;
+    }
     lighting_category = category;
-    apply();
+    queue_update(false);
 }
 
 void TrinityEnvironment::set_world_environment_path(const NodePath& path)
 {
+    if (world_environment_path == path)
+    {
+        return;
+    }
     detach_targets();
     world_environment_path = path;
-    apply();
+    queue_update(false);
 }
 
 void TrinityEnvironment::set_camera_path(const NodePath& path)
 {
+    if (camera_path == path)
+    {
+        return;
+    }
     detach_targets();
     camera_path = path;
-    apply();
+    queue_update(false);
 }
 
 void TrinityEnvironment::set_layer(const StringName& name, const Ref<TRLGT>& light, int priority, double weight,
@@ -240,17 +267,19 @@ void TrinityEnvironment::set_layer(const StringName& name, const Ref<TRLGT>& lig
     {
         if (layer.name == name)
         {
+            layer_order_dirty |= layer.priority != priority;
             layer.light = light;
             layer.priority = priority;
             layer.weight = weight;
             layer.additive = additive;
-            apply();
+            queue_update();
             return;
         }
     }
 
+    layer_order_dirty = true;
     layers.push_back({name, light, priority, weight, additive});
-    apply();
+    queue_update();
 }
 
 void TrinityEnvironment::set_layer_weight(const StringName& name, double weight)
@@ -261,8 +290,12 @@ void TrinityEnvironment::set_layer_weight(const StringName& name, double weight)
     {
         if (layer.name == name)
         {
+            if (layer.weight == weight)
+            {
+                return;
+            }
             layer.weight = weight;
-            apply();
+            queue_update();
             return;
         }
     }
@@ -270,23 +303,64 @@ void TrinityEnvironment::set_layer_weight(const StringName& name, double weight)
 
 void TrinityEnvironment::remove_layer(const StringName& name)
 {
+    const size_t count = layers.size();
     layers.erase(std::remove_if(layers.begin(), layers.end(),
                                 [&](const Layer& l)
                                 {
                                     return l.name == name;
                                 }),
                  layers.end());
-    apply();
+    if (layers.size() != count)
+    {
+        layer_order_dirty = true;
+        queue_update();
+    }
 }
 
 void TrinityEnvironment::clear_layers()
 {
+    if (layers.empty())
+    {
+        return;
+    }
     layers.clear();
-    apply();
+    layer_order_dirty = true;
+    queue_update();
 }
 
 void TrinityEnvironment::set_scene_layers(uint64_t owner, const std::vector<SceneLayer>& scene_layers)
 {
+    const size_t count = std::count_if(layers.begin(), layers.end(),
+                                      [owner](const Layer& layer) { return layer.scene_owner == owner; });
+    if (count == scene_layers.size())
+    {
+        size_t index = 0;
+        bool changed = false;
+        for (auto& layer : layers)
+        {
+            if (layer.scene_owner != owner)
+            {
+                continue;
+            }
+            const auto& source = scene_layers[index++];
+            changed |= layer.light != source.light || layer.priority != source.priority ||
+                       layer.weight != source.weight || layer.sample_time != source.sample_time ||
+                       layer.transform != source.transform || layer.name_prefix != source.name_prefix;
+            layer_order_dirty |= layer.priority != source.priority;
+            layer.light = source.light;
+            layer.priority = source.priority;
+            layer.weight = source.weight;
+            layer.sample_time = source.sample_time;
+            layer.transform = source.transform;
+            layer.name_prefix = source.name_prefix;
+        }
+        if (changed)
+        {
+            queue_update();
+        }
+        return;
+    }
+    layer_order_dirty = true;
     // Keep equal-priority owners in their original order when one moves/fades.
     size_t insertion = layers.size();
     for (size_t i = 0; i < layers.size(); ++i)
@@ -317,7 +391,7 @@ void TrinityEnvironment::set_scene_layers(uint64_t owner, const std::vector<Scen
         replacements.push_back(layer);
     }
     layers.insert(layers.begin() + insertion, replacements.begin(), replacements.end());
-    apply();
+    queue_update();
 }
 
 void TrinityEnvironment::remove_scene_layers(uint64_t owner)
@@ -331,7 +405,8 @@ void TrinityEnvironment::remove_scene_layers(uint64_t owner)
                  layers.end());
     if (layers.size() != count)
     {
-        apply();
+        layer_order_dirty = true;
+        queue_update();
     }
 }
 
@@ -380,13 +455,17 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT>& resource, double wei
         {
             Ref<TRFloatParameter> p = params[j];
 
-            if (p.is_null() || !std::isfinite(p->sample(curve_time)))
+            if (p.is_null())
             {
                 continue;
             }
 
             String key = p->get_param_name();
             double value = p->sample(curve_time);
+            if (!std::isfinite(value))
+            {
+                continue;
+            }
 
             if (additive)
             {
@@ -412,13 +491,17 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT>& resource, double wei
         {
             Ref<TRVec4Parameter> p = params[j];
 
-            if (p.is_null() || !p->sample(curve_time).is_finite())
+            if (p.is_null())
             {
                 continue;
             }
 
             String key = p->get_param_name();
             Vector4 value = p->sample(curve_time);
+            if (!value.is_finite())
+            {
+                continue;
+            }
 
             if (additive)
             {
@@ -1114,32 +1197,65 @@ void TrinityEnvironment::detach_targets()
     baseline_attributes.unref();
 }
 
+void TrinityEnvironment::queue_update(bool resolve)
+{
+    state_dirty |= resolve;
+    // Render-only settings must be applied even if the light stack stays identical.
+    render_dirty |= !resolve;
+    if (!update_queued && is_inside_tree())
+    {
+        update_queued = true;
+        call_deferred("_flush_update");
+    }
+}
+
 void TrinityEnvironment::apply()
 {
-    if (applying)
+    state_dirty = true;
+    render_dirty = true;
+    flush_update();
+}
+
+void TrinityEnvironment::flush_update()
+{
+    update_queued = false;
+    if (applying || (!state_dirty && !render_dirty))
     {
         return;
     }
 
     applying = true;
-    effective_state.clear();
+    const bool resolve = state_dirty;
+    const bool force_render = render_dirty;
+    state_dirty = false;
+    render_dirty = false;
+    bool changed = false;
 
-    resolve_resource(master_light, 1.0, false);
-
-    auto ordered = layers;
-    std::stable_sort(ordered.begin(), ordered.end(),
-                     [](const Layer& a, const Layer& b)
-                     {
-                         return a.priority < b.priority;
-                     });
-
-    for (const auto& layer : ordered)
+    if (resolve)
     {
-        resolve_resource(layer.light, layer.weight, layer.additive, layer.sample_time, layer.transform,
-                         layer.name_prefix);
+        Dictionary previous = effective_state;
+        effective_state = Dictionary();
+        resolve_resource(master_light, 1.0, false);
+
+        if (layer_order_dirty)
+        {
+            ordered_layer_indices.resize(layers.size());
+            std::iota(ordered_layer_indices.begin(), ordered_layer_indices.end(), size_t(0));
+            std::stable_sort(ordered_layer_indices.begin(), ordered_layer_indices.end(),
+                             [this](size_t a, size_t b) { return layers[a].priority < layers[b].priority; });
+            layer_order_dirty = false;
+        }
+
+        for (size_t index : ordered_layer_indices)
+        {
+            const auto& layer = layers[index];
+            resolve_resource(layer.light, layer.weight, layer.additive, layer.sample_time, layer.transform,
+                             layer.name_prefix);
+        }
+        changed = !effective_state.recursive_equal(previous, 0);
     }
 
-    if (is_inside_tree())
+    if (is_inside_tree() && (force_render || changed))
     {
         if (enabled && !effective_state.is_empty())
         {

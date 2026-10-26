@@ -264,6 +264,7 @@ void SeadArchive::LoadFromFile(String file)
     const int name_table_offset = sfnt_header_offset + sfnt.header_size;
     ERR_FAIL_COND_MSG((int)hdr.data_offset < name_table_offset, "File data should not be stored before the name table");
 
+    derived_assets.clear();
     m_data = buf;
     m_data_offset = hdr.data_offset;
     m_big_endian = hdr.big_endian;

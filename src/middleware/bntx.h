@@ -185,7 +185,7 @@ public:
     BinaryTexture() = default;
     ~BinaryTexture() = default;
 
-    Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset);
+    Error LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, bool upload_array = true);
     Vector4i get_channel_sources() const;
     Ref<Image> get_layer_image(int layer) const;
 
@@ -208,6 +208,8 @@ public:
     Error LoadFromFile(const String& path);
     Error LoadFromBuffer(const PackedByteArray& buffer);
 
+    Error LoadImagesFromBuffer(const PackedByteArray& buffer);
+
     TypedDictionary<String, BinaryTexture> get_textures() const
     {
         return textures.duplicate();
@@ -216,6 +218,7 @@ public:
     Ref<BinaryTexture> GetTexture(const String& name) const;
 
 private:
+    Error load_buffer(const PackedByteArray& buffer, bool upload_arrays);
     TypedDictionary<String, BinaryTexture> textures;
 };
 
