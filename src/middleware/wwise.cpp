@@ -41,6 +41,9 @@ void WwiseSoundBank::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_wem_data", "wem_id"), &WwiseSoundBank::get_wem_data);
 	ClassDB::bind_method(D_METHOD("get_wem_codec", "wem_id"), &WwiseSoundBank::get_wem_codec);
 	ClassDB::bind_method(D_METHOD("is_streamed", "wem_id"), &WwiseSoundBank::is_streamed);
+	ClassDB::bind_method(D_METHOD("resolve_event_wem_id", "event_name", "voice_type"), &WwiseSoundBank::resolve_event_wem_id, DEFVAL("INDEX"));
+	ClassDB::bind_method(D_METHOD("resolve_event_stream", "event_name", "voice_type"), &WwiseSoundBank::resolve_event_stream, DEFVAL("INDEX"));
+	ClassDB::bind_static_method("WwiseSoundBank", D_METHOD("hash_name", "name"), &WwiseSoundBank::hash_name);
 	ClassDB::bind_static_method("WwiseSoundBank", D_METHOD("load_wem", "wem"), &WwiseSoundBank::load_wem);
 	ClassDB::bind_static_method("WwiseSoundBank", D_METHOD("wem_to_ogg", "wem"), &WwiseSoundBank::wem_to_ogg);
 
@@ -864,6 +867,98 @@ struct HircSource
 	uint8_t stream_type = 0; // 0 = in bank, 1 = prefetch + streamed, 2 = streamed
 };
 
+// Bounded reader for the v145 event graph. Counts and offsets are never trusted.
+struct EventReader
+{
+	const uint8_t *data;
+	uint64_t position;
+	uint64_t end;
+	bool valid = true;
+
+	bool skip(uint64_t bytes)
+	{
+		if (!valid || bytes > end - position)
+		{
+			valid = false;
+			return false;
+		}
+		position += bytes;
+		return true;
+	}
+	uint8_t u8() { return skip(1) ? data[position - 1] : 0; }
+	uint16_t u16() { return skip(2) ? read_u16(data + position - 2) : 0; }
+	uint32_t u32() { return skip(4) ? read_u32(data + position - 4) : 0; }
+	uint32_t var()
+	{
+		uint32_t value = 0;
+		for (int i = 0; i < 5 && valid; ++i)
+		{
+			const uint8_t byte = u8();
+			if (value > (UINT32_MAX >> 7)) break;
+			value = (value << 7) | (byte & 0x7f);
+			if (!(byte & 0x80)) return value;
+		}
+		valid = false;
+		return 0;
+	}
+};
+
+// Skip the v145 parameter-node prefix to reach a switch container's routing
+// table. Layout checked against wwiser's wparser.py and the local PM_VOICE bank.
+bool skip_event_node_parameters(EventReader &r)
+{
+	r.skip(1); // FX override
+	const uint32_t effects = r.u8();
+	if (effects) r.skip(1 + uint64_t(effects) * 7);
+	r.skip(1); // metadata override
+	const uint32_t metadata = r.u8();
+	r.skip(uint64_t(metadata) * 6);
+	r.skip(10); // attachment override, bus, parent, priority flags
+	const uint32_t properties = r.u8();
+	r.skip(uint64_t(properties) * 5);
+	const uint32_t ranges = r.u8();
+	r.skip(uint64_t(ranges) * 9);
+	const uint8_t positioning = r.u8();
+	if ((positioning & 3) == 3)
+	{
+		r.skip(1); // 3D flags
+		if (positioning & 0x60) // automated positioning
+		{
+			r.skip(5);
+			const uint32_t vertices = r.u32();
+			r.skip(uint64_t(vertices) * 16);
+			const uint32_t paths = r.u32();
+			r.skip(uint64_t(paths) * 20);
+		}
+	}
+	const uint8_t auxiliary = r.u8();
+	if (auxiliary & 8) r.skip(16);
+	r.skip(10); // reflection bus and advanced voice settings
+	const uint32_t state_properties = r.var();
+	for (uint32_t i = 0; i < state_properties && r.valid; ++i)
+	{
+		r.var();
+		r.skip(2);
+	}
+	const uint32_t state_groups = r.var();
+	for (uint32_t i = 0; i < state_groups && r.valid; ++i)
+	{
+		r.skip(5);
+		const uint32_t states = r.var();
+		r.skip(uint64_t(states) * 8);
+	}
+	const uint32_t curves = r.u16();
+	for (uint32_t i = 0; i < curves && r.valid; ++i)
+	{
+		r.skip(6);
+		r.var();
+		r.skip(5);
+		const uint32_t points = r.u16();
+		r.skip(uint64_t(points) * 12);
+	}
+	return r.valid;
+}
+
 // One AkBankSourceData, as read by CAkBankMgr::LoadSource.
 bool read_bank_source(const uint8_t *d, uint32_t &offset, uint64_t end, HircSource &r_source)
 {
@@ -1070,6 +1165,131 @@ double AudioStreamWwise::_get_length() const
 
 // WwiseSoundBank
 
+Error WwiseSoundBank::parse_event_nodes(const uint8_t *data, uint32_t offset, uint32_t size)
+{
+	EventReader objects{data, offset, uint64_t(offset) + size};
+	const uint32_t count = objects.u32();
+	for (uint32_t i = 0; i < count && objects.valid; ++i)
+	{
+		const uint8_t type = objects.u8();
+		const uint32_t length = objects.u32();
+		const uint64_t start = objects.position;
+		ERR_FAIL_COND_V_MSG(!objects.skip(length) || length < 4, ERR_FILE_CORRUPT, "Truncated HIRC event object");
+		EventReader r{data, start, start + length};
+		const uint32_t id = r.u32();
+		EventNode node;
+		node.type = type;
+		if (type == HIRC_SOUND)
+		{
+			uint32_t source_offset = uint32_t(r.position);
+			HircSource source;
+			ERR_FAIL_COND_V(!read_bank_source(data, source_offset, r.end, source), ERR_FILE_CORRUPT);
+			if ((source.plugin_id & AK_PLUGIN_TYPE_MASK) == AK_PLUGIN_TYPE_CODEC)
+				node.target = source.id;
+		}
+		else if (type == 3) // Action: only Play actions targeting objects
+		{
+			const uint16_t action_type = r.u16();
+			const uint32_t target = r.u32();
+			const uint8_t flags = r.u8();
+			if ((action_type & 0xff00) == 0x0400 && !(flags & 1))
+				node.target = target;
+		}
+		else if (type == 4) // Event: a single action can resolve to a single stream
+		{
+			const uint32_t actions = r.var();
+			if (actions == 1)
+				node.target = r.u32();
+			else
+				r.skip(uint64_t(actions) * 4);
+			ERR_FAIL_COND_V(r.position != r.end, ERR_FILE_CORRUPT);
+		}
+		else if (type == 6) // Switch container
+		{
+			ERR_FAIL_COND_V(!skip_event_node_parameters(r), ERR_FILE_CORRUPT);
+			const uint8_t group_type = r.u8();
+			node.switch_group = r.u32();
+			node.default_switch = r.u32();
+			r.skip(1); // continuous validation
+			const uint32_t children = r.u32();
+			r.skip(uint64_t(children) * 4);
+			const uint32_t groups = r.u32();
+			for (uint32_t j = 0; j < groups && r.valid; ++j)
+			{
+				const uint32_t switch_id = r.u32();
+				const uint32_t items = r.u32();
+				ERR_FAIL_COND_V(uint64_t(items) * 4 > r.end - r.position, ERR_FILE_CORRUPT);
+				Vector<uint32_t> targets;
+				for (uint32_t k = 0; k < items && r.valid; ++k)
+					targets.push_back(r.u32());
+				node.switches[switch_id] = targets;
+			}
+			const uint32_t parameters = r.u32();
+			r.skip(uint64_t(parameters) * 14);
+			ERR_FAIL_COND_V(!r.valid || r.position != r.end, ERR_FILE_CORRUPT);
+			if (group_type != 0) node.type = 0; // State containers need state-group context.
+		}
+		else
+			continue;
+		ERR_FAIL_COND_V(!r.valid, ERR_FILE_CORRUPT);
+		event_nodes[id] = node;
+	}
+	ERR_FAIL_COND_V(!objects.valid || objects.position != objects.end, ERR_FILE_CORRUPT);
+	return OK;
+}
+
+int64_t WwiseSoundBank::hash_name(const String &name)
+{
+	const CharString bytes = name.to_lower().utf8();
+	uint32_t hash = 2166136261u;
+	for (int64_t i = 0; i < bytes.length(); ++i)
+		hash = (hash * 16777619u) ^ uint8_t(bytes[i]);
+	return hash;
+}
+
+uint32_t WwiseSoundBank::resolve_node_media(uint32_t object_id, uint32_t switch_id, int depth, uint32_t switch_group) const
+{
+	if (depth >= 32) return 0; // bounded recursion also rejects cyclic references
+	const EventNode *node = event_nodes.getptr(object_id);
+	if (!node) return 0;
+	if (node->type == HIRC_SOUND) return node->target;
+	if (node->type == 3 || node->type == 4)
+		return node->target ? resolve_node_media(node->target, switch_id, depth + 1, switch_group) : 0;
+	if (node->type == 6)
+	{
+		const Vector<uint32_t> *targets = node->switches.getptr(switch_id);
+		if (targets)
+		{
+			if (switch_group && switch_group != node->switch_group) return 0;
+			switch_group = node->switch_group;
+		}
+		else
+			targets = node->switches.getptr(node->default_switch);
+		if (targets && targets->size() == 1)
+			return resolve_node_media((*targets)[0], switch_id, depth + 1, switch_group);
+	}
+	return 0;
+}
+
+int64_t WwiseSoundBank::resolve_event_wem_id(const String &event_name, const String &voice_type) const
+{
+	if (bank_version != 145 || event_name.is_empty()) return 0;
+	const uint32_t event_id = uint32_t(hash_name(event_name));
+	const uint32_t switch_id = uint32_t(hash_name(voice_type));
+	const uint64_t key = (uint64_t(event_id) << 32) | switch_id;
+	if (const uint32_t *cached = event_media_cache.getptr(key)) return *cached;
+	const EventNode *event = event_nodes.getptr(event_id);
+	const uint32_t media_id = event && event->type == 4 ? resolve_node_media(event_id, switch_id, 0) : 0;
+	event_media_cache[key] = media_id;
+	return media_id;
+}
+
+Ref<AudioStream> WwiseSoundBank::resolve_event_stream(const String &event_name, const String &voice_type) const
+{
+	const int64_t media_id = resolve_event_wem_id(event_name, voice_type);
+	return media_id ? get_stream(media_id) : Ref<AudioStream>();
+}
+
 Error WwiseSoundBank::LoadFromFile(const String &path)
 {
 	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
@@ -1097,6 +1317,8 @@ Error WwiseSoundBank::LoadFromBuffer(const PackedByteArray &buffer)
 	sources.clear();
 	wem_ids.clear();
 	streams.clear();
+	event_nodes.clear();
+	event_media_cache.clear();
 	bank_version = 0;
 	bank_id = 0;
 
@@ -1136,6 +1358,16 @@ Error WwiseSoundBank::LoadFromBuffer(const PackedByteArray &buffer)
 			hirc_size = section_size;
 		}
 		offset = body + section_size;
+	}
+
+	if (bank_version == 145 && hirc_size)
+	{
+		Error graph_error = parse_event_nodes(d, hirc_offset, hirc_size);
+		if (graph_error != OK)
+		{
+			event_nodes.clear();
+			return graph_error;
+		}
 	}
 
 	// embedded media: DIDX entries {u32 id, u32 offset, u32 size} into DATA

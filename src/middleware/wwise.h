@@ -126,6 +126,10 @@ public:
 	int get_wem_codec(int64_t wem_id) const;
 	bool is_streamed(int64_t wem_id) const;
 
+	int64_t resolve_event_wem_id(const String &event_name, const String &voice_type = "INDEX") const;
+	Ref<AudioStream> resolve_event_stream(const String &event_name, const String &voice_type = "INDEX") const;
+	static int64_t hash_name(const String &name);
+
 	static Ref<AudioStream> load_wem(const PackedByteArray &wem);
 	static PackedByteArray wem_to_ogg(const PackedByteArray &wem);
 
@@ -141,6 +145,19 @@ private:
 		uint32_t plugin_id = 0;
 		bool streamed = false;
 	};
+
+	struct EventNode
+	{
+		uint8_t type = 0;
+		uint32_t target = 0;
+		uint32_t default_switch = 0;
+		uint32_t switch_group = 0;
+		HashMap<uint32_t, Vector<uint32_t>> switches;
+	};
+	HashMap<uint32_t, EventNode> event_nodes;
+	mutable HashMap<uint64_t, uint32_t> event_media_cache;
+	Error parse_event_nodes(const uint8_t *data, uint32_t offset, uint32_t size);
+	uint32_t resolve_node_media(uint32_t object_id, uint32_t switch_id, int depth, uint32_t switch_group = 0) const;
 
 	PackedByteArray media;
 	HashMap<uint32_t, MediaEntry> media_entries;

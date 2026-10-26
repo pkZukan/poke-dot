@@ -2,7 +2,7 @@ extends Node
 
 signal loading_progress(current: int, total: int)
 
-const player_prefab = preload("res://Scenes/Player/Player_tr.tscn")
+const player_prefab = preload("res://Scenes/Player/Player.tscn")
 
 @export var day_cycle_enabled := true
 ## Real-time minutes for a full 24 hour cycle.

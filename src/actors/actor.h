@@ -1,6 +1,9 @@
 #pragma once
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/classes/animation_player.hpp>
+#include <godot_cpp/classes/audio_stream_player3d.hpp>
+#include <godot_cpp/classes/bone_attachment3d.hpp>
+#include "middleware/wwise.h"
 #include <godot_cpp/classes/skeleton3d.hpp>
 #include <godot_cpp/classes/immediate_mesh.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
@@ -34,6 +37,9 @@ public:
     virtual TypedArray<StringName> GetAnimationList();
     virtual AABB GetBBox();
 
+    void set_voice_bank(const Ref<WwiseSoundBank> &bank);
+    Ref<WwiseSoundBank> get_voice_bank() const { return _voice_bank; }
+
 protected:
     bool debug_skel = false;
     String base_path;
@@ -47,10 +53,18 @@ private:
     TrinityModel* _model = nullptr;
     Skeleton3D* _skeleton = nullptr;
     String _skl_path;
+    Ref<WwiseSoundBank> _voice_bank;
+    bool _voice_bank_load_attempted = false;
+    AudioStreamPlayer3D* _voice_player = nullptr;
+    BoneAttachment3D* _voice_attachment = nullptr;
+
+    void _dispatch_animation_event(StringName animation_name, Dictionary event);
+    void _dispatch_animation_events(StringName animation_name, Array events);
 
     Skeleton3D* _find_skeleton(Node* node);
     void _setup_animation();
     void _add_mesh_animation(String tracm_file, String name);
+    void _add_effect_animation(String traef_file, String name);
     void _load_animation_parameter(String filepath);
     void _load_animation_resource(String filepath);
     void _load_animation_layer(String filepath);

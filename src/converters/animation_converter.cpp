@@ -29,6 +29,7 @@ Ref<Animation> TrinityAnimationConverter::convert_to_godot_animation(
     
     float frame_rate = anim->get_Info()->get_animation_rate();
     int key_frames = anim->get_Info()->get_animation_count();
+    godot_anim->set_meta("frame_rate", frame_rate);
     godot_anim->set_length(key_frames / frame_rate);
     godot_anim->set_loop_mode(anim->get_Info()->get_does_loop() ? Animation::LOOP_LINEAR : Animation::LOOP_NONE);
 

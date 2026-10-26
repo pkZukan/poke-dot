@@ -2,6 +2,8 @@ extends TrinityCharacterController
 
 ## Demo player: keyboard/mouse and joypad input with an orbiting camera.
 
+const EvolutionEffect := preload("res://Scripts/Player/evolution_effect.gd")
+
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var camera: Camera3D = $CameraPivot/Camera3D
 
@@ -10,12 +12,34 @@ extends TrinityCharacterController
 @export var joy_sensitivity: float = 120.0  # degrees per second at full tilt
 
 var _air_time := 0.0
+var _evolution_effect: EvolutionEffect
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	if character.has_signal("character_rebuilt"):
 		character.character_rebuilt.connect(_check_isflying)
 	_check_isflying()
+	if character is PokemonCharacter:
+		_evolution_effect = EvolutionEffect.new()
+		_evolution_effect.name = "EvolutionEffect"
+		add_child(_evolution_effect)
+
+func evolve_with_effect(index: int = 0) -> bool:
+	return _evolution_effect.start(index) if _evolution_effect else false
+
+func _physics_process(delta: float) -> void:
+	if _evolution_effect:
+		if Input.is_action_just_pressed("evolve"):
+			evolve_with_effect()
+		if _evolution_effect.is_evolving:
+			move_input = Vector2.ZERO
+			running = false
+			fly_vertical = 0.0
+			character.velocity = Vector3.ZERO
+			animator.set_movement(Vector2.ZERO, false)
+			animator.update_animation(delta)
+			return
+	super._physics_process(delta)
 
 func _check_isflying() -> void:
 	# Anything with a flying animation set can take off by jumping again in

@@ -1,4 +1,6 @@
 #include "actor.h"
+#include "fbs/animation/traef.h"
+#include "gflib.h"
 
 #include <godot_cpp/classes/animation.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
@@ -16,6 +18,12 @@ void ActorObj::_bind_methods()
     ClassDB::bind_method(D_METHOD("GetAnimationPlayer"), &ActorObj::GetAnimationPlayer);
     ClassDB::bind_method(D_METHOD("GetAnimationList"), &ActorObj::GetAnimationList);
     ClassDB::bind_method(D_METHOD("GetModel"), &ActorObj::GetModel);
+    ClassDB::bind_method(D_METHOD("set_voice_bank", "bank"), &ActorObj::set_voice_bank);
+    ClassDB::bind_method(D_METHOD("get_voice_bank"), &ActorObj::get_voice_bank);
+    ClassDB::bind_method(D_METHOD("_dispatch_animation_event", "animation_name", "event"), &ActorObj::_dispatch_animation_event);
+    ClassDB::bind_method(D_METHOD("_dispatch_animation_events", "animation_name", "events"), &ActorObj::_dispatch_animation_events);
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "voice_bank", PROPERTY_HINT_RESOURCE_TYPE, "WwiseSoundBank"), "set_voice_bank", "get_voice_bank");
+    ADD_SIGNAL(MethodInfo("animation_event", PropertyInfo(Variant::STRING_NAME, "animation_name"), PropertyInfo(Variant::DICTIONARY, "event")));
 }
 
 void ActorObj::Initialize()
@@ -67,6 +75,19 @@ AABB ActorObj::GetBBox()
 
 void ActorObj::_cleanup() 
 {
+    if (_voice_player)
+    {
+        _voice_player->stop();
+        _voice_player->get_parent()->remove_child(_voice_player);
+        _voice_player->queue_free();
+        _voice_player = nullptr;
+    }
+    if (_voice_attachment)
+    {
+        _voice_attachment->get_parent()->remove_child(_voice_attachment);
+        _voice_attachment->queue_free();
+        _voice_attachment = nullptr;
+    }
     if (_anim_player)
     {
         _anim_player->stop();
@@ -149,7 +170,7 @@ void ActorObj::_load_animation_resource(String filepath)
         if(eff.is_valid())
         {
             String file = base_path.path_join(eff->get_FileName());
-            //TODO
+            _add_effect_animation(file, name);
         }
     }
 }
@@ -236,6 +257,130 @@ void ActorObj::_add_animation(String anim_file, String name)
     _anim_lib->add_animation(name, godot_anim);
 }
 
+void ActorObj::_add_effect_animation(String traef_file, String name)
+{
+    Ref<TRAnimationEffects> traef = ResourceLoader::get_singleton()->load(traef_file);
+    if (traef.is_null())
+    {
+        UtilityFunctions::push_error("Failed to load TRAEF animation ", traef_file);
+        return;
+    }
+
+    Ref<Animation> godot_anim;
+    if (_anim_lib->has_animation(name))
+    {
+        godot_anim = _anim_lib->get_animation(name);
+    }
+    else
+    {
+        godot_anim.instantiate();
+        _anim_lib->add_animation(name, godot_anim);
+    }
+    godot_anim->set_meta("traef", traef);
+    double frame_rate = godot_anim->get_meta("frame_rate", 0.0);
+    Array events = traef->get_events(frame_rate);
+    godot_anim->set_meta("animation_events", events);
+    if (frame_rate <= 0.0 || events.is_empty()) return;
+
+    const int track = godot_anim->add_track(Animation::TYPE_METHOD);
+    godot_anim->track_set_path(track, NodePath("."));
+    Dictionary events_by_frame;
+    for (int i = 0; i < events.size(); ++i)
+    {
+        Dictionary event = events[i];
+        const int64_t frame = event["start_frame"];
+        Array batch = events_by_frame.get(frame, Array());
+        batch.push_back(event);
+        events_by_frame[frame] = batch;
+    }
+    // Godot replaces keys at identical times, so dispatch same-frame events together.
+    for (const Variant &frame : events_by_frame.keys())
+    {
+        Array args;
+        args.push_back(StringName(name));
+        args.push_back(events_by_frame[frame]);
+        Dictionary key;
+        key["method"] = "_dispatch_animation_events";
+        key["args"] = args;
+        godot_anim->track_insert_key(track, int64_t(frame) / frame_rate, key);
+    }
+}
+
+void ActorObj::_dispatch_animation_events(StringName animation_name, Array events)
+{
+    for (int i = 0; i < events.size(); ++i)
+        _dispatch_animation_event(animation_name, events[i]);
+}
+
+void ActorObj::set_voice_bank(const Ref<WwiseSoundBank> &bank)
+{
+    if (_voice_player) _voice_player->stop();
+    _voice_bank = bank;
+    _voice_bank_load_attempted = bank.is_valid();
+}
+
+void ActorObj::_dispatch_animation_event(StringName animation_name, Dictionary event)
+{
+    Dictionary parameters = event.get("parameters", Dictionary());
+    // AnimationPlayer's current clip is our top-clip approximation during fades.
+    if (bool(parameters.get("TriggerOnlyTopWeighted", false)) && _anim_player &&
+        !_anim_player->get_current_animation().is_empty() &&
+        _anim_player->get_current_animation() != animation_name) return;
+    emit_signal("animation_event", animation_name, event);
+    if (String(event.get("path", "")) != "Audio/PokeVoiceEvent" || !is_inside_tree()) return;
+
+    String event_name = parameters.get("PreviewEventName", "");
+    if (event_name.is_empty()) return;
+    const int probability = CLAMP(int(parameters.get("Probability", 100)), 0, 100);
+    if (probability == 0 || (probability < 100 && UtilityFunctions::randf() * 100.0 >= probability)) return;
+
+    if (_voice_bank.is_null() && !_voice_bank_load_attempted)
+    {
+        _voice_bank_load_attempted = true;
+        const String path = GFLib::romfs_path("audio/wwise/bin/Switch/PM_VOICE.bnk");
+        if (ResourceLoader::get_singleton()->exists(path))
+            _voice_bank = ResourceLoader::get_singleton()->load(path);
+    }
+    if (_voice_bank.is_null()) return;
+    Ref<AudioStream> stream = _voice_bank->resolve_event_stream(event_name, parameters.get("VoiceType", "INDEX"));
+    if (stream.is_null()) return;
+
+    if (!_voice_player)
+    {
+        _voice_player = memnew(AudioStreamPlayer3D);
+        _voice_player->set_name("AnimationVoice");
+        add_child(_voice_player);
+    }
+    _voice_player->stop();
+    const String joint = parameters.get("JointName", "");
+    const int bone = _skeleton && !joint.is_empty() ? _skeleton->find_bone(joint) : -1;
+    const bool follow = bool(parameters.get("Follow", false));
+    Node3D *parent = this;
+    if (follow && bone >= 0)
+    {
+        if (!_voice_attachment)
+        {
+            _voice_attachment = memnew(BoneAttachment3D);
+            _skeleton->add_child(_voice_attachment);
+        }
+        _voice_attachment->set_bone_idx(bone);
+        _voice_attachment->on_skeleton_update();
+        parent = _voice_attachment;
+    }
+    _voice_player->set_as_top_level(false);
+    if (_voice_player->get_parent() != parent) _voice_player->reparent(parent, false);
+    _voice_player->set_transform(Transform3D());
+    if (!follow)
+    {
+        const Transform3D origin = bone >= 0 ?
+            _skeleton->get_global_transform() * _skeleton->get_bone_global_pose(bone) : get_global_transform();
+        _voice_player->set_as_top_level(true);
+        _voice_player->set_global_transform(origin);
+    }
+    _voice_player->set_stream(stream);
+    _voice_player->play();
+}
+
 void ActorObj::_add_mesh_animation(String tracm_file, String name)
 {
     ERR_FAIL_NULL(_model);
@@ -260,6 +405,8 @@ void ActorObj::_add_mesh_animation(String tracm_file, String name)
     ERR_FAIL_COND(tracm->get_info().is_null());
     float frame_rate = tracm->get_info()->get_animation_rate();
     ERR_FAIL_COND_MSG(frame_rate <= 0, "TRACM frame rate must be positive");
+    if (!godot_anim->has_meta("frame_rate"))
+        godot_anim->set_meta("frame_rate", frame_rate);
     int key_frames = tracm->get_info()->get_animation_count();
 
     float length = (float)key_frames / frame_rate;

@@ -13,6 +13,7 @@
 #include "fbs/animation/tracp.h"
 #include "fbs/animation/tracr.h"
 #include "fbs/animation/tracm.h"
+#include "fbs/animation/traef.h"
 
 #include "fbs/gfx2/trlgt.h"
 #include "lights/trinity_environment.h"
@@ -99,6 +100,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
@@ -207,6 +209,15 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(TRTrackMaterialChannelVec4)
 		GDREGISTER_CLASS(TRTrackMaterialValue)
 		GDREGISTER_CLASS(TRTrackBlendshapeInit)
+
+		//traef
+		GDREGISTER_CLASS(TREffectValueInt)
+		GDREGISTER_CLASS(TREffectValueFloat)
+		GDREGISTER_CLASS(TREffectValueByte)
+		GDREGISTER_CLASS(TREffectValueString)
+		GDREGISTER_CLASS(TREffect)
+		GDREGISTER_CLASS(TRAnimationEffect)
+		GDREGISTER_CLASS(TRAnimationEffects)
 
 		//tracr
 		GDREGISTER_CLASS(TRAnimationChannelResource)
@@ -395,6 +406,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level) {
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
+		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
 
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
 		INIT_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
@@ -466,6 +478,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
+		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
 
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
 		FINI_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
