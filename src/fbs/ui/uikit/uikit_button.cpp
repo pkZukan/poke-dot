@@ -5,7 +5,7 @@ using namespace godot;
 void UIKitButton::_bind_methods()
 {
     GETTER_SETTER_BIND(UIKitButton, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(UIKitButton, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitButton, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitButton, ControlIndex, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitButton, Action, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitButton, ShortcutKey, Variant::INT, PROPERTY_HINT_NONE)

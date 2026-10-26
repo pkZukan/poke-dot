@@ -5,7 +5,7 @@ using namespace godot;
 void UIKitShortcut::_bind_methods()
 {
     GETTER_SETTER_BIND(UIKitShortcut, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(UIKitShortcut, shortcutKey, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitShortcut, shortcutKey, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitShortcut, repeat, Variant::BOOL, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitShortcut, action, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitShortcut, sfx, Variant::STRING, PROPERTY_HINT_NONE)

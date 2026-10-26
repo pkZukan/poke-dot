@@ -15,71 +15,88 @@
 namespace godot
 {
 
-inline void ui_warn_once(PackedStringArray &warnings, const String &message) {
-    if (!warnings.has(message)) warnings.push_back(message);
+inline void ui_warn_once(PackedStringArray& warnings, const String& message)
+{
+    if (!warnings.has(message))
+    {
+        warnings.push_back(message);
+    }
 }
 
-class UIFontResolver {
+class UIFontResolver
+{
 public:
     String font_dir;
 
     void reset();
-    Error index_archive(const Ref<SeadArchive> &archive, const PackedStringArray &files);
-    Ref<Font> get(const String &name, PackedStringArray &warnings);
+    Error index_archive(const Ref<SeadArchive>& archive, const PackedStringArray& files);
+    Ref<Font> get(const String& name, PackedStringArray& warnings);
 
 private:
     Dictionary archive_fonts;
 };
 
-class UIBuilder {
+class UIBuilder
+{
 public:
-    explicit UIBuilder(UIFontResolver &p_fonts) : fonts(p_fonts) {}
+    explicit UIBuilder(UIFontResolver& p_fonts) : fonts(p_fonts)
+    {
+    }
 
-    Error build(const Ref<SeadArchive> &archive, const String &arc_path, TrinityPane *&r_root);
+    Error build(const Ref<SeadArchive>& archive, const String& arc_path, TrinityPane*& r_root);
 
     Dictionary textures;
     Dictionary texture_materials;
     PackedStringArray warnings;
-    Vector<Control *> nodes;
+    Vector<Control*> nodes;
     String entry_layout;
 
 private:
     struct PaneInfo;
 
-    Error parse_layouts(const Ref<SeadArchive> &archive, const PackedStringArray &files, const String &arc_path);
-    Error load_textures(const Ref<SeadArchive> &archive, const PackedStringArray &files);
-    bool build_layout(const String &layout_name, Control *container, PackedStringArray ancestry);
+    Error parse_layouts(const Ref<SeadArchive>& archive, const PackedStringArray& files, const String& arc_path);
+    Error load_textures(const Ref<SeadArchive>& archive, const PackedStringArray& files);
+    bool build_layout(const String& layout_name, Control* container, PackedStringArray ancestry);
 
-    Control *create_pane_node(const PaneInfo &info, const String &layout_name, Control *parent);
-    void apply_transform(Control *node, const PaneInfo &info, const Vector2 &anchor);
-    double apply_alpha_and_visibility(Control *node, const PaneInfo &info);
+    Control* create_pane_node(const PaneInfo& info, const String& layout_name, Control* parent);
+    void apply_transform(Control* node, const PaneInfo& info, const Vector2& anchor);
+    double apply_alpha_and_visibility(Control* node, const PaneInfo& info);
 
-    bool build_part(Control *node, const Dictionary &pane, const PackedStringArray &ancestry);
-    void build_text(Label *label, const PaneInfo &info, const Dictionary &pane,
-            const Dictionary &layout_data, const String &layout_name);
-    void build_window(Control *node, const PaneInfo &info, const Dictionary &pane,
-            const Array &materials, const PackedStringArray &texture_names, double alpha);
-    void build_picture(Control *node, const PaneInfo &info, const Dictionary &pane,
-            const Array &materials, const PackedStringArray &texture_names, double alpha);
+    bool build_part(Control* node, const Dictionary& pane, const PackedStringArray& ancestry);
+    void build_text(Label* label, const PaneInfo& info, const Dictionary& pane, const Dictionary& layout_data,
+                    const String& layout_name);
+    void build_window(Control* node, const PaneInfo& info, const Dictionary& pane, const Array& materials,
+                      const PackedStringArray& texture_names, double alpha);
+    void build_picture(Control* node, const PaneInfo& info, const Dictionary& pane, const Array& materials,
+                       const PackedStringArray& texture_names, double alpha);
 
-    void apply_procedural_shape(Polygon2D *quad, const Vector2 &size, const Dictionary &shape);
-    Polygon2D *add_quad(Control *parent, const String &name, const Rect2 &rect, const Dictionary &material,
-            const PackedStringArray &texture_names, PackedVector2Array uv, const PackedColorArray &colors,
-            int texture_flip, double alpha);
+    void apply_procedural_shape(Polygon2D* quad, const Vector2& size, const Dictionary& shape);
+    Polygon2D* add_quad(Control* parent, const String& name, const Rect2& rect, const Dictionary& material,
+                        const PackedStringArray& texture_names, PackedVector2Array uv, const PackedColorArray& colors,
+                        int texture_flip, double alpha);
+
     // Matches the blend mode values in ui_picture.gdshader's picture_params.w.
-    enum BlendMode { BLEND_ALPHA, BLEND_ADD, BLEND_ADD_ONE, BLEND_PREMULTIPLIED, BLEND_MULTIPLY };
-    int blend_mode_of(const Dictionary &material);
-    Ref<ShaderMaterial> make_picture_material(const String &texture_name, const Dictionary &material);
-    void apply_texture1_projection(const Ref<ShaderMaterial> &shader_material, const Dictionary &material,
-            const Array &generators, const Vector2 &pane_size, const Vector2 &texture_size);
-    void apply_sampler(Polygon2D *quad, const Dictionary &map);
-    bool get_material(const Array &materials, int index, Dictionary &r_material);
+    enum BlendMode
+    {
+        BLEND_ALPHA,
+        BLEND_ADD,
+        BLEND_ADD_ONE,
+        BLEND_PREMULTIPLIED,
+        BLEND_MULTIPLY
+    };
 
-    UIFontResolver &fonts;
+    int blend_mode_of(const Dictionary& material);
+    Ref<ShaderMaterial> make_picture_material(const String& texture_name, const Dictionary& material);
+    void apply_texture1_projection(const Ref<ShaderMaterial>& shader_material, const Dictionary& material,
+                                   const Array& generators, const Vector2& pane_size, const Vector2& texture_size);
+    void apply_sampler(Polygon2D* quad, const Dictionary& map);
+    bool get_material(const Array& materials, int index, Dictionary& r_material);
+
+    UIFontResolver& fonts;
     Ref<Shader> picture_shader;
     Ref<Shader> multiply_shader;
     Dictionary layouts;
-    TrinityPane *root = nullptr;
+    TrinityPane* root = nullptr;
 };
 
 }

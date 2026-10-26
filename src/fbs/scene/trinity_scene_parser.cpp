@@ -4,15 +4,14 @@ using namespace godot;
 
 void TrinitySceneParser::_bind_methods()
 {
-    //TODO
 }
 
 Ref<Resource> TrinitySceneParser::FromData(String type, const void* data)
 {
-    using FactoryFunc = Ref<Resource>(*)(const void*);
-    
-    // Initialize once using a lambda
-    static const HashMap<String, FactoryFunc> factories = []() {
+    using FactoryFunc = Ref<Resource> (*)(const void*);
+
+    static const HashMap<String, FactoryFunc> factories = []()
+    {
         HashMap<String, FactoryFunc> map;
         map["SubScene"] = &CreateFromData<TRSubScene>;
         map["trinity_SceneObject"] = &CreateFromData<TrinitySceneObject>;
@@ -51,7 +50,7 @@ Ref<Resource> TrinitySceneParser::FromData(String type, const void* data)
         return map;
     }();
 
-    if (const FactoryFunc* func = factories.getptr(type)) 
+    if (const FactoryFunc* func = factories.getptr(type))
     {
         return (*func)(data);
     }

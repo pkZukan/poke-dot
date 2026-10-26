@@ -9,44 +9,57 @@
 #include "generated/trlgt_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TRLightCurve : public Resource {
+class TRLightCurve : public Resource
+{
     GDCLASS(TRLightCurve, Resource)
 protected:
     static void _bind_methods();
+
 public:
     GETTER_SETTER_DEFINE(Array, keys)
     float sample(double time) const;
+
 private:
     Array keys;
 };
 
-class TRLightCurve4 : public Resource {
+class TRLightCurve4 : public Resource
+{
     GDCLASS(TRLightCurve4, Resource)
 protected:
     static void _bind_methods();
+
 public:
     GETTER_SETTER_DEFINE(Ref<TRLightCurve>, x)
     GETTER_SETTER_DEFINE(Ref<TRLightCurve>, y)
     GETTER_SETTER_DEFINE(Ref<TRLightCurve>, z)
     GETTER_SETTER_DEFINE(Ref<TRLightCurve>, w)
     Vector4 sample(double time) const;
+
 private:
     Ref<TRLightCurve> x, y, z, w;
 };
 
-class TRFloatParameter : public Resource {
+class TRFloatParameter : public Resource
+{
     GDCLASS(TRFloatParameter, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRFloatParameter(){}
-    ~TRFloatParameter(){}
+    TRFloatParameter() = default;
+    ~TRFloatParameter() = default;
     GETTER_SETTER_DEFINE(String, param_name)
     GETTER_SETTER_DEFINE(float, param_val)
     GETTER_SETTER_DEFINE(Ref<TRLightCurve>, curve)
-    float sample(double time) const { return curve.is_valid() ? curve->sample(time) : param_val; }
+
+    float sample(double time) const
+    {
+        return curve.is_valid() ? curve->sample(time) : param_val;
+    }
 
 private:
     String param_name;
@@ -54,17 +67,23 @@ private:
     Ref<TRLightCurve> curve;
 };
 
-class TRVec4Parameter : public Resource {
+class TRVec4Parameter : public Resource
+{
     GDCLASS(TRVec4Parameter, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRVec4Parameter(){}
-    ~TRVec4Parameter(){}
+    TRVec4Parameter() = default;
+    ~TRVec4Parameter() = default;
     GETTER_SETTER_DEFINE(String, param_name)
     GETTER_SETTER_DEFINE(Vector4, value)
     GETTER_SETTER_DEFINE(Ref<TRLightCurve4>, curve)
-    Vector4 sample(double time) const { return curve.is_valid() ? curve->sample(time) : value; }
+
+    Vector4 sample(double time) const
+    {
+        return curve.is_valid() ? curve->sample(time) : value;
+    }
 
 private:
     String param_name;
@@ -72,13 +91,15 @@ private:
     Ref<TRLightCurve4> curve;
 };
 
-class TRStringParameter : public Resource {
+class TRStringParameter : public Resource
+{
     GDCLASS(TRStringParameter, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRStringParameter(){}
-    ~TRStringParameter(){}
+    TRStringParameter() = default;
+    ~TRStringParameter() = default;
     GETTER_SETTER_DEFINE(String, map_name)
     GETTER_SETTER_DEFINE(String, map_file)
 
@@ -87,13 +108,15 @@ private:
     String map_file;
 };
 
-class BoundMatrix : public Resource {
+class BoundMatrix : public Resource
+{
     GDCLASS(BoundMatrix, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    BoundMatrix(){}
-    ~BoundMatrix(){}
+    BoundMatrix() = default;
+    ~BoundMatrix() = default;
     GETTER_SETTER_DEFINE(Vector4, x)
     GETTER_SETTER_DEFINE(Vector4, y)
     GETTER_SETTER_DEFINE(Vector4, z)
@@ -104,13 +127,15 @@ private:
     Vector4 z;
 };
 
-class TRLight : public Resource {
-	GDCLASS(TRLight, Resource)
+class TRLight : public Resource
+{
+    GDCLASS(TRLight, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRLight(){}
-	~TRLight(){}
+    TRLight() = default;
+    ~TRLight() = default;
 
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(String, Type)
@@ -133,16 +158,18 @@ private:
     Ref<TRLightCurve4> scale_curve, rotation_curve, translation_curve;
 };
 
-class TRLGT : public Resource {
+class TRLGT : public Resource
+{
     GDCLASS(TRLGT, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRLGT(){}
-	~TRLGT(){}
+    TRLGT() = default;
+    ~TRLGT() = default;
 
     Error LoadFromFile(String file);
-	
+
     GETTER_SETTER_DEFINE(uint32_t, version)
     GETTER_SETTER_DEFINE(Array, lights)
 
@@ -151,18 +178,23 @@ private:
     Array lights;
 };
 
-class ResourceFormatLoaderTRLGT : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRLGT, ResourceFormatLoader)
+class ResourceFormatLoaderTRLGT : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRLGT, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRLGT(){}
-	~ResourceFormatLoaderTRLGT(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-    String _get_resource_type(const String &path) const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRLGT() = default;
+    ~ResourceFormatLoaderTRLGT() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    String _get_resource_type(const String& path) const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

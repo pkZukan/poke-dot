@@ -39,18 +39,20 @@
 #include "fbs/scene/components/trinity_TextureBufferComponent.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinitySceneParser : public Resource {
-	GDCLASS(TrinitySceneParser, Resource)
+class TrinitySceneParser : public Resource
+{
+    GDCLASS(TrinitySceneParser, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TrinitySceneParser(){}
-	~TrinitySceneParser(){}
+    static void _bind_methods();
 
-    template <typename T>
-    static Ref<Resource> CreateFromData(const void* data)
+public:
+    TrinitySceneParser() = default;
+    ~TrinitySceneParser() = default;
+
+    template <typename T> static Ref<Resource> CreateFromData(const void* data)
     {
         Ref<T> res;
         res.instantiate();

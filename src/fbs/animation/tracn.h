@@ -8,51 +8,61 @@
 #include "generated/tracn_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class AnimationChannelNameEntry : public Resource {
-	GDCLASS(AnimationChannelNameEntry, Resource)
+class AnimationChannelNameEntry : public Resource
+{
+    GDCLASS(AnimationChannelNameEntry, Resource)
 protected:
-	static void _bind_methods();
-public:
-	AnimationChannelNameEntry(){}
-	~AnimationChannelNameEntry(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, animation_name)
+public:
+    AnimationChannelNameEntry() = default;
+    ~AnimationChannelNameEntry() = default;
+
+    GETTER_SETTER_DEFINE(String, animation_name)
     GETTER_SETTER_DEFINE(String, filename)
 
 private:
-	String animation_name;
+    String animation_name;
     String filename;
 };
 
-class TRAnimationChannelNames : public Resource {
+class TRAnimationChannelNames : public Resource
+{
     GDCLASS(TRAnimationChannelNames, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRAnimationChannelNames(){}
-	~TRAnimationChannelNames(){}
+    TRAnimationChannelNames() = default;
+    ~TRAnimationChannelNames() = default;
 
     void LoadFromFile(String file);
-	
+
     GETTER_SETTER_DEFINE(Array, list)
 
 private:
     Array list;
 };
 
-class ResourceFormatLoaderTRACN : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRACN, ResourceFormatLoader)
+class ResourceFormatLoaderTRACN : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRACN, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRACN(){}
-	~ResourceFormatLoaderTRACN(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRACN() = default;
+    ~ResourceFormatLoaderTRACN() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

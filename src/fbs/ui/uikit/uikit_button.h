@@ -7,18 +7,21 @@
 #include "generated/uikit_button_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitButton : public Resource {
+class UIKitButton : public Resource
+{
     GDCLASS(UIKitButton, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	UIKitButton(){}
-	~UIKitButton(){}
+    UIKitButton() = default;
+    ~UIKitButton() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(String, ControlName)
     GETTER_SETTER_DEFINE(int, ControlIndex)

@@ -4,12 +4,15 @@
 #include "generated/trinity_CameraEntity_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinityCameraEntity : public Resource {
+class TrinityCameraEntity : public Resource
+{
     GDCLASS(TrinityCameraEntity, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromBuffer(const void* buffer);
     GETTER_SETTER_DEFINE(String, Name)
@@ -43,4 +46,4 @@ private:
     bool AttachTransform = false;
 };
 
-} // namespace godot
+}

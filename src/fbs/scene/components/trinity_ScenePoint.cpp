@@ -4,9 +4,9 @@ using namespace godot;
 
 void TrinityScenePoint::_bind_methods()
 {
-	GETTER_SETTER_BIND(TrinityScenePoint, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityScenePoint, Point, Variant::VECTOR3, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityScenePoint, AttachParent, Variant::BOOL, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityScenePoint, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityScenePoint, Point, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityScenePoint, AttachParent, Variant::BOOL, PROPERTY_HINT_NONE)
 }
 
 void TrinityScenePoint::LoadFromBuffer(const void* buffer)

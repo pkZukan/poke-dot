@@ -20,7 +20,7 @@ void BoxShape::_bind_methods()
 {
     GETTER_SETTER_BIND(BoxShape, pos, Variant::VECTOR3, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(BoxShape, size, Variant::VECTOR3, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(BoxShape, rot, Variant::VECTOR3, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(BoxShape, rot, Variant::VECTOR3, PROPERTY_HINT_NONE)
 }
 
 void CapsuleShape::_bind_methods()
@@ -50,14 +50,12 @@ void TrinityCharacterCollision::_bind_methods()
     GETTER_SETTER_BIND(TrinityCharacterCollision, shape, Variant::OBJECT, PROPERTY_HINT_NONE)
 }
 
-void TrinityCollisionComponent::_bind_methods()
-{
-    GETTER_SETTER_BIND(TrinityCollisionComponent, collision, Variant::OBJECT, PROPERTY_HINT_NONE)
-}
+void TrinityCollisionComponent::_bind_methods(){
+    GETTER_SETTER_BIND(TrinityCollisionComponent, collision, Variant::OBJECT, PROPERTY_HINT_NONE)}
 
 Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::ColShapeType col_shape, const void* data)
 {
-    switch(col_shape)
+    switch (col_shape)
     {
         case Titan::TrinityScene::ColShapeType::ColShapeType_SphereShape:
         {
@@ -75,7 +73,7 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
             box_shape.instantiate();
             box_shape->set_pos(Utils::toGodotVec3(src->pos()));
             box_shape->set_size(Utils::toGodotVec3(src->size()));
-			box_shape->set_rot(Utils::toGodotVec3(src->rot()));
+            box_shape->set_rot(Utils::toGodotVec3(src->rot()));
             return box_shape;
         }
         case Titan::TrinityScene::ColShapeType::ColShapeType_CapsuleShape:
@@ -94,9 +92,18 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
             Ref<ModelShape> model_shape;
             model_shape.instantiate();
             model_shape->set_path(Utils::toGodotString(src->file_path()));
-            if (src->pos()) model_shape->set_pos(Utils::toGodotVec3(src->pos()));
-            if (src->rot()) model_shape->set_rot(Utils::toGodotVec3(src->rot()));
-            if (src->scale()) model_shape->set_scale(Utils::toGodotVec3(src->scale()));
+            if (src->pos())
+            {
+                model_shape->set_pos(Utils::toGodotVec3(src->pos()));
+            }
+            if (src->rot())
+            {
+                model_shape->set_rot(Utils::toGodotVec3(src->rot()));
+            }
+            if (src->scale())
+            {
+                model_shape->set_scale(Utils::toGodotVec3(src->scale()));
+            }
             return model_shape;
         }
         case Titan::TrinityScene::ColShapeType::ColShapeType_PencilShape:
@@ -119,7 +126,7 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
 
 Ref<Resource> TrinityCollisionComponent::_ParseCollisionType(Titan::TrinityScene::Collision collision, const void* data)
 {
-    switch(collision)
+    switch (collision)
     {
         case Titan::TrinityScene::Collision::Collision_BodyCollision:
         {
@@ -138,14 +145,13 @@ Ref<Resource> TrinityCollisionComponent::_ParseCollisionType(Titan::TrinityScene
         default:
             return Ref<Resource>();
     }
-
 }
 
 void TrinityCollisionComponent::LoadFromBuffer(const void* buffer)
 {
     auto collision_component = Titan::TrinityScene::GetTrinityCollisionComponent(buffer);
     ERR_FAIL_COND_MSG(collision_component == nullptr, "Couldn't parse collision component");
-    
+
     auto collision = _ParseCollisionType(collision_component->collision_type(), collision_component->collision());
     set_collision(collision);
 }

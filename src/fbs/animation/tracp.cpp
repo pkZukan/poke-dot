@@ -31,15 +31,20 @@ void AnimationChannelParamTrigger::_bind_methods()
 
 void AnimationChannelParamEntry::_bind_methods()
 {
-    GETTER_SETTER_BIND(AnimationChannelParamEntry, animations, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "AnimationChannelParamInt")
-    GETTER_SETTER_BIND(AnimationChannelParamEntry, moves, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "AnimationChannelParamFloat")
-    GETTER_SETTER_BIND(AnimationChannelParamEntry, switches, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "AnimationChannelParamBool")
-    GETTER_SETTER_BIND(AnimationChannelParamEntry, triggers, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "AnimationChannelParamTrigger")
+    GETTER_SETTER_BIND(AnimationChannelParamEntry, animations, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "AnimationChannelParamInt")
+    GETTER_SETTER_BIND(AnimationChannelParamEntry, moves, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "AnimationChannelParamFloat")
+    GETTER_SETTER_BIND(AnimationChannelParamEntry, switches, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "AnimationChannelParamBool")
+    GETTER_SETTER_BIND(AnimationChannelParamEntry, triggers, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "AnimationChannelParamTrigger")
 }
 
-void TRAnimationChannelParams::_bind_methods() 
+void TRAnimationChannelParams::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRAnimationChannelParams, table, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "AnimationChannelParamEntry")
+    GETTER_SETTER_BIND(TRAnimationChannelParams, table, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "AnimationChannelParamEntry")
 }
 
 void TRAnimationChannelParams::LoadFromFile(String file)
@@ -50,14 +55,15 @@ void TRAnimationChannelParams::LoadFromFile(String file)
     ERR_FAIL_COND_MSG(tracp == nullptr, "Couldn't load TRACP");
 
     table.instantiate();
-    
+
     auto tbl = tracp->table();
 
     auto anims = tbl->int_params();
-    if(anims)
+    if (anims)
     {
         Array _arr_anim;
-        for (size_t i = 0; i < anims->size(); i++) {
+        for (size_t i = 0; i < anims->size(); i++)
+        {
             auto anim = anims->Get(i);
 
             Ref<AnimationChannelParamInt> obj;
@@ -73,10 +79,11 @@ void TRAnimationChannelParams::LoadFromFile(String file)
     }
 
     auto moves = tbl->float_params();
-    if(moves)
+    if (moves)
     {
         Array _arr_move;
-        for (size_t i = 0; i < moves->size(); i++) {
+        for (size_t i = 0; i < moves->size(); i++)
+        {
             auto move = moves->Get(i);
 
             Ref<AnimationChannelParamFloat> obj;
@@ -92,10 +99,11 @@ void TRAnimationChannelParams::LoadFromFile(String file)
     }
 
     auto switches = tbl->bool_params();
-    if(switches)
+    if (switches)
     {
         Array _arr_switch;
-        for (size_t i = 0; i < switches->size(); i++) {
+        for (size_t i = 0; i < switches->size(); i++)
+        {
             auto swit = switches->Get(i);
 
             Ref<AnimationChannelParamBool> obj;
@@ -109,10 +117,11 @@ void TRAnimationChannelParams::LoadFromFile(String file)
     }
 
     auto trigs = tbl->triggers();
-    if(trigs)
+    if (trigs)
     {
         Array _arr_trig;
-        for (size_t i = 0; i < trigs->size(); i++) {
+        for (size_t i = 0; i < trigs->size(); i++)
+        {
             auto trig = trigs->Get(i);
 
             Ref<AnimationChannelParamTrigger> obj;
@@ -125,7 +134,8 @@ void TRAnimationChannelParams::LoadFromFile(String file)
     }
 }
 
-Variant ResourceFormatLoaderTRACP::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRACP::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRAnimationChannelParams> tracn;
     tracn.instantiate();
@@ -141,7 +151,7 @@ PackedStringArray ResourceFormatLoaderTRACP::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRACP::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRACP::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRAnimationChannelParams");
 }

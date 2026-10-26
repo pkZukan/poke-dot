@@ -7,16 +7,19 @@
 #include "generated/trinity_PlacementRegistry_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrinityPlacementPosition : public Resource {
+class TrinityPlacementPosition : public Resource
+{
     GDCLASS(TrinityPlacementPosition, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityPlacementPosition(){}
-	~TrinityPlacementPosition(){}
-	
+    TrinityPlacementPosition() = default;
+    ~TrinityPlacementPosition() = default;
+
     GETTER_SETTER_DEFINE(String, ID)
     GETTER_SETTER_DEFINE(Vector3, position)
     GETTER_SETTER_DEFINE(Vector3, rotation)
@@ -27,53 +30,58 @@ private:
     Vector3 rotation;
 };
 
-class TrinityPlacementObjects : public Resource {
+class TrinityPlacementObjects : public Resource
+{
     GDCLASS(TrinityPlacementObjects, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityPlacementObjects(){}
-	~TrinityPlacementObjects(){}
-	
+    TrinityPlacementObjects() = default;
+    ~TrinityPlacementObjects() = default;
 
 private:
 };
 
-class TrinityPlacementObjectTemplates : public Resource {
+class TrinityPlacementObjectTemplates : public Resource
+{
     GDCLASS(TrinityPlacementObjectTemplates, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityPlacementObjectTemplates(){}
-	~TrinityPlacementObjectTemplates(){}
-	
+    TrinityPlacementObjectTemplates() = default;
+    ~TrinityPlacementObjectTemplates() = default;
 
 private:
 };
 
-class TrinityPlacementSpawners : public Resource {
+class TrinityPlacementSpawners : public Resource
+{
     GDCLASS(TrinityPlacementSpawners, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TrinityPlacementSpawners(){}
-	~TrinityPlacementSpawners(){}
+    static void _bind_methods();
 
+public:
+    TrinityPlacementSpawners() = default;
+    ~TrinityPlacementSpawners() = default;
 
 private:
 };
 
-class TrinityPlacementRegistry : public Resource {
+class TrinityPlacementRegistry : public Resource
+{
     GDCLASS(TrinityPlacementRegistry, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityPlacementRegistry(){}
-	~TrinityPlacementRegistry(){}
+    TrinityPlacementRegistry() = default;
+    ~TrinityPlacementRegistry() = default;
 
     void LoadFromBuffer(const void* buffer);
     Ref<Resource> _LoadPlacementItem(Titan::TrinityScene::PlacementItem item, const void* data);
-	
+
     GETTER_SETTER_DEFINE(Ref<Resource>, item)
 
 private:

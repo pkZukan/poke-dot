@@ -34,7 +34,8 @@ void TrinityCharacterCreationComponent::_bind_methods()
     GETTER_SETTER_BIND(TrinityCharacterCreationComponent, unk11, Variant::FLOAT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TrinityCharacterCreationComponent, unk12, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TrinityCharacterCreationComponent, unk13, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TrinityCharacterCreationComponent, ccdataMasterList, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TrinityCCDataMasterEntry")
+    GETTER_SETTER_BIND(TrinityCharacterCreationComponent, ccdataMasterList, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "TrinityCCDataMasterEntry")
     GETTER_SETTER_BIND(TrinityCharacterCreationComponent, unk14, Variant::PACKED_INT64_ARRAY, PROPERTY_HINT_NONE)
 }
 
@@ -58,8 +59,10 @@ void TrinityCharacterCreationComponent::LoadFromBuffer(const void* buffer)
     set_unk12(component->unk12());
     set_unk13(component->unk13());
     Array ccdata_master_list_values;
-    if (auto values = component->ccdata_master_list()) {
-        for (auto value : *values) {
+    if (auto values = component->ccdata_master_list())
+    {
+        for (auto value : *values)
+        {
             Ref<TrinityCCDataMasterEntry> entry;
             entry.instantiate();
             entry->LoadFromTable(value);
@@ -68,8 +71,12 @@ void TrinityCharacterCreationComponent::LoadFromBuffer(const void* buffer)
     }
     set_ccdataMasterList(ccdata_master_list_values);
     PackedInt64Array unk14_values;
-    if (auto values = component->unk14()) {
-        for (auto value : *values) unk14_values.push_back(value);
+    if (auto values = component->unk14())
+    {
+        for (auto value : *values)
+        {
+            unk14_values.push_back(value);
+        }
     }
     set_unk14(unk14_values);
 }

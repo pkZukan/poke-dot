@@ -25,62 +25,67 @@ namespace godot
 // Only the lookup tables are read up front; file data is read from disk on request.
 class WwisePackage : public Resource
 {
-	GDCLASS(WwisePackage, Resource)
+    GDCLASS(WwisePackage, Resource)
 
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
 
 public:
-	Error LoadFromFile(const String &path);
+    Error LoadFromFile(const String& path);
 
-	PackedInt64Array get_wem_ids() const;
-	bool has_wem(int64_t wem_id) const;
-	// max_size > 0 reads only the start of the file, e.g. for its header
-	PackedByteArray get_wem_data(int64_t wem_id, int64_t max_size = 0) const;
-	Ref<AudioStream> get_stream(int64_t wem_id) const;
+    PackedInt64Array get_wem_ids() const;
+    bool has_wem(int64_t wem_id) const;
+    // max_size > 0 reads only the start of the file, e.g. for its header
+    PackedByteArray get_wem_data(int64_t wem_id, int64_t max_size = 0) const;
+    Ref<AudioStream> get_stream(int64_t wem_id) const;
 
-	PackedInt64Array get_bank_ids() const;
-	PackedByteArray get_bank_data(int64_t bank_id) const;
+    PackedInt64Array get_bank_ids() const;
+    PackedByteArray get_bank_data(int64_t bank_id) const;
 
 private:
-	struct FileEntry
-	{
-		uint64_t offset = 0;
-		uint32_t size = 0;
-	};
+    struct FileEntry
+    {
+        uint64_t offset = 0;
+        uint32_t size = 0;
+    };
 
-	String file_path;
-	HashMap<uint32_t, FileEntry> wems;
-	HashMap<uint32_t, FileEntry> banks;
-	PackedInt64Array wem_ids;
-	PackedInt64Array bank_ids;
+    String file_path;
+    HashMap<uint32_t, FileEntry> wems;
+    HashMap<uint32_t, FileEntry> banks;
+    PackedInt64Array wem_ids;
+    PackedInt64Array bank_ids;
 
-	PackedByteArray read_entry(const FileEntry &entry, uint32_t max_size) const;
+    PackedByteArray read_entry(const FileEntry& entry, uint32_t max_size) const;
 };
 
 // Streamed WEM from a WwisePackage. Nothing is read until the stream is played (each
 // playback decodes its own copy, freed with the playback) or its length is queried (header only).
 class AudioStreamWwise : public AudioStream
 {
-	GDCLASS(AudioStreamWwise, AudioStream)
+    GDCLASS(AudioStreamWwise, AudioStream)
 
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
 
 public:
-	void setup(const Ref<WwisePackage> &p_package, uint32_t p_wem_id);
-	int64_t get_wem_id() const { return wem_id; }
-	// Decodes a fresh copy on every call; nothing is cached.
-	Ref<AudioStream> get_decoded_stream() const;
+    void setup(const Ref<WwisePackage>& p_package, uint32_t p_wem_id);
 
-	Ref<AudioStreamPlayback> _instantiate_playback() const override;
-	String _get_stream_name() const override;
-	double _get_length() const override;
+    int64_t get_wem_id() const
+    {
+        return wem_id;
+    }
+
+    // Decodes a fresh copy on every call; nothing is cached.
+    Ref<AudioStream> get_decoded_stream() const;
+
+    Ref<AudioStreamPlayback> _instantiate_playback() const override;
+    String _get_stream_name() const override;
+    double _get_length() const override;
 
 private:
-	Ref<WwisePackage> package;
-	uint32_t wem_id = 0;
-	mutable double length = -1.0;
+    Ref<WwisePackage> package;
+    uint32_t wem_id = 0;
+    mutable double length = -1.0;
 };
 
 // Wwise soundbank (.bnk). Media is exposed as AudioStreams keyed by WEM id:
@@ -93,82 +98,100 @@ private:
 // Other codecs (e.g. Switch Opus 0x3039) are only available as raw data via get_wem_data().
 class WwiseSoundBank : public Resource
 {
-	GDCLASS(WwiseSoundBank, Resource)
+    GDCLASS(WwiseSoundBank, Resource)
 
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
 
 public:
-	enum Codec
-	{
-		CODEC_PCM = 0x0001,
-		CODEC_PCM_AUTHORING = 0xFFFE,
-		CODEC_VORBIS = 0xFFFF,
-		CODEC_OPUS_NX = 0x3039,
-		CODEC_OPUS = 0x3040,
-		CODEC_OPUS_WEM = 0x3041,
-		CODEC_PTADPCM = 0x8311,
-	};
+    enum Codec
+    {
+        CODEC_PCM = 0x0001,
+        CODEC_PCM_AUTHORING = 0xFFFE,
+        CODEC_VORBIS = 0xFFFF,
+        CODEC_OPUS_NX = 0x3039,
+        CODEC_OPUS = 0x3040,
+        CODEC_OPUS_WEM = 0x3041,
+        CODEC_PTADPCM = 0x8311,
+    };
 
-	// LoadFromFile uses every .pck in the bank's directory; LoadFromBuffer only
-	// uses packages registered with add_package() beforehand.
-	Error LoadFromFile(const String &path);
-	Error LoadFromBuffer(const PackedByteArray &buffer);
-	void add_package(const Ref<WwisePackage> &package);
+    // LoadFromFile uses every .pck in the bank's directory; LoadFromBuffer only
+    // uses packages registered with add_package() beforehand.
+    Error LoadFromFile(const String& path);
+    Error LoadFromBuffer(const PackedByteArray& buffer);
+    void add_package(const Ref<WwisePackage>& package);
 
-	uint32_t get_bank_version() const { return bank_version; }
-	uint32_t get_bank_id() const { return bank_id; }
-	TypedDictionary<int64_t, AudioStream> get_streams() const { return streams; }
-	Ref<AudioStream> get_stream(int64_t wem_id) const;
-	// Embedded media first, then streamed sources, in bank order.
-	PackedInt64Array get_wem_ids() const { return wem_ids; }
-	PackedByteArray get_wem_data(int64_t wem_id) const;
-	int get_wem_codec(int64_t wem_id) const;
-	bool is_streamed(int64_t wem_id) const;
+    uint32_t get_bank_version() const
+    {
+        return bank_version;
+    }
 
-	int64_t resolve_event_wem_id(const String &event_name, const String &voice_type = "INDEX") const;
-	Ref<AudioStream> resolve_event_stream(const String &event_name, const String &voice_type = "INDEX") const;
-	static int64_t hash_name(const String &name);
+    uint32_t get_bank_id() const
+    {
+        return bank_id;
+    }
 
-	static Ref<AudioStream> load_wem(const PackedByteArray &wem);
-	static PackedByteArray wem_to_ogg(const PackedByteArray &wem);
+    TypedDictionary<int64_t, AudioStream> get_streams() const
+    {
+        return streams;
+    }
+
+    Ref<AudioStream> get_stream(int64_t wem_id) const;
+
+    // Embedded media first, then streamed sources, in bank order.
+    PackedInt64Array get_wem_ids() const
+    {
+        return wem_ids;
+    }
+
+    PackedByteArray get_wem_data(int64_t wem_id) const;
+    int get_wem_codec(int64_t wem_id) const;
+    bool is_streamed(int64_t wem_id) const;
+
+    int64_t resolve_event_wem_id(const String& event_name, const String& voice_type = "INDEX") const;
+    Ref<AudioStream> resolve_event_stream(const String& event_name, const String& voice_type = "INDEX") const;
+    static int64_t hash_name(const String& name);
+
+    static Ref<AudioStream> load_wem(const PackedByteArray& wem);
+    static PackedByteArray wem_to_ogg(const PackedByteArray& wem);
 
 private:
-	struct MediaEntry
-	{
-		uint32_t offset = 0;
-		uint32_t size = 0;
-	};
+    struct MediaEntry
+    {
+        uint32_t offset = 0;
+        uint32_t size = 0;
+    };
 
-	struct SourceEntry
-	{
-		uint32_t plugin_id = 0;
-		bool streamed = false;
-	};
+    struct SourceEntry
+    {
+        uint32_t plugin_id = 0;
+        bool streamed = false;
+    };
 
-	struct EventNode
-	{
-		uint8_t type = 0;
-		uint32_t target = 0;
-		uint32_t default_switch = 0;
-		uint32_t switch_group = 0;
-		HashMap<uint32_t, Vector<uint32_t>> switches;
-	};
-	HashMap<uint32_t, EventNode> event_nodes;
-	mutable HashMap<uint64_t, uint32_t> event_media_cache;
-	Error parse_event_nodes(const uint8_t *data, uint32_t offset, uint32_t size);
-	uint32_t resolve_node_media(uint32_t object_id, uint32_t switch_id, int depth, uint32_t switch_group = 0) const;
+    struct EventNode
+    {
+        uint8_t type = 0;
+        uint32_t target = 0;
+        uint32_t default_switch = 0;
+        uint32_t switch_group = 0;
+        HashMap<uint32_t, Vector<uint32_t>> switches;
+    };
 
-	PackedByteArray media;
-	HashMap<uint32_t, MediaEntry> media_entries;
-	HashMap<uint32_t, SourceEntry> sources;
-	PackedInt64Array wem_ids;
-	Vector<Ref<WwisePackage>> packages;
-	TypedDictionary<int64_t, AudioStream> streams;
-	uint32_t bank_version = 0;
-	uint32_t bank_id = 0;
+    HashMap<uint32_t, EventNode> event_nodes;
+    mutable HashMap<uint64_t, uint32_t> event_media_cache;
+    Error parse_event_nodes(const uint8_t* data, uint32_t offset, uint32_t size);
+    uint32_t resolve_node_media(uint32_t object_id, uint32_t switch_id, int depth, uint32_t switch_group = 0) const;
 
-	Ref<WwisePackage> find_package(uint32_t wem_id) const;
+    PackedByteArray media;
+    HashMap<uint32_t, MediaEntry> media_entries;
+    HashMap<uint32_t, SourceEntry> sources;
+    PackedInt64Array wem_ids;
+    Vector<Ref<WwisePackage>> packages;
+    TypedDictionary<int64_t, AudioStream> streams;
+    uint32_t bank_version = 0;
+    uint32_t bank_id = 0;
+
+    Ref<WwisePackage> find_package(uint32_t wem_id) const;
 };
 
 }
@@ -180,80 +203,87 @@ namespace godot
 
 class ResourceFormatLoaderBNK : public ResourceFormatLoader
 {
-	GDCLASS(ResourceFormatLoaderBNK, ResourceFormatLoader)
+    GDCLASS(ResourceFormatLoaderBNK, ResourceFormatLoader)
 
 protected:
-	static void _bind_methods() {}
+    static void _bind_methods()
+    {
+    }
 
 public:
-	PackedStringArray _get_recognized_extensions() const override;
-	String _get_resource_type(const String &path) const override;
-	bool _handles_type(const StringName &type) const override;
-	Variant _load(const String &path, const String &original_path, bool use_sub_threads, int32_t cache_mode) const override;
+    PackedStringArray _get_recognized_extensions() const override;
+    String _get_resource_type(const String& path) const override;
+    bool _handles_type(const StringName& type) const override;
+    Variant _load(const String& path, const String& original_path, bool use_sub_threads,
+                  int32_t cache_mode) const override;
 };
 
 // Godot's built-in inspector player only handles AudioStreamWAV, so Ogg and lazy Wwise
 // streams (e.g. from WwiseSoundBank) get this minimal play/stop preview instead.
 class AudioStreamPreviewControl : public HBoxContainer
 {
-	GDCLASS(AudioStreamPreviewControl, HBoxContainer)
+    GDCLASS(AudioStreamPreviewControl, HBoxContainer)
 
 protected:
-	static void _bind_methods();
-	void _notification(int what);
+    static void _bind_methods();
+    void _notification(int what);
 
 public:
-	void setup(const Ref<AudioStream> &p_stream);
+    void setup(const Ref<AudioStream>& p_stream);
 
 private:
-	Button *play_button = nullptr;
-	Label *time_label = nullptr;
-	AudioStreamPlayer *player = nullptr;
-	double length = 0.0;
+    Button* play_button = nullptr;
+    Label* time_label = nullptr;
+    AudioStreamPlayer* player = nullptr;
+    double length = 0.0;
 
-	void _on_play_pressed();
-	void _on_finished();
-	void _update_ui();
+    void _on_play_pressed();
+    void _on_finished();
+    void _update_ui();
 };
 
 class EditorInspectorPluginAudioStreamOgg : public EditorInspectorPlugin
 {
-	GDCLASS(EditorInspectorPluginAudioStreamOgg, EditorInspectorPlugin)
+    GDCLASS(EditorInspectorPluginAudioStreamOgg, EditorInspectorPlugin)
 
 protected:
-	static void _bind_methods() {}
+    static void _bind_methods()
+    {
+    }
 
 public:
-	bool _can_handle(Object *object) const override
-	{
-		return Object::cast_to<AudioStreamOggVorbis>(object) || Object::cast_to<AudioStreamWwise>(object);
-	}
+    bool _can_handle(Object* object) const override
+    {
+        return Object::cast_to<AudioStreamOggVorbis>(object) || Object::cast_to<AudioStreamWwise>(object);
+    }
 
-	void _parse_begin(Object *object) override;
+    void _parse_begin(Object* object) override;
 };
 
 class WwiseEditorPlugin : public EditorPlugin
 {
-	GDCLASS(WwiseEditorPlugin, EditorPlugin)
+    GDCLASS(WwiseEditorPlugin, EditorPlugin)
 
 private:
-	Ref<EditorInspectorPluginAudioStreamOgg> inspector_plugin;
+    Ref<EditorInspectorPluginAudioStreamOgg> inspector_plugin;
 
 protected:
-	static void _bind_methods() {}
+    static void _bind_methods()
+    {
+    }
 
 public:
-	void _enter_tree() override
-	{
-		inspector_plugin.instantiate();
-		add_inspector_plugin(inspector_plugin);
-	}
+    void _enter_tree() override
+    {
+        inspector_plugin.instantiate();
+        add_inspector_plugin(inspector_plugin);
+    }
 
-	void _exit_tree() override
-	{
-		remove_inspector_plugin(inspector_plugin);
-		inspector_plugin.unref();
-	}
+    void _exit_tree() override
+    {
+        remove_inspector_plugin(inspector_plugin);
+        inspector_plugin.unref();
+    }
 };
 
 }

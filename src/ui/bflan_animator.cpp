@@ -6,19 +6,26 @@
 
 using namespace godot;
 
-void BflanAnimator::_bind_methods() {
+void BflanAnimator::_bind_methods()
+{
     ClassDB::bind_method(D_METHOD("set_frame", "frame"), &BflanAnimator::set_frame);
     ClassDB::bind_method(D_METHOD("get_frame"), &BflanAnimator::get_frame);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "frame", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_frame", "get_frame");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "frame", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_frame",
+                 "get_frame");
 }
 
-Error BflanAnimator::configure(Node *owner, Control *layout, const String &p_component, const String &p_state, double p_frame_rate) {
+Error BflanAnimator::configure(Node* owner, Control* layout, const String& p_component, const String& p_state,
+                               double p_frame_rate)
+{
     ERR_FAIL_COND_V(!std::isfinite(p_frame_rate) || p_frame_rate <= 0, ERR_INVALID_PARAMETER);
     runtime.reset(owner, layout);
     String root;
     Dictionary data;
     Error error = runtime.resolve(owner, layout, p_component, p_state, root, data);
-    if (error != OK) return error;
+    if (error != OK)
+    {
+        return error;
+    }
 
     Ref<Animation> animation;
     animation.instantiate();
@@ -36,12 +43,21 @@ Error BflanAnimator::configure(Node *owner, Control *layout, const String &p_com
     Ref<AnimationLibrary> library;
     library.instantiate();
     error = library->add_animation("clip", animation);
-    if (error != OK) return error;
+    if (error != OK)
+    {
+        return error;
+    }
 
     stop(true);
-    if (has_animation_library("")) remove_animation_library("");
+    if (has_animation_library(""))
+    {
+        remove_animation_library("");
+    }
     error = add_animation_library("", library);
-    if (error != OK) return error;
+    if (error != OK)
+    {
+        return error;
+    }
     set_root(NodePath("."));
     owner_path = get_path_to(owner);
     layout_path = owner->get_path_to(layout);
@@ -52,12 +68,22 @@ Error BflanAnimator::configure(Node *owner, Control *layout, const String &p_com
     return OK;
 }
 
-void BflanAnimator::set_frame(double value) {
-    if (!std::isfinite(value)) return;
-    Node *owner = get_node_or_null(owner_path);
-    if (!owner) return;
-    Control *layout = Object::cast_to<Control>(owner->get_node_or_null(layout_path));
-    if (!layout) return;
+void BflanAnimator::set_frame(double value)
+{
+    if (!std::isfinite(value))
+    {
+        return;
+    }
+    Node* owner = get_node_or_null(owner_path);
+    if (!owner)
+    {
+        return;
+    }
+    Control* layout = Object::cast_to<Control>(owner->get_node_or_null(layout_path));
+    if (!layout)
+    {
+        return;
+    }
     Error error = runtime.apply(owner, layout, component, state, value);
     ERR_FAIL_COND_MSG(error != OK, "Could not apply BFLAN animation frame.");
     frame = value;

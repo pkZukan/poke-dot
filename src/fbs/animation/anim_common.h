@@ -8,91 +8,106 @@
 #include "generated/anim_common_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TRAnimationInfo : public Resource {
-	GDCLASS(TRAnimationInfo, Resource)
+class TRAnimationInfo : public Resource
+{
+    GDCLASS(TRAnimationInfo, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRAnimationInfo(){}
-	~TRAnimationInfo(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(uint32_t, does_loop)
+public:
+    TRAnimationInfo() = default;
+    ~TRAnimationInfo() = default;
+
+    GETTER_SETTER_DEFINE(uint32_t, does_loop)
     GETTER_SETTER_DEFINE(uint32_t, animation_count)
     GETTER_SETTER_DEFINE(uint32_t, animation_rate)
 
 private:
-	uint32_t does_loop;
+    uint32_t does_loop;
     uint32_t animation_count;
     uint32_t animation_rate;
 };
 
-#define DEFINE_FIXED_TRACK(ClassName, ValueType, VariantType) \
-class ClassName : public Resource { \
-    GDCLASS(ClassName, Resource) \
-protected: \
-    static void _bind_methods() { \
-        GETTER_SETTER_BIND(ClassName, value, VariantType, PROPERTY_HINT_NONE) \
-    } \
-public: \
-    ClassName(){} \
-    ~ClassName(){} \
-    GETTER_SETTER_DEFINE(ValueType, value) \
-private: \
-    ValueType value; \
-};
+#define DEFINE_FIXED_TRACK(ClassName, ValueType, VariantType)                                                          \
+    class ClassName : public Resource                                                                                  \
+    {                                                                                                                  \
+        GDCLASS(ClassName, Resource)                                                                                   \
+    protected:                                                                                                         \
+        static void _bind_methods()                                                                                    \
+        {                                                                                                              \
+            GETTER_SETTER_BIND(ClassName, value, VariantType, PROPERTY_HINT_NONE)                                      \
+        }                                                                                                              \
+                                                                                                                       \
+    public:                                                                                                            \
+        ClassName() = default;                                                                                         \
+        ~ClassName() = default;                                                                                        \
+        GETTER_SETTER_DEFINE(ValueType, value)                                                                         \
+    private:                                                                                                           \
+        ValueType value;                                                                                               \
+    };
 
-#define DEFINE_DYNAMIC_TRACK(ClassName, HintString) \
-class ClassName : public Resource { \
-    GDCLASS(ClassName, Resource) \
-protected: \
-    static void _bind_methods() { \
-        GETTER_SETTER_BIND(ClassName, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, HintString) \
-    } \
-public: \
-    ClassName(){} \
-    ~ClassName(){} \
-    GETTER_SETTER_DEFINE(Array, values) \
-private: \
-    Array values; \
-};
+#define DEFINE_DYNAMIC_TRACK(ClassName, HintString)                                                                    \
+    class ClassName : public Resource                                                                                  \
+    {                                                                                                                  \
+        GDCLASS(ClassName, Resource)                                                                                   \
+    protected:                                                                                                         \
+        static void _bind_methods()                                                                                    \
+        {                                                                                                              \
+            GETTER_SETTER_BIND(ClassName, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, HintString)                \
+        }                                                                                                              \
+                                                                                                                       \
+    public:                                                                                                            \
+        ClassName() = default;                                                                                         \
+        ~ClassName() = default;                                                                                        \
+        GETTER_SETTER_DEFINE(Array, values)                                                                            \
+    private:                                                                                                           \
+        Array values;                                                                                                  \
+    };
 
-#define DEFINE_FRAMED8_TRACK(ClassName, HintString) \
-class ClassName : public Resource { \
-    GDCLASS(ClassName, Resource) \
-protected: \
-    static void _bind_methods() { \
-        GETTER_SETTER_BIND(ClassName, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int") \
-        GETTER_SETTER_BIND(ClassName, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, HintString) \
-    } \
-public: \
-    ClassName(){} \
-    ~ClassName(){} \
-    GETTER_SETTER_DEFINE(Array, frames) \
-    GETTER_SETTER_DEFINE(Array, values) \
-private: \
-    Array frames; \
-    Array values; \
-};
+#define DEFINE_FRAMED8_TRACK(ClassName, HintString)                                                                    \
+    class ClassName : public Resource                                                                                  \
+    {                                                                                                                  \
+        GDCLASS(ClassName, Resource)                                                                                   \
+    protected:                                                                                                         \
+        static void _bind_methods()                                                                                    \
+        {                                                                                                              \
+            GETTER_SETTER_BIND(ClassName, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")                     \
+            GETTER_SETTER_BIND(ClassName, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, HintString)                \
+        }                                                                                                              \
+                                                                                                                       \
+    public:                                                                                                            \
+        ClassName() = default;                                                                                         \
+        ~ClassName() = default;                                                                                        \
+        GETTER_SETTER_DEFINE(Array, frames)                                                                            \
+        GETTER_SETTER_DEFINE(Array, values)                                                                            \
+    private:                                                                                                           \
+        Array frames;                                                                                                  \
+        Array values;                                                                                                  \
+    };
 
-#define DEFINE_FRAMED16_TRACK(ClassName, HintString) \
-class ClassName : public Resource { \
-    GDCLASS(ClassName, Resource) \
-protected: \
-    static void _bind_methods() { \
-        GETTER_SETTER_BIND(ClassName, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int") \
-        GETTER_SETTER_BIND(ClassName, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, HintString) \
-    } \
-public: \
-    ClassName(){} \
-    ~ClassName(){} \
-    GETTER_SETTER_DEFINE(Array, frames) \
-    GETTER_SETTER_DEFINE(Array, values) \
-private: \
-    Array frames; \
-    Array values; \
-};
+#define DEFINE_FRAMED16_TRACK(ClassName, HintString)                                                                   \
+    class ClassName : public Resource                                                                                  \
+    {                                                                                                                  \
+        GDCLASS(ClassName, Resource)                                                                                   \
+    protected:                                                                                                         \
+        static void _bind_methods()                                                                                    \
+        {                                                                                                              \
+            GETTER_SETTER_BIND(ClassName, frames, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "int")                     \
+            GETTER_SETTER_BIND(ClassName, values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, HintString)                \
+        }                                                                                                              \
+                                                                                                                       \
+    public:                                                                                                            \
+        ClassName() = default;                                                                                         \
+        ~ClassName() = default;                                                                                        \
+        GETTER_SETTER_DEFINE(Array, frames)                                                                            \
+        GETTER_SETTER_DEFINE(Array, values)                                                                            \
+    private:                                                                                                           \
+        Array frames;                                                                                                  \
+        Array values;                                                                                                  \
+    };
 
 DEFINE_FIXED_TRACK(FixedFloatTrack, float, Variant::FLOAT)
 DEFINE_DYNAMIC_TRACK(DynamicFloatTrack, "float")

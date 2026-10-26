@@ -88,13 +88,18 @@ void TRPersonalData::_bind_methods()
     BIND_ENUM_CONSTANT(DARK)
     BIND_ENUM_CONSTANT(FAIRY)
 
-    const String type_names = "Normal,Fighting,Flying,Poison,Ground,Rock,Bug,Ghost,Steel,Fire,Water,Grass,Electric,Psychic,Ice,Dragon,Dark,Fairy";
+    const String type_names = "Normal,Fighting,Flying,Poison,Ground,Rock,Bug,Ghost,Steel,Fire,Water,Grass,Electric,"
+                              "Psychic,Ice,Dragon,Dark,Fairy";
     ClassDB::bind_method(D_METHOD("get_type1"), &TRPersonalData::get_type1);
     ClassDB::bind_method(D_METHOD("set_type1", "type"), &TRPersonalData::set_type1);
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "type1", PROPERTY_HINT_ENUM, type_names, PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_CLASS_IS_ENUM, "TRPersonalData.Types"), "set_type1", "get_type1");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "type1", PROPERTY_HINT_ENUM, type_names,
+                              PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_CLASS_IS_ENUM, "TRPersonalData.Types"),
+                 "set_type1", "get_type1");
     ClassDB::bind_method(D_METHOD("get_type2"), &TRPersonalData::get_type2);
     ClassDB::bind_method(D_METHOD("set_type2", "type"), &TRPersonalData::set_type2);
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "type2", PROPERTY_HINT_ENUM, type_names, PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_CLASS_IS_ENUM, "TRPersonalData.Types"), "set_type2", "get_type2");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "type2", PROPERTY_HINT_ENUM, type_names,
+                              PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_CLASS_IS_ENUM, "TRPersonalData.Types"),
+                 "set_type2", "get_type2");
     GETTER_SETTER_BIND(TRPersonalData, ability1, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRPersonalData, ability2, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRPersonalData, ability3, Variant::INT, PROPERTY_HINT_NONE)
@@ -118,19 +123,16 @@ void TRPersonalData::_bind_methods()
     GETTER_SETTER_BIND(TRPersonalData, learnset, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRMove")
 }
 
-void TRPersonalArray::_bind_methods() 
-{
-    GETTER_SETTER_BIND(TRPersonalArray, entries, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRPersonalData")
-}
+void TRPersonalArray::_bind_methods(){
+    GETTER_SETTER_BIND(TRPersonalArray, entries, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRPersonalData")}
 
-Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
+Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData* ent)
 {
     Ref<TRPersonalData> pdata;
     pdata.instantiate();
 
-    // SpeciesInfo
     auto sp = ent->species();
-    if(sp)
+    if (sp)
     {
         Ref<TRSpeciesInfo> species;
         species.instantiate();
@@ -149,9 +151,8 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
 
     pdata->set_is_present(ent->is_present());
 
-    // ZukanData
     auto dz = ent->dex();
-    if(dz)
+    if (dz)
     {
         Ref<TRZukanData> dex;
         dex.instantiate();
@@ -168,9 +169,8 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
     pdata->set_growth(ent->growth());
     pdata->set_rate(ent->rate());
 
-    // GenderData
     auto gd = ent->gender();
-    if(gd)
+    if (gd)
     {
         Ref<TRGenderData> gender;
         gender.instantiate();
@@ -182,9 +182,8 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
     pdata->set_group_1(ent->group_1());
     pdata->set_group_2(ent->group_2());
 
-    // Hatch
     auto hd = ent->hatch();
-    if(hd)
+    if (hd)
     {
         Ref<TRHatch> hatch;
         hatch.instantiate();
@@ -201,9 +200,8 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
     pdata->set_evo_stage(ent->evo_stage());
     pdata->set_unk_flag(ent->unk_flag());
 
-    // Yield StatInfo
     auto yi = ent->yield_info();
-    if(yi)
+    if (yi)
     {
         Ref<TRStatInfo> yield_info;
         yield_info.instantiate();
@@ -216,9 +214,8 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
         pdata->set_yield_info(yield_info);
     }
 
-    // Base StatInfo
     auto bs = ent->stats();
-    if(bs)
+    if (bs)
     {
         Ref<TRStatInfo> stats;
         stats.instantiate();
@@ -231,12 +228,11 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
         pdata->set_stats(stats);
     }
 
-    // EvoData
     auto evos = ent->evo_table();
-    if(evos)
+    if (evos)
     {
         Array evoArr;
-        for(int j = 0; j < evos->size(); j++)
+        for (int j = 0; j < evos->size(); j++)
         {
             auto ed = evos->Get(j);
             Ref<TREvoData> evo;
@@ -254,42 +250,44 @@ Ref<TRPersonalData> TRPersonalArray::_LoadEntry(const PersonalData *ent)
         pdata->set_evo_table(evoArr);
     }
 
-    // Technical Machines
     auto tms = ent->technical_machines();
-    if(tms)
+    if (tms)
     {
         Array tmArr;
-        for(int j = 0; j < tms->size(); j++)
+        for (int j = 0; j < tms->size(); j++)
+        {
             tmArr.push_back((int)tms->Get(j));
+        }
         pdata->set_technical_machines(tmArr);
     }
 
-    // Egg Moves
     auto ems = ent->egg_moves();
-    if(ems)
+    if (ems)
     {
         Array emArr;
-        for(int j = 0; j < ems->size(); j++)
+        for (int j = 0; j < ems->size(); j++)
+        {
             emArr.push_back((int)ems->Get(j));
+        }
         pdata->set_egg_moves(emArr);
     }
 
-    // Reminder Moves
     auto rms = ent->reminder_moves();
-    if(rms)
+    if (rms)
     {
         Array rmArr;
-        for(int j = 0; j < rms->size(); j++)
+        for (int j = 0; j < rms->size(); j++)
+        {
             rmArr.push_back((int)rms->Get(j));
+        }
         pdata->set_reminder_moves(rmArr);
     }
 
-    // Learnset
     auto ls = ent->learnset();
-    if(ls)
+    if (ls)
     {
         Array lsArr;
-        for(int j = 0; j < ls->size(); j++)
+        for (int j = 0; j < ls->size(); j++)
         {
             auto mv = ls->Get(j);
             Ref<TRMove> move;
@@ -313,9 +311,9 @@ void TRPersonalArray::LoadFromFile(String file)
 
     Array entryArr;
     auto entries = personal->entries();
-    if(entries)
+    if (entries)
     {
-        for(int i = 0; i < entries->size(); i++)
+        for (int i = 0; i < entries->size(); i++)
         {
             auto ent = entries->Get(i);
             auto pdata = _LoadEntry(ent);
@@ -333,8 +331,10 @@ Ref<TRPersonalData> TRPersonalArray::LazyLoadFromFile(String file, int idx)
     ERR_FAIL_COND_V_MSG(personal == NULL, Ref<TRPersonalData>(), vformat("Couldn't load personal"));
 
     auto entries = personal->entries();
-    if(idx > entries->size())
+    if (idx > entries->size())
+    {
         return Ref<TRPersonalData>();
+    }
 
     return _LoadEntry(entries->Get(idx));
 }
@@ -348,12 +348,12 @@ int TRPersonalArray::FindIndex(String file, uint16_t species, uint8_t form)
 
     auto entries = personal->entries();
     int idx = -1;
-    if(entries)
+    if (entries)
     {
-        for(int i = 0; i < entries->size(); i++)
+        for (int i = 0; i < entries->size(); i++)
         {
             auto ent = entries->Get(i)->species();
-            if(ent->species_index() == species && ent->species_form() == form)
+            if (ent->species_index() == species && ent->species_form() == form)
             {
                 idx = i;
                 break;
@@ -364,7 +364,8 @@ int TRPersonalArray::FindIndex(String file, uint16_t species, uint8_t form)
     return idx;
 }
 
-Variant ResourceFormatLoaderTRPERSONAL::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRPERSONAL::_load(const String& p_path, const String& p_original_path,
+                                              bool p_use_sub_threads, int32_t p_cache_mode) const
 {
     Ref<TRPersonalArray> personal;
     personal.instantiate();
@@ -372,7 +373,7 @@ Variant ResourceFormatLoaderTRPERSONAL::_load(const String &p_path, const String
     return personal;
 }
 
-bool ResourceFormatLoaderTRPERSONAL::_recognize_path(const String &p_path, const StringName &p_type) const
+bool ResourceFormatLoaderTRPERSONAL::_recognize_path(const String& p_path, const StringName& p_type) const
 {
     String filename = p_path.get_file();
     return filename == "personal_array.bin";
@@ -386,7 +387,7 @@ PackedStringArray ResourceFormatLoaderTRPERSONAL::_get_recognized_extensions() c
     return exts;
 }
 
-bool ResourceFormatLoaderTRPERSONAL::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRPERSONAL::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRPersonalArray");
 }

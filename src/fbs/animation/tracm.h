@@ -9,302 +9,337 @@
 #include "generated/tracm_generated.h"
 #include <utils.h>
 
-namespace godot 
+namespace godot
 {
-class TRBlendTable : public Resource {
+class TRBlendTable : public Resource
+{
     GDCLASS(TRBlendTable, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRBlendTable(){}
-	~TRBlendTable(){}
-	
-	GETTER_SETTER_DEFINE(String, Name)
+    TRBlendTable() = default;
+    ~TRBlendTable() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
 
 private:
-	String Name;
+    String Name;
 };
 
-class TRTrackMaterialChannel : public Resource {
+class TRTrackMaterialChannel : public Resource
+{
     GDCLASS(TRTrackMaterialChannel, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRTrackMaterialChannel(){}
-	~TRTrackMaterialChannel(){}
-	
-	GETTER_SETTER_DEFINE(Array, values)
+    TRTrackMaterialChannel() = default;
+    ~TRTrackMaterialChannel() = default;
+
+    GETTER_SETTER_DEFINE(Array, values)
 
 private:
-	Array values;
+    Array values;
 };
 
-class TRTrackMaterialChannelVec4 : public Resource {
+class TRTrackMaterialChannelVec4 : public Resource
+{
     GDCLASS(TRTrackMaterialChannelVec4, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRTrackMaterialChannelVec4(){}
-	~TRTrackMaterialChannelVec4(){}
-	
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, x)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, y)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, z)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, w)
+    TRTrackMaterialChannelVec4() = default;
+    ~TRTrackMaterialChannelVec4() = default;
+
+    GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, x)
+    GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, y)
+    GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, z)
+    GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, w)
 
 private:
-	Ref<TRTrackMaterialChannel> x;
-	Ref<TRTrackMaterialChannel> y;
-	Ref<TRTrackMaterialChannel> z;
-	Ref<TRTrackMaterialChannel> w;
+    Ref<TRTrackMaterialChannel> x;
+    Ref<TRTrackMaterialChannel> y;
+    Ref<TRTrackMaterialChannel> z;
+    Ref<TRTrackMaterialChannel> w;
 };
 
-class TRTrackBlendshapeInit : public Resource {
+class TRTrackBlendshapeInit : public Resource
+{
     GDCLASS(TRTrackBlendshapeInit, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRTrackBlendshapeInit(){}
-	~TRTrackBlendshapeInit(){}
-	
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Array, blendshape_list)
+    TRTrackBlendshapeInit() = default;
+    ~TRTrackBlendshapeInit() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Array, blendshape_list)
 
 private:
-	String Name;
-	Array blendshape_list;
+    String Name;
+    Array blendshape_list;
 };
 
-class TRTrackBlendShape : public Resource {
+class TRTrackBlendShape : public Resource
+{
     GDCLASS(TRTrackBlendShape, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRTrackBlendShape(){}
-	~TRTrackBlendShape(){}
-	
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Array, init_values)
-	GETTER_SETTER_DEFINE(Ref<Resource>, track)
-	GETTER_SETTER_DEFINE(uint32_t, blend_list_idx)
+    TRTrackBlendShape() = default;
+    ~TRTrackBlendShape() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Array, init_values)
+    GETTER_SETTER_DEFINE(Ref<Resource>, track)
+    GETTER_SETTER_DEFINE(uint32_t, blend_list_idx)
 
 private:
-	String Name;
-	Array init_values;
-	Ref<Resource> track;	//BlendTrack
-	uint32_t blend_list_idx;
+    String Name;
+    Array init_values;
+    Ref<Resource> track; // BlendTrack
+    uint32_t blend_list_idx;
 };
 
-class TRTrackFlagsInfo : public Resource {
+class TRTrackFlagsInfo : public Resource
+{
     GDCLASS(TRTrackFlagsInfo, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRTrackFlagsInfo(){}
-	~TRTrackFlagsInfo(){}
-	
-	GETTER_SETTER_DEFINE(Ref<Resource>, values)
+    TRTrackFlagsInfo() = default;
+    ~TRTrackFlagsInfo() = default;
+
+    GETTER_SETTER_DEFINE(Ref<Resource>, values)
 
 private:
-	Ref<Resource> values; //TRTrackFlag
+    Ref<Resource> values; // TRTrackFlag
 };
 
-class TRBlendShapeTimeline : public Resource {
+class TRBlendShapeTimeline : public Resource
+{
     GDCLASS(TRBlendShapeTimeline, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRBlendShapeTimeline(){}
-	~TRBlendShapeTimeline(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, info)
-	GETTER_SETTER_DEFINE(uint32_t, res_1)
-	GETTER_SETTER_DEFINE(Array, blendshape_tracks)
-	GETTER_SETTER_DEFINE(uint8_t, res_3)
-	GETTER_SETTER_DEFINE(Array, blend_list)
-	
+public:
+    TRBlendShapeTimeline() = default;
+    ~TRBlendShapeTimeline() = default;
+
+    GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, info)
+    GETTER_SETTER_DEFINE(uint32_t, res_1)
+    GETTER_SETTER_DEFINE(Array, blendshape_tracks)
+    GETTER_SETTER_DEFINE(uint8_t, res_3)
+    GETTER_SETTER_DEFINE(Array, blend_list)
+
 private:
-	Ref<TRAnimationInfo> info;
-	uint32_t res_1;
-	Array blendshape_tracks;
-	uint8_t res_3;
-	Array blend_list;
+    Ref<TRAnimationInfo> info;
+    uint32_t res_1;
+    Array blendshape_tracks;
+    uint8_t res_3;
+    Array blend_list;
 };
 
-class TRTrackMaterialValue : public Resource {
+class TRTrackMaterialValue : public Resource
+{
     GDCLASS(TRTrackMaterialValue, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRTrackMaterialValue(){}
-	~TRTrackMaterialValue(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(float, Time)
-	GETTER_SETTER_DEFINE(float, Value)
-	GETTER_SETTER_DEFINE(uint32_t, config_0)
-	GETTER_SETTER_DEFINE(uint32_t, config_1)
-	GETTER_SETTER_DEFINE(uint32_t, config_2)
-	
+public:
+    TRTrackMaterialValue() = default;
+    ~TRTrackMaterialValue() = default;
+
+    GETTER_SETTER_DEFINE(float, Time)
+    GETTER_SETTER_DEFINE(float, Value)
+    GETTER_SETTER_DEFINE(uint32_t, config_0)
+    GETTER_SETTER_DEFINE(uint32_t, config_1)
+    GETTER_SETTER_DEFINE(uint32_t, config_2)
+
 private:
-	float Time;
-	float Value;
-	uint32_t config_0;
-	uint32_t config_1;
-	uint32_t config_2;
+    float Time;
+    float Value;
+    uint32_t config_0;
+    uint32_t config_1;
+    uint32_t config_2;
 };
 
-class TRTrackMaterialInit : public Resource {
+class TRTrackMaterialInit : public Resource
+{
     GDCLASS(TRTrackMaterialInit, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRTrackMaterialInit(){}
-	~TRTrackMaterialInit(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, list)
-	
+public:
+    TRTrackMaterialInit() = default;
+    ~TRTrackMaterialInit() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannel>, list)
+
 private:
-	String Name;
-	Ref<TRTrackMaterialChannel> list;
+    String Name;
+    Ref<TRTrackMaterialChannel> list;
 };
 
-class TRTrackMaterialAnim : public Resource {
+class TRTrackMaterialAnim : public Resource
+{
     GDCLASS(TRTrackMaterialAnim, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRTrackMaterialAnim(){}
-	~TRTrackMaterialAnim(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannelVec4>, list)
-	
+public:
+    TRTrackMaterialAnim() = default;
+    ~TRTrackMaterialAnim() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Ref<TRTrackMaterialChannelVec4>, list)
+
 private:
-	String Name;
-	Ref<TRTrackMaterialChannelVec4> list;
+    String Name;
+    Ref<TRTrackMaterialChannelVec4> list;
 };
 
-class TRTrackMaterial : public Resource {
+class TRTrackMaterial : public Resource
+{
     GDCLASS(TRTrackMaterial, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRTrackMaterial(){}
-	~TRTrackMaterial(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Array, init_values)
-	GETTER_SETTER_DEFINE(Array, anim_values)
-	
+public:
+    TRTrackMaterial() = default;
+    ~TRTrackMaterial() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Array, init_values)
+    GETTER_SETTER_DEFINE(Array, anim_values)
+
 private:
-	String Name;
-	Array init_values;
-	Array anim_values;
+    String Name;
+    Array init_values;
+    Array anim_values;
 };
 
-class TRVisibilityShapeTimeline : public Resource {
+class TRVisibilityShapeTimeline : public Resource
+{
     GDCLASS(TRVisibilityShapeTimeline, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRVisibilityShapeTimeline(){}
-	~TRVisibilityShapeTimeline(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(float, time)
-	GETTER_SETTER_DEFINE(float, value)
-	GETTER_SETTER_DEFINE(Ref<TRTrackFlagsInfo>, info)
-	
+public:
+    TRVisibilityShapeTimeline() = default;
+    ~TRVisibilityShapeTimeline() = default;
+
+    GETTER_SETTER_DEFINE(float, time)
+    GETTER_SETTER_DEFINE(float, value)
+    GETTER_SETTER_DEFINE(Ref<TRTrackFlagsInfo>, info)
+
 private:
-	float time;
-	float value;
-	Ref<TRTrackFlagsInfo> info;
+    float time;
+    float value;
+    Ref<TRTrackFlagsInfo> info;
 };
 
-class TRTrackMaterialTimeline : public Resource {
+class TRTrackMaterialTimeline : public Resource
+{
     GDCLASS(TRTrackMaterialTimeline, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TRTrackMaterialTimeline(){}
-	~TRTrackMaterialTimeline(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, info)
-	GETTER_SETTER_DEFINE(uint32_t, res_1)
-	GETTER_SETTER_DEFINE(Array, material_tracks)
-	GETTER_SETTER_DEFINE(uint8_t, unk3)
-	GETTER_SETTER_DEFINE(uint8_t, unk4)
+public:
+    TRTrackMaterialTimeline() = default;
+    ~TRTrackMaterialTimeline() = default;
+
+    GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, info)
+    GETTER_SETTER_DEFINE(uint32_t, res_1)
+    GETTER_SETTER_DEFINE(Array, material_tracks)
+    GETTER_SETTER_DEFINE(uint8_t, unk3)
+    GETTER_SETTER_DEFINE(uint8_t, unk4)
 
 private:
-	Ref<TRAnimationInfo> info;
-	uint32_t res_1;
-	Array material_tracks;
-	uint8_t unk3;
-	uint8_t unk4;
+    Ref<TRAnimationInfo> info;
+    uint32_t res_1;
+    Array material_tracks;
+    uint8_t unk3;
+    uint8_t unk4;
 };
 
-class TRMeshAnimeTrack : public Resource {
+class TRMeshAnimeTrack : public Resource
+{
     GDCLASS(TRMeshAnimeTrack, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRMeshAnimeTrack(){}
-	~TRMeshAnimeTrack(){}
-	
+    TRMeshAnimeTrack() = default;
+    ~TRMeshAnimeTrack() = default;
+
     GETTER_SETTER_DEFINE(String, path)
-	GETTER_SETTER_DEFINE(int, res_1)
-	GETTER_SETTER_DEFINE(int, res_2)
-	GETTER_SETTER_DEFINE(int, res_3)
-	GETTER_SETTER_DEFINE(Ref<TRTrackMaterialTimeline>, mat_anim)
-	GETTER_SETTER_DEFINE(Ref<TRVisibilityShapeTimeline>, vis_anim)
-	GETTER_SETTER_DEFINE(Ref<TRBlendShapeTimeline>, blendshape_anim)
+    GETTER_SETTER_DEFINE(int, res_1)
+    GETTER_SETTER_DEFINE(int, res_2)
+    GETTER_SETTER_DEFINE(int, res_3)
+    GETTER_SETTER_DEFINE(Ref<TRTrackMaterialTimeline>, mat_anim)
+    GETTER_SETTER_DEFINE(Ref<TRVisibilityShapeTimeline>, vis_anim)
+    GETTER_SETTER_DEFINE(Ref<TRBlendShapeTimeline>, blendshape_anim)
 
 private:
-	String path;
-	int res_1;
-	int res_2;
-	int res_3;
+    String path;
+    int res_1;
+    int res_2;
+    int res_3;
     Ref<TRTrackMaterialTimeline> mat_anim;
-	Ref<TRVisibilityShapeTimeline> vis_anim;
-	Ref<TRBlendShapeTimeline> blendshape_anim;
+    Ref<TRVisibilityShapeTimeline> vis_anim;
+    Ref<TRBlendShapeTimeline> blendshape_anim;
 };
 
-class TRAnimationChannelMeshes : public Resource {
+class TRAnimationChannelMeshes : public Resource
+{
     GDCLASS(TRAnimationChannelMeshes, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRAnimationChannelMeshes(){}
-	~TRAnimationChannelMeshes(){}
+    TRAnimationChannelMeshes() = default;
+    ~TRAnimationChannelMeshes() = default;
 
     void LoadFromFile(String file);
-	
+
     GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, info)
-	GETTER_SETTER_DEFINE(Array, tracks)
+    GETTER_SETTER_DEFINE(Array, tracks)
 
 private:
-	Ref<TRTrackMaterialChannel> _LoadTrackMaterialChannel(const Titan::Animation::TrackMaterialValueList *matValList);
-	Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim);
-	Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline *visAnim);
-	Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline *blendAnim);
-	Ref<Resource> _LoadTrackFlag(Titan::Animation::TrackFlag type, const void* data);
-	Ref<Resource> _LoadBlendTracks(Titan::Animation::BlendTrack type, const void* data);
+    Ref<TRTrackMaterialChannel> _LoadTrackMaterialChannel(const Titan::Animation::TrackMaterialValueList* matValList);
+    Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline* matAnim);
+    Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline* visAnim);
+    Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline* blendAnim);
+    Ref<Resource> _LoadTrackFlag(Titan::Animation::TrackFlag type, const void* data);
+    Ref<Resource> _LoadBlendTracks(Titan::Animation::BlendTrack type, const void* data);
 
-	Ref<TRAnimationInfo> info;
+    Ref<TRAnimationInfo> info;
     Array tracks;
 };
 
-class ResourceFormatLoaderTRACM : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRACM, ResourceFormatLoader)
+class ResourceFormatLoaderTRACM : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRACM, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRACM(){}
-	~ResourceFormatLoaderTRACM(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRACM() = default;
+    ~ResourceFormatLoaderTRACM() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

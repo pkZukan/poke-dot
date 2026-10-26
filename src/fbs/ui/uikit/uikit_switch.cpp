@@ -5,7 +5,7 @@ using namespace godot;
 void UIKitSwitch::_bind_methods()
 {
     GETTER_SETTER_BIND(UIKitSwitch, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(UIKitSwitch, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitSwitch, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
 void UIKitSwitch::LoadFromBuffer(const void* buffer)

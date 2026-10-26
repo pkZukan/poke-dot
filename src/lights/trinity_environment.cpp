@@ -17,7 +17,8 @@ void TrinityEnvironment::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("set_time_of_day", "hours"), &TrinityEnvironment::set_time_of_day);
     ClassDB::bind_method(D_METHOD("get_time_of_day"), &TrinityEnvironment::get_time_of_day);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "time_of_day", PROPERTY_HINT_RANGE, "0,24,0.01,suffix:h"), "set_time_of_day", "get_time_of_day");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "time_of_day", PROPERTY_HINT_RANGE, "0,24,0.01,suffix:h"),
+                 "set_time_of_day", "get_time_of_day");
 
     ClassDB::bind_method(D_METHOD("set_master_light", "light"), &TrinityEnvironment::set_master_light);
     ClassDB::bind_method(D_METHOD("get_master_light"), &TrinityEnvironment::get_master_light);
@@ -31,13 +32,15 @@ void TrinityEnvironment::_bind_methods()
     ClassDB::bind_method(D_METHOD("set_lighting_category", "category"), &TrinityEnvironment::set_lighting_category);
     ClassDB::bind_method(D_METHOD("get_lighting_category"), &TrinityEnvironment::get_lighting_category);
 
-    ClassDB::bind_method(D_METHOD("set_world_environment_path", "path"), &TrinityEnvironment::set_world_environment_path);
+    ClassDB::bind_method(D_METHOD("set_world_environment_path", "path"),
+                         &TrinityEnvironment::set_world_environment_path);
     ClassDB::bind_method(D_METHOD("get_world_environment_path"), &TrinityEnvironment::get_world_environment_path);
 
     ClassDB::bind_method(D_METHOD("set_camera_path", "path"), &TrinityEnvironment::set_camera_path);
     ClassDB::bind_method(D_METHOD("get_camera_path"), &TrinityEnvironment::get_camera_path);
 
-    ClassDB::bind_method(D_METHOD("set_layer", "name", "light", "priority", "weight", "additive"), &TrinityEnvironment::set_layer, DEFVAL(0), DEFVAL(1.0), DEFVAL(false));
+    ClassDB::bind_method(D_METHOD("set_layer", "name", "light", "priority", "weight", "additive"),
+                         &TrinityEnvironment::set_layer, DEFVAL(0), DEFVAL(1.0), DEFVAL(false));
     ClassDB::bind_method(D_METHOD("set_layer_weight", "name", "weight"), &TrinityEnvironment::set_layer_weight);
     ClassDB::bind_method(D_METHOD("remove_layer", "name"), &TrinityEnvironment::remove_layer);
     ClassDB::bind_method(D_METHOD("clear_layers"), &TrinityEnvironment::clear_layers);
@@ -47,12 +50,17 @@ void TrinityEnvironment::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_environment"), &TrinityEnvironment::get_environment);
     ClassDB::bind_method(D_METHOD("get_camera_attributes"), &TrinityEnvironment::get_camera_attributes);
 
-    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "master_light", PROPERTY_HINT_RESOURCE_TYPE, "TRLGT"), "set_master_light", "get_master_light");
+    ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "master_light", PROPERTY_HINT_RESOURCE_TYPE, "TRLGT"),
+                 "set_master_light", "get_master_light");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "enabled"), "set_enabled", "is_enabled");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_native_bloom"), "set_use_native_bloom", "get_use_native_bloom");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "lighting_category", PROPERTY_HINT_RANGE, "-1,7,1"), "set_lighting_category", "get_lighting_category");
-    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "world_environment_path", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "WorldEnvironment"), "set_world_environment_path", "get_world_environment_path");
-    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "camera_path", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "Camera3D"), "set_camera_path", "get_camera_path");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "lighting_category", PROPERTY_HINT_RANGE, "-1,7,1"),
+                 "set_lighting_category", "get_lighting_category");
+    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "world_environment_path", PROPERTY_HINT_NODE_PATH_VALID_TYPES,
+                              "WorldEnvironment"),
+                 "set_world_environment_path", "get_world_environment_path");
+    ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "camera_path", PROPERTY_HINT_NODE_PATH_VALID_TYPES, "Camera3D"),
+                 "set_camera_path", "get_camera_path");
 
     ADD_SIGNAL(MethodInfo("environment_applied"));
 }
@@ -63,8 +71,7 @@ namespace
 // controller to publish a probe may clear it when detaching.
 uint64_t active_probe_owner = 0;
 
-template <class T>
-T *instance(uint64_t id)
+template <class T> T* instance(uint64_t id)
 {
     return id ? Object::cast_to<T>(ObjectDB::get_instance(id)) : nullptr;
 }
@@ -74,7 +81,7 @@ Vector3 xyz(Vector4 v)
     return Vector3(v.x, v.y, v.z);
 }
 
-void rgb_to_hsv(float r, float g, float b, float &h, float &s, float &v)
+void rgb_to_hsv(float r, float g, float b, float& h, float& s, float& v)
 {
     float k = 0.f;
 
@@ -99,7 +106,9 @@ void rgb_to_hsv(float r, float g, float b, float &h, float &s, float &v)
 Vector3 hsv_to_rgb(float h, float s, float v)
 {
     if (s < FLT_EPSILON)
+    {
         return Vector3(v, v, v);
+    }
 
     h = std::fmod(h, 1.0f) / (60.0f / 360.0f);
     int i = static_cast<int>(h);
@@ -110,12 +119,18 @@ Vector3 hsv_to_rgb(float h, float s, float v)
 
     switch (i)
     {
-        case 0: return Vector3(v, t, p);
-        case 1: return Vector3(q, v, p);
-        case 2: return Vector3(p, v, t);
-        case 3: return Vector3(p, q, v);
-        case 4: return Vector3(t, p, v);
-        default: return Vector3(v, p, q);
+        case 0:
+            return Vector3(v, t, p);
+        case 1:
+            return Vector3(q, v, p);
+        case 2:
+            return Vector3(p, v, t);
+        case 3:
+            return Vector3(p, q, v);
+        case 4:
+            return Vector3(t, p, v);
+        default:
+            return Vector3(v, p, q);
     }
 }
 
@@ -129,7 +144,7 @@ Vector4 offset_color(Vector4 current, Vector4 offset)
 
 // Resets every stored property of `to` to the value in `from`, so properties the
 // light stack stops driving fall back to the user's baseline resource.
-void copy_properties(const Object *from, Object *to)
+void copy_properties(const Object* from, Object* to)
 {
     Array properties = from->get_property_list();
 
@@ -140,18 +155,28 @@ void copy_properties(const Object *from, Object *to)
 
         if ((int(property["usage"]) & PROPERTY_USAGE_STORAGE) && name != StringName("resource_path") &&
             name != StringName("script"))
+        {
             to->set(name, from->get(name));
+        }
     }
 }
 }
 
 void TrinityEnvironment::_notification(int what)
 {
+    if (what == NOTIFICATION_ENTER_TREE)
+    {
+        add_to_group("trinity_environments");
+    }
+
     if (what == NOTIFICATION_READY)
+    {
         apply();
+    }
 
     if (what == NOTIFICATION_EXIT_TREE)
     {
+        remove_from_group("trinity_environments");
         detach_targets();
         request_ready();
     }
@@ -165,7 +190,7 @@ void TrinityEnvironment::set_time_of_day(double hours)
     apply();
 }
 
-void TrinityEnvironment::set_master_light(const Ref<TRLGT> &light)
+void TrinityEnvironment::set_master_light(const Ref<TRLGT>& light)
 {
     master_light = light;
     apply();
@@ -191,26 +216,28 @@ void TrinityEnvironment::set_lighting_category(int category)
     apply();
 }
 
-void TrinityEnvironment::set_world_environment_path(const NodePath &path)
+void TrinityEnvironment::set_world_environment_path(const NodePath& path)
 {
     detach_targets();
     world_environment_path = path;
     apply();
 }
 
-void TrinityEnvironment::set_camera_path(const NodePath &path)
+void TrinityEnvironment::set_camera_path(const NodePath& path)
 {
     detach_targets();
     camera_path = path;
     apply();
 }
 
-void TrinityEnvironment::set_layer(const StringName &name, const Ref<TRLGT> &light, int priority, double weight, bool additive)
+void TrinityEnvironment::set_layer(const StringName& name, const Ref<TRLGT>& light, int priority, double weight,
+                                   bool additive)
 {
     ERR_FAIL_COND_MSG(!std::isfinite(weight) || weight < 0 || weight > 1, "Layer weight must be in [0, 1].");
     ERR_FAIL_COND(light.is_null());
 
-    for (auto &layer : layers)
+    for (auto& layer : layers)
+    {
         if (layer.name == name)
         {
             layer.light = light;
@@ -220,29 +247,35 @@ void TrinityEnvironment::set_layer(const StringName &name, const Ref<TRLGT> &lig
             apply();
             return;
         }
+    }
 
     layers.push_back({name, light, priority, weight, additive});
     apply();
 }
 
-void TrinityEnvironment::set_layer_weight(const StringName &name, double weight)
+void TrinityEnvironment::set_layer_weight(const StringName& name, double weight)
 {
     ERR_FAIL_COND_MSG(!std::isfinite(weight) || weight < 0 || weight > 1, "Layer weight must be in [0, 1].");
 
-    for (auto &layer : layers)
+    for (auto& layer : layers)
+    {
         if (layer.name == name)
         {
             layer.weight = weight;
             apply();
             return;
         }
+    }
 }
 
-void TrinityEnvironment::remove_layer(const StringName &name)
+void TrinityEnvironment::remove_layer(const StringName& name)
 {
-    layers.erase(
-        std::remove_if(layers.begin(), layers.end(), [&](const Layer &l) { return l.name == name; }),
-        layers.end());
+    layers.erase(std::remove_if(layers.begin(), layers.end(),
+                                [&](const Layer& l)
+                                {
+                                    return l.name == name;
+                                }),
+                 layers.end());
     apply();
 }
 
@@ -252,31 +285,89 @@ void TrinityEnvironment::clear_layers()
     apply();
 }
 
+void TrinityEnvironment::set_scene_layers(uint64_t owner, const std::vector<SceneLayer>& scene_layers)
+{
+    // Keep equal-priority owners in their original order when one moves/fades.
+    size_t insertion = layers.size();
+    for (size_t i = 0; i < layers.size(); ++i)
+    {
+        if (layers[i].scene_owner == owner)
+        {
+            insertion = i;
+            break;
+        }
+    }
+    layers.erase(std::remove_if(layers.begin(), layers.end(),
+                                [owner](const Layer& l)
+                                {
+                                    return l.scene_owner == owner;
+                                }),
+                 layers.end());
+    std::vector<Layer> replacements;
+    for (const auto& source : scene_layers)
+    {
+        Layer layer;
+        layer.light = source.light;
+        layer.priority = source.priority;
+        layer.weight = source.weight;
+        layer.scene_owner = owner;
+        layer.sample_time = source.sample_time;
+        layer.transform = source.transform;
+        layer.name_prefix = source.name_prefix;
+        replacements.push_back(layer);
+    }
+    layers.insert(layers.begin() + insertion, replacements.begin(), replacements.end());
+    apply();
+}
+
+void TrinityEnvironment::remove_scene_layers(uint64_t owner)
+{
+    const size_t count = layers.size();
+    layers.erase(std::remove_if(layers.begin(), layers.end(),
+                                [owner](const Layer& l)
+                                {
+                                    return l.scene_owner == owner;
+                                }),
+                 layers.end());
+    if (layers.size() != count)
+    {
+        apply();
+    }
+}
+
 // Applies one light file at a fixed transition progress (`weight`):
 // override layers lerp each parameter they contain from the stack below;
 // additive (offset) layers add weight * delta, and only to parameters that
 // already exist below.
-void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double weight, bool additive)
+void TrinityEnvironment::resolve_resource(const Ref<TRLGT>& resource, double weight, bool additive, double sample_time,
+                                          const Transform3D& transform, const String& name_prefix)
 {
     if (resource.is_null() || weight <= 0)
+    {
         return;
+    }
 
     Array lights = resource->get_lights();
+    const double curve_time = sample_time < 0 ? time_of_day : sample_time;
 
     for (int i = 0; i < lights.size(); ++i)
     {
         Ref<TRLight> light = lights[i];
 
         if (light.is_null())
+        {
             continue;
+        }
 
-        String name = light->get_Name();
+        String name = name_prefix + light->get_Name();
         Dictionary entry = effective_state.get(name, Dictionary());
         entry["name"] = name;
 
         // A light keeps the type it was first defined with (normally by the master).
         if (!entry.has("type"))
+        {
             entry["type"] = light->get_Type();
+        }
 
         Dictionary floats = entry.get("floats", Dictionary());
         Dictionary vectors = entry.get("vectors", Dictionary());
@@ -289,16 +380,20 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
         {
             Ref<TRFloatParameter> p = params[j];
 
-            if (p.is_null() || !std::isfinite(p->sample(time_of_day)))
+            if (p.is_null() || !std::isfinite(p->sample(curve_time)))
+            {
                 continue;
+            }
 
             String key = p->get_param_name();
-            double value = p->sample(time_of_day);
+            double value = p->sample(curve_time);
 
             if (additive)
             {
                 if (!floats.has(key))
+                {
                     continue;
+                }
 
                 value = double(floats[key]) + value * weight;
             }
@@ -317,21 +412,27 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
         {
             Ref<TRVec4Parameter> p = params[j];
 
-            if (p.is_null() || !p->sample(time_of_day).is_finite())
+            if (p.is_null() || !p->sample(curve_time).is_finite())
+            {
                 continue;
+            }
 
             String key = p->get_param_name();
-            Vector4 value = p->sample(time_of_day);
+            Vector4 value = p->sample(curve_time);
 
             if (additive)
             {
                 if (!vectors.has(key))
+                {
                     continue;
+                }
 
                 value = offset_color(vectors[key], value * weight);
             }
             else if (vectors.has(key))
+            {
                 value = Vector4(vectors[key]).lerp(value, weight);
+            }
 
             vectors[key] = value;
         }
@@ -343,15 +444,18 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
             Ref<TRStringParameter> p = params[j];
 
             if (p.is_null())
+            {
                 continue;
+            }
 
             // Textures aren't interpolated; a layer's textures replace those below as soon as it applies.
             String file = p->get_map_file();
             textures[p->get_map_name()] = file;
-            texture_paths[p->get_map_name()] = (file.is_absolute_path() ? file : resource->get_path().get_base_dir().path_join(file)).simplify_path();
+            texture_paths[p->get_map_name()] =
+                (file.is_absolute_path() ? file : resource->get_path().get_base_dir().path_join(file)).simplify_path();
         }
 
-        Ref<BoundMatrix> matrix = light->sample_matrix(time_of_day);
+        Ref<BoundMatrix> matrix = light->sample_matrix(curve_time);
 
         if (matrix.is_valid())
         {
@@ -359,9 +463,20 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
             Vector3 translation = xyz(matrix->get_z());
 
             // Static rotations are YXZ Euler angles; curve-driven rotations are ZYX.
-            Quaternion rotation = Basis::from_euler(
-                xyz(matrix->get_y()),
-                light->get_rotation_curve().is_valid() ? EULER_ORDER_ZYX : EULER_ORDER_YXZ).get_rotation_quaternion();
+            Quaternion rotation =
+                Basis::from_euler(xyz(matrix->get_y()),
+                                  light->get_rotation_curve().is_valid() ? EULER_ORDER_ZYX : EULER_ORDER_YXZ)
+                    .get_rotation_quaternion();
+
+            if (transform != Transform3D())
+            {
+                const Transform3D placed = transform * Transform3D(Basis(rotation).scaled_local(scale), translation);
+                scale = placed.basis.get_scale();
+                rotation = scale.x != 0 && scale.y != 0 && scale.z != 0
+                               ? placed.basis.get_rotation_quaternion()
+                               : transform.basis.get_rotation_quaternion() * rotation;
+                translation = placed.origin;
+            }
 
             if (additive)
             {
@@ -396,7 +511,7 @@ void TrinityEnvironment::resolve_resource(const Ref<TRLGT> &resource, double wei
     }
 }
 
-Dictionary TrinityEnvironment::find_type(const String &type) const
+Dictionary TrinityEnvironment::find_type(const String& type) const
 {
     Array names = effective_state.keys();
 
@@ -405,7 +520,9 @@ Dictionary TrinityEnvironment::find_type(const String &type) const
         Dictionary entry = effective_state[names[i]];
 
         if (String(entry.get("type", "")) == type)
+        {
             return entry;
+        }
     }
 
     return Dictionary();
@@ -423,28 +540,35 @@ Dictionary TrinityEnvironment::find_category(int category) const
         Dictionary entry = effective_state[names[i]];
 
         if (String(entry.get("type", "")) == "Selectable" && int(number(entry, "CategoryLabel", 0)) == category)
+        {
             found = entry;
+        }
     }
 
     return found;
 }
 
-double TrinityEnvironment::number(const Dictionary &light, const String &name, double fallback) const
+double TrinityEnvironment::number(const Dictionary& light, const String& name, double fallback) const
 {
     Dictionary values = light.get("floats", Dictionary());
 
     if (!values.has(name))
+    {
         return fallback;
+    }
 
     return values[name];
 }
 
-Color TrinityEnvironment::color(const Dictionary &light, const String &name, Color fallback, bool source_is_linear) const
+Color TrinityEnvironment::color(const Dictionary& light, const String& name, Color fallback,
+                                bool source_is_linear) const
 {
     Dictionary values = light.get("vectors", Dictionary());
 
     if (!values.has(name))
+    {
         return fallback;
+    }
 
     Vector4 v = values[name];
 
@@ -457,20 +581,24 @@ Color TrinityEnvironment::color(const Dictionary &light, const String &name, Col
     return source_is_linear ? value.linear_to_srgb() : value;
 }
 
-bool TrinityEnvironment::probe_average(const Dictionary &probe, Color &average)
+bool TrinityEnvironment::probe_average(const Dictionary& probe, Color& average)
 {
     Dictionary paths = probe.get("texture_paths", Dictionary());
     String path = paths.get("DiffuseProbe", "");
 
     if (path.is_empty())
+    {
         return false;
+    }
 
     if (diffuse_probe_cache.has(path))
     {
         Variant cached = diffuse_probe_cache[path];
 
         if (cached.get_type() != Variant::COLOR)
+        {
             return false;
+        }
 
         average = cached;
         return true;
@@ -481,26 +609,36 @@ bool TrinityEnvironment::probe_average(const Dictionary &probe, Color &average)
     diffuse_probe_cache[path] = Variant();
 
     if (!ResourceLoader::get_singleton()->exists(path))
+    {
         return false;
+    }
 
     Ref<BinaryTextureArchive> archive = ResourceLoader::get_singleton()->load(path);
 
     if (archive.is_null())
+    {
         return false;
+    }
 
     auto textures = archive->get_textures();
     Ref<BinaryTexture> texture = archive->GetTexture(path.get_file().get_basename());
 
     if (texture.is_null() && textures.size() == 1)
+    {
         texture = textures.values()[0];
+    }
 
     if (texture.is_null() || texture->get_layer_image(5).is_null() || texture->get_layer_image(6).is_valid())
+    {
         return false;
+    }
 
     Vector4i swizzle = texture->get_channel_sources();
 
     if (swizzle.x < 0 || swizzle.x > 5 || swizzle.y < 0 || swizzle.y > 5 || swizzle.z < 0 || swizzle.z > 5)
+    {
         return false;
+    }
 
     double red = 0, green = 0, blue = 0, total = 0;
     int size = 0;
@@ -510,10 +648,14 @@ bool TrinityEnvironment::probe_average(const Dictionary &probe, Color &average)
         Ref<Image> original = texture->get_layer_image(face);
 
         if (original.is_null() || original->get_width() != original->get_height() || original->get_width() <= 0)
+        {
             return false;
+        }
 
         if (face > 0 && original->get_width() != size)
+        {
             return false;
+        }
 
         size = original->get_width();
 
@@ -521,26 +663,32 @@ bool TrinityEnvironment::probe_average(const Dictionary &probe, Color &average)
         Ref<Image> image = original->duplicate();
 
         if (image->is_compressed() && image->decompress() != OK)
+        {
             return false;
+        }
 
         for (int y = 0; y < size; ++y)
+        {
             for (int x = 0; x < size; ++x)
             {
                 Color c = image->get_pixel(x, y);
 
                 if (!std::isfinite(c.r) || !std::isfinite(c.g) || !std::isfinite(c.b))
+                {
                     return false;
+                }
 
                 float channels[6] = {0, 1, c.r, c.g, c.b, c.a};
                 double u = 2.0 * (x + 0.5) / size - 1.0;
                 double v = 2.0 * (y + 0.5) / size - 1.0;
-                double weight = 1.0 / std::pow(1.0 + u*u + v*v, 1.5);
+                double weight = 1.0 / std::pow(1.0 + u * u + v * v, 1.5);
 
                 red += MAX(0.0f, channels[swizzle.x]) * weight;
                 green += MAX(0.0f, channels[swizzle.y]) * weight;
                 blue += MAX(0.0f, channels[swizzle.z]) * weight;
                 total += weight;
             }
+        }
     }
 
     // L0 of the source's already-filtered diffuse irradiance cube. This keeps its
@@ -550,31 +698,33 @@ bool TrinityEnvironment::probe_average(const Dictionary &probe, Color &average)
     return true;
 }
 
-void TrinityEnvironment::apply_probe_ambient(const Ref<Environment> &environment)
+void TrinityEnvironment::apply_probe_ambient(const Ref<Environment>& environment)
 {
-    RenderingServer *rs = RenderingServer::get_singleton();
+    RenderingServer* rs = RenderingServer::get_singleton();
     active_probe_owner = get_instance_id();
     rs->global_shader_parameter_set("TrinityDiffuseProbeEnabled", false);
     Dictionary gi = find_type("GILightCommon");
-    Color lightmap_gain = color(gi, "LightMapColor", Color(1,1,1)).srgb_to_linear() *
-        MAX(0.0, number(gi, "LightMapIntensity", 1));
+    Color lightmap_gain =
+        color(gi, "LightMapColor", Color(1, 1, 1)).srgb_to_linear() * MAX(0.0, number(gi, "LightMapIntensity", 1));
     rs->global_shader_parameter_set("TrinityLightMapGain", Vector3(lightmap_gain.r, lightmap_gain.g, lightmap_gain.b));
     Dictionary probe = find_type("Probe");
     Color average;
 
     if (!probe_average(probe, average))
+    {
         return;
+    }
 
-    Color tint = color(probe, "DiffuseProbeColor", Color(1,1,1)).srgb_to_linear();
+    Color tint = color(probe, "DiffuseProbeColor", Color(1, 1, 1)).srgb_to_linear();
     double energy = CLAMP(number(probe, "DiffuseProbeIntensity", 1), 0.0, 100.0);
 
-    tint *= color(gi, "Color", Color(1,1,1)).srgb_to_linear();
+    tint *= color(gi, "Color", Color(1, 1, 1)).srgb_to_linear();
     energy *= CLAMP(number(gi, "Intensity", 1), 0.0, 100.0);
 
     if (lighting_category >= 0)
     {
         String suffix = String::num_int64(lighting_category);
-        tint *= color(gi, "Color" + suffix, Color(1,1,1)).srgb_to_linear();
+        tint *= color(gi, "Color" + suffix, Color(1, 1, 1)).srgb_to_linear();
         energy *= CLAMP(number(gi, "Intensity" + suffix, 1), 0.0, 100.0);
     }
 
@@ -603,21 +753,25 @@ void TrinityEnvironment::apply_probe_ambient(const Ref<Environment> &environment
 // Metallic surfaces get no diffuse light, so without the specular probe they render black.
 // Godot only takes reflections from the Environment sky, so the probe cube is fed through
 // a sky shader; the visible sky stays the SkySimple dome drawn in front of it.
-void TrinityEnvironment::apply_probe_specular(const Ref<Environment> &environment)
+void TrinityEnvironment::apply_probe_specular(const Ref<Environment>& environment)
 {
     Dictionary probe = find_type("Probe");
     Dictionary paths = probe.get("texture_paths", Dictionary());
     Ref<Cubemap> cubemap = load_cubemap(paths.get("SpecularProbe", ""));
 
     if (cubemap.is_null())
+    {
         return;
+    }
 
     if (probe_sky.is_null())
     {
         Ref<Shader> shader = ResourceLoader::get_singleton()->load("res://gflib/shaders/SpecularProbe.gdshader");
 
         if (shader.is_null())
+        {
             return;
+        }
 
         probe_sky_material.instantiate();
         probe_sky_material->set_shader(shader);
@@ -628,43 +782,54 @@ void TrinityEnvironment::apply_probe_specular(const Ref<Environment> &environmen
         probe_sky->set_process_mode(Sky::PROCESS_MODE_INCREMENTAL);
     }
 
-    Color tint = color(probe, "SpecularProbeColor", Color(1,1,1)).srgb_to_linear();
+    Color tint = color(probe, "SpecularProbeColor", Color(1, 1, 1)).srgb_to_linear();
 
     probe_sky_material->set_shader_parameter("SpecularProbe", cubemap);
     probe_sky_material->set_shader_parameter("SpecularProbeColor", Vector3(tint.r, tint.g, tint.b));
-    probe_sky_material->set_shader_parameter("SpecularProbeIntensity", CLAMP(number(probe, "SpecularProbeIntensity", 1), 0.0, 100.0));
+    probe_sky_material->set_shader_parameter("SpecularProbeIntensity",
+                                             CLAMP(number(probe, "SpecularProbeIntensity", 1), 0.0, 100.0));
     probe_sky_material->set_shader_parameter("SpecularProbeSaturation", number(probe, "SpecularProbeSaturation", 1));
 
     environment->set_sky(probe_sky);
     environment->set_reflection_source(Environment::REFLECTION_SOURCE_SKY);
 }
 
-Ref<Cubemap> TrinityEnvironment::load_cubemap(const String &path)
+Ref<Cubemap> TrinityEnvironment::load_cubemap(const String& path)
 {
     const String key = path + String("\ncube");
 
     if (texture_cache.has(key))
+    {
         return texture_cache[key];
+    }
 
     texture_cache[key] = Variant();
-    ResourceLoader *loader = ResourceLoader::get_singleton();
+    ResourceLoader* loader = ResourceLoader::get_singleton();
 
     if (path.is_empty() || !loader->exists(path))
+    {
         return Ref<Cubemap>();
+    }
 
     Ref<BinaryTextureArchive> archive = loader->load(path);
 
     if (archive.is_null())
+    {
         return Ref<Cubemap>();
+    }
 
     auto textures = archive->get_textures();
     Ref<BinaryTexture> texture = archive->GetTexture(path.get_file().get_basename());
 
     if (texture.is_null() && textures.size() == 1)
+    {
         texture = textures.values()[0];
+    }
 
     if (texture.is_null() || texture->get_layers() != 6)
+    {
         return Ref<Cubemap>();
+    }
 
     TypedArray<Image> faces;
 
@@ -673,7 +838,9 @@ Ref<Cubemap> TrinityEnvironment::load_cubemap(const String &path)
         Ref<Image> image = texture->get_layer_image(face);
 
         if (image.is_null())
+        {
             return Ref<Cubemap>();
+        }
 
         faces.push_back(image);
     }
@@ -682,29 +849,37 @@ Ref<Cubemap> TrinityEnvironment::load_cubemap(const String &path)
     result.instantiate();
 
     if (result->create_from_images(faces) != OK)
+    {
         return Ref<Cubemap>();
+    }
 
     texture_cache[key] = result;
     return result;
 }
 
 // The LUT is rebuilt only when the PfxCgCurve parameters change (photo filters animate them).
-Ref<ImageTexture3D> TrinityEnvironment::retail_tonemap_lut(const Dictionary &global)
+Ref<ImageTexture3D> TrinityEnvironment::retail_tonemap_lut(const Dictionary& global)
 {
     PackedFloat64Array key;
     key.push_back(number(global, "PfxCgCurveEnabled", 0));
 
-    for (const char *name : {"PfxCgToeStrength", "PfxCgToeLength", "PfxCgShoulderStrength",
-        "PfxCgShoulderLength", "PfxCgShoulderAngle", "PfxCgCurveGamma"})
+    for (const char* name : {"PfxCgToeStrength", "PfxCgToeLength", "PfxCgShoulderStrength", "PfxCgShoulderLength",
+                             "PfxCgShoulderAngle", "PfxCgCurveGamma"})
+    {
         key.push_back(number(global, name, 0));
+    }
 
     if (tonemap_lut.is_valid() && key == tonemap_lut_key)
+    {
         return tonemap_lut;
+    }
 
     RetailToneCurve curve;
 
     if (key[0] > 0)
+    {
         curve = RetailToneCurve::create(key[1], key[2], key[3], key[4], key[5], key[6]);
+    }
 
     tonemap_lut = build_retail_tonemap_lut(curve, 96, RETAIL_TONEMAP_HEADROOM);
     tonemap_lut_key = key;
@@ -716,14 +891,16 @@ Ref<ImageTexture3D> TrinityEnvironment::retail_tonemap_lut(const Dictionary &glo
 // [WorldShadowTimeStart, WorldShadowTimeEnd], which wraps past midnight for moon shadows.
 void TrinityEnvironment::update_world_shadow()
 {
-    RenderingServer *rs = RenderingServer::get_singleton();
+    RenderingServer* rs = RenderingServer::get_singleton();
     Dictionary global = find_type("Global");
     Dictionary directional = find_type("Directional");
     Dictionary paths = global.get("texture_paths", Dictionary());
     Ref<Texture2D> map;
 
     if (number(global, "WorldShadowEnable", 0) > 0)
+    {
         map = load_texture(paths.get("WorldShadowTexture", ""));
+    }
 
     double start = number(directional, "WorldShadowTimeStart", 4);
     double span = Math::fposmod(number(directional, "WorldShadowTimeEnd", 20) - start, 24.0);
@@ -748,41 +925,54 @@ void TrinityEnvironment::update_world_shadow()
 
     rs->global_shader_parameter_set("TrinityWorldShadowWeights", weights);
     rs->global_shader_parameter_set("TrinityWorldShadowTransform",
-        Vector4(1.0 / size, 1.0 / size, offset_x / size + 1.0, offset_z / size + 1.0));
+                                    Vector4(1.0 / size, 1.0 / size, offset_x / size + 1.0, offset_z / size + 1.0));
     rs->global_shader_parameter_set("TrinityWorldShadowParams",
-        Vector4(MAX(0.01, number(global, "WorldShadowFadeDistance", 40)), number(global, "WorldShadowFadePow", 10), intensity, 0));
+                                    Vector4(MAX(0.01, number(global, "WorldShadowFadeDistance", 40)),
+                                            number(global, "WorldShadowFadePow", 10), intensity, 0));
 }
 
 // Failures are cached too, so a missing file isn't retried on every time-of-day step.
-Ref<Texture2D> TrinityEnvironment::load_texture(const String &path)
+Ref<Texture2D> TrinityEnvironment::load_texture(const String& path)
 {
     if (texture_cache.has(path))
+    {
         return texture_cache[path];
+    }
 
     texture_cache[path] = Variant();
-    ResourceLoader *loader = ResourceLoader::get_singleton();
+    ResourceLoader* loader = ResourceLoader::get_singleton();
 
     if (path.is_empty() || !loader->exists(path))
+    {
         return Ref<Texture2D>();
+    }
 
     Ref<BinaryTextureArchive> archive = loader->load(path);
 
     if (archive.is_null())
+    {
         return Ref<Texture2D>();
+    }
 
     auto textures = archive->get_textures();
     Ref<BinaryTexture> texture = archive->GetTexture(path.get_file().get_basename());
 
     if (texture.is_null() && textures.size() == 1)
+    {
         texture = textures.values()[0];
+    }
 
     if (texture.is_null() || texture->get_layers() == 0)
+    {
         return Ref<Texture2D>();
+    }
 
     Ref<Image> image = texture->get_layer_image(0);
 
     if (image.is_null())
+    {
         return Ref<Texture2D>();
+    }
 
     Ref<Texture2D> result = ImageTexture::create_from_image(image);
     texture_cache[path] = result;
@@ -790,33 +980,41 @@ Ref<Texture2D> TrinityEnvironment::load_texture(const String &path)
 }
 
 // Uniform names match the Sky light's parameters; fallbacks match project.godot.
-void TrinityEnvironment::update_sky(const Dictionary &sky_data)
+void TrinityEnvironment::update_sky(const Dictionary& sky_data)
 {
-    RenderingServer *rs = RenderingServer::get_singleton();
+    RenderingServer* rs = RenderingServer::get_singleton();
 
-    static const struct { const char *name; double fallback; } floats[] = {
-        {"SkyHorizonFalloff", 1.0}, {"SkyCloudRim", 1.0}, {"SkyCloudsFadeOut", -0.3},
-        {"SkyTopCloudSpeed", 1.0}, {"SkyTopBreakupSpeed", 1.0}, {"SkyTopPlaneHeight", 1.0},
-        {"SkyTopPlaneHorizon", 1.0}, {"SkyTopPlaneTiling", 1.0}, {"SkyTopCloudCoverage", 1.0},
-        {"SkySunRadius", 1.0}, {"SkySunShine", 1.0}, {"SkySunBrightness", 1.0},
-        {"SkyMoonScale", 1.0}, {"SkyMoonPhase", 1.0}, {"SkyMoonShadingRotation", 1.0},
-        {"SkyMoonBrightness", 1.0}, {"SkyStarsTiling", 1.0}, {"SkyStarsHorizonLift", 1.0},
-        {"SkyStarsIntensity", 0.0}, {"SkyStarsMaskTiling", 1.0}, {"SkyStarsMaskSpeed", 0.0},
-        {"SkyFogIntensity", 1.0}, {"SkyFogOffset", 1.0}, {"SkyFogGradation", 1.0},
+    static const struct
+    {
+        const char* name;
+        double fallback;
+    } floats[] = {
+        {"SkyHorizonFalloff", 1.0},   {"SkyCloudRim", 1.0},        {"SkyCloudsFadeOut", -0.3},
+        {"SkyTopCloudSpeed", 1.0},    {"SkyTopBreakupSpeed", 1.0}, {"SkyTopPlaneHeight", 1.0},
+        {"SkyTopPlaneHorizon", 1.0},  {"SkyTopPlaneTiling", 1.0},  {"SkyTopCloudCoverage", 1.0},
+        {"SkySunRadius", 1.0},        {"SkySunShine", 1.0},        {"SkySunBrightness", 1.0},
+        {"SkyMoonScale", 1.0},        {"SkyMoonPhase", 1.0},       {"SkyMoonShadingRotation", 1.0},
+        {"SkyMoonBrightness", 1.0},   {"SkyStarsTiling", 1.0},     {"SkyStarsHorizonLift", 1.0},
+        {"SkyStarsIntensity", 0.0},   {"SkyStarsMaskTiling", 1.0}, {"SkyStarsMaskSpeed", 0.0},
+        {"SkyFogIntensity", 1.0},     {"SkyFogOffset", 1.0},       {"SkyFogGradation", 1.0},
         {"ScatteringFogFactor", 0.7},
     };
 
-    for (const auto &f : floats)
+    for (const auto& f : floats)
+    {
         rs->global_shader_parameter_set(f.name, number(sky_data, f.name, f.fallback));
+    }
 
     // Used as stored; no sRGB conversion.
-    static const char *colors[] = {
+    static const char* colors[] = {
         "SkyZenithColor", "SkyHorizonColor", "SkyCloudColor", "SkyCloudColorRim", "SkySunTintColor", "SkyFogColor",
     };
     Dictionary vectors = sky_data.get("vectors", Dictionary());
 
-    for (const char *name : colors)
+    for (const char* name : colors)
+    {
         rs->global_shader_parameter_set(name, Vector4(vectors.get(name, Vector4(1, 1, 1, 1))));
+    }
 
     // ScatteringFogColor.w scales the whole color (including w, which then gates the term).
     Vector4 scattering = vectors.get("ScatteringFogColor", Vector4(1, 1, 1, 0));
@@ -826,13 +1024,16 @@ void TrinityEnvironment::update_sky(const Dictionary &sky_data)
     Ref<Texture2D> lut = load_texture(global_paths.get("AtmosphereLUT", ""));
 
     if (lut.is_null())
+    {
         scattering.w = 0;
+    }
 
     set_global_texture("AtmosphereLUT", lut);
     rs->global_shader_parameter_set("ScatteringFogColor", scattering);
 
     // Pitch is in units of 90 degrees (positive = below the horizon), yaw in units of 180.
-    auto direction = [](double pitch, double yaw) {
+    auto direction = [](double pitch, double yaw)
+    {
         pitch *= 0.5 * Math_PI;
         yaw *= Math_PI;
         return Vector3(std::sin(yaw) * std::cos(pitch), -std::sin(pitch), std::cos(yaw) * std::cos(pitch));
@@ -849,15 +1050,17 @@ void TrinityEnvironment::update_sky(const Dictionary &sky_data)
 
     rs->global_shader_parameter_set("SkySunDirection", sun);
     rs->global_shader_parameter_set("SkyMoonDirection",
-        direction(number(sky_data, "SkyMoonPitch", 0), number(sky_data, "SkyMoonYaw", 0)));
+                                    direction(number(sky_data, "SkyMoonPitch", 0), number(sky_data, "SkyMoonYaw", 0)));
 }
 
 // Setting a global texture invalidates every material that samples it (tens of thousands
 // in the field), so only push actual changes. Time-of-day updates happen every frame.
-void TrinityEnvironment::set_global_texture(const StringName &name, const Ref<Texture> &texture)
+void TrinityEnvironment::set_global_texture(const StringName& name, const Ref<Texture>& texture)
 {
     if (global_textures.has(name) && Ref<Texture>(global_textures[name]) == texture)
+    {
         return;
+    }
 
     global_textures[name] = texture;
     RenderingServer::get_singleton()->global_shader_parameter_set(name, texture);
@@ -867,30 +1070,38 @@ void TrinityEnvironment::detach_targets()
 {
     if (active_probe_owner == get_instance_id())
     {
-        RenderingServer *rs = RenderingServer::get_singleton();
+        RenderingServer* rs = RenderingServer::get_singleton();
         rs->global_shader_parameter_set("TrinityDiffuseProbeEnabled", false);
         set_global_texture("TrinityDiffuseProbe", Ref<Texture>());
         rs->global_shader_parameter_set("TrinityLightMapGain", Vector3(1, 1, 1));
         active_probe_owner = 0;
     }
-    WorldEnvironment *world = instance<WorldEnvironment>(bound_world_id);
+    WorldEnvironment* world = instance<WorldEnvironment>(bound_world_id);
 
     if (world)
     {
         if (world->get_environment() == applied_environment)
+        {
             world->set_environment(original_environment);
+        }
 
         if (world->get_camera_attributes() == applied_attributes)
+        {
             world->set_camera_attributes(original_world_attributes);
+        }
     }
 
-    Camera3D *camera = instance<Camera3D>(bound_camera_id);
+    Camera3D* camera = instance<Camera3D>(bound_camera_id);
 
     if (camera && camera->get_attributes() == applied_attributes)
+    {
         camera->set_attributes(original_camera_attributes);
+    }
 
-    if (auto *light = instance<DirectionalLight3D>(owned_light_id))
+    if (auto* light = instance<DirectionalLight3D>(owned_light_id))
+    {
         light->hide();
+    }
 
     bound_world_id = bound_camera_id = 0;
 
@@ -906,7 +1117,9 @@ void TrinityEnvironment::detach_targets()
 void TrinityEnvironment::apply()
 {
     if (applying)
+    {
         return;
+    }
 
     applying = true;
     effective_state.clear();
@@ -914,17 +1127,28 @@ void TrinityEnvironment::apply()
     resolve_resource(master_light, 1.0, false);
 
     auto ordered = layers;
-    std::stable_sort(ordered.begin(), ordered.end(), [](const Layer &a, const Layer &b) { return a.priority < b.priority; });
+    std::stable_sort(ordered.begin(), ordered.end(),
+                     [](const Layer& a, const Layer& b)
+                     {
+                         return a.priority < b.priority;
+                     });
 
-    for (const auto &layer : ordered)
-        resolve_resource(layer.light, layer.weight, layer.additive);
+    for (const auto& layer : ordered)
+    {
+        resolve_resource(layer.light, layer.weight, layer.additive, layer.sample_time, layer.transform,
+                         layer.name_prefix);
+    }
 
     if (is_inside_tree())
     {
         if (enabled && !effective_state.is_empty())
+        {
             apply_render_state();
+        }
         else
+        {
             detach_targets();
+        }
     }
 
     applying = false;
@@ -933,8 +1157,8 @@ void TrinityEnvironment::apply()
 
 void TrinityEnvironment::apply_render_state()
 {
-    WorldEnvironment *world = nullptr;
-    Camera3D *camera = nullptr;
+    WorldEnvironment* world = nullptr;
+    Camera3D* camera = nullptr;
 
     if (!world_environment_path.is_empty())
     {
@@ -988,12 +1212,16 @@ void TrinityEnvironment::apply_render_state()
         baseline_environment = original_environment;
 
         if (baseline_environment.is_null())
+        {
             baseline_environment.instantiate();
+        }
 
         baseline_attributes = camera ? original_camera_attributes : original_world_attributes;
 
         if (baseline_attributes.is_null())
+        {
             baseline_attributes.instantiate();
+        }
 
         // Created once per binding so time-of-day steps don't allocate new RIDs.
         applied_environment.instantiate();
@@ -1028,7 +1256,9 @@ void TrinityEnvironment::apply_render_state()
 
         // Only None and ACES are currently verified; other source modes keep the baseline.
         if (mode == 0)
+        {
             env->set_tonemapper(Environment::TONE_MAPPER_LINEAR);
+        }
         else if (retail_lut)
         {
             env->set_tonemapper(Environment::TONE_MAPPER_LINEAR);
@@ -1039,7 +1269,9 @@ void TrinityEnvironment::apply_render_state()
             env->set_adjustment_color_correction(retail_tonemap_lut(global));
         }
         else if (mode == 3)
+        {
             env->set_tonemapper(Environment::TONE_MAPPER_ACES);
+        }
 
         env->set_tonemap_exposure(exposure * hdr_scale);
         attributes->set_auto_exposure_enabled(false);
@@ -1106,7 +1338,7 @@ void TrinityEnvironment::apply_render_state()
     apply_probe_specular(env);
     update_world_shadow();
 
-    auto *sun = instance<DirectionalLight3D>(owned_light_id);
+    auto* sun = instance<DirectionalLight3D>(owned_light_id);
 
     if (!sun)
     {
@@ -1166,19 +1398,26 @@ void TrinityEnvironment::apply_render_state()
     bool split_direction = caster.has("rotation") && directional.has("rotation");
     Vector3 to_caster = Quaternion(caster.get("rotation", Quaternion())).xform(Vector3(0, 0, 1));
     Vector3 to_shading = Quaternion(directional.get("rotation", Quaternion())).xform(Vector3(0, 0, 1));
-    RenderingServer *rs = RenderingServer::get_singleton();
-    rs->global_shader_parameter_set("TrinitySunShadowDirection", Vector4(to_caster.x, to_caster.y, to_caster.z, split_direction ? 1.0 : 0.0));
+    RenderingServer* rs = RenderingServer::get_singleton();
+    rs->global_shader_parameter_set("TrinitySunShadowDirection",
+                                    Vector4(to_caster.x, to_caster.y, to_caster.z, split_direction ? 1.0 : 0.0));
     rs->global_shader_parameter_set("TrinitySunShadingDirection", to_shading);
 
     sun->set_param(Light3D::PARAM_SHADOW_NORMAL_BIAS, MAX(0.0, number(shading, "ShadowNormalBias", 1.0)));
     sun->set_param(Light3D::PARAM_SHADOW_BIAS, MAX(0.0, number(shading, "ShadowDepthBias", 0.1)));
 
     if (world->get_environment() != env)
+    {
         world->set_environment(env);
+    }
 
     if (world->get_camera_attributes() != attributes)
+    {
         world->set_camera_attributes(attributes);
+    }
 
     if (camera && camera->get_attributes() != attributes)
+    {
         camera->set_attributes(attributes);
+    }
 }

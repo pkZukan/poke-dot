@@ -26,10 +26,14 @@ void TRTrackMaterialChannel::_bind_methods()
 
 void TRTrackMaterialChannelVec4::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, x, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
-    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, y, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
-    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, z, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
-    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, w, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannel")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, x, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackMaterialChannel")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, y, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackMaterialChannel")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, z, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackMaterialChannel")
+    GETTER_SETTER_BIND(TRTrackMaterialChannelVec4, w, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackMaterialChannel")
 }
 
 void TRTrackBlendshapeInit::_bind_methods()
@@ -41,7 +45,8 @@ void TRTrackBlendshapeInit::_bind_methods()
 void TRTrackBlendShape::_bind_methods()
 {
     GETTER_SETTER_BIND(TRTrackBlendShape, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRTrackBlendShape, init_values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackBlendshapeInit")
+    GETTER_SETTER_BIND(TRTrackBlendShape, init_values, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "TRTrackBlendshapeInit")
     GETTER_SETTER_BIND(TRTrackBlendShape, track, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, BLEND_TRACK)
     GETTER_SETTER_BIND(TRTrackBlendShape, blend_list_idx, Variant::INT, PROPERTY_HINT_NONE)
 }
@@ -49,13 +54,15 @@ void TRTrackBlendShape::_bind_methods()
 void TRTrackMaterialInit::_bind_methods()
 {
     GETTER_SETTER_BIND(TRTrackMaterialInit, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRTrackMaterialInit, list, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialValueList")
+    GETTER_SETTER_BIND(TRTrackMaterialInit, list, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackMaterialValueList")
 }
 
 void TRTrackMaterialAnim::_bind_methods()
 {
     GETTER_SETTER_BIND(TRTrackMaterialAnim, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRTrackMaterialAnim, list, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialChannels")
+    GETTER_SETTER_BIND(TRTrackMaterialAnim, list, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackMaterialChannels")
 }
 
 void TRTrackMaterial::_bind_methods()
@@ -74,7 +81,8 @@ void TRBlendShapeTimeline::_bind_methods()
 {
     GETTER_SETTER_BIND(TRBlendShapeTimeline, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationInfo")
     GETTER_SETTER_BIND(TRBlendShapeTimeline, res_1, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRBlendShapeTimeline, blendshape_tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackBlendShape")
+    GETTER_SETTER_BIND(TRBlendShapeTimeline, blendshape_tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "TRTrackBlendShape")
     GETTER_SETTER_BIND(TRBlendShapeTimeline, res_3, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRBlendShapeTimeline, blend_list, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRBlendTable")
 }
@@ -83,14 +91,16 @@ void TRVisibilityShapeTimeline::_bind_methods()
 {
     GETTER_SETTER_BIND(TRVisibilityShapeTimeline, time, Variant::FLOAT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRVisibilityShapeTimeline, value, Variant::FLOAT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRVisibilityShapeTimeline, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackFlagsInfo")
+    GETTER_SETTER_BIND(TRVisibilityShapeTimeline, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackFlagsInfo")
 }
 
 void TRTrackMaterialTimeline::_bind_methods()
 {
     GETTER_SETTER_BIND(TRTrackMaterialTimeline, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationInfo")
     GETTER_SETTER_BIND(TRTrackMaterialTimeline, res_1, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRTrackMaterialTimeline, material_tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRTrackMaterial")
+    GETTER_SETTER_BIND(TRTrackMaterialTimeline, material_tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "TRTrackMaterial")
     GETTER_SETTER_BIND(TRTrackMaterialTimeline, unk3, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRTrackMaterialTimeline, unk4, Variant::INT, PROPERTY_HINT_NONE)
 }
@@ -101,26 +111,29 @@ void TRMeshAnimeTrack::_bind_methods()
     GETTER_SETTER_BIND(TRMeshAnimeTrack, res_1, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRMeshAnimeTrack, res_2, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRMeshAnimeTrack, res_3, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRMeshAnimeTrack, mat_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRTrackMaterialTimeline")
-    GETTER_SETTER_BIND(TRMeshAnimeTrack, vis_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRVisibilityShapeTimeline")
-    GETTER_SETTER_BIND(TRMeshAnimeTrack, blendshape_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRBlendShapeTimeline")
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, mat_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRTrackMaterialTimeline")
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, vis_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRVisibilityShapeTimeline")
+    GETTER_SETTER_BIND(TRMeshAnimeTrack, blendshape_anim, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRBlendShapeTimeline")
 }
 
-void TRAnimationChannelMeshes::_bind_methods() 
-{
+void TRAnimationChannelMeshes::_bind_methods(){
     GETTER_SETTER_BIND(TRAnimationChannelMeshes, info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationInfo")
-    GETTER_SETTER_BIND(TRAnimationChannelMeshes, tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRMeshAnimeTrack")
-}
+        GETTER_SETTER_BIND(TRAnimationChannelMeshes, tracks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                           "TRMeshAnimeTrack")}
 
-Ref<TRTrackMaterialChannel> TRAnimationChannelMeshes::_LoadTrackMaterialChannel(const Titan::Animation::TrackMaterialValueList *matValList)
+Ref<TRTrackMaterialChannel> TRAnimationChannelMeshes::_LoadTrackMaterialChannel(
+    const Titan::Animation::TrackMaterialValueList* matValList)
 {
     Array vs;
     Ref<TRTrackMaterialChannel> trkMatValList;
     trkMatValList.instantiate();
-    if(matValList)
+    if (matValList)
     {
         auto vals = matValList->values();
-        for(int k = 0; k < vals->size(); k++)
+        for (int k = 0; k < vals->size(); k++)
         {
             auto val = vals->Get(k);
             Ref<TRTrackMaterialValue> mval;
@@ -138,15 +151,16 @@ Ref<TRTrackMaterialChannel> TRAnimationChannelMeshes::_LoadTrackMaterialChannel(
     return trkMatValList;
 }
 
-Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline *matAnim)
+Ref<TRTrackMaterialTimeline>
+TRAnimationChannelMeshes::_LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline* matAnim)
 {
     Ref<TRTrackMaterialTimeline> anim;
     anim.instantiate();
 
-    if(matAnim)
+    if (matAnim)
     {
         auto m_inf = matAnim->res_0();
-        if(m_inf)
+        if (m_inf)
         {
             Ref<TRAnimationInfo> _info;
             _info.instantiate();
@@ -158,10 +172,10 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
         anim->set_res_1(matAnim->res_1());
 
         auto m_tracks = matAnim->material_track();
-        if(m_tracks)
+        if (m_tracks)
         {
             Array trkArr;
-            for(int i = 0; i < m_tracks->size(); i++)
+            for (int i = 0; i < m_tracks->size(); i++)
             {
                 auto m_trk = m_tracks->Get(i);
                 Ref<TRTrackMaterial> trk;
@@ -169,17 +183,17 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
                 trk->set_Name(Utils::toGodotString(m_trk->name()));
 
                 auto init_vals = m_trk->init_values();
-                if(init_vals)
+                if (init_vals)
                 {
                     Array ivs;
-                    for(int j = 0; j < init_vals->size(); j++)
+                    for (int j = 0; j < init_vals->size(); j++)
                     {
                         auto iv = init_vals->Get(j);
                         Ref<TRTrackMaterialInit> initVal;
                         initVal.instantiate();
                         initVal->set_Name(Utils::toGodotString(iv->name()));
                         auto list = iv->list();
-                        if(list)
+                        if (list)
                         {
                             Ref<TRTrackMaterialChannel> initValList = _LoadTrackMaterialChannel(list);
                             initVal->set_list(initValList);
@@ -190,10 +204,10 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
                 }
 
                 auto anim_vals = m_trk->anim_values();
-                if(anim_vals)
+                if (anim_vals)
                 {
                     Array avs;
-                    for(int j = 0; j < anim_vals->size(); j++)
+                    for (int j = 0; j < anim_vals->size(); j++)
                     {
                         auto av = anim_vals->Get(j);
                         Ref<TRTrackMaterialAnim> animVal;
@@ -235,131 +249,158 @@ Ref<TRTrackMaterialTimeline> TRAnimationChannelMeshes::_LoadMaterialAnims(const 
 
 Ref<Resource> TRAnimationChannelMeshes::_LoadBlendTracks(Titan::Animation::BlendTrack type, const void* data)
 {
-    switch (type) {
-        case Titan::Animation::BlendTrack::BlendTrack_FixedBlendTrack: 
+    switch (type)
+    {
+        case Titan::Animation::BlendTrack::BlendTrack_FixedBlendTrack:
         {
             auto src = static_cast<const Titan::Animation::FixedBlendTrack*>(data);
-            Ref<FixedFloatTrack> t; 
+            Ref<FixedFloatTrack> t;
             t.instantiate();
             t->set_value(src->value());
             return t;
         }
-        case Titan::Animation::BlendTrack::BlendTrack_DynamicBlendTrack: 
+        case Titan::Animation::BlendTrack::BlendTrack_DynamicBlendTrack:
         {
             auto src = static_cast<const Titan::Animation::DynamicBlendTrack*>(data);
-            Ref<DynamicFloatTrack> t; 
+            Ref<DynamicFloatTrack> t;
             t.instantiate();
             Array vals;
             for (size_t i = 0; i < src->value()->size(); i++)
+            {
                 vals.append(src->value()->Get(i));
+            }
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::BlendTrack::BlendTrack_Framed16BlendTrack: 
+        case Titan::Animation::BlendTrack::BlendTrack_Framed16BlendTrack:
         {
             auto src = static_cast<const Titan::Animation::Framed16BlendTrack*>(data);
-            Ref<Framed16FloatTrack> t; 
+            Ref<Framed16FloatTrack> t;
             t.instantiate();
             Array frames, vals;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
+            }
             for (size_t i = 0; i < src->value()->size(); i++)
+            {
                 vals.append(src->value()->Get(i));
-            t->set_frames(frames); 
+            }
+            t->set_frames(frames);
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::BlendTrack::BlendTrack_Framed8BlendTrack: 
+        case Titan::Animation::BlendTrack::BlendTrack_Framed8BlendTrack:
         {
             auto src = static_cast<const Titan::Animation::Framed8BlendTrack*>(data);
-            Ref<Framed8FloatTrack> t; 
+            Ref<Framed8FloatTrack> t;
             t.instantiate();
             Array frames, vals;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
+            }
             for (size_t i = 0; i < src->value()->size(); i++)
+            {
                 vals.append(src->value()->Get(i));
-            t->set_frames(frames); 
+            }
+            t->set_frames(frames);
             t->set_values(vals);
             return t;
         }
-        default: 
+        default:
             return Ref<Resource>();
     }
 }
 
 Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFlag type, const void* data)
 {
-    switch (type) {
-        case Titan::Animation::TrackFlag::TrackFlag_FixedBoolTrack: 
+    switch (type)
+    {
+        case Titan::Animation::TrackFlag::TrackFlag_FixedBoolTrack:
         {
             auto src = static_cast<const Titan::Animation::FixedBoolTrack*>(data);
-            Ref<FixedBoolTrack> t; 
+            Ref<FixedBoolTrack> t;
             t.instantiate();
             t->set_value(src->value());
             return t;
         }
-        case Titan::Animation::TrackFlag::TrackFlag_DynamicBoolTrack: 
+        case Titan::Animation::TrackFlag::TrackFlag_DynamicBoolTrack:
         {
             auto src = static_cast<const Titan::Animation::DynamicBoolTrack*>(data);
-            Ref<DynamicBoolTrack> t; 
+            Ref<DynamicBoolTrack> t;
             t.instantiate();
             Array vals;
             for (size_t i = 0; i < src->value()->size(); i++)
+            {
                 for (int bit = 0; bit < 8; ++bit)
+                {
                     vals.append(bool((src->value()->Get(i) >> bit) & 1));
+                }
+            }
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::TrackFlag::TrackFlag_Framed16BoolTrack: 
+        case Titan::Animation::TrackFlag::TrackFlag_Framed16BoolTrack:
         {
             auto src = static_cast<const Titan::Animation::Framed16BoolTrack*>(data);
-            Ref<Framed16BoolTrack> t; 
+            Ref<Framed16BoolTrack> t;
             t.instantiate();
             Array frames, vals;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
+            }
             // Visibility values are packed LSB-first, one bit per key.
-            ERR_FAIL_COND_V_MSG(!src->value() || src->value()->size() * 8 < src->frames()->size(), Ref<Resource>(), "Truncated visibility flags");
+            ERR_FAIL_COND_V_MSG(!src->value() || src->value()->size() * 8 < src->frames()->size(), Ref<Resource>(),
+                                "Truncated visibility flags");
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 vals.append(bool((src->value()->Get(i / 8) >> (i % 8)) & 1));
-            t->set_frames(frames); 
+            }
+            t->set_frames(frames);
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::TrackFlag::TrackFlag_Framed8BoolTrack: 
+        case Titan::Animation::TrackFlag::TrackFlag_Framed8BoolTrack:
         {
             auto src = static_cast<const Titan::Animation::Framed8BoolTrack*>(data);
-            Ref<Framed8BoolTrack> t; 
+            Ref<Framed8BoolTrack> t;
             t.instantiate();
             Array frames, vals;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
+            }
             // Visibility values are packed LSB-first, one bit per key.
-            ERR_FAIL_COND_V_MSG(!src->value() || src->value()->size() * 8 < src->frames()->size(), Ref<Resource>(), "Truncated visibility flags");
+            ERR_FAIL_COND_V_MSG(!src->value() || src->value()->size() * 8 < src->frames()->size(), Ref<Resource>(),
+                                "Truncated visibility flags");
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 vals.append(bool((src->value()->Get(i / 8) >> (i % 8)) & 1));
-            t->set_frames(frames); 
+            }
+            t->set_frames(frames);
             t->set_values(vals);
             return t;
         }
-        default: 
+        default:
             return Ref<Resource>();
     }
 }
 
-Ref<TRVisibilityShapeTimeline> TRAnimationChannelMeshes::_LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline *visAnim)
+Ref<TRVisibilityShapeTimeline>
+TRAnimationChannelMeshes::_LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline* visAnim)
 {
     Ref<TRVisibilityShapeTimeline> anim;
     anim.instantiate();
 
-    if(visAnim)
+    if (visAnim)
     {
         anim->set_time(visAnim->time());
         anim->set_value(visAnim->value());
-        
+
         auto info = visAnim->info();
-        if(info)
+        if (info)
         {
             Ref<TRTrackFlagsInfo> vis_flag;
             vis_flag.instantiate();
@@ -374,15 +415,16 @@ Ref<TRVisibilityShapeTimeline> TRAnimationChannelMeshes::_LoadVisibilityAnims(co
     return anim;
 }
 
-Ref<TRBlendShapeTimeline> TRAnimationChannelMeshes::_LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline *blendAnim)
+Ref<TRBlendShapeTimeline>
+TRAnimationChannelMeshes::_LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline* blendAnim)
 {
     Ref<TRBlendShapeTimeline> anim;
     anim.instantiate();
 
-    if(blendAnim)
+    if (blendAnim)
     {
         auto _inf = blendAnim->info();
-        if(_inf)
+        if (_inf)
         {
             Ref<TRAnimationInfo> _info;
             _info.instantiate();
@@ -394,21 +436,21 @@ Ref<TRBlendShapeTimeline> TRAnimationChannelMeshes::_LoadBlendshapeAnims(const T
         }
         anim->set_res_1(blendAnim->res_1());
         auto blendTracks = blendAnim->blendshape_tracks();
-        if(blendTracks)
+        if (blendTracks)
         {
             Array bshapeArr;
-            for(int i = 0; i < blendTracks->size(); i++)
+            for (int i = 0; i < blendTracks->size(); i++)
             {
                 auto trk = blendTracks->Get(i);
                 Ref<TRTrackBlendShape> bshape;
                 bshape.instantiate();
                 bshape->set_Name(Utils::toGodotString(trk->name()));
-                
+
                 auto initVals = trk->init_values();
                 Array initValArr;
-                if(initVals)
+                if (initVals)
                 {
-                    for(int j = 0; j < initVals->size(); j++)
+                    for (int j = 0; j < initVals->size(); j++)
                     {
                         auto iv = initVals->Get(j);
                         Ref<TRTrackBlendshapeInit> init_val;
@@ -416,10 +458,10 @@ Ref<TRBlendShapeTimeline> TRAnimationChannelMeshes::_LoadBlendshapeAnims(const T
                         init_val->set_Name(Utils::toGodotString(iv->mesh_name()));
 
                         auto list = iv->blendshape_list();
-                        if(list)
+                        if (list)
                         {
                             Array bsArr;
-                            for(int k = 0; k < list->size(); k++)
+                            for (int k = 0; k < list->size(); k++)
                             {
                                 bsArr.push_back(Utils::toGodotString(list->Get(k)));
                             }
@@ -441,10 +483,10 @@ Ref<TRBlendShapeTimeline> TRAnimationChannelMeshes::_LoadBlendshapeAnims(const T
         anim->set_res_3(blendAnim->res_3());
 
         auto blist = blendAnim->blend_list();
-        if(blist)
+        if (blist)
         {
             Array bshapeArr;
-            for(int i = 0; i < blist->size(); i++)
+            for (int i = 0; i < blist->size(); i++)
             {
                 auto trk = blist->Get(i);
                 Ref<TRBlendTable> bshape;
@@ -467,7 +509,7 @@ void TRAnimationChannelMeshes::LoadFromFile(String file)
     ERR_FAIL_COND_MSG(tracm == nullptr, "Couldn't load TRACM");
 
     auto _inf = tracm->info();
-    if(_inf)
+    if (_inf)
     {
         Ref<TRAnimationInfo> _info;
         _info.instantiate();
@@ -480,7 +522,7 @@ void TRAnimationChannelMeshes::LoadFromFile(String file)
 
     auto tracks = tracm->tracks();
     Array trackArr;
-    for(int i = 0; i < tracks->size(); i++)
+    for (int i = 0; i < tracks->size(); i++)
     {
         auto track = tracks->Get(i);
 
@@ -491,15 +533,12 @@ void TRAnimationChannelMeshes::LoadFromFile(String file)
         anim->set_res_2(track->res_2());
         anim->set_res_3(track->res_3());
 
-        //Material anims
         Ref<TRTrackMaterialTimeline> _mat_anim = _LoadMaterialAnims(track->material_animation());
         anim->set_mat_anim(_mat_anim);
 
-        //Visibility anims
         Ref<TRVisibilityShapeTimeline> _vis_anim = _LoadVisibilityAnims(track->visibility_animation());
         anim->set_vis_anim(_vis_anim);
 
-        //Blendshape anims
         Ref<TRBlendShapeTimeline> _blendshape_anim = _LoadBlendshapeAnims(track->blendshape_animation());
         anim->set_blendshape_anim(_blendshape_anim);
 
@@ -508,7 +547,8 @@ void TRAnimationChannelMeshes::LoadFromFile(String file)
     set_tracks(trackArr);
 }
 
-Variant ResourceFormatLoaderTRACM::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRACM::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRAnimationChannelMeshes> tracm;
     tracm.instantiate();
@@ -524,7 +564,7 @@ PackedStringArray ResourceFormatLoaderTRACM::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRACM::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRACM::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRAnimationChannelMeshes");
 }

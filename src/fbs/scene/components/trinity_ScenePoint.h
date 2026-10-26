@@ -7,18 +7,21 @@
 #include "generated/trinity_ScenePoint_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrinityScenePoint : public Resource {
+class TrinityScenePoint : public Resource
+{
     GDCLASS(TrinityScenePoint, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityScenePoint(){}
-	~TrinityScenePoint(){}
+    TrinityScenePoint() = default;
+    ~TrinityScenePoint() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(Vector3, Point)
     GETTER_SETTER_DEFINE(bool, AttachParent)

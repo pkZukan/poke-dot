@@ -2,18 +2,18 @@
 
 using namespace godot;
 
-void LodIndex::_bind_methods() 
+void LodIndex::_bind_methods()
 {
     GETTER_SETTER_BIND(LodIndex, unk0, Variant::INT, PROPERTY_HINT_NONE)
 }
 
-void LOD::_bind_methods() 
+void LOD::_bind_methods()
 {
     GETTER_SETTER_BIND(LOD, Index, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "LodIndex")
     GETTER_SETTER_BIND(LOD, Type, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
-void TRModel::_bind_methods() 
+void TRModel::_bind_methods()
 {
     GETTER_SETTER_BIND(TRModel, Meshes, Variant::PACKED_STRING_ARRAY, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRModel, Skeleton, Variant::STRING, PROPERTY_HINT_NONE)
@@ -30,7 +30,7 @@ void TRModel::LoadFromFile(String file)
     ERR_FAIL_COND_MSG(trmdl == NULL, vformat("Couldn't load TRMDL flatbuffer"));
 
     BBox = AABB();
-    const auto *bounds = trmdl->bounds();
+    const auto* bounds = trmdl->bounds();
     if (bounds && bounds->min() && bounds->max())
     {
         Vector3 min = Utils::toGodotVec3(bounds->min());
@@ -38,27 +38,28 @@ void TRModel::LoadFromFile(String file)
         BBox = AABB(min, max - min);
     }
 
-    //Get Meshes
     auto meshes = trmdl->meshes();
-    if(meshes)
+    if (meshes)
     {
-        for(int i = 0; i < meshes->size(); i++)
+        for (int i = 0; i < meshes->size(); i++)
+        {
             Meshes.push_back(Utils::toGodotString(meshes->Get(i)->filename()));
+        }
     }
 
-    //Get Mats
     auto mats = trmdl->materials();
-    if(mats)
+    if (mats)
     {
-        for(int i = 0; i < mats->size(); i++)
+        for (int i = 0; i < mats->size(); i++)
+        {
             Materials.push_back(Utils::toGodotString(mats->Get(i)));
+        }
     }
 
-    //Get LODs
     auto lods = trmdl->lods();
-    if(lods)
+    if (lods)
     {
-        for(int i = 0; i < lods->size(); i++)
+        for (int i = 0; i < lods->size(); i++)
         {
             auto l = lods->Get(i);
             Ref<LOD> lod;
@@ -66,26 +67,27 @@ void TRModel::LoadFromFile(String file)
             lod->set_Type(Utils::toGodotString(l->lod_type()));
             auto lind = l->index();
             Array linds;
-            for(int j = 0; j < lind->size(); j++)
+            for (int j = 0; j < lind->size(); j++)
             {
                 Ref<LodIndex> li;
                 li.instantiate();
                 li->set_unk0(lind->Get(j)->unk0());
                 linds.push_back(li);
             }
-                
+
             lod->set_Index(linds);
         }
     }
 
     auto skel = trmdl->skeleton();
-    if(skel)
+    if (skel)
     {
         Skeleton = Utils::toGodotString(trmdl->skeleton()->filename());
     }
 }
 
-Variant ResourceFormatLoaderTRMDL::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRMDL::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRModel> trmdl;
     trmdl.instantiate();
@@ -101,7 +103,7 @@ PackedStringArray ResourceFormatLoaderTRMDL::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRMDL::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRMDL::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRModel");
 }

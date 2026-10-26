@@ -5,20 +5,18 @@ using namespace godot;
 void TRScene::_bind_methods()
 {
     GETTER_SETTER_BIND(TRScene, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TRScene, nested_type, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "Resource")
-	GETTER_SETTER_BIND(TRScene, sub_objects, Variant::ARRAY, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRScene, nested_type, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "Resource")
+    GETTER_SETTER_BIND(TRScene, sub_objects, Variant::ARRAY, PROPERTY_HINT_NONE)
 }
 
-void TRSCN::_bind_methods()
-{
+void TRSCN::_bind_methods(){
     GETTER_SETTER_BIND(TRSCN, Name, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRSCN, Extra, Variant::STRING, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRSCN, res_2, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRSCN, res_3, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRSCN, chunks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRScene")
-    GETTER_SETTER_BIND(TRSCN, subScenes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "String")
-    GETTER_SETTER_BIND(TRSCN, unk_6, Variant::INT, PROPERTY_HINT_NONE)
-}
+        GETTER_SETTER_BIND(TRSCN, Extra, Variant::STRING, PROPERTY_HINT_NONE)
+            GETTER_SETTER_BIND(TRSCN, res_2, Variant::INT, PROPERTY_HINT_NONE)
+                GETTER_SETTER_BIND(TRSCN, res_3, Variant::INT, PROPERTY_HINT_NONE)
+                    GETTER_SETTER_BIND(TRSCN, chunks, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRScene")
+                        GETTER_SETTER_BIND(TRSCN, subScenes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "String")
+                            GETTER_SETTER_BIND(TRSCN, unk_6, Variant::INT, PROPERTY_HINT_NONE)}
 
 Ref<TRScene> TRSCN::ParseSceneEntry(const Titan::TrinityScene::SceneEntry* chunk)
 {
@@ -27,15 +25,16 @@ Ref<TRScene> TRSCN::ParseSceneEntry(const Titan::TrinityScene::SceneEntry* chunk
 
     String typeName = Utils::toGodotString(chunk->type_name());
     trscene->set_Name(typeName);
-    
-    if (auto data = chunk->nested_type()) 
+
+    if (auto data = chunk->nested_type())
     {
         auto parsedData = TrinitySceneParser::FromData(typeName, data->data());
         trscene->set_nested_type(parsedData);
     }
 
     Array subObjects;
-    for (int j = 0; j < chunk->sub_objects()->size(); j++) {
+    for (int j = 0; j < chunk->sub_objects()->size(); j++)
+    {
         auto subScene = ParseSceneEntry(chunk->sub_objects()->Get(j));
         subObjects.push_back(subScene);
     }
@@ -57,17 +56,19 @@ void TRSCN::LoadFromFile(String file)
     set_res_3(trscn->res_3());
 
     auto subs = trscn->sub_scenes();
-    if(subs)
+    if (subs)
     {
-        for(int i = 0; i < subs->size(); i++)
+        for (int i = 0; i < subs->size(); i++)
+        {
             subScenes.push_back(Utils::toGodotString(subs->Get(i)));
+        }
     }
     set_subScenes(subScenes);
 
     set_unk_6(trscn->unk_6());
 
-
-    for (int i = 0; i < trscn->chunks()->size(); i++) {
+    for (int i = 0; i < trscn->chunks()->size(); i++)
+    {
         auto chunk = trscn->chunks()->Get(i);
         auto scene = ParseSceneEntry(chunk);
         chunks.push_back(scene);
@@ -75,7 +76,8 @@ void TRSCN::LoadFromFile(String file)
     set_chunks(chunks);
 }
 
-Variant ResourceFormatLoaderTRSCN::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRSCN::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRSCN> trscn;
     trscn.instantiate();
@@ -92,7 +94,7 @@ PackedStringArray ResourceFormatLoaderTRSCN::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRSCN::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRSCN::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRSCN");
 }

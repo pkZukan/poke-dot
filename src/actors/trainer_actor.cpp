@@ -10,7 +10,8 @@
 
 using namespace godot;
 
-void TrainerActor::_bind_methods() {
+void TrainerActor::_bind_methods()
+{
     GETTER_SETTER_BIND(TrainerActor, id, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TrainerActor, variation, Variant::STRING, PROPERTY_HINT_NONE)
 
@@ -20,13 +21,14 @@ void TrainerActor::_bind_methods() {
 void TrainerActor::Initialize()
 {
     String base_path = GFLib::romfs_path("ik_chara");
-    
+
     _trainer_mdl_path = base_path.path_join("model_uq/tr0013_00_detective");
     _trainer_mot_path = base_path.path_join("motion_uq/tr0013_00_detective");
 
-    LoadActor(_trainer_mdl_path.path_join("tr0013_00.trmdl"), _trainer_mot_path.path_join("tr0013_00_base.tracn"), variation);
+    LoadActor(_trainer_mdl_path.path_join("tr0013_00.trmdl"), _trainer_mot_path.path_join("tr0013_00_base.tracn"),
+              variation);
 
-    //Quick hack to steal jump anims from player since npcs/rival dont have them
+    // NPC and rival catalogs lack jump animations; reuse the player clips.
     const String player_motion_path = base_path.path_join("motion_pc/base");
     _add_animation(player_motion_path.path_join("p0_00_00210_jumpup01_start.tranm"), "00210_jumpup01_start");
     _add_animation(player_motion_path.path_join("p0_00_00211_jumpup01_loop.tranm"), "00211_jumpup01_loop");

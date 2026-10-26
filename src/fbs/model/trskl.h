@@ -9,107 +9,121 @@
 #include "generated/trskl_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class IKControl : public Resource {
-	GDCLASS(IKControl, Resource)
+class IKControl : public Resource
+{
+    GDCLASS(IKControl, Resource)
 protected:
-	static void _bind_methods();
-public:
-	IKControl(){}
-	~IKControl(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
+public:
+    IKControl() = default;
+    ~IKControl() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
 
 private:
-	String Name;
+    String Name;
 };
 
-class TransformNode : public Resource {
-	GDCLASS(TransformNode, Resource)
+class TransformNode : public Resource
+{
+    GDCLASS(TransformNode, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TransformNode(){}
-	~TransformNode(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Transform3D, Transform)
-	GETTER_SETTER_DEFINE(Vector3, ScalePivot)
-	GETTER_SETTER_DEFINE(Vector3, RotatePivot)
-	GETTER_SETTER_DEFINE(int, ParentIndex)
-	GETTER_SETTER_DEFINE(int, RigIndex)
-	GETTER_SETTER_DEFINE(String, ParentName)
-	GETTER_SETTER_DEFINE(int, NodeType)
-	GETTER_SETTER_DEFINE(bool, unk_0)
-	GETTER_SETTER_DEFINE(bool, ignore_parent_rot)
+public:
+    TransformNode() = default;
+    ~TransformNode() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Transform3D, Transform)
+    GETTER_SETTER_DEFINE(Vector3, ScalePivot)
+    GETTER_SETTER_DEFINE(Vector3, RotatePivot)
+    GETTER_SETTER_DEFINE(int, ParentIndex)
+    GETTER_SETTER_DEFINE(int, RigIndex)
+    GETTER_SETTER_DEFINE(String, ParentName)
+    GETTER_SETTER_DEFINE(int, NodeType)
+    GETTER_SETTER_DEFINE(bool, unk_0)
+    GETTER_SETTER_DEFINE(bool, ignore_parent_rot)
 
 private:
-	String Name;
-	Transform3D Transform;
-	Vector3 ScalePivot;
-	Vector3 RotatePivot;
-	int ParentIndex;
-	int RigIndex;
-	String ParentName;
-	int NodeType;
-	bool unk_0;
-	bool ignore_parent_rot;
+    String Name;
+    Transform3D Transform;
+    Vector3 ScalePivot;
+    Vector3 RotatePivot;
+    int ParentIndex;
+    int RigIndex;
+    String ParentName;
+    int NodeType;
+    bool unk_0;
+    bool ignore_parent_rot;
 };
 
-class BoneEntry : public Resource {
-	GDCLASS(BoneEntry, Resource)
+class BoneEntry : public Resource
+{
+    GDCLASS(BoneEntry, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	BoneEntry(){}
-	~BoneEntry(){}
+    BoneEntry() = default;
+    ~BoneEntry() = default;
 
     GETTER_SETTER_DEFINE(bool, InheritPosition)
     GETTER_SETTER_DEFINE(bool, InfluenceSkinning)
-	GETTER_SETTER_DEFINE(Transform3D, Matrix)
+    GETTER_SETTER_DEFINE(Transform3D, Matrix)
 
 private:
     bool InheritPosition;
-	bool InfluenceSkinning;
-	Transform3D Matrix;
+    bool InfluenceSkinning;
+    Transform3D Matrix;
 };
 
-class TRSkeleton : public Resource {
-	GDCLASS(TRSkeleton, Resource)
+class TRSkeleton : public Resource
+{
+    GDCLASS(TRSkeleton, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRSkeleton(){}
-	~TRSkeleton(){}
+    TRSkeleton() = default;
+    ~TRSkeleton() = default;
 
     void LoadFromFile(String file);
 
-	GETTER_SETTER_DEFINE(int, Version)
-	GETTER_SETTER_DEFINE(Array, TransformNodes)
-	GETTER_SETTER_DEFINE(Array, Bones)
-	GETTER_SETTER_DEFINE(Array, IKs)
-	GETTER_SETTER_DEFINE(int, RigOffset)
+    GETTER_SETTER_DEFINE(int, Version)
+    GETTER_SETTER_DEFINE(Array, TransformNodes)
+    GETTER_SETTER_DEFINE(Array, Bones)
+    GETTER_SETTER_DEFINE(Array, IKs)
+    GETTER_SETTER_DEFINE(int, RigOffset)
 
 private:
-	int Version;
-	Array TransformNodes;
-	Array Bones;
-	Array IKs;
-	int RigOffset;
+    int Version;
+    Array TransformNodes;
+    Array Bones;
+    Array IKs;
+    int RigOffset;
 };
 
-class ResourceFormatLoaderTRSKL : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRSKL, ResourceFormatLoader)
+class ResourceFormatLoaderTRSKL : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRSKL, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRSKL(){}
-	~ResourceFormatLoaderTRSKL(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRSKL() = default;
+    ~ResourceFormatLoaderTRSKL() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

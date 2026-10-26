@@ -5,9 +5,9 @@ using namespace godot;
 void UIKitGauge::_bind_methods()
 {
     GETTER_SETTER_BIND(UIKitGauge, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(UIKitGauge, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitGauge, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitGauge, ControlIndex, Variant::INT, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(UIKitGauge, Type, Variant::INT, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitGauge, Type, Variant::INT, PROPERTY_HINT_NONE)
 }
 
 void UIKitGauge::LoadFromBuffer(const void* buffer)

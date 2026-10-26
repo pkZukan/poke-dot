@@ -4,12 +4,15 @@
 #include "generated/trinity_TerrainStreamingSetting_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinityTerrainStreamingSetting : public Resource {
+class TrinityTerrainStreamingSetting : public Resource
+{
     GDCLASS(TrinityTerrainStreamingSetting, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromBuffer(const void* buffer);
     GETTER_SETTER_DEFINE(float, LowLoadRadius)
@@ -25,4 +28,4 @@ private:
     float TreeLoadRadius = 0.0f;
 };
 
-} // namespace godot
+}

@@ -45,7 +45,7 @@ void VertexAccessors::_bind_methods()
     GETTER_SETTER_BIND(VertexAccessors, Strides, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "SizeTable")
 }
 
-void MeshShape::_bind_methods() 
+void MeshShape::_bind_methods()
 {
     GETTER_SETTER_BIND(MeshShape, Name, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(MeshShape, BBox, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "AABB")
@@ -57,7 +57,7 @@ void MeshShape::_bind_methods()
     GETTER_SETTER_BIND(MeshShape, MeshName, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
-void TRMesh::_bind_methods() 
+void TRMesh::_bind_methods()
 {
     GETTER_SETTER_BIND(TRMesh, unk0, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRMesh, BufferName, Variant::STRING, PROPERTY_HINT_NONE)
@@ -67,7 +67,7 @@ void TRMesh::_bind_methods()
 void TRMesh::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
-	ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRMSH file: %s", file));
+    ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRMSH file: %s", file));
 
     auto mesh = Titan::Model::GetTRMSH(buf.ptr());
     ERR_FAIL_COND_MSG(mesh == NULL, vformat("Couldn't load TRMSH flatbuffer"));
@@ -75,11 +75,9 @@ void TRMesh::LoadFromFile(String file)
     set_BufferName(Utils::toGodotString(mesh->buffer_name()));
     set_unk0(mesh->unk0());
 
-    //Array of meshes
     auto meshShapes = mesh->meshes();
-    for(int i = 0; i < meshShapes->size(); i++)
+    for (int i = 0; i < meshShapes->size(); i++)
     {
-        //Meshes have name and array of attributes
         Ref<MeshShape> mshape;
         mshape.instantiate();
 
@@ -97,17 +95,16 @@ void TRMesh::LoadFromFile(String file)
         mshape->set_PolygonType(msh->polygon_type());
         mshape->set_MeshName(Utils::toGodotString(msh->mesh_name()));
 
-        //Get attributes
         auto attributes = msh->attributes();
         Array attribs;
-        for(int j = 0; j < attributes->size(); j++)
+        for (int j = 0; j < attributes->size(); j++)
         {
             Ref<VertexAccessors> att;
             att.instantiate();
 
             auto atts = attributes->Get(j)->attrs();
             Array accessors;
-            for(int k = 0; k < atts->size(); k++)
+            for (int k = 0; k < atts->size(); k++)
             {
                 Ref<Accessors> accs;
                 accs.instantiate();
@@ -122,7 +119,7 @@ void TRMesh::LoadFromFile(String file)
 
             auto attSizes = attributes->Get(j)->size();
             Array strides;
-            for(int k = 0; k < attSizes->size(); k++)
+            for (int k = 0; k < attSizes->size(); k++)
             {
                 Ref<SizeTable> st;
                 st.instantiate();
@@ -135,10 +132,9 @@ void TRMesh::LoadFromFile(String file)
         }
         mshape->set_Attributes(attribs);
 
-        //Get Materials
         auto mats = msh->materials();
         Array matInfo;
-        for(int j = 0; j < mats->size(); j++)
+        for (int j = 0; j < mats->size(); j++)
         {
             Ref<MaterialInfo> minfo;
             minfo.instantiate();
@@ -151,10 +147,9 @@ void TRMesh::LoadFromFile(String file)
         }
         mshape->set_Materials(matInfo);
 
-        //Get Influences
         auto influences = msh->influence();
         Array influence;
-        for(int j = 0; j < influences->size(); j++)
+        for (int j = 0; j < influences->size(); j++)
         {
             Ref<InfluenceEntry> infEnt;
             infEnt.instantiate();
@@ -163,12 +158,13 @@ void TRMesh::LoadFromFile(String file)
             influence.push_back(infEnt);
         }
         mshape->set_Influences(influence);
-        
+
         MeshDescriptors.push_back(mshape);
     }
 }
 
-Variant ResourceFormatLoaderTRMSH::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRMSH::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRMesh> trmsh;
     trmsh.instantiate();
@@ -184,7 +180,7 @@ PackedStringArray ResourceFormatLoaderTRMSH::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRMSH::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRMSH::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRMesh");
 }

@@ -7,25 +7,27 @@
 #include "generated/trinity_AnimationComponent_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrinityAnimationComponent : public Resource {
+class TrinityAnimationComponent : public Resource
+{
     GDCLASS(TrinityAnimationComponent, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityAnimationComponent(){}
-	~TrinityAnimationComponent(){}
+    TrinityAnimationComponent() = default;
+    ~TrinityAnimationComponent() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, FilePath)
     GETTER_SETTER_DEFINE(String, Name)
 
 private:
     String FilePath;
     String Name;
-    //TODO: other fields
 };
 
 }

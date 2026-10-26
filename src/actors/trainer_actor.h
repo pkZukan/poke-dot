@@ -4,7 +4,6 @@
 #include <godot_cpp/classes/skeleton3d.hpp>
 #include <godot_cpp/classes/immediate_mesh.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
-#include <godot_cpp/classes/animation_player.hpp>
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
 #include "fbs/animation/tracn.h"
@@ -13,9 +12,11 @@
 #include "actor.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrainerActor : public ActorObj {
+class TrainerActor : public ActorObj
+{
     GDCLASS(TrainerActor, ActorObj)
 protected:
     static void _bind_methods();
@@ -37,4 +38,4 @@ private:
     String _trainer_mot_path;
 };
 
-} // namespace godot
+}

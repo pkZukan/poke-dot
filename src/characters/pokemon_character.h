@@ -11,9 +11,11 @@
 #include "middleware/bntx.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class PokemonCharacter : public CharacterBody3D {
+class PokemonCharacter : public CharacterBody3D
+{
     GDCLASS(PokemonCharacter, CharacterBody3D)
 protected:
     static void _bind_methods();
@@ -36,7 +38,9 @@ public:
     void setterCallback(String setterName)
     {
         if (!is_inside_tree())
+        {
             return;
+        }
         // Shiny only swaps materials and the icon; other changes rebuild the model.
         if (setterName == "is_shiny" && _actor)
         {
@@ -50,12 +54,12 @@ public:
 
     Vector3 GetRootMotionPos();
 
-    Node3D *get_model() const;
+    Node3D* get_model() const;
     Ref<TRPersonalData> get_personal() const;
     bool Evolve(int index);
-    AnimationPlayer *get_animation_player() const;
-    void configure_animation_tree(AnimationTree *tree);
-    void apply_movement(double delta, const Vector3 &direction);
+    AnimationPlayer* get_animation_player() const;
+    void configure_animation_tree(AnimationTree* tree);
+    void apply_movement(double delta, const Vector3& direction);
 
 private:
     uint16_t species = 0;
@@ -66,10 +70,10 @@ private:
     float max_root_motion_speed = 30.0f;
     Ref<BinaryTexture> icon;
 
-    PokemonActor *_actor = nullptr;
-    AnimationTree *_anim_tree = nullptr;
-    
-    CollisionShape3D *_col = nullptr;
+    PokemonActor* _actor = nullptr;
+    AnimationTree* _anim_tree = nullptr;
+
+    CollisionShape3D* _col = nullptr;
     Ref<BoxShape3D> _col_shape;
 
     void _initialize();
@@ -80,4 +84,4 @@ private:
     void _try_step_up(const Vector3& motion);
 };
 
-} // namespace godot
+}

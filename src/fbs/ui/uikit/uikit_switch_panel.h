@@ -5,15 +5,18 @@
 #include "generated/uikit_switch_panel_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitSwitchPanel : public Resource {
+class UIKitSwitchPanel : public Resource
+{
     GDCLASS(UIKitSwitchPanel, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    UIKitSwitchPanel(){}
-    ~UIKitSwitchPanel(){}
+    UIKitSwitchPanel() = default;
+    ~UIKitSwitchPanel() = default;
 
     void LoadFromBuffer(const void* buffer);
 

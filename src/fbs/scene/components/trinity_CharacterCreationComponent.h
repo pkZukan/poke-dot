@@ -4,12 +4,15 @@
 #include "generated/trinity_CharacterCreationComponent_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinityCCDataMasterEntry : public Resource {
+class TrinityCCDataMasterEntry : public Resource
+{
     GDCLASS(TrinityCCDataMasterEntry, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromTable(const Titan::TrinityScene::TrinityCCDataMasterEntry* table);
     GETTER_SETTER_DEFINE(String, Part)
@@ -21,10 +24,12 @@ private:
     String Name;
 };
 
-class TrinityCharacterCreationComponent : public Resource {
+class TrinityCharacterCreationComponent : public Resource
+{
     GDCLASS(TrinityCharacterCreationComponent, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromBuffer(const void* buffer);
     GETTER_SETTER_DEFINE(String, Name)
@@ -64,4 +69,4 @@ private:
     PackedInt64Array unk14;
 };
 
-} // namespace godot
+}

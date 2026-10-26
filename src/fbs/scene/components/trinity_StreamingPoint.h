@@ -4,12 +4,15 @@
 #include "generated/trinity_StreamingPoint_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinityStreamingObject : public Resource {
+class TrinityStreamingObject : public Resource
+{
     GDCLASS(TrinityStreamingObject, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromTable(const Titan::TrinityScene::TrinityStreamingObject* table);
     GETTER_SETTER_DEFINE(String, Name)
@@ -19,10 +22,12 @@ private:
     PackedByteArray NestedType;
 };
 
-class TrinityStreamingPointData : public Resource {
+class TrinityStreamingPointData : public Resource
+{
     GDCLASS(TrinityStreamingPointData, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromTable(const Titan::TrinityScene::TrinityStreamingPointData* table);
     GETTER_SETTER_DEFINE(String, Name)
@@ -32,10 +37,12 @@ private:
     Vector3 Position;
 };
 
-class TrinityStreamingEntry : public Resource {
+class TrinityStreamingEntry : public Resource
+{
     GDCLASS(TrinityStreamingEntry, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromTable(const Titan::TrinityScene::TrinityStreamingEntry* table);
     GETTER_SETTER_DEFINE(Ref<TrinityStreamingPointData>, Point)
@@ -45,10 +52,12 @@ private:
     Array Objects;
 };
 
-class TrinityStreamingPoint : public Resource {
+class TrinityStreamingPoint : public Resource
+{
     GDCLASS(TrinityStreamingPoint, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromBuffer(const void* buffer);
     GETTER_SETTER_DEFINE(Array, Entries)
@@ -56,4 +65,4 @@ private:
     Array Entries;
 };
 
-} // namespace godot
+}

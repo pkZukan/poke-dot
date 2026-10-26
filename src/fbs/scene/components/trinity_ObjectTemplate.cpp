@@ -4,12 +4,12 @@ using namespace godot;
 
 void TrinityObjectTemplate::_bind_methods()
 {
-	GETTER_SETTER_BIND(TrinityObjectTemplate, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityObjectTemplate, Scope, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityObjectTemplate, FilePath, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityObjectTemplate, IsExpanded, Variant::BOOL, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityObjectTemplate, EntityType, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TrinityObjectTemplate, EntityData, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "Resource")
+    GETTER_SETTER_BIND(TrinityObjectTemplate, Name, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityObjectTemplate, Scope, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityObjectTemplate, FilePath, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityObjectTemplate, IsExpanded, Variant::BOOL, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityObjectTemplate, EntityType, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TrinityObjectTemplate, EntityData, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "Resource")
 }
 
 void TrinityObjectTemplate::LoadFromBuffer(const void* buffer)

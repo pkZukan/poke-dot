@@ -7,7 +7,6 @@
 #include <godot_cpp/classes/skeleton3d.hpp>
 #include <godot_cpp/classes/immediate_mesh.hpp>
 #include <godot_cpp/classes/animation_library.hpp>
-#include <godot_cpp/classes/animation_player.hpp>
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
 #include "fbs/animation/tracn.h"
@@ -15,9 +14,11 @@
 #include "pokemon_catalog.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class ActorObj: public Node3D {
+class ActorObj : public Node3D
+{
     GDCLASS(ActorObj, Node3D)
 protected:
     static void _bind_methods();
@@ -30,15 +31,30 @@ public:
     void _cleanup();
     virtual void LoadActor(String mdlFile, String animFile, String variation = String());
 
-    virtual AnimationPlayer* GetAnimationPlayer() { return _anim_player; }
-    virtual Skeleton3D* GetSkeleton() { return _skeleton; }
-    TrinityModel* GetModel() { return _model; }
+    virtual AnimationPlayer* GetAnimationPlayer()
+    {
+        return _anim_player;
+    }
+
+    virtual Skeleton3D* GetSkeleton()
+    {
+        return _skeleton;
+    }
+
+    TrinityModel* GetModel()
+    {
+        return _model;
+    }
 
     virtual TypedArray<StringName> GetAnimationList();
     virtual AABB GetBBox();
 
-    void set_voice_bank(const Ref<WwiseSoundBank> &bank);
-    Ref<WwiseSoundBank> get_voice_bank() const { return _voice_bank; }
+    void set_voice_bank(const Ref<WwiseSoundBank>& bank);
+
+    Ref<WwiseSoundBank> get_voice_bank() const
+    {
+        return _voice_bank;
+    }
 
 protected:
     bool debug_skel = false;
@@ -74,9 +90,8 @@ private:
     void _load_animation_motion_detector(String filepath);
     void _load_animations(String tracn_file);
 
-    //Debug
     MeshInstance3D* _debug_mesh = nullptr;
     Ref<ImmediateMesh> _imm_mesh;
 };
 
-} // namespace godot
+}

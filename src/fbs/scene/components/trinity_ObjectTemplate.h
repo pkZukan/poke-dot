@@ -8,18 +8,21 @@
 #include <fbs/scene/trinity_scene_parser.h>
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrinityObjectTemplate : public Resource {
+class TrinityObjectTemplate : public Resource
+{
     GDCLASS(TrinityObjectTemplate, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityObjectTemplate(){}
-	~TrinityObjectTemplate(){}
+    TrinityObjectTemplate() = default;
+    ~TrinityObjectTemplate() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(String, Scope)
     GETTER_SETTER_DEFINE(String, FilePath)

@@ -5,15 +5,18 @@
 #include "generated/uikit_option_guide_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitOptionGuide : public Resource {
+class UIKitOptionGuide : public Resource
+{
     GDCLASS(UIKitOptionGuide, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    UIKitOptionGuide(){}
-    ~UIKitOptionGuide(){}
+    UIKitOptionGuide() = default;
+    ~UIKitOptionGuide() = default;
 
     void LoadFromBuffer(const void* buffer);
 

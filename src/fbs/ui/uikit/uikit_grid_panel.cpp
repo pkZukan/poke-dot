@@ -34,7 +34,8 @@ void UIKitGridPanel::LoadFromBuffer(const void* buffer)
 
     set_Name(Utils::toGodotString(component->name()));
     set_CursorName(Utils::toGodotString(component->cursor_name()));
-    set_GridSize(component->grid_size() ? Vector2i(component->grid_size()->x(), component->grid_size()->y()) : Vector2i());
+    set_GridSize(component->grid_size() ? Vector2i(component->grid_size()->x(), component->grid_size()->y())
+                                        : Vector2i());
     set_Mode(component->mode());
     Array buttonInfoArray;
     if (auto entries = component->button_info())

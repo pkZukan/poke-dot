@@ -7,26 +7,29 @@
 #include "generated/trmmt_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class VariationControl : public Resource {
+class VariationControl : public Resource
+{
     GDCLASS(VariationControl, Resource)
 protected:
-	static void _bind_methods();
-public:
-	VariationControl(){}
-	~VariationControl(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(int, FrameMin)
-	GETTER_SETTER_DEFINE(int, FrameMax)
-	GETTER_SETTER_DEFINE(int, DefaultOverride)
-	GETTER_SETTER_DEFINE(PackedByteArray, Tracm)
-	GETTER_SETTER_DEFINE(Dictionary, Rule)
-	GETTER_SETTER_DEFINE(bool, TableDriven)
-	GETTER_SETTER_DEFINE(int, VariationCount)
-	GETTER_SETTER_DEFINE(Dictionary, MaterialValues)
-	GETTER_SETTER_DEFINE(Dictionary, MeshVisibility)
+public:
+    VariationControl() = default;
+    ~VariationControl() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(int, FrameMin)
+    GETTER_SETTER_DEFINE(int, FrameMax)
+    GETTER_SETTER_DEFINE(int, DefaultOverride)
+    GETTER_SETTER_DEFINE(PackedByteArray, Tracm)
+    GETTER_SETTER_DEFINE(Dictionary, Rule)
+    GETTER_SETTER_DEFINE(bool, TableDriven)
+    GETTER_SETTER_DEFINE(int, VariationCount)
+    GETTER_SETTER_DEFINE(Dictionary, MaterialValues)
+    GETTER_SETTER_DEFINE(Dictionary, MeshVisibility)
 
 private:
     String Name;
@@ -37,58 +40,67 @@ private:
     Dictionary Rule;
     bool TableDriven = false;
     int VariationCount = 0;
-    Dictionary MaterialValues; 
-    Dictionary MeshVisibility; 
+    Dictionary MaterialValues;
+    Dictionary MeshVisibility;
 };
 
-class ModelVariation : public Resource {
+class ModelVariation : public Resource
+{
     GDCLASS(ModelVariation, Resource)
 protected:
-	static void _bind_methods();
-public:
-	ModelVariation(){}
-	~ModelVariation(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(PackedStringArray, Materials)
-	GETTER_SETTER_DEFINE(Dictionary, MeshVisibility)
-	GETTER_SETTER_DEFINE(Array, Controls)
+public:
+    ModelVariation() = default;
+    ~ModelVariation() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(PackedStringArray, Materials)
+    GETTER_SETTER_DEFINE(Dictionary, MeshVisibility)
+    GETTER_SETTER_DEFINE(Array, Controls)
 
 private:
     String Name;
     PackedStringArray Materials;
     Dictionary MeshVisibility;
-	Array Controls;
+    Array Controls;
 };
 
-class TRModelMeta : public Resource {
+class TRModelMeta : public Resource
+{
     GDCLASS(TRModelMeta, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRModelMeta(){}
-	~TRModelMeta(){}
+    TRModelMeta() = default;
+    ~TRModelMeta() = default;
 
     void LoadFromFile(String file);
-    Ref<ModelVariation> find_variation(const String &name) const;
+    Ref<ModelVariation> find_variation(const String& name) const;
 
-	GETTER_SETTER_DEFINE(Array, Variations)
+    GETTER_SETTER_DEFINE(Array, Variations)
 
 private:
     Array Variations;
 };
 
-class ResourceFormatLoaderTRMMT : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRMMT, ResourceFormatLoader)
+class ResourceFormatLoaderTRMMT : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRMMT, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRMMT(){}
-	~ResourceFormatLoaderTRMMT(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRMMT() = default;
+    ~ResourceFormatLoaderTRMMT() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

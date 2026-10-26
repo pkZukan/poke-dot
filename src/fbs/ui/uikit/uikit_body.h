@@ -7,18 +7,21 @@
 #include "generated/uikit_body_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitBody : public Resource {
+class UIKitBody : public Resource
+{
     GDCLASS(UIKitBody, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	UIKitBody(){}
-	~UIKitBody(){}
+    UIKitBody() = default;
+    ~UIKitBody() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(String, ControlName)
     GETTER_SETTER_DEFINE(int, ControlIndex)

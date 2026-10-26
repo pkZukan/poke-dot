@@ -4,12 +4,15 @@
 #include "generated/trinity_ScriptComponent_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinityScriptComponent : public Resource {
+class TrinityScriptComponent : public Resource
+{
     GDCLASS(TrinityScriptComponent, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromBuffer(const void* buffer);
     GETTER_SETTER_DEFINE(String, FilePath)
@@ -27,4 +30,4 @@ private:
     String ResName;
 };
 
-} // namespace godot
+}

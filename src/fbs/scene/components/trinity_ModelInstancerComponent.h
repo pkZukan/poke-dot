@@ -7,18 +7,21 @@
 #include "generated/trinity_ModelInstancerComponent_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrinityModelInstancerComponent : public Resource {
+class TrinityModelInstancerComponent : public Resource
+{
     GDCLASS(TrinityModelInstancerComponent, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TrinityModelInstancerComponent(){}
-    ~TrinityModelInstancerComponent(){}
+    TrinityModelInstancerComponent() = default;
+    ~TrinityModelInstancerComponent() = default;
 
     void LoadFromBuffer(const void* buffer);
-    
+
     GETTER_SETTER_DEFINE(String, FilePath)
 private:
     String FilePath;

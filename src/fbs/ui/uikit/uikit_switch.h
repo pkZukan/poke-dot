@@ -7,18 +7,21 @@
 #include "generated/uikit_switch_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitSwitch : public Resource {
+class UIKitSwitch : public Resource
+{
     GDCLASS(UIKitSwitch, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	UIKitSwitch(){}
-	~UIKitSwitch(){}
+    UIKitSwitch() = default;
+    ~UIKitSwitch() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(String, ControlName)
 

@@ -7,15 +7,18 @@
 #include "generated/personal_array_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TRSpeciesInfo : public Resource {
+class TRSpeciesInfo : public Resource
+{
     GDCLASS(TRSpeciesInfo, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRSpeciesInfo(){}
-    ~TRSpeciesInfo(){}
+    TRSpeciesInfo() = default;
+    ~TRSpeciesInfo() = default;
     GETTER_SETTER_DEFINE(int, species_index)
     GETTER_SETTER_DEFINE(int, species_form)
     GETTER_SETTER_DEFINE(int, species_model)
@@ -40,13 +43,15 @@ private:
     int res2;
 };
 
-class TRStatInfo : public Resource {
+class TRStatInfo : public Resource
+{
     GDCLASS(TRStatInfo, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRStatInfo(){}
-    ~TRStatInfo(){}
+    TRStatInfo() = default;
+    ~TRStatInfo() = default;
     GETTER_SETTER_DEFINE(int, HP)
     GETTER_SETTER_DEFINE(int, ATK)
     GETTER_SETTER_DEFINE(int, DEF)
@@ -63,13 +68,15 @@ private:
     int SPE;
 };
 
-class TRGenderData : public Resource {
+class TRGenderData : public Resource
+{
     GDCLASS(TRGenderData, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRGenderData(){}
-    ~TRGenderData(){}
+    TRGenderData() = default;
+    ~TRGenderData() = default;
     GETTER_SETTER_DEFINE(int, group)
     GETTER_SETTER_DEFINE(int, ratio)
 
@@ -78,13 +85,15 @@ private:
     int ratio;
 };
 
-class TREvoData : public Resource {
+class TREvoData : public Resource
+{
     GDCLASS(TREvoData, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TREvoData(){}
-    ~TREvoData(){}
+    TREvoData() = default;
+    ~TREvoData() = default;
     GETTER_SETTER_DEFINE(int, level)
     GETTER_SETTER_DEFINE(int, method)
     GETTER_SETTER_DEFINE(int, arg)
@@ -105,13 +114,15 @@ private:
     int form;
 };
 
-class TRHatch : public Resource {
+class TRHatch : public Resource
+{
     GDCLASS(TRHatch, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRHatch(){}
-    ~TRHatch(){}
+    TRHatch() = default;
+    ~TRHatch() = default;
     GETTER_SETTER_DEFINE(int, species)
     GETTER_SETTER_DEFINE(int, form)
     GETTER_SETTER_DEFINE(int, region)
@@ -124,13 +135,15 @@ private:
     int can_evolve;
 };
 
-class TRZukanData : public Resource {
+class TRZukanData : public Resource
+{
     GDCLASS(TRZukanData, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRZukanData(){}
-    ~TRZukanData(){}
+    TRZukanData() = default;
+    ~TRZukanData() = default;
     GETTER_SETTER_DEFINE(int, index)
     GETTER_SETTER_DEFINE(int, group)
 
@@ -139,13 +152,15 @@ private:
     int group;
 };
 
-class TRMove : public Resource {
+class TRMove : public Resource
+{
     GDCLASS(TRMove, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    TRMove(){}
-    ~TRMove(){}
+    TRMove() = default;
+    ~TRMove() = default;
     GETTER_SETTER_DEFINE(int, move)
     GETTER_SETTER_DEFINE(int, level)
 private:
@@ -153,12 +168,15 @@ private:
     int level;
 };
 
-class TRPersonalData : public Resource {
+class TRPersonalData : public Resource
+{
     GDCLASS(TRPersonalData, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    enum Types {
+    enum Types
+    {
         NORMAL,
         FIGHTING,
         FLYING,
@@ -179,8 +197,8 @@ public:
         FAIRY,
     };
 
-    TRPersonalData(){}
-    ~TRPersonalData(){}
+    TRPersonalData() = default;
+    ~TRPersonalData() = default;
     GETTER_SETTER_DEFINE(Ref<TRSpeciesInfo>, species)
     GETTER_SETTER_DEFINE(bool, is_present)
     GETTER_SETTER_DEFINE(Ref<TRZukanData>, dex)
@@ -236,38 +254,45 @@ private:
     Array learnset;
 };
 
-class TRPersonalArray : public Resource {
+class TRPersonalArray : public Resource
+{
     GDCLASS(TRPersonalArray, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRPersonalArray(){}
-	~TRPersonalArray(){}
+    TRPersonalArray() = default;
+    ~TRPersonalArray() = default;
 
     void LoadFromFile(String file);
     Ref<TRPersonalData> LazyLoadFromFile(String file, int idx);
     int FindIndex(String file, uint16_t species, uint8_t form);
-	
+
     GETTER_SETTER_DEFINE(Array, entries)
 
 private:
-    Ref<TRPersonalData> _LoadEntry(const PersonalData *ent);
+    Ref<TRPersonalData> _LoadEntry(const PersonalData* ent);
 
     Array entries;
 };
 
-class ResourceFormatLoaderTRPERSONAL : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRPERSONAL, ResourceFormatLoader)
+class ResourceFormatLoaderTRPERSONAL : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRPERSONAL, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRPERSONAL(){}
-	~ResourceFormatLoaderTRPERSONAL(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-    virtual bool _recognize_path(const String &p_path, const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRPERSONAL() = default;
+    ~ResourceFormatLoaderTRPERSONAL() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual bool _recognize_path(const String& p_path, const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

@@ -7,75 +7,87 @@
 #include "generated/trmdl_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class LodIndex : public Resource {
+class LodIndex : public Resource
+{
     GDCLASS(LodIndex, Resource)
 protected:
-	static void _bind_methods();
-public:
-	LodIndex(){}
-	~LodIndex(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(int, unk0)
+public:
+    LodIndex() = default;
+    ~LodIndex() = default;
+
+    GETTER_SETTER_DEFINE(int, unk0)
 
 private:
-	int unk0;
+    int unk0;
 };
 
-class LOD : public Resource {
+class LOD : public Resource
+{
     GDCLASS(LOD, Resource)
 protected:
-	static void _bind_methods();
-public:
-	LOD(){}
-	~LOD(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(Array, Index)
-	GETTER_SETTER_DEFINE(String, Type)
+public:
+    LOD() = default;
+    ~LOD() = default;
+
+    GETTER_SETTER_DEFINE(Array, Index)
+    GETTER_SETTER_DEFINE(String, Type)
 
 private:
-	Array Index;
-	String Type;
+    Array Index;
+    String Type;
 };
 
-class TRModel : public Resource {
+class TRModel : public Resource
+{
     GDCLASS(TRModel, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRModel(){}
-	~TRModel(){}
+    TRModel() = default;
+    ~TRModel() = default;
 
-	void LoadFromFile(String file);
+    void LoadFromFile(String file);
 
-	GETTER_SETTER_DEFINE(int, unk0)
-	GETTER_SETTER_DEFINE(PackedStringArray, Meshes)
-	GETTER_SETTER_DEFINE(String, Skeleton)
-	GETTER_SETTER_DEFINE(PackedStringArray, Materials)
-	GETTER_SETTER_DEFINE(Array, Lods)
-	GETTER_SETTER_DEFINE(AABB, BBox)
+    GETTER_SETTER_DEFINE(int, unk0)
+    GETTER_SETTER_DEFINE(PackedStringArray, Meshes)
+    GETTER_SETTER_DEFINE(String, Skeleton)
+    GETTER_SETTER_DEFINE(PackedStringArray, Materials)
+    GETTER_SETTER_DEFINE(Array, Lods)
+    GETTER_SETTER_DEFINE(AABB, BBox)
 
 private:
-	int unk0;
-	PackedStringArray Meshes;
-	String Skeleton;
-	PackedStringArray Materials;
-	Array Lods;
-	AABB BBox;
+    int unk0;
+    PackedStringArray Meshes;
+    String Skeleton;
+    PackedStringArray Materials;
+    Array Lods;
+    AABB BBox;
 };
 
-class ResourceFormatLoaderTRMDL : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRMDL, ResourceFormatLoader)
+class ResourceFormatLoaderTRMDL : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRMDL, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRMDL(){}
-	~ResourceFormatLoaderTRMDL(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRMDL() = default;
+    ~ResourceFormatLoaderTRMDL() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

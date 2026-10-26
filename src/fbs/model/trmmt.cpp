@@ -30,48 +30,72 @@ void TRModelMeta::_bind_methods()
     GETTER_SETTER_BIND(TRModelMeta, Variations, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "ModelVariation")
 }
 
-// Collects named per-variation series into name -> Array.
 template <typename T, typename F>
-static void read_series(const flatbuffers::Vector<flatbuffers::Offset<T>> *list, Dictionary &out, F convert)
+static void read_series(const flatbuffers::Vector<flatbuffers::Offset<T>>* list, Dictionary& out, F convert)
 {
-    if (list == nullptr) return;
-    for (auto series : *list) {
+    if (list == nullptr)
+    {
+        return;
+    }
+    for (auto series : *list)
+    {
         Array values;
         if (series->values())
-            for (auto v : *series->values()) values.push_back(convert(v));
+        {
+            for (auto v : *series->values())
+            {
+                values.push_back(convert(v));
+            }
+        }
         out[Utils::toGodotString(series->name())] = values;
     }
 }
 
-static Dictionary read_rule(const Titan::Model::ControlRule *rule)
+static Dictionary read_rule(const Titan::Model::ControlRule* rule)
 {
     Dictionary out;
-    if (rule == nullptr) return out;
+    if (rule == nullptr)
+    {
+        return out;
+    }
     out["name"] = Utils::toGodotString(rule->name());
     out["upper"] = rule->upper();
     out["initial"] = rule->initial();
 
     Dictionary cond;
-    if (auto copy = rule->condition_as_RuleCopy()) {
+    if (auto copy = rule->condition_as_RuleCopy())
+    {
         cond["type"] = "copy";
         cond["source"] = Utils::toGodotString(copy->source());
-    } else if (auto copy_if = rule->condition_as_RuleCopyIfPresent()) {
+    }
+    else if (auto copy_if = rule->condition_as_RuleCopyIfPresent())
+    {
         cond["type"] = "copy_if_present";
         cond["probe"] = Utils::toGodotString(copy_if->probe());
         cond["source"] = Utils::toGodotString(copy_if->source());
-    } else if (auto sw = rule->condition_as_RuleSwitch()) {
+    }
+    else if (auto sw = rule->condition_as_RuleSwitch())
+    {
         cond["type"] = "switch";
         cond["source"] = Utils::toGodotString(sw->source());
         Dictionary cases;
         if (sw->cases())
-            for (auto c : *sw->cases()) cases[c->match()] = c->result();
+        {
+            for (auto c : *sw->cases())
+            {
+                cases[c->match()] = c->result();
+            }
+        }
         cond["cases"] = cases;
     }
-    if (!cond.is_empty()) out["condition"] = cond;
+    if (!cond.is_empty())
+    {
+        out["condition"] = cond;
+    }
     return out;
 }
 
-static Ref<VariationControl> read_control(const Titan::Model::VariationControl *src)
+static Ref<VariationControl> read_control(const Titan::Model::VariationControl* src)
 {
     Ref<VariationControl> ctrl;
     ctrl.instantiate();
@@ -81,7 +105,8 @@ static Ref<VariationControl> read_control(const Titan::Model::VariationControl *
     ctrl->set_DefaultOverride(src->default_override());
     ctrl->set_Rule(read_rule(src->rule()));
 
-    if (src->tracm() && src->tracm()->bytebuffer()) {
+    if (src->tracm() && src->tracm()->bytebuffer())
+    {
         auto bytes = src->tracm()->bytebuffer();
         PackedByteArray tracm;
         tracm.resize(bytes->size());
@@ -91,24 +116,49 @@ static Ref<VariationControl> read_control(const Titan::Model::VariationControl *
 
     auto table = src->variations();
     ctrl->set_TableDriven(src->table_driven() && table != nullptr);
-    if (table == nullptr) return ctrl;
+    if (table == nullptr)
+    {
+        return ctrl;
+    }
 
     ctrl->set_VariationCount(table->count());
     Dictionary materials;
-    if (table->materials()) {
-        for (auto mat : *table->materials()) {
+    if (table->materials())
+    {
+        for (auto mat : *table->materials())
+        {
             Dictionary params;
-            read_series(mat->floats(), params, [](float v) { return Variant(v); });
-            read_series(mat->vec3s(), params, [](const Titan::Math::Vec3 *v) { return Variant(Utils::toGodotVec3(v)); });
-            read_series(mat->vec4s(), params, [](const Titan::Math::Vec4 *v) { return Variant(Utils::toGodotVec4(v)); });
-            read_series(mat->ints(), params, [](int32_t v) { return Variant(v); });
+            read_series(mat->floats(), params,
+                        [](float v)
+                        {
+                            return Variant(v);
+                        });
+            read_series(mat->vec3s(), params,
+                        [](const Titan::Math::Vec3* v)
+                        {
+                            return Variant(Utils::toGodotVec3(v));
+                        });
+            read_series(mat->vec4s(), params,
+                        [](const Titan::Math::Vec4* v)
+                        {
+                            return Variant(Utils::toGodotVec4(v));
+                        });
+            read_series(mat->ints(), params,
+                        [](int32_t v)
+                        {
+                            return Variant(v);
+                        });
             materials[Utils::toGodotString(mat->material())] = params;
         }
     }
     ctrl->set_MaterialValues(materials);
 
     Dictionary visibility;
-    read_series(table->mesh_visibility(), visibility, [](uint8_t v) { return Variant(v != 0); });
+    read_series(table->mesh_visibility(), visibility,
+                [](uint8_t v)
+                {
+                    return Variant(v != 0);
+                });
     ctrl->set_MeshVisibility(visibility);
     return ctrl;
 }
@@ -120,7 +170,10 @@ void TRModelMeta::LoadFromFile(String file)
 
     auto meta = Titan::Model::GetTRMMT(buf.ptr());
     ERR_FAIL_COND_MSG(meta == NULL, vformat("Couldn't load TRMMT flatbuffer"));
-    if (meta->variations() == nullptr) return;
+    if (meta->variations() == nullptr)
+    {
+        return;
+    }
 
     for (auto src : *meta->variations())
     {
@@ -130,34 +183,53 @@ void TRModelMeta::LoadFromFile(String file)
 
         PackedStringArray materials;
         if (src->materials())
-            for (auto path : *src->materials()) materials.push_back(Utils::toGodotString(path));
+        {
+            for (auto path : *src->materials())
+            {
+                materials.push_back(Utils::toGodotString(path));
+            }
+        }
         variation->set_Materials(materials);
 
         Dictionary visibility;
         if (src->mesh_visibility())
+        {
             for (auto toggle : *src->mesh_visibility())
+            {
                 visibility[Utils::toGodotString(toggle->mesh())] = toggle->visible();
+            }
+        }
         variation->set_MeshVisibility(visibility);
 
         Array controls;
         if (src->controls())
-            for (auto ctrl : *src->controls()) controls.push_back(read_control(ctrl));
+        {
+            for (auto ctrl : *src->controls())
+            {
+                controls.push_back(read_control(ctrl));
+            }
+        }
         variation->set_Controls(controls);
 
         Variations.push_back(variation);
     }
 }
 
-Ref<ModelVariation> TRModelMeta::find_variation(const String &name) const
+Ref<ModelVariation> TRModelMeta::find_variation(const String& name) const
 {
-    for (int i = 0; i < Variations.size(); i++) {
+    for (int i = 0; i < Variations.size(); i++)
+    {
         Ref<ModelVariation> variation = Variations[i];
-        if (variation.is_valid() && variation->get_Name() == name) return variation;
+        if (variation.is_valid() && variation->get_Name() == name)
+        {
+            return variation;
+        }
     }
     return Ref<ModelVariation>();
 }
 
-Variant ResourceFormatLoaderTRMMT::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRMMT::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRModelMeta> trmmt;
     trmmt.instantiate();
@@ -173,7 +245,7 @@ PackedStringArray ResourceFormatLoaderTRMMT::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRMMT::_handles_type(const StringName &p_type) const
+bool ResourceFormatLoaderTRMMT::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRModelMeta");
 }

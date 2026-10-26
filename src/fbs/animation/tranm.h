@@ -9,105 +9,119 @@
 #include "generated/tranm_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
 class QuaternionHelper
 {
 private:
-	static constexpr int32_t SCALE = 0x7FFF;
+    static constexpr int32_t SCALE = 0x7FFF;
     static constexpr float PI_QUARTER = Math_PI / 4.0f;
     static constexpr float PI_HALF = Math_PI / 2.0f;
 
-	static float expand_float(int32_t i);
+    static float expand_float(int32_t i);
 
 public:
-    static Quaternion Unpack(const Vector3i &vec);
+    static Quaternion Unpack(const Vector3i& vec);
 };
 
-class BoneTrack : public Resource {
-	GDCLASS(BoneTrack, Resource)
+class BoneTrack : public Resource
+{
+    GDCLASS(BoneTrack, Resource)
 protected:
-	static void _bind_methods();
-public:
-	BoneTrack(){}
-	~BoneTrack(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
+public:
+    BoneTrack() = default;
+    ~BoneTrack() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(Ref<Resource>, scale)
     GETTER_SETTER_DEFINE(Ref<Resource>, rotate)
     GETTER_SETTER_DEFINE(Ref<Resource>, translate)
 
 private:
-	String Name;
+    String Name;
     Ref<Resource> scale;
     Ref<Resource> rotate;
     Ref<Resource> translate;
 };
 
-class BoneInit : public Resource {
-	GDCLASS(BoneInit, Resource)
+class BoneInit : public Resource
+{
+    GDCLASS(BoneInit, Resource)
 protected:
-	static void _bind_methods();
-public:
-	BoneInit(){}
-	~BoneInit(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(uint32_t, isInit)
+public:
+    BoneInit() = default;
+    ~BoneInit() = default;
+
+    GETTER_SETTER_DEFINE(uint32_t, isInit)
     GETTER_SETTER_DEFINE(Transform3D, transform)
 
 private:
-	uint32_t isInit;
+    uint32_t isInit;
     Transform3D transform;
 };
 
-class BoneAnimation : public Resource {
-	GDCLASS(BoneAnimation, Resource)
+class BoneAnimation : public Resource
+{
+    GDCLASS(BoneAnimation, Resource)
 protected:
-	static void _bind_methods();
-public:
-	BoneAnimation(){}
-	~BoneAnimation(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(Array, tracks)
+public:
+    BoneAnimation() = default;
+    ~BoneAnimation() = default;
+
+    GETTER_SETTER_DEFINE(Array, tracks)
     GETTER_SETTER_DEFINE(Ref<BoneInit>, initData)
 
 private:
-	Array tracks;
+    Array tracks;
     Ref<BoneInit> initData;
 };
 
-class TRAnimation : public Resource {
+class TRAnimation : public Resource
+{
     GDCLASS(TRAnimation, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRAnimation(){}
-	~TRAnimation(){}
+    TRAnimation() = default;
+    ~TRAnimation() = default;
 
     void LoadFromFile(String file);
-	
+
     GETTER_SETTER_DEFINE(Ref<TRAnimationInfo>, Info)
     GETTER_SETTER_DEFINE(Ref<BoneAnimation>, Track)
 
 private:
-	Ref<Resource> ParseRotationTrack(Titan::Animation::RotationTrack type, const void* data);
-	Ref<Resource> ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data);
+    Ref<Resource> ParseRotationTrack(Titan::Animation::RotationTrack type, const void* data);
+    Ref<Resource> ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data);
 
     Ref<TRAnimationInfo> Info;
     Ref<BoneAnimation> Track;
 };
 
-class ResourceFormatLoaderTRANM : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRANM, ResourceFormatLoader)
+class ResourceFormatLoaderTRANM : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRANM, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRANM(){}
-	~ResourceFormatLoaderTRANM(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRANM() = default;
+    ~ResourceFormatLoaderTRANM() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

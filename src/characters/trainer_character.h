@@ -11,9 +11,11 @@
 #include "middleware/bntx.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrainerCharacter : public CharacterBody3D {
+class TrainerCharacter : public CharacterBody3D
+{
     GDCLASS(TrainerCharacter, CharacterBody3D)
 protected:
     static void _bind_methods();
@@ -32,15 +34,17 @@ public:
     void setterCallback(String setterName)
     {
         if (is_inside_tree())
+        {
             _initialize();
+        }
     }
 
     Vector3 GetRootMotionPos();
 
-    Node3D *get_model() const;
-    AnimationPlayer *get_animation_player() const;
-    void configure_animation_tree(AnimationTree *tree);
-    void apply_movement(double delta, const Vector3 &direction);
+    Node3D* get_model() const;
+    AnimationPlayer* get_animation_player() const;
+    void configure_animation_tree(AnimationTree* tree);
+    void apply_movement(double delta, const Vector3& direction);
 
 private:
     String variation;
@@ -48,10 +52,10 @@ private:
     float max_root_motion_speed = 30.0f;
     Ref<BinaryTexture> icon;
 
-    TrainerActor *_actor = nullptr;
-    AnimationTree *_anim_tree = nullptr;
-    
-    CollisionShape3D *_col = nullptr;
+    TrainerActor* _actor = nullptr;
+    AnimationTree* _anim_tree = nullptr;
+
+    CollisionShape3D* _col = nullptr;
     Ref<BoxShape3D> _col_shape;
 
     void _initialize();
@@ -59,4 +63,4 @@ private:
     void _try_step_up(const Vector3& motion);
 };
 
-} // namespace godot
+}

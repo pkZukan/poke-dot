@@ -8,18 +8,22 @@
 
 using namespace godot;
 
-namespace {
+namespace
+{
 std::vector<StringName> owned_globals;
 }
 
 void register_trinity_shader_globals()
 {
-    ProjectSettings *settings = ProjectSettings::get_singleton();
-    struct Global {
-        const char *name;
-        const char *type;
+    ProjectSettings* settings = ProjectSettings::get_singleton();
+
+    struct Global
+    {
+        const char* name;
+        const char* type;
         Variant default_value;
     };
+
     // RenderingServer is not exposed to extensions at scene initialization yet.
     // Godot loads these settings into the renderer later during startup.
     // Textures start unbound until the environment sets them.
@@ -71,10 +75,13 @@ void register_trinity_shader_globals()
         {"TrinitySunShadingDirection", "vec3", Vector3(0, 1, 0)},
     };
 
-    for (const Global &global : globals) {
+    for (const Global& global : globals)
+    {
         const StringName name(String("shader_globals/") + global.name);
         if (settings->has_setting(name))
+        {
             continue;
+        }
         Dictionary value;
         value["type"] = global.type;
         value["value"] = global.default_value;
@@ -86,8 +93,10 @@ void register_trinity_shader_globals()
 
 void unregister_trinity_shader_globals()
 {
-    ProjectSettings *settings = ProjectSettings::get_singleton();
-    for (const StringName &name : owned_globals)
+    ProjectSettings* settings = ProjectSettings::get_singleton();
+    for (const StringName& name : owned_globals)
+    {
         settings->set_setting(name, Variant());
+    }
     owned_globals.clear();
 }

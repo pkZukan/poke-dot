@@ -2,7 +2,16 @@ namespace Titan.TrinityScene;
 
 table TrinityLightApplierComponent
 {
-    // No fields are documented in the reference yet.
+    file_path: string;
+    time_span: float;
+    current_time: float;
+    start_with_offset_data: bool;
+    offset_data_name: string;
+    offset_blend_weight: float;
+    apply_game_object_srt: bool;
+    priority: int;
+    unique_flag: bool;
+    use_instancer_srt: bool;
 }
 
 root_type TrinityLightApplierComponent;

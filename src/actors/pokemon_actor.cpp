@@ -10,7 +10,7 @@
 
 using namespace godot;
 
-void PokemonActor::_bind_methods() 
+void PokemonActor::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("Initialize"), &PokemonActor::Initialize);
     ClassDB::bind_method(D_METHOD("GetPersonal"), &PokemonActor::GetPersonal);
@@ -18,7 +18,8 @@ void PokemonActor::_bind_methods()
     ClassDB::bind_method(D_METHOD("GetEvolutions"), &PokemonActor::GetEvolutions);
     ClassDB::bind_method(D_METHOD("FindLevelUpEvolution", "level"), &PokemonActor::FindLevelUpEvolution);
     ClassDB::bind_method(D_METHOD("Evolve", "index"), &PokemonActor::Evolve);
-    ADD_SIGNAL(MethodInfo("evolved", PropertyInfo(Variant::INT, "previous_species"), PropertyInfo(Variant::INT, "previous_form")));
+    ADD_SIGNAL(MethodInfo("evolved", PropertyInfo(Variant::INT, "previous_species"),
+                          PropertyInfo(Variant::INT, "previous_form")));
 }
 
 PokemonActor::PokemonActor()
@@ -31,27 +32,35 @@ void PokemonActor::SetInfo(Ref<CatalogEntry> catalog, bool isShiny)
     _catalog = catalog;
     _isShiny = isShiny;
     Ref<SpeciesResourceInfo> info = _catalog.is_valid() ? _catalog->get_species_info() : Ref<SpeciesResourceInfo>();
-    _personal = info.is_valid() ? PokemonCatalog::get_singleton()->GetPersonalData(info->get_species(), info->get_form()) : Ref<TRPersonalData>();
+    _personal = info.is_valid()
+                    ? PokemonCatalog::get_singleton()->GetPersonalData(info->get_species(), info->get_form())
+                    : Ref<TRPersonalData>();
 }
 
 void PokemonActor::SetShiny(bool isShiny)
 {
     _isShiny = isShiny;
-    if (TrinityModel *model = GetModel())
+    if (TrinityModel* model = GetModel())
+    {
         model->set_variation(_isShiny ? "rare" : "");
+    }
 }
 
 void PokemonActor::Initialize()
 {
-    if(!_catalog.is_valid()) return;
+    if (!_catalog.is_valid())
+    {
+        return;
+    }
 
     String relMdlPath = _catalog->get_model_path();
     _species_path = base_path.path_join(relMdlPath.get_base_dir());
     String _species_mdl = relMdlPath.get_file();
     Ref<AnimationResourceInfo> animInfo = _catalog->get_animations()[0];
-    
+
     String tracn_file = base_path.path_join(animInfo->get_path());
-    tracn_file = tracn_file.replace(".tracn", "_base.tracn"); //why, gamefreak?
+    // Pokemon animation files add _base to the catalog's .tracn path.
+    tracn_file = tracn_file.replace(".tracn", "_base.tracn");
     LoadActor(_species_path.path_join(_species_mdl), tracn_file, _isShiny ? "rare" : "");
 }
 
@@ -59,13 +68,17 @@ Array PokemonActor::GetEvolutions() const
 {
     Array evolutions;
     if (_personal.is_null())
+    {
         return evolutions;
+    }
     const Array table = _personal->get_evo_table();
     for (int i = 0; i < table.size(); i++)
     {
         Ref<TREvoData> evo = table[i];
         if (evo.is_valid() && evo->get_species() != 0)
+        {
             evolutions.push_back(evo);
+        }
     }
     return evolutions;
 }
@@ -77,7 +90,9 @@ int PokemonActor::FindLevelUpEvolution(int level) const
     {
         Ref<TREvoData> evo = evolutions[i];
         if (evo->get_method() == 4 && level >= evo->get_level())
+        {
             return i;
+        }
     }
     return -1;
 }
@@ -90,13 +105,17 @@ bool PokemonActor::Evolve(int index)
     Ref<SpeciesResourceInfo> current = _catalog->get_species_info();
 
     // Keep the gender model when the evolution has one; otherwise use its default model.
-    PokemonCatalog *catalog = PokemonCatalog::get_singleton();
+    PokemonCatalog* catalog = PokemonCatalog::get_singleton();
     uint8_t gender = current->get_gender();
     if (!catalog->HasCatalogEntry(evo->get_species(), evo->get_form(), gender))
+    {
         gender = 0;
+    }
     Ref<CatalogEntry> target = catalog->GetCatalogEntry(evo->get_species(), evo->get_form(), gender);
     if (target.is_null())
+    {
         return false;
+    }
 
     const int previous_species = current->get_species();
     const int previous_form = current->get_form();

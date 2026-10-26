@@ -7,16 +7,19 @@
 #include "generated/trinity_sceneObject_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TrinityObjectLayer : public Resource {
+class TrinityObjectLayer : public Resource
+{
     GDCLASS(TrinityObjectLayer, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinityObjectLayer(){}
-	~TrinityObjectLayer(){}
-	
+    TrinityObjectLayer() = default;
+    ~TrinityObjectLayer() = default;
+
     GETTER_SETTER_DEFINE(int, Priority)
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(Transform3D, transform)
@@ -27,16 +30,18 @@ private:
     Transform3D transform;
 };
 
-class TrinitySceneObject : public Resource {
+class TrinitySceneObject : public Resource
+{
     GDCLASS(TrinitySceneObject, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TrinitySceneObject(){}
-	~TrinitySceneObject(){}
+    TrinitySceneObject() = default;
+    ~TrinitySceneObject() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(Transform3D, transform)
     GETTER_SETTER_DEFINE(bool, keep_world_srt)

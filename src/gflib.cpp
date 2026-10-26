@@ -5,9 +5,9 @@
 
 using namespace godot;
 
-static const char *ROMFS_ROOT_SETTING = "gflib/romfs_root";
+static const char* ROMFS_ROOT_SETTING = "gflib/romfs_root";
 
-GFLib *GFLib::singleton = nullptr;
+GFLib* GFLib::singleton = nullptr;
 
 void GFLib::_bind_methods()
 {
@@ -20,20 +20,26 @@ void GFLib::_bind_methods()
 GFLib::GFLib()
 {
     if (singleton == nullptr)
+    {
         singleton = this;
+    }
 }
 
 GFLib::~GFLib()
 {
     if (singleton == this)
+    {
         singleton = nullptr;
+    }
 }
 
 void GFLib::load_project_settings()
 {
-    ProjectSettings *settings = ProjectSettings::get_singleton();
+    ProjectSettings* settings = ProjectSettings::get_singleton();
     if (!settings->has_setting(ROMFS_ROOT_SETTING))
+    {
         settings->set_setting(ROMFS_ROOT_SETTING, String());
+    }
     settings->set_initial_value(ROMFS_ROOT_SETTING, String());
     settings->set_as_basic(ROMFS_ROOT_SETTING, true);
 
@@ -46,18 +52,20 @@ void GFLib::load_project_settings()
     romfs_root = settings->get_setting(ROMFS_ROOT_SETTING);
 }
 
-String GFLib::romfs_path(const String &relative)
+String GFLib::romfs_path(const String& relative)
 {
     return singleton ? singleton->romfs_root.path_join(relative) : relative;
 }
 
-void GFLib::set_romfs_root(const String &path)
+void GFLib::set_romfs_root(const String& path)
 {
     if (romfs_root == path)
+    {
         return;
+    }
     romfs_root = path;
     // The catalog is read once at startup; refresh it from the new root.
-    if (PokemonCatalog *catalog = PokemonCatalog::get_singleton())
+    if (PokemonCatalog* catalog = PokemonCatalog::get_singleton())
     {
         catalog->unload_catalog();
         catalog->load_catalog();

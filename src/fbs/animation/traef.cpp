@@ -71,15 +71,25 @@ Array TRAnimationEffects::get_events(double frame_rate) const
             Ref<TREffect> entry = entries[j];
             Ref<Resource> value = entry->get_value();
             if (Ref<TREffectValueInt> integer = value; integer.is_valid())
+            {
                 parameters[entry->get_Name()] = integer->get_value();
+            }
             else if (Ref<TREffectValueFloat> real = value; real.is_valid())
+            {
                 parameters[entry->get_Name()] = real->get_value();
+            }
             else if (Ref<TREffectValueByte> byte = value; byte.is_valid())
+            {
                 parameters[entry->get_Name()] = byte->get_value();
+            }
             else if (Ref<TREffectValueString> string = value; string.is_valid())
+            {
                 parameters[entry->get_Name()] = string->get_value();
+            }
             else
+            {
                 parameters[entry->get_Name()] = Variant();
+            }
         }
         event["parameters"] = parameters;
         events[i] = event;
@@ -89,10 +99,13 @@ Array TRAnimationEffects::get_events(double frame_rate) const
 
 Ref<Resource> TRAnimationEffects::_LoadEffectValue(Titan::Animation::EffectValue type, const void* data)
 {
-    if(!data)
+    if (!data)
+    {
         return Ref<Resource>();
+    }
 
-    switch (type) {
+    switch (type)
+    {
         case Titan::Animation::EffectValue::EffectValue_EffectValue_Int:
         {
             auto src = static_cast<const Titan::Animation::EffectValue_Int*>(data);
@@ -140,9 +153,10 @@ void TRAnimationEffects::LoadFromFile(String file)
 
     auto anims = traef->effects();
     Array animArr;
-    if(anims)
+    if (anims)
     {
-        for (size_t i = 0; i < anims->size(); i++) {
+        for (size_t i = 0; i < anims->size(); i++)
+        {
             auto anim = anims->Get(i);
 
             Ref<TRAnimationEffect> obj;
@@ -154,9 +168,10 @@ void TRAnimationEffects::LoadFromFile(String file)
 
             auto params = anim->effects();
             Array paramArr;
-            if(params)
+            if (params)
             {
-                for (size_t j = 0; j < params->size(); j++) {
+                for (size_t j = 0; j < params->size(); j++)
+                {
                     auto param = params->Get(j);
 
                     Ref<TREffect> effect;
@@ -175,7 +190,8 @@ void TRAnimationEffects::LoadFromFile(String file)
     set_effects(animArr);
 }
 
-Variant ResourceFormatLoaderTRAEF::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRAEF::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRAnimationEffects> traef;
     traef.instantiate();
@@ -191,7 +207,7 @@ PackedStringArray ResourceFormatLoaderTRAEF::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRAEF::_handles_type(const StringName &p_type) const
+bool ResourceFormatLoaderTRAEF::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRAnimationEffects");
 }

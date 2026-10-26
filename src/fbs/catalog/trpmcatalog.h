@@ -9,69 +9,78 @@
 #include "generated/trpmcatalog_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class LocatorResourceInfo : public Resource {
-	GDCLASS(LocatorResourceInfo, Resource)
+class LocatorResourceInfo : public Resource
+{
+    GDCLASS(LocatorResourceInfo, Resource)
 protected:
-	static void _bind_methods();
-public:
-	LocatorResourceInfo(){}
-	~LocatorResourceInfo(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(int16_t, form_number)
+public:
+    LocatorResourceInfo() = default;
+    ~LocatorResourceInfo() = default;
+
+    GETTER_SETTER_DEFINE(int16_t, form_number)
     GETTER_SETTER_DEFINE(uint8_t, loc_index)
     GETTER_SETTER_DEFINE(String, loc_path)
 
 private:
-	int16_t form_number;
+    int16_t form_number;
     uint8_t loc_index;
     String loc_path;
 };
 
-class AnimationResourceInfo : public Resource {
-	GDCLASS(AnimationResourceInfo, Resource)
+class AnimationResourceInfo : public Resource
+{
+    GDCLASS(AnimationResourceInfo, Resource)
 protected:
-	static void _bind_methods();
-public:
-	AnimationResourceInfo(){}
-	~AnimationResourceInfo(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(int16_t, form_number)
+public:
+    AnimationResourceInfo() = default;
+    ~AnimationResourceInfo() = default;
+
+    GETTER_SETTER_DEFINE(int16_t, form_number)
     GETTER_SETTER_DEFINE(String, path)
 
 private:
-	int16_t form_number;
+    int16_t form_number;
     String path;
 };
 
-class SpeciesResourceInfo : public Resource {
-	GDCLASS(SpeciesResourceInfo, Resource)
+class SpeciesResourceInfo : public Resource
+{
+    GDCLASS(SpeciesResourceInfo, Resource)
 protected:
-	static void _bind_methods();
-public:
-	SpeciesResourceInfo(){}
-	~SpeciesResourceInfo(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(uint16_t, species)
+public:
+    SpeciesResourceInfo() = default;
+    ~SpeciesResourceInfo() = default;
+
+    GETTER_SETTER_DEFINE(uint16_t, species)
     GETTER_SETTER_DEFINE(uint16_t, form)
     GETTER_SETTER_DEFINE(uint8_t, gender)
 
 private:
-	uint16_t species;
+    uint16_t species;
     uint16_t form;
     uint8_t gender;
 };
 
-class CatalogEntry : public Resource {
-	GDCLASS(CatalogEntry, Resource)
+class CatalogEntry : public Resource
+{
+    GDCLASS(CatalogEntry, Resource)
 protected:
-	static void _bind_methods();
-public:
-	CatalogEntry(){}
-	~CatalogEntry(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(Ref<SpeciesResourceInfo>, species_info)
+public:
+    CatalogEntry() = default;
+    ~CatalogEntry() = default;
+
+    GETTER_SETTER_DEFINE(Ref<SpeciesResourceInfo>, species_info)
     GETTER_SETTER_DEFINE(String, model_path)
     GETTER_SETTER_DEFINE(String, material_table_path)
     GETTER_SETTER_DEFINE(String, config_path)
@@ -80,7 +89,7 @@ public:
     GETTER_SETTER_DEFINE(String, icon_path)
 
 private:
-	Ref<SpeciesResourceInfo> species_info;
+    Ref<SpeciesResourceInfo> species_info;
     String model_path;
     String material_table_path;
     String config_path;
@@ -89,16 +98,18 @@ private:
     String icon_path;
 };
 
-class TRPpokemonCatalog : public Resource {
+class TRPpokemonCatalog : public Resource
+{
     GDCLASS(TRPpokemonCatalog, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRPpokemonCatalog(){}
-	~TRPpokemonCatalog(){}
+    TRPpokemonCatalog() = default;
+    ~TRPpokemonCatalog() = default;
 
     void LoadFromFile(String file);
-	
+
     GETTER_SETTER_DEFINE(int, version)
     GETTER_SETTER_DEFINE(Array, catalog_table)
 
@@ -107,17 +118,22 @@ private:
     Array catalog_table;
 };
 
-class ResourceFormatLoaderTRPMCATALOG : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRPMCATALOG, ResourceFormatLoader)
+class ResourceFormatLoaderTRPMCATALOG : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRPMCATALOG, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRPMCATALOG(){}
-	~ResourceFormatLoaderTRPMCATALOG(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRPMCATALOG() = default;
+    ~ResourceFormatLoaderTRPMCATALOG() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

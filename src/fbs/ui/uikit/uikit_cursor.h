@@ -5,15 +5,18 @@
 #include "generated/uikit_cursor_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitCursor : public Resource {
+class UIKitCursor : public Resource
+{
     GDCLASS(UIKitCursor, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    UIKitCursor(){}
-    ~UIKitCursor(){}
+    UIKitCursor() = default;
+    ~UIKitCursor() = default;
 
     void LoadFromBuffer(const void* buffer);
 

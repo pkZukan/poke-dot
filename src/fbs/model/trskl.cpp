@@ -2,12 +2,12 @@
 
 using namespace godot;
 
-void IKControl::_bind_methods() 
+void IKControl::_bind_methods()
 {
     GETTER_SETTER_BIND(IKControl, Name, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
-void TransformNode::_bind_methods() 
+void TransformNode::_bind_methods()
 {
     GETTER_SETTER_BIND(TransformNode, Name, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TransformNode, Transform, Variant::TRANSFORM3D, PROPERTY_HINT_NONE)
@@ -21,14 +21,14 @@ void TransformNode::_bind_methods()
     GETTER_SETTER_BIND(TransformNode, ignore_parent_rot, Variant::BOOL, PROPERTY_HINT_NONE)
 }
 
-void BoneEntry::_bind_methods() 
+void BoneEntry::_bind_methods()
 {
     GETTER_SETTER_BIND(BoneEntry, InheritPosition, Variant::BOOL, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(BoneEntry, InfluenceSkinning, Variant::BOOL, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(BoneEntry, Matrix, Variant::TRANSFORM3D, PROPERTY_HINT_NONE)
 }
 
-void TRSkeleton::_bind_methods() 
+void TRSkeleton::_bind_methods()
 {
     GETTER_SETTER_BIND(TRSkeleton, Version, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRSkeleton, TransformNodes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TransformNode")
@@ -41,13 +41,12 @@ void TRSkeleton::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRSKL file: %s", file));
-    
+
     auto skel = Titan::Model::GetTRSKL(buf.ptr());
     ERR_FAIL_COND_MSG(skel == NULL, vformat("Couldn't load TRSKL flatbuffer"));
 
-    //Get Bones
     auto bones = skel->bones();
-    for(int i = 0; i < bones->size(); i++)
+    for (int i = 0; i < bones->size(); i++)
     {
         auto boneEnt = bones->Get(i);
         Ref<BoneEntry> bone;
@@ -57,22 +56,16 @@ void TRSkeleton::LoadFromFile(String file)
 
         auto matrix = boneEnt->matrix();
         Transform3D boneMatrix(
-            Basis(
-                Utils::toGodotVec3(matrix->x()),
-                Utils::toGodotVec3(matrix->y()),
-                Utils::toGodotVec3(matrix->z())
-            ),
-            Utils::toGodotVec3(matrix->w())
-        );
+            Basis(Utils::toGodotVec3(matrix->x()), Utils::toGodotVec3(matrix->y()), Utils::toGodotVec3(matrix->z())),
+            Utils::toGodotVec3(matrix->w()));
         bone->set_InfluenceSkinning(boneEnt->influence_skinning());
-        bone->set_Matrix(boneMatrix);        
+        bone->set_Matrix(boneMatrix);
 
         Bones.push_back(bone);
     }
 
-    //Get transforms
     auto transforms = skel->transform_nodes();
-    for(int i = 0; i < transforms->size(); i++)
+    for (int i = 0; i < transforms->size(); i++)
     {
         Ref<TransformNode> tn;
         tn.instantiate();
@@ -84,7 +77,7 @@ void TRSkeleton::LoadFromFile(String file)
         Basis scale_basis = Basis::from_scale(scale);
         Basis rot_basis = Basis::from_euler(rot, EulerOrder::EULER_ORDER_ZYX);
         tn->set_Transform(Transform3D(scale_basis * rot_basis, pos));
-        
+
         tn->set_ScalePivot(Utils::toGodotVec3(transforms->Get(i)->scalePivot()));
         tn->set_RotatePivot(Utils::toGodotVec3(transforms->Get(i)->rotatePivot()));
         tn->set_ParentIndex(transforms->Get(i)->parent_idx());
@@ -97,9 +90,8 @@ void TRSkeleton::LoadFromFile(String file)
         TransformNodes.push_back(tn);
     }
 
-    //Get IKs
     auto ikcontrols = skel->iks();
-    for(int i = 0; i < ikcontrols->size(); i++)
+    for (int i = 0; i < ikcontrols->size(); i++)
     {
         Ref<IKControl> ik;
         ik.instantiate();
@@ -113,7 +105,8 @@ void TRSkeleton::LoadFromFile(String file)
     RigOffset = skel->rig_offset();
 }
 
-Variant ResourceFormatLoaderTRSKL::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRSKL::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRSkeleton> trskl;
     trskl.instantiate();
@@ -129,7 +122,7 @@ PackedStringArray ResourceFormatLoaderTRSKL::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRSKL::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRSKL::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRSkeleton");
 }

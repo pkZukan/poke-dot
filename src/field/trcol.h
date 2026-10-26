@@ -16,40 +16,50 @@
 #include <cstring>
 #include <algorithm>
 
-namespace godot {
+namespace godot
+{
 
-class TRCOL : public Resource {
-	GDCLASS(TRCOL, Resource)
+class TRCOL : public Resource
+{
+    GDCLASS(TRCOL, Resource)
 
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
 
 public:
-	TRCOL() {}
-	~TRCOL() {}
+    TRCOL() = default;
+    ~TRCOL() = default;
 
-	void LoadFromFile(String file);
+    void LoadFromFile(String file);
 
-	Ref<HavokTag> get_tag() { return tag; }
-	Ref<ArrayMesh> get_mesh();
+    Ref<HavokTag> get_tag()
+    {
+        return tag;
+    }
+
+    Ref<ArrayMesh> get_mesh();
 
 private:
-	Ref<HavokTag> tag;
+    Ref<HavokTag> tag;
 };
 
-class ResourceFormatLoaderTRCOL : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRCOL, ResourceFormatLoader)
+class ResourceFormatLoaderTRCOL : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRCOL, ResourceFormatLoader)
 
 protected:
-	static void _bind_methods() {}
+    static void _bind_methods()
+    {
+    }
 
 public:
-	ResourceFormatLoaderTRCOL() {}
-	~ResourceFormatLoaderTRCOL() {}
+    ResourceFormatLoaderTRCOL() = default;
+    ~ResourceFormatLoaderTRCOL() = default;
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
-} // namespace godot
+}

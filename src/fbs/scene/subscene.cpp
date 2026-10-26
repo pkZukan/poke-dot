@@ -5,7 +5,7 @@ using namespace godot;
 void TRSubScene::_bind_methods()
 {
     GETTER_SETTER_BIND(TRSubScene, FileName, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(TRSubScene, group, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(TRSubScene, group, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRSubScene, subdata, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "byte")
 }
 

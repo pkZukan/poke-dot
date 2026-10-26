@@ -25,119 +25,144 @@ void BoneAnimation::_bind_methods()
     GETTER_SETTER_BIND(BoneAnimation, initData, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "BoneInit")
 }
 
-void TRAnimation::_bind_methods() 
+void TRAnimation::_bind_methods()
 {
     GETTER_SETTER_BIND(TRAnimation, Info, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "AnimationInfo")
     GETTER_SETTER_BIND(TRAnimation, Track, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "BoneAnimation")
 }
 
-float QuaternionHelper::expand_float(int32_t i) {
+float QuaternionHelper::expand_float(int32_t i)
+{
     return i * (PI_HALF / SCALE) - PI_QUARTER;
 }
 
-Quaternion QuaternionHelper::Unpack(const Vector3i &vec) {
+Quaternion QuaternionHelper::Unpack(const Vector3i& vec)
+{
 
-    uint64_t pack = (static_cast<uint64_t>(static_cast<uint16_t>(vec.z)) << 32) 
-                  | (static_cast<uint64_t>(static_cast<uint16_t>(vec.y)) << 16) 
-                  | static_cast<uint16_t>(vec.x);
-    
+    uint64_t pack = (static_cast<uint64_t>(static_cast<uint16_t>(vec.z)) << 32) |
+                    (static_cast<uint64_t>(static_cast<uint16_t>(vec.y)) << 16) | static_cast<uint16_t>(vec.x);
+
     float q1 = expand_float(static_cast<int32_t>((pack >> 3) & 0x7FFF));
     float q2 = expand_float(static_cast<int32_t>((pack >> 18) & 0x7FFF));
     float q3 = expand_float(static_cast<int32_t>((pack >> 33) & 0x7FFF));
-    
+
     float max_component = Math::sqrt(Math::max(1.0f - (q1 * q1 + q2 * q2 + q3 * q3), 0.0f));
-    
+
     int missing_component = pack & 0b0011;
-    
+
     float values[4];
     int idx = 0;
-    for (int i = 0; i < 4; i++) {
-        if (i == missing_component) {
+    for (int i = 0; i < 4; i++)
+    {
+        if (i == missing_component)
+        {
             values[i] = max_component;
-        } else {
+        }
+        else
+        {
             values[i] = (idx == 0) ? q1 : (idx == 1) ? q2 : q3;
             idx++;
         }
     }
-    
+
     bool is_negative = (pack & 0b0100) != 0;
-    
-    Quaternion q(values[0], values[1], values[2], values[3]); 
-    
-    if (is_negative) {
+
+    Quaternion q(values[0], values[1], values[2], values[3]);
+
+    if (is_negative)
+    {
         q = -q;
     }
-    
+
     return q.normalized();
 }
 
 Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data)
 {
-    switch (type) {
-        case Titan::Animation::VectorTrack_FixedVectorTrack: {
+    switch (type)
+    {
+        case Titan::Animation::VectorTrack_FixedVectorTrack:
+        {
             auto src = static_cast<const Titan::Animation::FixedVectorTrack*>(data);
-            Ref<FixedVectorTrack> t; 
+            Ref<FixedVectorTrack> t;
             t.instantiate();
             t->set_value(Utils::toGodotVec3(src->co()));
             return t;
         }
-        case Titan::Animation::VectorTrack_DynamicVectorTrack: {
+        case Titan::Animation::VectorTrack_DynamicVectorTrack:
+        {
             auto src = static_cast<const Titan::Animation::DynamicVectorTrack*>(data);
-            Ref<DynamicVectorTrack> t; 
+            Ref<DynamicVectorTrack> t;
             t.instantiate();
             Array co;
             for (size_t i = 0; i < src->co()->size(); i++)
+            {
                 co.append(Utils::toGodotVec3(src->co()->Get(i)));
+            }
             t->set_values(co);
             return t;
         }
-        case Titan::Animation::VectorTrack_Framed16VectorTrack: {
+        case Titan::Animation::VectorTrack_Framed16VectorTrack:
+        {
             auto src = static_cast<const Titan::Animation::Framed16VectorTrack*>(data);
-            Ref<Framed16VectorTrack> t; 
+            Ref<Framed16VectorTrack> t;
             t.instantiate();
             Array frames, co;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
+            }
             for (size_t i = 0; i < src->co()->size(); i++)
+            {
                 co.append(Utils::toGodotVec3(src->co()->Get(i)));
-            t->set_frames(frames); t->set_values(co);
+            }
+            t->set_frames(frames);
+            t->set_values(co);
             return t;
         }
-        case Titan::Animation::VectorTrack_Framed8VectorTrack: {
+        case Titan::Animation::VectorTrack_Framed8VectorTrack:
+        {
             auto src = static_cast<const Titan::Animation::Framed8VectorTrack*>(data);
-            Ref<Framed8VectorTrack> t; 
+            Ref<Framed8VectorTrack> t;
             t.instantiate();
             Array frames, co;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
+            }
             for (size_t i = 0; i < src->co()->size(); i++)
+            {
                 co.append(Utils::toGodotVec3(src->co()->Get(i)));
-            t->set_frames(frames); t->set_values(co);
+            }
+            t->set_frames(frames);
+            t->set_values(co);
             return t;
         }
-        default: return Ref<Resource>();
+        default:
+            return Ref<Resource>();
     }
 }
 
 Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack type, const void* data)
 {
-    switch (type) {
-        case Titan::Animation::RotationTrack_FixedRotationTrack: 
+    switch (type)
+    {
+        case Titan::Animation::RotationTrack_FixedRotationTrack:
         {
             auto src = static_cast<const Titan::Animation::FixedRotationTrack*>(data);
-            Ref<FixedRotationTrack> t; 
+            Ref<FixedRotationTrack> t;
             t.instantiate();
             Quaternion quat = QuaternionHelper::Unpack(Vector3i(src->co()->x(), src->co()->y(), src->co()->z()));
             t->set_value(quat);
             return t;
         }
-        case Titan::Animation::RotationTrack_DynamicRotationTrack: 
+        case Titan::Animation::RotationTrack_DynamicRotationTrack:
         {
             auto src = static_cast<const Titan::Animation::DynamicRotationTrack*>(data);
-            Ref<DynamicRotationTrack> t; 
+            Ref<DynamicRotationTrack> t;
             t.instantiate();
             Array co;
-            for (size_t i = 0; i < src->co()->size(); i++) 
+            for (size_t i = 0; i < src->co()->size(); i++)
             {
                 auto v = src->co()->Get(i);
                 Quaternion quat = QuaternionHelper::Unpack(Vector3i(v->x(), v->y(), v->z()));
@@ -146,43 +171,47 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
             t->set_values(co);
             return t;
         }
-        case Titan::Animation::RotationTrack_Framed16RotationTrack: 
+        case Titan::Animation::RotationTrack_Framed16RotationTrack:
         {
             auto src = static_cast<const Titan::Animation::Framed16RotationTrack*>(data);
-            Ref<Framed16RotationTrack> t; 
+            Ref<Framed16RotationTrack> t;
             t.instantiate();
             Array frames, co;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
-            for (size_t i = 0; i < src->co()->size(); i++) 
+            }
+            for (size_t i = 0; i < src->co()->size(); i++)
             {
                 auto v = src->co()->Get(i);
                 Quaternion quat = QuaternionHelper::Unpack(Vector3i(v->x(), v->y(), v->z()));
                 co.append(quat);
             }
-            t->set_frames(frames); 
+            t->set_frames(frames);
             t->set_values(co);
             return t;
         }
-        case Titan::Animation::RotationTrack_Framed8RotationTrack: 
+        case Titan::Animation::RotationTrack_Framed8RotationTrack:
         {
             auto src = static_cast<const Titan::Animation::Framed8RotationTrack*>(data);
-            Ref<Framed8RotationTrack> t; 
+            Ref<Framed8RotationTrack> t;
             t.instantiate();
             Array frames, co;
             for (size_t i = 0; i < src->frames()->size(); i++)
+            {
                 frames.append(src->frames()->Get(i));
-            for (size_t i = 0; i < src->co()->size(); i++) 
+            }
+            for (size_t i = 0; i < src->co()->size(); i++)
             {
                 auto v = src->co()->Get(i);
                 Quaternion quat = QuaternionHelper::Unpack(Vector3i(v->x(), v->y(), v->z()));
                 co.append(quat);
             }
-            t->set_frames(frames); 
+            t->set_frames(frames);
             t->set_values(co);
             return t;
         }
-        default: 
+        default:
             return Ref<Resource>();
     }
 }
@@ -194,7 +223,6 @@ void TRAnimation::LoadFromFile(String file)
     auto anim = Titan::Animation::GetTRANM(buf.ptr());
     ERR_FAIL_COND_MSG(anim == nullptr, "Couldn't load TRANM flatbuffer");
 
-    // Get Info
     auto info = anim->info();
     Ref<TRAnimationInfo> animInfo;
     animInfo.instantiate();
@@ -203,14 +231,12 @@ void TRAnimation::LoadFromFile(String file)
     animInfo->set_animation_rate(info->animation_rate());
     set_Info(animInfo);
 
-    // Get BoneAnimation
     auto track = anim->track();
     Ref<BoneAnimation> boneAnimation;
     boneAnimation.instantiate();
 
-    // Parse BoneInit
     auto initData = track->initData();
-    if (initData) 
+    if (initData)
     {
         Ref<BoneInit> boneInit;
         boneInit.instantiate();
@@ -219,12 +245,11 @@ void TRAnimation::LoadFromFile(String file)
         boneAnimation->set_initData(boneInit);
     }
 
-    // Parse BoneTracks
     auto tracks = track->tracks();
     Array trackArray;
-    if (tracks) 
+    if (tracks)
     {
-        for (size_t i = 0; i < tracks->size(); i++) 
+        for (size_t i = 0; i < tracks->size(); i++)
         {
             auto boneTrack = tracks->Get(i);
             Ref<BoneTrack> bt;
@@ -242,7 +267,8 @@ void TRAnimation::LoadFromFile(String file)
     set_Track(boneAnimation);
 }
 
-Variant ResourceFormatLoaderTRANM::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRANM::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRAnimation> tranm;
     tranm.instantiate();
@@ -258,7 +284,7 @@ PackedStringArray ResourceFormatLoaderTRANM::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRANM::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRANM::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRAnimation");
 }

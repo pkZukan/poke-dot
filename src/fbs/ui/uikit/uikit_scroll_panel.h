@@ -5,15 +5,18 @@
 #include "generated/uikit_scroll_panel_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitScrollPanel : public Resource {
+class UIKitScrollPanel : public Resource
+{
     GDCLASS(UIKitScrollPanel, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    UIKitScrollPanel(){}
-    ~UIKitScrollPanel(){}
+    UIKitScrollPanel() = default;
+    ~UIKitScrollPanel() = default;
 
     void LoadFromBuffer(const void* buffer);
 

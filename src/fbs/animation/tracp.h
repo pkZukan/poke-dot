@@ -8,125 +8,143 @@
 #include "generated/tracp_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class AnimationChannelParamInt : public Resource {
-	GDCLASS(AnimationChannelParamInt, Resource)
+class AnimationChannelParamInt : public Resource
+{
+    GDCLASS(AnimationChannelParamInt, Resource)
 protected:
-	static void _bind_methods();
-public:
-	AnimationChannelParamInt(){}
-	~AnimationChannelParamInt(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
+public:
+    AnimationChannelParamInt() = default;
+    ~AnimationChannelParamInt() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(uint32_t, min)
-	GETTER_SETTER_DEFINE(uint32_t, max)
+    GETTER_SETTER_DEFINE(uint32_t, max)
     GETTER_SETTER_DEFINE(uint32_t, default_val)
 
 private:
-	String Name;
+    String Name;
     uint32_t min;
-	uint32_t max;
+    uint32_t max;
     uint32_t default_val;
 };
 
-class AnimationChannelParamTrigger : public Resource {
-	GDCLASS(AnimationChannelParamTrigger, Resource)
+class AnimationChannelParamTrigger : public Resource
+{
+    GDCLASS(AnimationChannelParamTrigger, Resource)
 protected:
-	static void _bind_methods();
-public:
-	AnimationChannelParamTrigger(){}
-	~AnimationChannelParamTrigger(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
+public:
+    AnimationChannelParamTrigger() = default;
+    ~AnimationChannelParamTrigger() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
 
 private:
-	String Name;
+    String Name;
 };
 
-class AnimationChannelParamBool : public Resource {
-	GDCLASS(AnimationChannelParamBool, Resource)
+class AnimationChannelParamBool : public Resource
+{
+    GDCLASS(AnimationChannelParamBool, Resource)
 protected:
-	static void _bind_methods();
-public:
-	AnimationChannelParamBool(){}
-	~AnimationChannelParamBool(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
+public:
+    AnimationChannelParamBool() = default;
+    ~AnimationChannelParamBool() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(bool, Val)
 
 private:
-	String Name;
+    String Name;
     bool Val;
 };
 
-class AnimationChannelParamFloat : public Resource {
-	GDCLASS(AnimationChannelParamFloat, Resource)
+class AnimationChannelParamFloat : public Resource
+{
+    GDCLASS(AnimationChannelParamFloat, Resource)
 protected:
-	static void _bind_methods();
-public:
-	AnimationChannelParamFloat(){}
-	~AnimationChannelParamFloat(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
+public:
+    AnimationChannelParamFloat() = default;
+    ~AnimationChannelParamFloat() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(float, min)
-	GETTER_SETTER_DEFINE(float, max)
+    GETTER_SETTER_DEFINE(float, max)
     GETTER_SETTER_DEFINE(float, default_val)
 
 private:
-	String Name;
+    String Name;
     float min;
-	float max;
+    float max;
     float default_val;
 };
 
-class AnimationChannelParamEntry : public Resource {
-	GDCLASS(AnimationChannelParamEntry, Resource)
+class AnimationChannelParamEntry : public Resource
+{
+    GDCLASS(AnimationChannelParamEntry, Resource)
 protected:
-	static void _bind_methods();
-public:
-	AnimationChannelParamEntry(){}
-	~AnimationChannelParamEntry(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(Array, animations)
+public:
+    AnimationChannelParamEntry() = default;
+    ~AnimationChannelParamEntry() = default;
+
+    GETTER_SETTER_DEFINE(Array, animations)
     GETTER_SETTER_DEFINE(Array, moves)
-	GETTER_SETTER_DEFINE(Array, switches)
+    GETTER_SETTER_DEFINE(Array, switches)
     GETTER_SETTER_DEFINE(Array, triggers)
 
 private:
-	Array animations;
+    Array animations;
     Array moves;
-	Array switches;
+    Array switches;
     Array triggers;
 };
 
-class TRAnimationChannelParams : public Resource {
+class TRAnimationChannelParams : public Resource
+{
     GDCLASS(TRAnimationChannelParams, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRAnimationChannelParams(){}
-	~TRAnimationChannelParams(){}
+    TRAnimationChannelParams() = default;
+    ~TRAnimationChannelParams() = default;
 
     void LoadFromFile(String file);
-	
+
     GETTER_SETTER_DEFINE(Ref<AnimationChannelParamEntry>, table)
 
 private:
     Ref<AnimationChannelParamEntry> table;
 };
 
-class ResourceFormatLoaderTRACP : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRACP, ResourceFormatLoader)
+class ResourceFormatLoaderTRACP : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRACP, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRACP(){}
-	~ResourceFormatLoaderTRACP(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRACP() = default;
+    ~ResourceFormatLoaderTRACP() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

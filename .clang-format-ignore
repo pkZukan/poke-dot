@@ -1,0 +1,4 @@
+godot-cpp/**
+src/generated/**
+src/converters/shader_options.gen.h
+src/middleware/wwise_codebooks.h

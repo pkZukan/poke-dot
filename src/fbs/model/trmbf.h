@@ -9,51 +9,61 @@
 #include "generated/trmbf_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class ModelBuffer : public Resource {
-	GDCLASS(ModelBuffer, Resource)
+class ModelBuffer : public Resource
+{
+    GDCLASS(ModelBuffer, Resource)
 protected:
-	static void _bind_methods();
-public:
-	ModelBuffer(){}
-	~ModelBuffer(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(Array, IndexBuffers)
+public:
+    ModelBuffer() = default;
+    ~ModelBuffer() = default;
+
+    GETTER_SETTER_DEFINE(Array, IndexBuffers)
     GETTER_SETTER_DEFINE(Array, VertexBuffers)
 
 private:
-	Array IndexBuffers;
+    Array IndexBuffers;
     Array VertexBuffers;
 };
 
-class TRModelBuffer : public Resource {
+class TRModelBuffer : public Resource
+{
     GDCLASS(TRModelBuffer, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRModelBuffer(){}
-	~TRModelBuffer(){}
+    TRModelBuffer() = default;
+    ~TRModelBuffer() = default;
 
     void LoadFromFile(String file);
-	
+
     GETTER_SETTER_DEFINE(Array, Buffers)
 
 private:
     Array Buffers;
 };
 
-class ResourceFormatLoaderTRMBF : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRMBF, ResourceFormatLoader)
+class ResourceFormatLoaderTRMBF : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRMBF, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRMBF(){}
-	~ResourceFormatLoaderTRMBF(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRMBF() = default;
+    ~ResourceFormatLoaderTRMBF() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

@@ -6,48 +6,62 @@
 #include <godot_cpp/classes/tree_item.hpp>
 #include "generated/common_generated.h"
 
-#define GETTER_SETTER_BIND(c, x, y, ...)  \
-	ClassDB::bind_method(D_METHOD("get_"#x), &c::get_##x); \
-	ClassDB::bind_method(D_METHOD("set_"#x), &c::set_##x); \
-	ADD_PROPERTY(PropertyInfo(y, #x, __VA_ARGS__), "set_"#x, "get_"#x);
+#define GETTER_SETTER_BIND(c, x, y, ...)                                                                               \
+    ClassDB::bind_method(D_METHOD("get_" #x), &c::get_##x);                                                            \
+    ClassDB::bind_method(D_METHOD("set_" #x), &c::set_##x);                                                            \
+    ADD_PROPERTY(PropertyInfo(y, #x, __VA_ARGS__), "set_" #x, "get_" #x);
 
-#define GETTER_SETTER_DEFINE(x, y) \
-	x get_##y() { return y; } \
-	void set_##y(x val) { y = val; }
+#define GETTER_SETTER_DEFINE(x, y)                                                                                     \
+    x get_##y()                                                                                                        \
+    {                                                                                                                  \
+        return y;                                                                                                      \
+    }                                                                                                                  \
+    void set_##y(x val)                                                                                                \
+    {                                                                                                                  \
+        y = val;                                                                                                       \
+    }
 
-#define GETTER_SETTER_CALLBACK_DEFINE(x, y) \
-	x get_##y() { return y; } 	\
-	void set_##y(x val) { 		\
-		if(y != val){			\
-			y = val; 			\
-			setterCallback(#y); \
-		}						\
-	}
+#define GETTER_SETTER_CALLBACK_DEFINE(x, y)                                                                            \
+    x get_##y()                                                                                                        \
+    {                                                                                                                  \
+        return y;                                                                                                      \
+    }                                                                                                                  \
+    void set_##y(x val)                                                                                                \
+    {                                                                                                                  \
+        if (y != val)                                                                                                  \
+        {                                                                                                              \
+            y = val;                                                                                                   \
+            setterCallback(#y);                                                                                        \
+        }                                                                                                              \
+    }
 
-#define Bit(n)  ((uint32_t) 1 << (n))
+#define Bit(n) ((uint32_t)1 << (n))
 #define Mask(n) (Bit(n) - 1)
 
-namespace godot {
+namespace godot
+{
 
-class Utils : public Resource {
-	GDCLASS(Utils, Resource)
+class Utils : public Resource
+{
+    GDCLASS(Utils, Resource)
 protected:
-	static void _bind_methods();
-public:
-	Utils(){}
-	~Utils(){}
+    static void _bind_methods();
 
-    static godot::Vector3 toGodotVec3(const Titan::Math::Vec3 *vec);
-	static godot::Vector4 toGodotVec4(const Titan::Math::Vec4 *vec);
-	static godot::Vector2i toGodotVec2i(const Titan::Math::Vec2i *vec);
-	static godot::Vector3i toGodotVec3i(const Titan::Math::Vec3i *vec);
-	static godot::Transform3D toGodotTransform(const Titan::Math::Transform *tran);
-	static godot::Transform3D toGodotTransform(const Titan::Math::SRT *srt);
-    static godot::String toGodotString(const flatbuffers::String *str);
+public:
+    Utils() = default;
+    ~Utils() = default;
+
+    static godot::Vector3 toGodotVec3(const Titan::Math::Vec3* vec);
+    static godot::Vector4 toGodotVec4(const Titan::Math::Vec4* vec);
+    static godot::Vector2i toGodotVec2i(const Titan::Math::Vec2i* vec);
+    static godot::Vector3i toGodotVec3i(const Titan::Math::Vec3i* vec);
+    static godot::Transform3D toGodotTransform(const Titan::Math::Transform* tran);
+    static godot::Transform3D toGodotTransform(const Titan::Math::SRT* srt);
+    static godot::String toGodotString(const flatbuffers::String* str);
 
     static float half_to_float(uint16_t half);
     static uint16_t float_to_half(float value);
-	static String read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end_pos = UINT64_MAX);
-	static TreeItem* FindTreeItemByName(TreeItem* current, const String& target_name);
+    static String read_null_terminated_string(Ref<StreamPeerBuffer> sp, uint64_t end_pos = UINT64_MAX);
+    static TreeItem* FindTreeItemByName(TreeItem* current, const String& target_name);
 };
 }

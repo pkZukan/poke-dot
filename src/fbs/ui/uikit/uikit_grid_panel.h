@@ -5,15 +5,18 @@
 #include "generated/uikit_grid_panel_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitButtonInfo : public Resource {
+class UIKitButtonInfo : public Resource
+{
     GDCLASS(UIKitButtonInfo, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    UIKitButtonInfo(){}
-    ~UIKitButtonInfo(){}
+    UIKitButtonInfo() = default;
+    ~UIKitButtonInfo() = default;
 
     void LoadFromBuffer(const Titan::pe::UIKit::ButtonInfoTable* button_info);
 
@@ -27,13 +30,15 @@ private:
     Vector2i Size;
 };
 
-class UIKitGridPanel : public Resource {
+class UIKitGridPanel : public Resource
+{
     GDCLASS(UIKitGridPanel, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    UIKitGridPanel(){}
-    ~UIKitGridPanel(){}
+    UIKitGridPanel() = default;
+    ~UIKitGridPanel() = default;
 
     void LoadFromBuffer(const void* buffer);
 

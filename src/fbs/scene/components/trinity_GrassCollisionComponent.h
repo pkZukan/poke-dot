@@ -4,12 +4,15 @@
 #include "generated/trinity_GrassCollisionComponent_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinityGrassCollisionComponent : public Resource {
+class TrinityGrassCollisionComponent : public Resource
+{
     GDCLASS(TrinityGrassCollisionComponent, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromBuffer(const void* buffer);
     GETTER_SETTER_DEFINE(String, name)
@@ -21,4 +24,4 @@ private:
     float max = 0.0f;
 };
 
-} // namespace godot
+}

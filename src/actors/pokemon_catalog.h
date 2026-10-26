@@ -11,7 +11,8 @@
 
 namespace godot
 {
-class PokemonCatalog : public Object {
+class PokemonCatalog : public Object
+{
     GDCLASS(PokemonCatalog, Object)
     static PokemonCatalog* _singleton;
 
@@ -19,7 +20,7 @@ public:
     PokemonCatalog();
     ~PokemonCatalog();
 
-    static PokemonCatalog *get_singleton() 
+    static PokemonCatalog* get_singleton()
     {
         return _singleton;
     }
@@ -41,4 +42,4 @@ private:
 
     void _load_personal();
 };
-} //namespace godot
+}

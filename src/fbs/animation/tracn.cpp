@@ -8,9 +8,10 @@ void AnimationChannelNameEntry::_bind_methods()
     GETTER_SETTER_BIND(AnimationChannelNameEntry, filename, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
-void TRAnimationChannelNames::_bind_methods() 
+void TRAnimationChannelNames::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRAnimationChannelNames, list, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "AnimationChannelNameEntry")
+    GETTER_SETTER_BIND(TRAnimationChannelNames, list, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE,
+                       "AnimationChannelNameEntry")
 }
 
 void TRAnimationChannelNames::LoadFromFile(String file)
@@ -22,8 +23,10 @@ void TRAnimationChannelNames::LoadFromFile(String file)
 
     auto list = tracn->list();
     Array channelArr;
-    if (list) {
-        for (size_t i = 0; i < list->size(); i++) {
+    if (list)
+    {
+        for (size_t i = 0; i < list->size(); i++)
+        {
             auto ent = list->Get(i);
 
             Ref<AnimationChannelNameEntry> animEnt;
@@ -37,7 +40,8 @@ void TRAnimationChannelNames::LoadFromFile(String file)
     set_list(channelArr);
 }
 
-Variant ResourceFormatLoaderTRACN::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRACN::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRAnimationChannelNames> tracn;
     tracn.instantiate();
@@ -53,7 +57,7 @@ PackedStringArray ResourceFormatLoaderTRACN::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRACN::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRACN::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRAnimationChannelNames");
 }

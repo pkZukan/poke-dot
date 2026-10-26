@@ -9,247 +9,275 @@
 #include "generated/trmtr_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class ByteExtra : public Resource {
+class ByteExtra : public Resource
+{
     GDCLASS(ByteExtra, Resource)
 protected:
-	static void _bind_methods();
-public:
-	ByteExtra(){}
-	~ByteExtra(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(int8_t, Value)
+public:
+    ByteExtra() = default;
+    ~ByteExtra() = default;
+
+    GETTER_SETTER_DEFINE(int8_t, Value)
 
 private:
     int8_t Value;
 };
 
-class IntExtra : public Resource {
+class IntExtra : public Resource
+{
     GDCLASS(IntExtra, Resource)
 protected:
-	static void _bind_methods();
-public:
-	IntExtra(){}
-	~IntExtra(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(int, res0)
-	GETTER_SETTER_DEFINE(int, Value)
+public:
+    IntExtra() = default;
+    ~IntExtra() = default;
+
+    GETTER_SETTER_DEFINE(int, res0)
+    GETTER_SETTER_DEFINE(int, Value)
 
 private:
     int res0;
-	int Value;
+    int Value;
 };
 
-class FloatParameter : public Resource {
+class FloatParameter : public Resource
+{
     GDCLASS(FloatParameter, Resource)
 protected:
-	static void _bind_methods();
-public:
-	FloatParameter(){}
-	~FloatParameter(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(float, Value)
+public:
+    FloatParameter() = default;
+    ~FloatParameter() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(float, Value)
 
 private:
     String Name;
-	float Value;
+    float Value;
 };
 
-class Float4Parameter : public Resource {
+class Float4Parameter : public Resource
+{
     GDCLASS(Float4Parameter, Resource)
 protected:
-	static void _bind_methods();
-public:
-	Float4Parameter(){}
-	~Float4Parameter(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Vector4, Value)
+public:
+    Float4Parameter() = default;
+    ~Float4Parameter() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Vector4, Value)
 
 private:
     String Name;
-	Vector4 Value;
+    Vector4 Value;
 };
 
-class ShaderIntParam : public Resource {
+class ShaderIntParam : public Resource
+{
     GDCLASS(ShaderIntParam, Resource)
 protected:
-	static void _bind_methods();
-public:
-	ShaderIntParam(){}
-	~ShaderIntParam(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(int, Value)
+public:
+    ShaderIntParam() = default;
+    ~ShaderIntParam() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(int, Value)
 
 private:
     String Name;
-	int Value;
+    int Value;
 };
 
-class ShaderStringParam : public Resource {
+class ShaderStringParam : public Resource
+{
     GDCLASS(ShaderStringParam, Resource)
 protected:
-	static void _bind_methods();
-public:
-	ShaderStringParam(){}
-	~ShaderStringParam(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(String, Value)
+public:
+    ShaderStringParam() = default;
+    ~ShaderStringParam() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(String, Value)
 
 private:
     String Name;
-	String Value;
+    String Value;
 };
 
-class SamplerEntry : public Resource {
+class SamplerEntry : public Resource
+{
     GDCLASS(SamplerEntry, Resource)
 protected:
-	static void _bind_methods();
-public:
-	SamplerEntry(){}
-	~SamplerEntry(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(int, SamplerState_0)
-	GETTER_SETTER_DEFINE(int, SamplerState_1)
-	GETTER_SETTER_DEFINE(int, SamplerState_2)
-	GETTER_SETTER_DEFINE(int, SamplerState_3)
-	GETTER_SETTER_DEFINE(float, SamplerState_4)
-	GETTER_SETTER_DEFINE(float, SamplerState_5)
-	GETTER_SETTER_DEFINE(float, SamplerState_6)
-	GETTER_SETTER_DEFINE(float, SamplerState_7)
-	GETTER_SETTER_DEFINE(float, SamplerState_8)
-	GETTER_SETTER_DEFINE(int, RepeatU)
-	GETTER_SETTER_DEFINE(int, RepeatV)
-	GETTER_SETTER_DEFINE(int, RepeatW)
-	GETTER_SETTER_DEFINE(Color, BorderColor)
+public:
+    SamplerEntry() = default;
+    ~SamplerEntry() = default;
+
+    GETTER_SETTER_DEFINE(int, SamplerState_0)
+    GETTER_SETTER_DEFINE(int, SamplerState_1)
+    GETTER_SETTER_DEFINE(int, SamplerState_2)
+    GETTER_SETTER_DEFINE(int, SamplerState_3)
+    GETTER_SETTER_DEFINE(float, SamplerState_4)
+    GETTER_SETTER_DEFINE(float, SamplerState_5)
+    GETTER_SETTER_DEFINE(float, SamplerState_6)
+    GETTER_SETTER_DEFINE(float, SamplerState_7)
+    GETTER_SETTER_DEFINE(float, SamplerState_8)
+    GETTER_SETTER_DEFINE(int, RepeatU)
+    GETTER_SETTER_DEFINE(int, RepeatV)
+    GETTER_SETTER_DEFINE(int, RepeatW)
+    GETTER_SETTER_DEFINE(Color, BorderColor)
 
 private:
-	int SamplerState_0;
-	int SamplerState_1;
-	int SamplerState_2;
-	int SamplerState_3;
-	float SamplerState_4;
-	float SamplerState_5;
-	float SamplerState_6;
-	float SamplerState_7;
-	float SamplerState_8;
-	int RepeatU;
-	int RepeatV;
-	int RepeatW;
-	Color BorderColor;
+    int SamplerState_0;
+    int SamplerState_1;
+    int SamplerState_2;
+    int SamplerState_3;
+    float SamplerState_4;
+    float SamplerState_5;
+    float SamplerState_6;
+    float SamplerState_7;
+    float SamplerState_8;
+    int RepeatU;
+    int RepeatV;
+    int RepeatW;
+    Color BorderColor;
 };
 
-class TextureEntry : public Resource {
+class TextureEntry : public Resource
+{
     GDCLASS(TextureEntry, Resource)
 protected:
-	static void _bind_methods();
-public:
-	TextureEntry(){}
-	~TextureEntry(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(String, File)
-	GETTER_SETTER_DEFINE(int, Slot)
+public:
+    TextureEntry() = default;
+    ~TextureEntry() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(String, File)
+    GETTER_SETTER_DEFINE(int, Slot)
 
 private:
     String Name;
-	String File;
-	int Slot;
+    String File;
+    int Slot;
 };
 
-class ShaderEntry : public Resource {
+class ShaderEntry : public Resource
+{
     GDCLASS(ShaderEntry, Resource)
 protected:
-	static void _bind_methods();
-public:
-	ShaderEntry(){}
-	~ShaderEntry(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Array, StringParams)
+public:
+    ShaderEntry() = default;
+    ~ShaderEntry() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Array, StringParams)
 
 private:
     String Name;
-	Array StringParams;
+    Array StringParams;
 };
 
-class MaterialEntry : public Resource {
+class MaterialEntry : public Resource
+{
     GDCLASS(MaterialEntry, Resource)
 protected:
-	static void _bind_methods();
-public:
-	MaterialEntry(){}
-	~MaterialEntry(){}
+    static void _bind_methods();
 
-	GETTER_SETTER_DEFINE(String, Name)
-	GETTER_SETTER_DEFINE(Array, Shaders)
-	GETTER_SETTER_DEFINE(Array, Textures)
-	GETTER_SETTER_DEFINE(Array, Samplers)
-	GETTER_SETTER_DEFINE(Array, FloatParams)
-	GETTER_SETTER_DEFINE(String, unk_5)
-	GETTER_SETTER_DEFINE(Array, FloatLightParams)
-	GETTER_SETTER_DEFINE(Array, Float4Params)
-	GETTER_SETTER_DEFINE(String, unk_8)
-	GETTER_SETTER_DEFINE(Array, IntParams)
-	GETTER_SETTER_DEFINE(String, unk_10)
-	GETTER_SETTER_DEFINE(String, unk_11)
-	GETTER_SETTER_DEFINE(String, unk_12)
-	GETTER_SETTER_DEFINE(Ref<ByteExtra>, ByteExt)
-	GETTER_SETTER_DEFINE(Ref<IntExtra>, IntExt)
-	GETTER_SETTER_DEFINE(String, AlphaType)
+public:
+    MaterialEntry() = default;
+    ~MaterialEntry() = default;
+
+    GETTER_SETTER_DEFINE(String, Name)
+    GETTER_SETTER_DEFINE(Array, Shaders)
+    GETTER_SETTER_DEFINE(Array, Textures)
+    GETTER_SETTER_DEFINE(Array, Samplers)
+    GETTER_SETTER_DEFINE(Array, FloatParams)
+    GETTER_SETTER_DEFINE(String, unk_5)
+    GETTER_SETTER_DEFINE(Array, FloatLightParams)
+    GETTER_SETTER_DEFINE(Array, Float4Params)
+    GETTER_SETTER_DEFINE(String, unk_8)
+    GETTER_SETTER_DEFINE(Array, IntParams)
+    GETTER_SETTER_DEFINE(String, unk_10)
+    GETTER_SETTER_DEFINE(String, unk_11)
+    GETTER_SETTER_DEFINE(String, unk_12)
+    GETTER_SETTER_DEFINE(Ref<ByteExtra>, ByteExt)
+    GETTER_SETTER_DEFINE(Ref<IntExtra>, IntExt)
+    GETTER_SETTER_DEFINE(String, AlphaType)
 
 private:
     String Name;
-	Array Shaders;
-	Array Textures;
-	Array Samplers;
-	Array FloatParams;
-	String unk_5;
-	Array FloatLightParams;
-	Array Float4Params;
-	String unk_8;
-	Array IntParams;
-	String unk_10;
-	String unk_11;
-	String unk_12;
-	Ref<ByteExtra> ByteExt;
-	Ref<IntExtra> IntExt;
-	String AlphaType;
+    Array Shaders;
+    Array Textures;
+    Array Samplers;
+    Array FloatParams;
+    String unk_5;
+    Array FloatLightParams;
+    Array Float4Params;
+    String unk_8;
+    Array IntParams;
+    String unk_10;
+    String unk_11;
+    String unk_12;
+    Ref<ByteExtra> ByteExt;
+    Ref<IntExtra> IntExt;
+    String AlphaType;
 };
 
-class TRMaterial : public Resource {
+class TRMaterial : public Resource
+{
     GDCLASS(TRMaterial, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRMaterial(){}
-	~TRMaterial(){}
+    TRMaterial() = default;
+    ~TRMaterial() = default;
 
     void LoadFromFile(String file);
 
-	GETTER_SETTER_DEFINE(int, unk0)
-	GETTER_SETTER_DEFINE(Array, Materials)
+    GETTER_SETTER_DEFINE(int, unk0)
+    GETTER_SETTER_DEFINE(Array, Materials)
 
 private:
-	int unk0;
+    int unk0;
     Array Materials;
 };
 
-class ResourceFormatLoaderTRMTR : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderTRMTR, ResourceFormatLoader)
+class ResourceFormatLoaderTRMTR : public ResourceFormatLoader
+{
+    GDCLASS(ResourceFormatLoaderTRMTR, ResourceFormatLoader)
 protected:
-	static void _bind_methods(){}
-public:
-	ResourceFormatLoaderTRMTR(){}
-	~ResourceFormatLoaderTRMTR(){}
+    static void _bind_methods()
+    {
+    }
 
-	virtual PackedStringArray _get_recognized_extensions() const override;
-	virtual bool _handles_type(const StringName &p_type) const override;
-	virtual Variant _load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const override;
+public:
+    ResourceFormatLoaderTRMTR() = default;
+    ~ResourceFormatLoaderTRMTR() = default;
+
+    virtual PackedStringArray _get_recognized_extensions() const override;
+    virtual bool _handles_type(const StringName& p_type) const override;
+    virtual Variant _load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                          int32_t p_cache_mode) const override;
 };
 
 }

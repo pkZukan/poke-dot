@@ -7,25 +7,28 @@
 #include "generated/subscene_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class TRSubScene : public Resource {
-	GDCLASS(TRSubScene, Resource)
+class TRSubScene : public Resource
+{
+    GDCLASS(TRSubScene, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	TRSubScene(){}
-	~TRSubScene(){}
+    TRSubScene() = default;
+    ~TRSubScene() = default;
 
     GETTER_SETTER_DEFINE(String, FileName)
-	GETTER_SETTER_DEFINE(String, group)
-	GETTER_SETTER_DEFINE(PackedByteArray, subdata)
+    GETTER_SETTER_DEFINE(String, group)
+    GETTER_SETTER_DEFINE(PackedByteArray, subdata)
 
-	void LoadFromBuffer(const void* data);
+    void LoadFromBuffer(const void* data);
 
 private:
     String FileName;
-	String group;
-	PackedByteArray subdata;
+    String group;
+    PackedByteArray subdata;
 };
-}   
+}

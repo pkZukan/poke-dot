@@ -9,9 +9,12 @@ void TRAnimationTrackResource::_bind_methods()
 
 void TRAnimationTrackResourceTable::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRAnimationTrackResourceTable, animation, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationTrackResource")
-    GETTER_SETTER_BIND(TRAnimationTrackResourceTable, material, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationTrackResource")
-    GETTER_SETTER_BIND(TRAnimationTrackResourceTable, effect, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationTrackResource")
+    GETTER_SETTER_BIND(TRAnimationTrackResourceTable, animation, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRAnimationTrackResource")
+    GETTER_SETTER_BIND(TRAnimationTrackResourceTable, material, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRAnimationTrackResource")
+    GETTER_SETTER_BIND(TRAnimationTrackResourceTable, effect, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRAnimationTrackResource")
 }
 
 void TRAnimationTrack::_bind_methods()
@@ -19,7 +22,8 @@ void TRAnimationTrack::_bind_methods()
     GETTER_SETTER_BIND(TRAnimationTrack, Name, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRAnimationTrack, res_0, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(TRAnimationTrack, res_1, Variant::INT, PROPERTY_HINT_NONE)
-    GETTER_SETTER_BIND(TRAnimationTrack, Resources, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationTrackResourceTable")
+    GETTER_SETTER_BIND(TRAnimationTrack, Resources, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRAnimationTrackResourceTable")
 }
 
 void TRAnimationTrackListTable::_bind_methods()
@@ -27,9 +31,10 @@ void TRAnimationTrackListTable::_bind_methods()
     GETTER_SETTER_BIND(TRAnimationTrackListTable, list, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "TRAnimationTrack")
 }
 
-void TRAnimationChannelResource::_bind_methods() 
+void TRAnimationChannelResource::_bind_methods()
 {
-    GETTER_SETTER_BIND(TRAnimationChannelResource, table, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "TRAnimationTrackListTable")
+    GETTER_SETTER_BIND(TRAnimationChannelResource, table, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE,
+                       "TRAnimationTrackListTable")
 }
 
 void TRAnimationChannelResource::LoadFromFile(String file)
@@ -45,7 +50,8 @@ void TRAnimationChannelResource::LoadFromFile(String file)
     t_table.instantiate();
     Array trackList;
     auto list = track_table->list();
-    for (size_t i = 0; i < list->size(); i++) {
+    for (size_t i = 0; i < list->size(); i++)
+    {
         auto ent = list->Get(i);
 
         Ref<TRAnimationTrack> track;
@@ -58,7 +64,7 @@ void TRAnimationChannelResource::LoadFromFile(String file)
         Ref<TRAnimationTrackResourceTable> trackRes;
         trackRes.instantiate();
 
-        if(res->animation())
+        if (res->animation())
         {
             Ref<TRAnimationTrackResource> anim;
             anim.instantiate();
@@ -66,7 +72,7 @@ void TRAnimationChannelResource::LoadFromFile(String file)
             trackRes->set_animation(anim);
         }
 
-        if(res->material())
+        if (res->material())
         {
             Ref<TRAnimationTrackResource> mat;
             mat.instantiate();
@@ -74,7 +80,7 @@ void TRAnimationChannelResource::LoadFromFile(String file)
             trackRes->set_material(mat);
         }
 
-        if(res->effect())
+        if (res->effect())
         {
             Ref<TRAnimationTrackResource> eff;
             eff.instantiate();
@@ -89,7 +95,8 @@ void TRAnimationChannelResource::LoadFromFile(String file)
     set_table(t_table);
 }
 
-Variant ResourceFormatLoaderTRACR::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const
+Variant ResourceFormatLoaderTRACR::_load(const String& p_path, const String& p_original_path, bool p_use_sub_threads,
+                                         int32_t p_cache_mode) const
 {
     Ref<TRAnimationChannelResource> tracr;
     tracr.instantiate();
@@ -105,7 +112,7 @@ PackedStringArray ResourceFormatLoaderTRACR::_get_recognized_extensions() const
     return exts;
 }
 
-bool ResourceFormatLoaderTRACR::_handles_type(const StringName &p_type) const 
+bool ResourceFormatLoaderTRACR::_handles_type(const StringName& p_type) const
 {
     return p_type == String("TRAnimationChannelResource");
 }

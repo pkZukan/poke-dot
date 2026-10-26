@@ -3,7 +3,8 @@
 #include <godot_cpp/classes/image_texture3d.hpp>
 #include <godot_cpp/variant/vector3.hpp>
 
-namespace godot {
+namespace godot
+{
 
 struct RetailToneCurve
 {
@@ -18,12 +19,11 @@ struct RetailToneCurve
     Segment segments[3];
 
     static RetailToneCurve create(double toe_strength, double toe_length, double shoulder_strength,
-        double shoulder_length, double shoulder_angle, double gamma);
+                                  double shoulder_length, double shoulder_angle, double gamma);
     float eval(float x) const;
 };
 
-
-Vector3 retail_aces(const Vector3 &color);
-Ref<ImageTexture3D> build_retail_tonemap_lut(const RetailToneCurve &curve, int size, float headroom);
+Vector3 retail_aces(const Vector3& color);
+Ref<ImageTexture3D> build_retail_tonemap_lut(const RetailToneCurve& curve, int size, float headroom);
 
 }

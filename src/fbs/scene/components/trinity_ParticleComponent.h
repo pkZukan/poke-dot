@@ -4,12 +4,15 @@
 #include "generated/trinity_ParticleComponent_generated.h"
 #include "utils.h"
 
-namespace godot {
+namespace godot
+{
 
-class TrinityParticleComponent : public Resource {
+class TrinityParticleComponent : public Resource
+{
     GDCLASS(TrinityParticleComponent, Resource)
 protected:
     static void _bind_methods();
+
 public:
     void LoadFromBuffer(const void* buffer);
     GETTER_SETTER_DEFINE(String, particle_file)
@@ -25,4 +28,4 @@ private:
     String particle_parent;
 };
 
-} // namespace godot
+}

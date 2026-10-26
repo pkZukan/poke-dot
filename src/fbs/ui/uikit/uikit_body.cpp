@@ -5,7 +5,7 @@ using namespace godot;
 void UIKitBody::_bind_methods()
 {
     GETTER_SETTER_BIND(UIKitBody, Name, Variant::STRING, PROPERTY_HINT_NONE)
-	GETTER_SETTER_BIND(UIKitBody, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
+    GETTER_SETTER_BIND(UIKitBody, ControlName, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitBody, ControlIndex, Variant::INT, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitBody, InSfx, Variant::STRING, PROPERTY_HINT_NONE)
     GETTER_SETTER_BIND(UIKitBody, OutSfx, Variant::STRING, PROPERTY_HINT_NONE)

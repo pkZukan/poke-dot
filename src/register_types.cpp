@@ -124,339 +124,319 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
-void initialize_gen_module(ModuleInitializationLevel p_level) {
-	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE) 
-	{
-		register_trinity_shader_globals();
+void initialize_gen_module(ModuleInitializationLevel p_level)
+{
+    if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
+    {
+        register_trinity_shader_globals();
 
-		//model fbs
-		GDREGISTER_CLASS(MeshShape)
-		GDREGISTER_CLASS(ModelBuffer)
-		GDREGISTER_CLASS(VertexAccessors)
-		GDREGISTER_CLASS(SizeTable)
-		GDREGISTER_CLASS(Accessors)
-		GDREGISTER_CLASS(BoneEntry)
-		GDREGISTER_CLASS(MaterialEntry)
-		GDREGISTER_CLASS(TextureEntry)
-		GDREGISTER_CLASS(ShaderEntry)
-		GDREGISTER_CLASS(SamplerEntry)
-		GDREGISTER_CLASS(ShaderStringParam)
-		GDREGISTER_CLASS(ShaderIntParam)
-		GDREGISTER_CLASS(MaterialInfo)
-		GDREGISTER_CLASS(Sphere)
-		GDREGISTER_CLASS(InfluenceEntry)
-		GDREGISTER_CLASS(TransformNode)
-		GDREGISTER_CLASS(IKControl)
-		GDREGISTER_CLASS(LOD)
-		GDREGISTER_CLASS(LodIndex)
-		GDREGISTER_CLASS(ByteExtra)
-		GDREGISTER_CLASS(IntExtra)
-		GDREGISTER_CLASS(FloatParameter)
-		GDREGISTER_CLASS(Float4Parameter)
-		GDREGISTER_CLASS(VariationControl)
-		GDREGISTER_CLASS(ModelVariation)
+        GDREGISTER_CLASS(MeshShape)
+        GDREGISTER_CLASS(ModelBuffer)
+        GDREGISTER_CLASS(VertexAccessors)
+        GDREGISTER_CLASS(SizeTable)
+        GDREGISTER_CLASS(Accessors)
+        GDREGISTER_CLASS(BoneEntry)
+        GDREGISTER_CLASS(MaterialEntry)
+        GDREGISTER_CLASS(TextureEntry)
+        GDREGISTER_CLASS(ShaderEntry)
+        GDREGISTER_CLASS(SamplerEntry)
+        GDREGISTER_CLASS(ShaderStringParam)
+        GDREGISTER_CLASS(ShaderIntParam)
+        GDREGISTER_CLASS(MaterialInfo)
+        GDREGISTER_CLASS(Sphere)
+        GDREGISTER_CLASS(InfluenceEntry)
+        GDREGISTER_CLASS(TransformNode)
+        GDREGISTER_CLASS(IKControl)
+        GDREGISTER_CLASS(LOD)
+        GDREGISTER_CLASS(LodIndex)
+        GDREGISTER_CLASS(ByteExtra)
+        GDREGISTER_CLASS(IntExtra)
+        GDREGISTER_CLASS(FloatParameter)
+        GDREGISTER_CLASS(Float4Parameter)
+        GDREGISTER_CLASS(VariationControl)
+        GDREGISTER_CLASS(ModelVariation)
 
-		//Model
-		GDREGISTER_CLASS(TRModel)
-		GDREGISTER_CLASS(TRMesh)
-		GDREGISTER_CLASS(TRModelBuffer)
-		GDREGISTER_CLASS(TRSkeleton)
-		GDREGISTER_CLASS(TRModelMeta)
-		GDREGISTER_CLASS(TRMaterial)
+        GDREGISTER_CLASS(TRModel)
+        GDREGISTER_CLASS(TRMesh)
+        GDREGISTER_CLASS(TRModelBuffer)
+        GDREGISTER_CLASS(TRSkeleton)
+        GDREGISTER_CLASS(TRModelMeta)
+        GDREGISTER_CLASS(TRMaterial)
 
-		//anim_common
-		GDREGISTER_CLASS(TRAnimationInfo)
-		GDREGISTER_CLASS(FixedVectorTrack)
-		GDREGISTER_CLASS(DynamicVectorTrack)
-		GDREGISTER_CLASS(Framed8VectorTrack)
-		GDREGISTER_CLASS(Framed16VectorTrack)
-		GDREGISTER_CLASS(FixedRotationTrack)
-		GDREGISTER_CLASS(DynamicRotationTrack)
-		GDREGISTER_CLASS(Framed8RotationTrack)
-		GDREGISTER_CLASS(Framed16RotationTrack)
-		GDREGISTER_CLASS(FixedBoolTrack)
-		GDREGISTER_CLASS(DynamicBoolTrack)
-		GDREGISTER_CLASS(Framed8BoolTrack)
-		GDREGISTER_CLASS(Framed16BoolTrack)
-		GDREGISTER_CLASS(FixedFloatTrack)
-		GDREGISTER_CLASS(DynamicFloatTrack)
-		GDREGISTER_CLASS(Framed8FloatTrack)
-		GDREGISTER_CLASS(Framed16FloatTrack)
+        GDREGISTER_CLASS(TRAnimationInfo)
+        GDREGISTER_CLASS(FixedVectorTrack)
+        GDREGISTER_CLASS(DynamicVectorTrack)
+        GDREGISTER_CLASS(Framed8VectorTrack)
+        GDREGISTER_CLASS(Framed16VectorTrack)
+        GDREGISTER_CLASS(FixedRotationTrack)
+        GDREGISTER_CLASS(DynamicRotationTrack)
+        GDREGISTER_CLASS(Framed8RotationTrack)
+        GDREGISTER_CLASS(Framed16RotationTrack)
+        GDREGISTER_CLASS(FixedBoolTrack)
+        GDREGISTER_CLASS(DynamicBoolTrack)
+        GDREGISTER_CLASS(Framed8BoolTrack)
+        GDREGISTER_CLASS(Framed16BoolTrack)
+        GDREGISTER_CLASS(FixedFloatTrack)
+        GDREGISTER_CLASS(DynamicFloatTrack)
+        GDREGISTER_CLASS(Framed8FloatTrack)
+        GDREGISTER_CLASS(Framed16FloatTrack)
 
-		//tranm
-		GDREGISTER_CLASS(BoneInit)
-		GDREGISTER_CLASS(BoneTrack)
-		GDREGISTER_CLASS(BoneAnimation)
-		GDREGISTER_CLASS(TRAnimation)
+        GDREGISTER_CLASS(BoneInit)
+        GDREGISTER_CLASS(BoneTrack)
+        GDREGISTER_CLASS(BoneAnimation)
+        GDREGISTER_CLASS(TRAnimation)
 
-		//tracn
-		GDREGISTER_CLASS(TRAnimationChannelNames)
-		GDREGISTER_CLASS(AnimationChannelNameEntry)
+        GDREGISTER_CLASS(TRAnimationChannelNames)
+        GDREGISTER_CLASS(AnimationChannelNameEntry)
 
-		//tracm
-		GDREGISTER_CLASS(TRAnimationChannelMeshes)
-		GDREGISTER_CLASS(TRMeshAnimeTrack)
-		GDREGISTER_CLASS(TRTrackFlagsInfo)
-		GDREGISTER_CLASS(TRBlendShapeTimeline)
-		GDREGISTER_CLASS(TRVisibilityShapeTimeline)
-		GDREGISTER_CLASS(TRTrackMaterialTimeline)
-		GDREGISTER_CLASS(TRTrackBlendShape)
-		GDREGISTER_CLASS(TRBlendTable)
-		GDREGISTER_CLASS(TRTrackMaterial)
-		GDREGISTER_CLASS(TRTrackMaterialAnim)
-		GDREGISTER_CLASS(TRTrackMaterialInit)
-		GDREGISTER_CLASS(TRTrackMaterialChannel)
-		GDREGISTER_CLASS(TRTrackMaterialChannelVec4)
-		GDREGISTER_CLASS(TRTrackMaterialValue)
-		GDREGISTER_CLASS(TRTrackBlendshapeInit)
+        GDREGISTER_CLASS(TRAnimationChannelMeshes)
+        GDREGISTER_CLASS(TRMeshAnimeTrack)
+        GDREGISTER_CLASS(TRTrackFlagsInfo)
+        GDREGISTER_CLASS(TRBlendShapeTimeline)
+        GDREGISTER_CLASS(TRVisibilityShapeTimeline)
+        GDREGISTER_CLASS(TRTrackMaterialTimeline)
+        GDREGISTER_CLASS(TRTrackBlendShape)
+        GDREGISTER_CLASS(TRBlendTable)
+        GDREGISTER_CLASS(TRTrackMaterial)
+        GDREGISTER_CLASS(TRTrackMaterialAnim)
+        GDREGISTER_CLASS(TRTrackMaterialInit)
+        GDREGISTER_CLASS(TRTrackMaterialChannel)
+        GDREGISTER_CLASS(TRTrackMaterialChannelVec4)
+        GDREGISTER_CLASS(TRTrackMaterialValue)
+        GDREGISTER_CLASS(TRTrackBlendshapeInit)
 
-		//traef
-		GDREGISTER_CLASS(TREffectValueInt)
-		GDREGISTER_CLASS(TREffectValueFloat)
-		GDREGISTER_CLASS(TREffectValueByte)
-		GDREGISTER_CLASS(TREffectValueString)
-		GDREGISTER_CLASS(TREffect)
-		GDREGISTER_CLASS(TRAnimationEffect)
-		GDREGISTER_CLASS(TRAnimationEffects)
+        GDREGISTER_CLASS(TREffectValueInt)
+        GDREGISTER_CLASS(TREffectValueFloat)
+        GDREGISTER_CLASS(TREffectValueByte)
+        GDREGISTER_CLASS(TREffectValueString)
+        GDREGISTER_CLASS(TREffect)
+        GDREGISTER_CLASS(TRAnimationEffect)
+        GDREGISTER_CLASS(TRAnimationEffects)
 
-		//tracr
-		GDREGISTER_CLASS(TRAnimationChannelResource)
-		GDREGISTER_CLASS(TRAnimationTrackListTable)
-		GDREGISTER_CLASS(TRAnimationTrack)
-		GDREGISTER_CLASS(TRAnimationTrackResourceTable)
-		GDREGISTER_CLASS(TRAnimationTrackResource)
+        GDREGISTER_CLASS(TRAnimationChannelResource)
+        GDREGISTER_CLASS(TRAnimationTrackListTable)
+        GDREGISTER_CLASS(TRAnimationTrack)
+        GDREGISTER_CLASS(TRAnimationTrackResourceTable)
+        GDREGISTER_CLASS(TRAnimationTrackResource)
 
-		//tracp
-		GDREGISTER_CLASS(TRAnimationChannelParams)
-		GDREGISTER_CLASS(AnimationChannelParamEntry)
-		GDREGISTER_CLASS(AnimationChannelParamInt)
-		GDREGISTER_CLASS(AnimationChannelParamFloat)
-		GDREGISTER_CLASS(AnimationChannelParamBool)
-		GDREGISTER_CLASS(AnimationChannelParamTrigger)
+        GDREGISTER_CLASS(TRAnimationChannelParams)
+        GDREGISTER_CLASS(AnimationChannelParamEntry)
+        GDREGISTER_CLASS(AnimationChannelParamInt)
+        GDREGISTER_CLASS(AnimationChannelParamFloat)
+        GDREGISTER_CLASS(AnimationChannelParamBool)
+        GDREGISTER_CLASS(AnimationChannelParamTrigger)
 
-		//trlgt
-		GDREGISTER_CLASS(TRLightCurve)
-		GDREGISTER_CLASS(TRLightCurve4)
-		GDREGISTER_CLASS(TRLGT)
-		GDREGISTER_CLASS(TRLight)
-		GDREGISTER_CLASS(BoundMatrix)
-		GDREGISTER_CLASS(TRFloatParameter)
-		GDREGISTER_CLASS(TRVec4Parameter)
-		GDREGISTER_CLASS(TRStringParameter)
-		GDREGISTER_CLASS(TrinityEnvironment)
+        GDREGISTER_CLASS(TRLightCurve)
+        GDREGISTER_CLASS(TRLightCurve4)
+        GDREGISTER_CLASS(TRLGT)
+        GDREGISTER_CLASS(TRLight)
+        GDREGISTER_CLASS(BoundMatrix)
+        GDREGISTER_CLASS(TRFloatParameter)
+        GDREGISTER_CLASS(TRVec4Parameter)
+        GDREGISTER_CLASS(TRStringParameter)
+        GDREGISTER_CLASS(TrinityEnvironment)
 
-		//ccdata
-		GDREGISTER_CLASS(TrinityCharacterCreationData)
-		GDREGISTER_CLASS(TrinityCCDataSomeTable2)
-		GDREGISTER_CLASS(TrinityCCDataEntry)
-		GDREGISTER_CLASS(TrinityCCDataEntry2)
-		GDREGISTER_CLASS(TrinityCCDataEntry3)
-		GDREGISTER_CLASS(TrinityCCDataEntry4)
+        GDREGISTER_CLASS(TrinityCharacterCreationData)
+        GDREGISTER_CLASS(TrinityCCDataSomeTable2)
+        GDREGISTER_CLASS(TrinityCCDataEntry)
+        GDREGISTER_CLASS(TrinityCCDataEntry2)
+        GDREGISTER_CLASS(TrinityCCDataEntry3)
+        GDREGISTER_CLASS(TrinityCCDataEntry4)
 
-		//catalog
-		GDREGISTER_CLASS(TRPpokemonCatalog)
-		GDREGISTER_CLASS(CatalogEntry)
-		GDREGISTER_CLASS(SpeciesResourceInfo)
-		GDREGISTER_CLASS(AnimationResourceInfo)
-		GDREGISTER_CLASS(LocatorResourceInfo)
+        GDREGISTER_CLASS(TRPpokemonCatalog)
+        GDREGISTER_CLASS(CatalogEntry)
+        GDREGISTER_CLASS(SpeciesResourceInfo)
+        GDREGISTER_CLASS(AnimationResourceInfo)
+        GDREGISTER_CLASS(LocatorResourceInfo)
 
-		//scene
-		GDREGISTER_CLASS(TRSCN)
-		GDREGISTER_CLASS(TRScene)
-		GDREGISTER_CLASS(TRSubScene)
-		GDREGISTER_CLASS(TrinitySceneObject)
-		GDREGISTER_CLASS(TrinityObjectLayer)
-		GDREGISTER_CLASS(TrinityScenePoint)
-		GDREGISTER_CLASS(TrinityObjectTemplate)
-		GDREGISTER_CLASS(TrinityModelComponent)
-		GDREGISTER_CLASS(TrinityModelInstancerComponent)
-		GDREGISTER_CLASS(TrinityAnimationComponent)
-		GDREGISTER_CLASS(TrinityCollisionComponent)
-		GDREGISTER_CLASS(TrinityBodyCollision)
-		GDREGISTER_CLASS(TrinityCharacterCollision)
-		GDREGISTER_CLASS(ModelShape)
-		GDREGISTER_CLASS(SphereShape)
-		GDREGISTER_CLASS(BoxShape)
-		GDREGISTER_CLASS(CapsuleShape)
-		GDREGISTER_CLASS(PencilShape)
-		GDREGISTER_CLASS(TrinityPlacementRegistry)
-		GDREGISTER_CLASS(TrinityPlacementPosition)
-		GDREGISTER_CLASS(TrinityPlacementObjects)
-		GDREGISTER_CLASS(TrinityPlacementObjectTemplates)
-		GDREGISTER_CLASS(TrinityPlacementSpawners)
+        GDREGISTER_CLASS(TRSCN)
+        GDREGISTER_CLASS(TRScene)
+        GDREGISTER_CLASS(TRSubScene)
+        GDREGISTER_CLASS(TrinitySceneObject)
+        GDREGISTER_CLASS(TrinityObjectLayer)
+        GDREGISTER_CLASS(TrinityScenePoint)
+        GDREGISTER_CLASS(TrinityObjectTemplate)
+        GDREGISTER_CLASS(TrinityModelComponent)
+        GDREGISTER_CLASS(TrinityModelInstancerComponent)
+        GDREGISTER_CLASS(TrinityAnimationComponent)
+        GDREGISTER_CLASS(TrinityCollisionComponent)
+        GDREGISTER_CLASS(TrinityBodyCollision)
+        GDREGISTER_CLASS(TrinityCharacterCollision)
+        GDREGISTER_CLASS(ModelShape)
+        GDREGISTER_CLASS(SphereShape)
+        GDREGISTER_CLASS(BoxShape)
+        GDREGISTER_CLASS(CapsuleShape)
+        GDREGISTER_CLASS(PencilShape)
+        GDREGISTER_CLASS(TrinityPlacementRegistry)
+        GDREGISTER_CLASS(TrinityPlacementPosition)
+        GDREGISTER_CLASS(TrinityPlacementObjects)
+        GDREGISTER_CLASS(TrinityPlacementObjectTemplates)
+        GDREGISTER_CLASS(TrinityPlacementSpawners)
 
-		GDREGISTER_CLASS(PeFlatbuffersDataEntry)
-		GDREGISTER_CLASS(PeFlatbuffersDataComponent)
-		GDREGISTER_CLASS(PeInputEventTriggerComponent)
-		GDREGISTER_CLASS(PeSimpleNode)
-		GDREGISTER_CLASS(PeTextComponent)
-		GDREGISTER_CLASS(PeUikitManagerComponent)
-		GDREGISTER_CLASS(PeUikitViewComponent)
-		GDREGISTER_CLASS(TiAIPerceptualComponent)
-		GDREGISTER_CLASS(TrinityCameraEntity)
-		GDREGISTER_CLASS(TrinityCCDataMasterEntry)
-		GDREGISTER_CLASS(TrinityCharacterCreationComponent)
-		GDREGISTER_CLASS(TrinityCharacterCreationMasterComponent)
-		GDREGISTER_CLASS(TrinityEnvironmentParameter)
-		GDREGISTER_CLASS(TrinityGluePlugin)
-		GDREGISTER_CLASS(TrinityGrassCollisionComponent)
-		GDREGISTER_CLASS(TrinityGroundPlaceComponent)
-		GDREGISTER_CLASS(TrinityLayoutCommonResourceComponent)
-		GDREGISTER_CLASS(TrinityLayoutComponent)
-		GDREGISTER_CLASS(TrinityLightApplierComponent)
-		GDREGISTER_CLASS(TrinityLightDirectApplierComponent)
-		GDREGISTER_CLASS(TrinityOverrideSensorData)
-		GDREGISTER_CLASS(TrinityParticleComponent)
-		GDREGISTER_CLASS(PropInt)
-		GDREGISTER_CLASS(PropDec)
-		GDREGISTER_CLASS(PropStr)
-		GDREGISTER_CLASS(PropEnum)
-		GDREGISTER_CLASS(PropUnion)
-		GDREGISTER_CLASS(PropField)
-		GDREGISTER_CLASS(PropTable)
-		GDREGISTER_CLASS(PropList)
-		GDREGISTER_CLASS(TrinityPropertySheet)
-		GDREGISTER_CLASS(TrinityScriptComponent)
-		GDREGISTER_CLASS(TrinityStreamingObject)
-		GDREGISTER_CLASS(TrinityStreamingPointData)
-		GDREGISTER_CLASS(TrinityStreamingEntry)
-		GDREGISTER_CLASS(TrinityStreamingPoint)
-		GDREGISTER_CLASS(TrinityTerrainStreamingSetting)
-		GDREGISTER_CLASS(TrinityTextureBufferComponent)
+        GDREGISTER_CLASS(PeFlatbuffersDataEntry)
+        GDREGISTER_CLASS(PeFlatbuffersDataComponent)
+        GDREGISTER_CLASS(PeInputEventTriggerComponent)
+        GDREGISTER_CLASS(PeSimpleNode)
+        GDREGISTER_CLASS(PeTextComponent)
+        GDREGISTER_CLASS(PeUikitManagerComponent)
+        GDREGISTER_CLASS(PeUikitViewComponent)
+        GDREGISTER_CLASS(TiAIPerceptualComponent)
+        GDREGISTER_CLASS(TrinityCameraEntity)
+        GDREGISTER_CLASS(TrinityCCDataMasterEntry)
+        GDREGISTER_CLASS(TrinityCharacterCreationComponent)
+        GDREGISTER_CLASS(TrinityCharacterCreationMasterComponent)
+        GDREGISTER_CLASS(TrinityEnvironmentParameter)
+        GDREGISTER_CLASS(TrinityGluePlugin)
+        GDREGISTER_CLASS(TrinityGrassCollisionComponent)
+        GDREGISTER_CLASS(TrinityGroundPlaceComponent)
+        GDREGISTER_CLASS(TrinityLayoutCommonResourceComponent)
+        GDREGISTER_CLASS(TrinityLayoutComponent)
+        GDREGISTER_CLASS(TrinityLightApplierComponent)
+        GDREGISTER_CLASS(TrinityLightDirectApplierComponent)
+        GDREGISTER_CLASS(TrinityOverrideSensorData)
+        GDREGISTER_CLASS(TrinityParticleComponent)
+        GDREGISTER_CLASS(PropInt)
+        GDREGISTER_CLASS(PropDec)
+        GDREGISTER_CLASS(PropStr)
+        GDREGISTER_CLASS(PropEnum)
+        GDREGISTER_CLASS(PropUnion)
+        GDREGISTER_CLASS(PropField)
+        GDREGISTER_CLASS(PropTable)
+        GDREGISTER_CLASS(PropList)
+        GDREGISTER_CLASS(TrinityPropertySheet)
+        GDREGISTER_CLASS(TrinityScriptComponent)
+        GDREGISTER_CLASS(TrinityStreamingObject)
+        GDREGISTER_CLASS(TrinityStreamingPointData)
+        GDREGISTER_CLASS(TrinityStreamingEntry)
+        GDREGISTER_CLASS(TrinityStreamingPoint)
+        GDREGISTER_CLASS(TrinityTerrainStreamingSetting)
+        GDREGISTER_CLASS(TrinityTextureBufferComponent)
 
-		//personal
-		GDREGISTER_CLASS(TRPersonalArray)
-		GDREGISTER_CLASS(TRPersonalData)
-		GDREGISTER_CLASS(TRSpeciesInfo)
-		GDREGISTER_CLASS(TRMove)
-		GDREGISTER_CLASS(TRZukanData)
-		GDREGISTER_CLASS(TRHatch)
-		GDREGISTER_CLASS(TREvoData)
-		GDREGISTER_CLASS(TRGenderData)
-		GDREGISTER_CLASS(TRStatInfo)
+        GDREGISTER_CLASS(TRPersonalArray)
+        GDREGISTER_CLASS(TRPersonalData)
+        GDREGISTER_CLASS(TRSpeciesInfo)
+        GDREGISTER_CLASS(TRMove)
+        GDREGISTER_CLASS(TRZukanData)
+        GDREGISTER_CLASS(TRHatch)
+        GDREGISTER_CLASS(TREvoData)
+        GDREGISTER_CLASS(TRGenderData)
+        GDREGISTER_CLASS(TRStatInfo)
 
-		//Entities
-		GDREGISTER_CLASS(ActorObj)
-		GDREGISTER_CLASS(PokemonActor)
-		GDREGISTER_CLASS(TrainerActor)
-		GDREGISTER_CLASS(PokemonCharacter)
-		GDREGISTER_CLASS(TrainerCharacter)
-		GDREGISTER_CLASS(TrinityAnimationConverter)
-		GDREGISTER_CLASS(TrinityModel)
-		GDREGISTER_CLASS(TrinityPane)
-		GDREGISTER_CLASS(BflanAnimator)
-		GDREGISTER_CLASS(TrinityUI)
+        GDREGISTER_CLASS(ActorObj)
+        GDREGISTER_CLASS(PokemonActor)
+        GDREGISTER_CLASS(TrainerActor)
+        GDREGISTER_CLASS(PokemonCharacter)
+        GDREGISTER_CLASS(TrainerCharacter)
+        GDREGISTER_CLASS(TrinityAnimationConverter)
+        GDREGISTER_CLASS(TrinityModel)
+        GDREGISTER_CLASS(TrinityPane)
+        GDREGISTER_CLASS(BflanAnimator)
+        GDREGISTER_CLASS(TrinityUI)
 
-		//middleware
-		GDREGISTER_CLASS(BinaryTexture)
-		GDREGISTER_CLASS(BinaryTextureArchive)
-		GDREGISTER_CLASS(SeadArchive)
-		GDREGISTER_CLASS(BinaryLayout)
-		GDREGISTER_CLASS(BinaryLayoutAnimation)
-		GDREGISTER_CLASS(HavokTag)
-		GDREGISTER_CLASS(HavokSdkVer)
-		GDREGISTER_CLASS(HavokItem)
-		GDREGISTER_CLASS(HavokStrings)
-		GDREGISTER_CLASS(HavokTypeNameDescriptor)
-		GDREGISTER_CLASS(HavokTypeBodyDescriptor)
-		GDREGISTER_CLASS(HavokData)
-		GDREGISTER_CLASS(BinaryFont)
-		GDREGISTER_CLASS(BinaryCompositeFont)
-		GDREGISTER_CLASS(WwiseSoundBank)
-		GDREGISTER_CLASS(WwisePackage)
-		GDREGISTER_CLASS(AudioStreamWwise)
+        GDREGISTER_CLASS(BinaryTexture)
+        GDREGISTER_CLASS(BinaryTextureArchive)
+        GDREGISTER_CLASS(SeadArchive)
+        GDREGISTER_CLASS(BinaryLayout)
+        GDREGISTER_CLASS(BinaryLayoutAnimation)
+        GDREGISTER_CLASS(HavokTag)
+        GDREGISTER_CLASS(HavokSdkVer)
+        GDREGISTER_CLASS(HavokItem)
+        GDREGISTER_CLASS(HavokStrings)
+        GDREGISTER_CLASS(HavokTypeNameDescriptor)
+        GDREGISTER_CLASS(HavokTypeBodyDescriptor)
+        GDREGISTER_CLASS(HavokData)
+        GDREGISTER_CLASS(BinaryFont)
+        GDREGISTER_CLASS(BinaryCompositeFont)
+        GDREGISTER_CLASS(WwiseSoundBank)
+        GDREGISTER_CLASS(WwisePackage)
+        GDREGISTER_CLASS(AudioStreamWwise)
 
-		//Field
-		GDREGISTER_CLASS(TRCOL)
-		GDREGISTER_CLASS(TRINS)
-		GDREGISTER_CLASS(FlatbufferSchema)
-		GDREGISTER_CLASS(TrinityMapReplace)
-		GDREGISTER_CLASS(TrinitySceneLoader)
+        GDREGISTER_CLASS(TRCOL)
+        GDREGISTER_CLASS(TRINS)
+        GDREGISTER_CLASS(FlatbufferSchema)
+        GDREGISTER_CLASS(TrinityMapReplace)
+        GDREGISTER_CLASS(TrinitySceneLoader)
 
-		//UIkit
-		GDREGISTER_CLASS(TRUIV)
-		GDREGISTER_CLASS(TRUIViewChunk)
-		GDREGISTER_CLASS(UIKitGauge)
-		GDREGISTER_CLASS(UIKitBody)
-		GDREGISTER_CLASS(UIKitShortcut)
-		GDREGISTER_CLASS(UIKitButton)
-		GDREGISTER_CLASS(UIKitSwitch)
-		GDREGISTER_CLASS(UIKitButtonInfo)
-		GDREGISTER_CLASS(UIKitCursor)
-		GDREGISTER_CLASS(UIKitGridPanel)
-		GDREGISTER_CLASS(UIKitOptionGuide)
-		GDREGISTER_CLASS(UIKitScrollPanel)
-		GDREGISTER_CLASS(UIKitSwitchItem)
-		GDREGISTER_CLASS(UIKitSwitchPanel)
+        GDREGISTER_CLASS(TRUIV)
+        GDREGISTER_CLASS(TRUIViewChunk)
+        GDREGISTER_CLASS(UIKitGauge)
+        GDREGISTER_CLASS(UIKitBody)
+        GDREGISTER_CLASS(UIKitShortcut)
+        GDREGISTER_CLASS(UIKitButton)
+        GDREGISTER_CLASS(UIKitSwitch)
+        GDREGISTER_CLASS(UIKitButtonInfo)
+        GDREGISTER_CLASS(UIKitCursor)
+        GDREGISTER_CLASS(UIKitGridPanel)
+        GDREGISTER_CLASS(UIKitOptionGuide)
+        GDREGISTER_CLASS(UIKitScrollPanel)
+        GDREGISTER_CLASS(UIKitSwitchItem)
+        GDREGISTER_CLASS(UIKitSwitchPanel)
 
-		//Helpers
-		GDREGISTER_CLASS(TrinitySceneParser)
-		GDREGISTER_CLASS(Utils)
+        GDREGISTER_CLASS(TrinitySceneParser)
+        GDREGISTER_CLASS(Utils)
 
-		//Resource loaders
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
 
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
 
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
 
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
 
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFCPX)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderSARC)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderBNK)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderBFCPX)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderSARC)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderBNK)
 
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
 
-		INIT_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
-		//Singletons
-		GDREGISTER_CLASS(GFLib)
-		Engine::get_singleton()->register_singleton("GFLib", memnew(GFLib));
-		GFLib::get_singleton()->load_project_settings();
+        GDREGISTER_CLASS(GFLib)
+        Engine::get_singleton()->register_singleton("GFLib", memnew(GFLib));
+        GFLib::get_singleton()->load_project_settings();
 
-		GDREGISTER_CLASS(PokemonCatalog)
-		Engine::get_singleton()->register_singleton("PokemonCatalog", memnew(PokemonCatalog));
+        GDREGISTER_CLASS(PokemonCatalog)
+        Engine::get_singleton()->register_singleton("PokemonCatalog", memnew(PokemonCatalog));
 
-		//Init singletons
-		PokemonCatalog::get_singleton()->load_catalog();
-	}
-	
-	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) 
-	{
-		ClassDB::register_internal_class<SarcInspectorControl>();
+        PokemonCatalog::get_singleton()->load_catalog();
+    }
+
+    if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
+    {
+        ClassDB::register_internal_class<SarcInspectorControl>();
         ClassDB::register_internal_class<EditorInspectorPluginSARC>();
-		ClassDB::register_internal_class<SARCEditorPlugin>();
-		EditorPlugins::add_by_type<SARCEditorPlugin>();
+        ClassDB::register_internal_class<SARCEditorPlugin>();
+        EditorPlugins::add_by_type<SARCEditorPlugin>();
 
-		ClassDB::register_internal_class<AudioStreamPreviewControl>();
-		ClassDB::register_internal_class<EditorInspectorPluginAudioStreamOgg>();
-		ClassDB::register_internal_class<WwiseEditorPlugin>();
-		EditorPlugins::add_by_type<WwiseEditorPlugin>();
-	}
+        ClassDB::register_internal_class<AudioStreamPreviewControl>();
+        ClassDB::register_internal_class<EditorInspectorPluginAudioStreamOgg>();
+        ClassDB::register_internal_class<WwiseEditorPlugin>();
+        EditorPlugins::add_by_type<WwiseEditorPlugin>();
+    }
 }
 
-void uninitialize_gen_module(ModuleInitializationLevel p_level) {
+void uninitialize_gen_module(ModuleInitializationLevel p_level)
+{
 
     if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
     {
@@ -464,71 +444,75 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level) {
         EditorPlugins::remove_by_type<WwiseEditorPlugin>();
     }
 
-	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
-	{
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
+    if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
+    {
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMDL)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMSH)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMBF)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSKL)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMTR)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRMMT)
 
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACN)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRANM)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
 
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
 
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRSCN)
 
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPMCATALOG)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRPERSONAL)
 
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFCPX)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderSARC)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderBNK)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderBNTX)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderBFCPX)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderBFFNT)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderSARC)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderBNK)
 
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderBFBS)
 
-		FINI_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRUIV)
 
-		if (Engine::get_singleton()->has_singleton("PokemonCatalog")) {
-			PokemonCatalog* catalog = Object::cast_to<PokemonCatalog>(
-				Engine::get_singleton()->get_singleton("PokemonCatalog")
-			);
-			Engine::get_singleton()->unregister_singleton("PokemonCatalog");
-			memdelete(catalog);
-		}
+        if (Engine::get_singleton()->has_singleton("PokemonCatalog"))
+        {
+            PokemonCatalog* catalog =
+                Object::cast_to<PokemonCatalog>(Engine::get_singleton()->get_singleton("PokemonCatalog"));
+            Engine::get_singleton()->unregister_singleton("PokemonCatalog");
+            memdelete(catalog);
+        }
 
-		if (Engine::get_singleton()->has_singleton("GFLib")) {
-			Object *gflib = Engine::get_singleton()->get_singleton("GFLib");
-			Engine::get_singleton()->unregister_singleton("GFLib");
-			memdelete(gflib);
-		}
+        if (Engine::get_singleton()->has_singleton("GFLib"))
+        {
+            Object* gflib = Engine::get_singleton()->get_singleton("GFLib");
+            Engine::get_singleton()->unregister_singleton("GFLib");
+            memdelete(gflib);
+        }
 
-		unregister_trinity_shader_globals();
-	}
+        unregister_trinity_shader_globals();
+    }
 }
 
-extern "C" {
-// Initialization.
-GDExtensionBool GDE_EXPORT gflib_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, const GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization) {
-	godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
+extern "C"
+{
+    GDExtensionBool GDE_EXPORT gflib_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address,
+                                                  const GDExtensionClassLibraryPtr p_library,
+                                                  GDExtensionInitialization* r_initialization)
+    {
+        godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 
-	init_obj.register_initializer(initialize_gen_module);
-	init_obj.register_terminator(uninitialize_gen_module);
-	init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
+        init_obj.register_initializer(initialize_gen_module);
+        init_obj.register_terminator(uninitialize_gen_module);
+        init_obj.set_minimum_library_initialization_level(MODULE_INITIALIZATION_LEVEL_SCENE);
 
-	return init_obj.init();
-}
+        return init_obj.init();
+    }
 }

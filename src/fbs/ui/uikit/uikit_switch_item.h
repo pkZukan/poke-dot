@@ -5,15 +5,18 @@
 #include "generated/uikit_switch_item_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitSwitchItem : public Resource {
+class UIKitSwitchItem : public Resource
+{
     GDCLASS(UIKitSwitchItem, Resource)
 protected:
     static void _bind_methods();
+
 public:
-    UIKitSwitchItem(){}
-    ~UIKitSwitchItem(){}
+    UIKitSwitchItem() = default;
+    ~UIKitSwitchItem() = default;
 
     void LoadFromBuffer(const void* buffer);
 

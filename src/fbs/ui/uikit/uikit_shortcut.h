@@ -7,18 +7,21 @@
 #include "generated/uikit_shortcut_generated.h"
 #include <utils.h>
 
-namespace godot {
+namespace godot
+{
 
-class UIKitShortcut : public Resource {
+class UIKitShortcut : public Resource
+{
     GDCLASS(UIKitShortcut, Resource)
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
+
 public:
-	UIKitShortcut(){}
-	~UIKitShortcut(){}
+    UIKitShortcut() = default;
+    ~UIKitShortcut() = default;
 
     void LoadFromBuffer(const void* buffer);
-	
+
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(int, shortcutKey)
     GETTER_SETTER_DEFINE(bool, repeat)

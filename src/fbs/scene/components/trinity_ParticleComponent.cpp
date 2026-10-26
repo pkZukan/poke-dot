@@ -17,8 +17,12 @@ void TrinityParticleComponent::LoadFromBuffer(const void* buffer)
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityParticleComponent");
     set_particle_file(Utils::toGodotString(component->particle_file()));
     PackedInt64Array unk_1_values;
-    if (auto values = component->unk_1()) {
-        for (auto value : *values) unk_1_values.push_back(value);
+    if (auto values = component->unk_1())
+    {
+        for (auto value : *values)
+        {
+            unk_1_values.push_back(value);
+        }
     }
     set_unk_1(unk_1_values);
     set_res_2(component->res_2());
