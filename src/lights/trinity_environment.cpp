@@ -1234,7 +1234,8 @@ void TrinityEnvironment::flush_update()
     if (resolve)
     {
         Dictionary previous = effective_state;
-        effective_state = Dictionary();
+        const Dictionary next_state;
+        effective_state = next_state;
         resolve_resource(master_light, 1.0, false);
 
         if (layer_order_dirty)
