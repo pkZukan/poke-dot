@@ -1,9 +1,9 @@
 shader_type spatial;
 render_mode unshaded;
 
-uniform sampler2D AlbedoColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D DitherPatternMap : hint_default_black, repeat_enable;
-uniform sampler2D OutlineMaskMap : hint_default_black, repeat_enable;
+uniform sampler2D AlbedoColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D DitherPatternMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D OutlineMaskMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[3];
 uniform int sampler_repeat_v[3];

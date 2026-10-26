@@ -1,17 +1,17 @@
 // Shared jewel material equations. POKEMON_JEWEL selects the retail fixed
 // Pokemon constants and layered/eyelid material path.
-uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap : hint_normal, repeat_enable;
-uniform sampler2D PackedMap : hint_default_white, repeat_enable;
-uniform sampler2D EmissionNormalMap : hint_normal, repeat_enable;
-uniform sampler2D EmissionColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D FresnelNoiseMap : hint_default_white, repeat_enable;
-uniform sampler2D FresnelMaskMap : hint_default_white, repeat_enable;
-uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
-uniform sampler2D LayerMaskMap : hint_default_black, repeat_enable;
-uniform sampler2D OpacityMap1 : hint_default_black, repeat_enable;
-uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D PackedMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D EmissionNormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D EmissionColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D FresnelNoiseMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D FresnelMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D BaseColorMap1 : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LayerMaskMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D OpacityMap1 : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform int sampler_repeat_u[12];
 uniform int sampler_repeat_v[12];
 uniform vec4 sampler_border_color[12];

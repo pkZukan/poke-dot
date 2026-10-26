@@ -1,13 +1,13 @@
 shader_type spatial;
 render_mode cull_disabled;
 
-uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap : hint_normal, repeat_enable;
-uniform sampler2D HairFlowMap : hint_default_white, repeat_enable;
-uniform sampler2D MetallicMap : hint_default_white, repeat_enable;
-uniform sampler2D RoughnessMap : hint_default_white, repeat_enable;
-uniform sampler2D DiscardMaskMap : hint_default_white, repeat_enable;
-uniform sampler2D ColorTableMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D HairFlowMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D MetallicMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D RoughnessMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D DiscardMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D ColorTableMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[7];
 uniform int sampler_repeat_v[7];
@@ -114,6 +114,7 @@ void fragment() {
     ROUGHNESS = EnableRoughnessMap ? sample_trinity(RoughnessMap, uv, 4).r : Roughness;
     METALLIC = 0.0; // Scatter must never turn hair into a metal in Godot.
     SPECULAR = 0.5;
+    TRINITY_LIGHT_FRAGMENT;
 }
 
 void light() {

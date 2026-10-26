@@ -1,6 +1,6 @@
 shader_type spatial;
 render_mode unshaded, blend_mul, fog_disabled, depth_draw_never, depth_test_disabled, cull_disabled;
-uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[1];
 uniform int sampler_repeat_v[1];

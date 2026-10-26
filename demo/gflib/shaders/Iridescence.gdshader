@@ -1,12 +1,12 @@
 shader_type spatial;
 
-uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap : hint_normal, repeat_enable;
-uniform sampler2D MetallicMap : hint_default_white, repeat_enable;
-uniform sampler2D RoughnessMap : hint_default_white, repeat_enable;
-uniform sampler2D AOMap : hint_default_white, repeat_enable;
-uniform sampler2D EmissionColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D LayerMaskMap : hint_default_black, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D MetallicMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D RoughnessMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D AOMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D EmissionColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LayerMaskMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[7];
 uniform int sampler_repeat_v[7];

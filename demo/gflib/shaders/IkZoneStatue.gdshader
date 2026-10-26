@@ -1,12 +1,12 @@
 shader_type spatial;
 render_mode unshaded;
 
-uniform sampler2D ScanMap : hint_default_white, repeat_enable;
-uniform sampler2D NoiseMap1 : hint_default_white, repeat_enable;
-uniform sampler2D AmbientSphereMap : hint_default_white, repeat_enable;
-uniform sampler2D DotPatternMap : hint_default_white, repeat_enable;
-uniform sampler2D NoiseMap2 : hint_default_white, repeat_enable;
-uniform sampler2D GradientMap2 : hint_default_white, repeat_enable;
+uniform sampler2D ScanMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NoiseMap1 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D AmbientSphereMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D DotPatternMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NoiseMap2 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D GradientMap2 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[6];
 uniform int sampler_repeat_v[6];

@@ -1,11 +1,11 @@
 shader_type spatial;
 render_mode blend_premul_alpha, cull_disabled;
-uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap : hint_normal, repeat_enable;
-uniform sampler2D NormalMap1 : hint_normal, repeat_enable;
-uniform sampler2D FlowMap : hint_default_white, repeat_enable;
-uniform sampler2D FoamMaskMap : hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D BaseColorMap1 : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap1 : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D FlowMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D FoamMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform int sampler_repeat_u[6];
 uniform int sampler_repeat_v[6];
 uniform vec4 sampler_border_color[6];

@@ -82,40 +82,40 @@ vec2 inside_repeat_uv(vec2 uv, vec2 offset) {
 }
 #endif
 // Retail core material equations; renderer-dependent gaps are in docs/shaders/retail.md.
-uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap : hint_normal, repeat_enable;
-uniform sampler2D NormalMap1 : hint_normal, repeat_enable;
-uniform sampler2D NormalMap2 : hint_normal, repeat_enable;
-uniform sampler2D MetallicMap : hint_default_white, repeat_enable;
-uniform sampler2D RoughnessMap : hint_default_white, repeat_enable;
-uniform sampler2D RoughnessMap1 : hint_default_white, repeat_enable;
-uniform sampler2D AOMap : hint_default_white, repeat_enable;
-uniform sampler2D AOMap1 : hint_default_white, repeat_enable;
-uniform sampler2D AOMap2 : hint_default_white, repeat_enable;
-uniform sampler2D LayerMaskMap : hint_default_white, repeat_enable;
-uniform sampler2D ParallaxMap : hint_default_white, repeat_enable;
-uniform sampler2D EmissionColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D LightMap : hint_default_white, repeat_enable;
-uniform sampler2D WindMaskMap : hint_default_white, repeat_enable;
-uniform sampler2D PackedMap : hint_default_white, repeat_enable;
-uniform sampler2D DetailMaskMap : hint_default_white, repeat_enable;
-uniform sampler2D RoughnessMap2 : hint_default_white, repeat_enable;
-uniform sampler2D OpacityMap1 : hint_default_white, repeat_enable;
-uniform sampler2D ColorTableMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D BaseColorMap1 : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap1 : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap2 : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D MetallicMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D RoughnessMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D RoughnessMap1 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D AOMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D AOMap1 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D AOMap2 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LayerMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D ParallaxMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D EmissionColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LightMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D WindMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D PackedMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D DetailMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D RoughnessMap2 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D OpacityMap1 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D ColorTableMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 // Variant textures follow the shared ones so sample_trinity slots stay stable.
 #ifdef BG_LAYER
-uniform sampler2D MetallicMap1 : hint_default_white, repeat_enable;
-uniform sampler2D EmissionColorMap1 : source_color, hint_default_white, repeat_enable;
+uniform sampler2D MetallicMap1 : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D EmissionColorMap1 : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 #endif
 #ifdef INSIDE_EMISSION_PARALLAX
-uniform sampler2D InsideEmissionParallaxIntensityMap : source_color, hint_default_black, repeat_enable;
+uniform sampler2D InsideEmissionParallaxIntensityMap : source_color, hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
 #endif
 #ifdef EYE_MATERIAL
-uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D HighlightMaskMap : hint_default_black, repeat_enable;
-uniform sampler2D EyelidShadowMaskMap : hint_default_black, repeat_enable;
+uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D HighlightMaskMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D EyelidShadowMaskMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
 #endif
 #ifdef EYE_MATERIAL
 uniform int sampler_repeat_u[25];
@@ -289,7 +289,7 @@ void vertex() {
     }
     // Approximation retained until the original wind controller is available.
     if (WindReceiverType != 0) {
-        float mask = EnableWindMaskMap ? sample_trinity(WindMaskMap, transform_uv(UV, UVScaleOffset), 15).r : 1.0;
+        float mask = EnableWindMaskMap ? sample_trinity_lod(WindMaskMap, transform_uv(UV, UVScaleOffset), 15, 0.0).r : 1.0;
         vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
         VERTEX.x += sin(TIME * 1.7 + dot(world_position.xz, vec2(0.7, 0.5))) * mask * 0.025;
     }

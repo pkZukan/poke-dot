@@ -19,25 +19,25 @@ uniform float LightYaw;
 uniform float LightRoll;
 varying vec3 character_world_position;
 void vertex() { character_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
-uniform sampler2D BaseColorMap  : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap     : hint_normal, repeat_enable;
-uniform sampler2D OcclusionMap   : hint_default_white, repeat_enable;
-uniform sampler2D SpecularMaskMap  : hint_default_white, repeat_enable;
-uniform sampler2D ShadowingColorMap : hint_default_white, repeat_enable;
-uniform sampler2D ShadowingColorMaskMap         : hint_default_white, repeat_enable;
-uniform sampler2D RimLightMaskMap        : hint_default_white, repeat_enable;
-uniform sampler2D LayerMaskMap  : hint_default_black, repeat_enable;
-uniform sampler2D ParallaxMap   : hint_default_black, repeat_enable;
-uniform sampler2D HighlightMaskMap : source_color, hint_default_black, repeat_enable;
-uniform sampler2D EyelidShadowMaskMap      : hint_default_white, repeat_enable;
-uniform sampler2D OpacityMap1 : hint_default_black, repeat_enable;
-uniform sampler2D ColorTableMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D DiscardMaskMap : hint_default_white, repeat_enable;
-uniform sampler2D IkLayerMaskMap1 : hint_default_black, repeat_enable;
-uniform sampler2D IkLayerMaskMap2 : hint_default_black, repeat_enable;
-uniform sampler2D IkLayerMaskMap3 : hint_default_black, repeat_enable;
+uniform sampler2D BaseColorMap  : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap     : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D OcclusionMap   : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D SpecularMaskMap  : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D ShadowingColorMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D ShadowingColorMaskMap         : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D RimLightMaskMap        : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LayerMaskMap  : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D ParallaxMap   : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D HighlightMaskMap : source_color, hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D EyelidShadowMaskMap      : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D OpacityMap1 : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D ColorTableMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D DiscardMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D IkLayerMaskMap1 : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D IkLayerMaskMap2 : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D IkLayerMaskMap3 : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
 // A probe cubemap in retail; it is not one of the sample_trinity 2D slots.
 uniform samplerCube LocalReflectionMap : hint_default_white;
 
@@ -514,6 +514,7 @@ void fragment() {
     PREMUL_ALPHA_FACTOR = blend_state.x;
     ALPHA = blend_state.y;
 #endif
+    TRINITY_LIGHT_FRAGMENT;
 }
 void light() {
     // Holocast output is fully emissive; it receives no scene lighting.

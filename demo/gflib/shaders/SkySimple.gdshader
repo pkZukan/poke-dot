@@ -1,12 +1,12 @@
 shader_type spatial;
 render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled;
 
-uniform sampler2D MoonColorMap : hint_default_black, repeat_enable;
-uniform sampler2D MoonNormalMap : hint_normal, repeat_enable;
-uniform sampler2D TopCloudsShapeMap : hint_default_black, repeat_enable;
-uniform sampler2D TopCloudsBreakupMap : hint_default_black, repeat_enable;
-uniform sampler2D NightStarsMap : hint_default_black, repeat_enable;
-uniform sampler2D NightStarsMaskMap : hint_default_black, repeat_enable;
+uniform sampler2D MoonColorMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D MoonNormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D TopCloudsShapeMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D TopCloudsBreakupMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NightStarsMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NightStarsMaskMap : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[6];
 uniform int sampler_repeat_v[6];

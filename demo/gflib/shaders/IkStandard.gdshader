@@ -1,9 +1,9 @@
 shader_type spatial;
 
-uniform sampler2D BaseColorMap : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap : hint_normal, repeat_enable;
-uniform sampler2D PackedMap : hint_default_white, repeat_enable;
-uniform sampler2D WindowGradientMap : source_color, hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D PackedMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D WindowGradientMap : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[4];
 uniform int sampler_repeat_v[4];

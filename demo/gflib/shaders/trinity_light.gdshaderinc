@@ -17,15 +17,18 @@ float trinity_world_shadow(vec3 world, vec3 camera) {
     return 1.0 - TrinityWorldShadowParams.z * (1.0 - min(baked + fade, 1.0));
 }
 
-// light() has no VERTEX, so the world position is rebuilt from the fragment depth.
-float trinity_light_attenuation(float attenuation, bool directional, int receive_shadow, vec2 screen_uv, float depth, mat4 inv_projection, mat4 inv_view) {
+// Evaluate in fragment(), where VERTEX and the current view's matrices agree.
+// Godot's light() exposes the combined projection in multiview, so rebuilding
+// world position from SCREEN_UV/depth there samples different shadows per eye.
+varying float trinity_baked_shadow;
+#define TRINITY_SHADOW_FRAGMENT trinity_baked_shadow = trinity_world_shadow((INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz, INV_VIEW_MATRIX[3].xyz)
+
+float trinity_light_attenuation(float attenuation, bool directional, int receive_shadow, float baked_shadow) {
     if (!directional) return attenuation;
     if (receive_shadow <= 0) return 1.0;
-    vec4 view = inv_projection * vec4(screen_uv * 2.0 - 1.0, depth, 1.0);
-    vec3 world = (inv_view * vec4(view.xyz / view.w, 1.0)).xyz;
-    return min(attenuation, trinity_world_shadow(world, inv_view[3].xyz));
+    return min(attenuation, baked_shadow);
 }
-#define TRINITY_ATTENUATION(receive) trinity_light_attenuation(ATTENUATION, LIGHT_IS_DIRECTIONAL, receive, SCREEN_UV, FRAGCOORD.z, INV_PROJECTION_MATRIX, INV_VIEW_MATRIX)
+#define TRINITY_ATTENUATION(receive) trinity_light_attenuation(ATTENUATION, LIGHT_IS_DIRECTIONAL, receive, trinity_baked_shadow)
 
 // Retail casts the sun's shadows from ShadowTransform but shades with DirectionalMain.
 // The Godot sun points along the shadow caster; shade it with DirectionalMain instead.
@@ -39,13 +42,13 @@ vec3 trinity_light_direction(vec3 light, bool directional, mat4 view) {
 #define TRINITY_LIGHT trinity_light_direction(LIGHT, LIGHT_IS_DIRECTIONAL, VIEW_MATRIX)
 
 #ifdef TRINITY_CUSTOM_LIGHT
-#define TRINITY_LIGHT_FRAGMENT
+#define TRINITY_LIGHT_FRAGMENT TRINITY_SHADOW_FRAGMENT
 #else
 uniform int ReceiveShadow = 1;
 
 // light() can't read SPECULAR, so fragment() hands the dielectric F0 over.
 varying float trinity_dielectric_f0;
-#define TRINITY_LIGHT_FRAGMENT trinity_dielectric_f0 = 0.16 * SPECULAR * SPECULAR
+#define TRINITY_LIGHT_FRAGMENT TRINITY_SHADOW_FRAGMENT; trinity_dielectric_f0 = 0.16 * SPECULAR * SPECULAR
 
 float trinity_schlick(float u) {
     float m = 1.0 - u, m2 = m * m;

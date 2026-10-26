@@ -1,11 +1,11 @@
 shader_type spatial;
 render_mode blend_premul_alpha, cull_disabled, depth_draw_never;
 
-uniform sampler2D BaseColorMap1 : source_color, hint_default_white, repeat_enable;
-uniform sampler2D NormalMap1 : hint_normal, repeat_enable;
-uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, repeat_enable;
-uniform sampler2D HighlightMaskMap : hint_default_white, repeat_enable;
+uniform sampler2D BaseColorMap1 : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D NormalMap1 : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D UpperEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LowerEyelidColorMap : source_color, hint_default_transparent, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D HighlightMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 
 uniform int sampler_repeat_u[5];
 uniform int sampler_repeat_v[5];
@@ -78,6 +78,7 @@ void fragment() {
         float mask = sample_trinity(HighlightMaskMap, coat_uv(UV, UVScaleOffset1, 0.0), 4).r;
         EMISSION = mask * EmissionIntensityLayer7 * EmissionColorLayer7.rgb;
     }
+    TRINITY_LIGHT_FRAGMENT;
 }
 
 void light() {

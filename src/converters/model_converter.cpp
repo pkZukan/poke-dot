@@ -537,14 +537,17 @@ void TrinityModel::_apply_textures(const String& path, const Ref<MaterialEntry>&
                     {
                         break;
                     }
-                    image = image->duplicate();
-                    // Shaders sample the probe at blurred mip levels, but the
-                    // archive loader only keeps mip 0.
-                    if (image->is_compressed())
+                    // Preserve authored compressed mip chains. Only synthesize
+                    // blurred levels for probes supplied without any mipmaps.
+                    if (!image->has_mipmaps())
                     {
-                        image->decompress();
+                        image = image->duplicate();
+                        if (image->is_compressed())
+                        {
+                            image->decompress();
+                        }
+                        image->generate_mipmaps();
                     }
-                    image->generate_mipmaps();
                     faces.push_back(image);
                 }
                 if (faces.size() != 6)

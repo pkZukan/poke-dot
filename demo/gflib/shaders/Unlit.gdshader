@@ -2,12 +2,12 @@ shader_type spatial;
 render_mode unshaded, cull_back, depth_draw_opaque;
 
 // Retail NVN formulas and variant choices: docs/shaders/retail.md.
-uniform sampler2D BaseColorMap : source_color, repeat_enable;
-uniform sampler2D LayerMaskMap : hint_default_white, repeat_enable;
-uniform sampler2D DisplacementMap : repeat_enable;
-uniform sampler2D BaseColorMap1 : source_color, repeat_enable;
-uniform sampler2D OpacityMap : hint_default_white, repeat_enable;
-uniform sampler2D OpacityMap1 : hint_default_black, repeat_enable;
+uniform sampler2D BaseColorMap : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D LayerMaskMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D DisplacementMap : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D BaseColorMap1 : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D OpacityMap : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D OpacityMap1 : hint_default_black, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform int sampler_repeat_u[6];
 uniform int sampler_repeat_v[6];
 uniform vec4 sampler_border_color[6];
@@ -74,7 +74,7 @@ vec4 saturate_color(vec4 color) {
 void vertex() {
     if (EnableDisplacementMap) {
         vec2 uv = transform_uv(select_uv(UV, UV2, UVIndexLayer3), UVScaleOffset3);
-        float phase = sample_trinity(DisplacementMap, uv, 2).r;
+        float phase = sample_trinity_lod(DisplacementMap, uv, 2, 0.0).r;
         VERTEX += NORMAL * (sin(phase) * COLOR.r * DisplacementHeight);
     }
 }

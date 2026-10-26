@@ -1,4 +1,6 @@
 #include "bntx.h"
+#include <cstring>
+#include <vector>
 
 using namespace godot;
 
@@ -103,6 +105,8 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
 
     PackedByteArray result;
     result.resize(toSwizzle ? surfSize : linearSize);
+    uint8_t* destination = result.ptrw();
+    const uint8_t* source = data.ptr();
 
     uint32_t dataSize = (uint32_t)data.size();
 
@@ -137,21 +141,12 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
                 {
                     continue;
                 }
-                for (uint32_t i = 0; i < bpp; i++)
-                {
-                    result.set(swizzled + i, data[linear + i]);
-                }
+                std::memcpy(destination + swizzled, source + linear, bpp);
             }
             else
             {
-                if (swizzled + bpp > dataSize)
-                {
-                    continue;
-                }
-                for (uint32_t i = 0; i < bpp; i++)
-                {
-                    result.set(linear + i, data[swizzled + i]);
-                }
+                ERR_FAIL_COND_V(swizzled + bpp > dataSize, PackedByteArray());
+                std::memcpy(destination + linear, source + swizzled, bpp);
             }
         }
     }
@@ -265,9 +260,10 @@ static bool has_bytes(const Ref<StreamPeerBuffer>& sp, uint64_t offset, uint64_t
 
 // A BC1 block with color0 <= color1 is in 3-color mode, where index 3 is
 // transparent black.
-static bool bc1_has_punch_through(const PackedByteArray& data)
+static bool bc1_has_punch_through(const PackedByteArray& data, int width, int height)
 {
     const uint8_t* blocks = data.ptr();
+    const int blocks_wide = DIV_ROUND_UP(width, 4);
     for (int64_t i = 0; i + 8 <= data.size(); i += 8)
     {
         const uint16_t color0 = blocks[i] | (blocks[i + 1] << 8);
@@ -278,8 +274,14 @@ static bool bc1_has_punch_through(const PackedByteArray& data)
         }
         const uint32_t indices =
             blocks[i + 4] | (blocks[i + 5] << 8) | (blocks[i + 6] << 16) | (uint32_t(blocks[i + 7]) << 24);
+        const int block = int(i / 8);
         for (int texel = 0; texel < 16; texel++)
         {
+            if ((block % blocks_wide) * 4 + texel % 4 >= width ||
+                (block / blocks_wide) * 4 + texel / 4 >= height)
+            {
+                continue;
+            }
             if (((indices >> (texel * 2)) & 3) == 3)
             {
                 return true;
@@ -313,10 +315,31 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
                     ERR_FILE_CORRUPT);
     ERR_FAIL_COND_V(!has_bytes(sp, info.MipMapArrayPtr, uint64_t(info.MipsCount) * 8), ERR_FILE_CORRUPT);
     sp->seek(info.MipMapArrayPtr);
-    const uint64_t first_mip_start = sp->get_64();
+    int full_mip_count = 1;
+    for (int extent = MAX(info.Width, info.Height); extent > 1; extent >>= 1)
+    {
+        ++full_mip_count;
+    }
+    ERR_FAIL_COND_V(info.MipsCount > full_mip_count, ERR_FILE_CORRUPT);
+    std::vector<uint64_t> mip_offsets(info.MipsCount);
+    for (uint64_t& offset : mip_offsets)
+    {
+        offset = sp->get_64();
+    }
+    const uint64_t first_mip_start = mip_offsets[0];
     const uint64_t layer_size = uint64_t(info.DataSize) / info.ArrayLength;
-    const uint64_t first_mip_end = info.MipsCount > 1 ? sp->get_64() : first_mip_start + layer_size;
-    ERR_FAIL_COND_V(first_mip_end <= first_mip_start || first_mip_end - first_mip_start > layer_size, ERR_FILE_CORRUPT);
+    ERR_FAIL_COND_V(!has_bytes(sp, first_mip_start, info.DataSize), ERR_FILE_CORRUPT);
+    for (int mip = 0; mip < info.MipsCount; ++mip)
+    {
+        const uint64_t end = mip + 1 < info.MipsCount ? mip_offsets[mip + 1] : first_mip_start + layer_size;
+        ERR_FAIL_COND_V(mip_offsets[mip] < first_mip_start || end <= mip_offsets[mip] ||
+                            end - first_mip_start > layer_size,
+                        ERR_FILE_CORRUPT);
+    }
+    // Godot Images require a complete chain. Retain the old base-level fallback
+    // for partial chains; the game's multi-level textures have full chains.
+    const bool use_mipmaps = info.MipsCount > 1 && info.MipsCount == full_mip_count;
+    const int mip_count = use_mipmaps ? info.MipsCount : 1;
     const uint32_t sources = uint32_t(info.ChannelType);
     channel_sources = Vector4i(sources & 0xff, (sources >> 8) & 0xff, (sources >> 16) & 0xff, (sources >> 24) & 0xff);
 
@@ -324,21 +347,29 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
     bool punch_through = false;
     for (int layer = 0; layer < info.ArrayLength; ++layer)
     {
-        const uint64_t start = first_mip_start + layer_size * layer;
-        const uint64_t end = first_mip_end + layer_size * layer;
-        ERR_FAIL_COND_V(!has_bytes(sp, start, end - start), ERR_FILE_CORRUPT);
-        sp->seek(start);
-        Array bytes = sp->get_data(end - start);
-        ERR_FAIL_COND_V(bytes.size() < 2 || int(bytes[0]) != OK, ERR_FILE_CORRUPT);
-        PackedByteArray pixels = Swizzle(info.Width, info.Height, info, bytes[1], false);
+        PackedByteArray pixels;
+        for (int mip = 0; mip < mip_count; ++mip)
+        {
+            const uint64_t start = mip_offsets[mip] + layer_size * layer;
+            const uint64_t end =
+                (mip + 1 < info.MipsCount ? mip_offsets[mip + 1] : first_mip_start + layer_size) + layer_size * layer;
+            sp->seek(start);
+            Array bytes = sp->get_data(end - start);
+            ERR_FAIL_COND_V(bytes.size() < 2 || int(bytes[0]) != OK, ERR_FILE_CORRUPT);
+            const int width = MAX(1, info.Width >> mip);
+            const int height = MAX(1, info.Height >> mip);
+            PackedByteArray level = Swizzle(width, height, info, bytes[1], false);
+            ERR_FAIL_COND_V(level.is_empty(), ERR_FILE_CORRUPT);
+            if (format == Image::FORMAT_DXT1 && !punch_through)
+            {
+                punch_through = bc1_has_punch_through(level, width, height);
+            }
+            pixels.append_array(level);
+        }
         Ref<Image> image;
         image.instantiate();
-        image->set_data(info.Width, info.Height, false, format, pixels);
+        image->set_data(info.Width, info.Height, use_mipmaps, format, pixels);
         ERR_FAIL_COND_V(image->is_empty(), ERR_FILE_CORRUPT);
-        if (format == Image::FORMAT_DXT1 && !punch_through)
-        {
-            punch_through = bc1_has_punch_through(pixels);
-        }
         layers.push_back(image);
     }
     // NVN samples BC1 with its 1-bit alpha, but Godot uploads DXT1 as opaque
