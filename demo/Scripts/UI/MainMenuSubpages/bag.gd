@@ -56,7 +56,7 @@ func _initialize_text():
 	_set_text("T_noitem_00", "No items")
 	_set_text("T_detail_00", "Select an item to view its details.")
 	_set_text("T_id_00", "—")
-	_set_text("T_name_01", "No Move")
+	get_scope("N_sec_waza_00")._set_text("T_name_01", "No Move")
 	_set_text("T_detail_01", "Select a TM to view its move.")
 	_set_text("T_classification_00", "Category")
 	_set_text("T_power_00", "Power")

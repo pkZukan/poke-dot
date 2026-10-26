@@ -61,6 +61,7 @@ func _on_option_selected(index: int) -> void:
 	var submenu: Control = submenus.get(index)
 	if not is_instance_valid(submenu):
 		return
+	play_ui_sound("PLAY_UI_COMMON_DECIDE")
 	active_submenu = submenu
 	$canvas.hide()
 	active_submenu.process_mode = Node.PROCESS_MODE_INHERIT
@@ -68,6 +69,7 @@ func _on_option_selected(index: int) -> void:
 
 func _on_submenu_back_requested(submenu: Control) -> void:
 	if submenu == active_submenu:
+		play_ui_sound("PLAY_UI_COMMON_CANCEL")
 		_return_to_main_menu()
 
 func _return_to_main_menu() -> void:
@@ -121,6 +123,7 @@ func _on_entrance_started() -> void:
 func _move_selection(direction: int) -> void:
 	play_state("L_menu_button_%02d" % selected_idx, "unselect")
 	selected_idx = wrapi(selected_idx + direction, 0, menu_entry_names.size())
+	play_ui_sound("PLAY_UI_COMMON_SELECT")
 	play_state("L_menu_button_%02d" % selected_idx, "select")
 	_update_cursor()
 
@@ -129,9 +132,9 @@ func _update_cursor() -> void:
 	var button := get_scope("L_menu_button_%02d" % selected_idx)
 	if not cursor or not button:
 		return
-	var anchor := button.get_pane("N_cursor")
+	var anchor := button.get_pane("N_cursor") as TrinityPane
 	if anchor:
-		var target := anchor.get_global_transform() * (anchor.size * 0.5)
+		var target := anchor.get_projected_transform() * (anchor.size * 0.5)
 		cursor.position = cursor.get_parent().get_global_transform().affine_inverse() * target - cursor.size * 0.5
 
 # Set money display
@@ -171,6 +174,7 @@ func _input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("main_menu"):
 		get_viewport().set_input_as_handled()
+		play_ui_sound("PLAY_UI_COMMON_CANCEL")
 		if active_submenu != null:
 			_return_to_main_menu()
 		else:

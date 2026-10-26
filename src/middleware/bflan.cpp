@@ -15,6 +15,7 @@ void BinaryLayoutAnimation::_bind_methods()
 
 void BinaryLayoutAnimation::LoadFromBuffer(const PackedByteArray &buffer)
 {
+	animation.clear();
 	Dictionary result;
 	BflytUtils::Reader reader{buffer, uint64_t(buffer.size())};
 	if (!parse(reader, result)) return;
@@ -102,13 +103,65 @@ bool BinaryLayoutAnimation::parse_pat1(BflytUtils::Reader &r, uint64_t p, uint32
 	ERR_FAIL_COND_V_MSG(name < header || (count && groups < header) || !r.has(p + groups, uint64_t(count) * 28), false, "Invalid pat1 offsets");
 	result["order"] = r.number(p + 8, 2);
 	result["name"] = r.cstring(p + name);
-	if (extra) result["unknown"] = r.number(p + 20, 4);
+	if (extra)
+	{
+		const uint64_t offset = r.number(p + 20, 4);
+		if (offset)
+		{
+			ERR_FAIL_COND_V_MSG(offset < header, false, "Invalid pat1 user-data offset");
+			Dictionary user_data;
+			if (!parse_user_data(r, p + offset, user_data)) return false;
+			result["user_data"] = user_data;
+			if (user_data.has("WWISE_EVENT"))
+			{
+				ERR_FAIL_COND_V_MSG(user_data["WWISE_EVENT"].get_type() != Variant::STRING, false, "WWISE_EVENT must be a string");
+				result["wwise_event"] = user_data["WWISE_EVENT"];
+			}
+		}
+	}
 	result["start_frame"] = int16_t(r.number(p + 20 + extra, 2));
 	result["end_frame"] = int16_t(r.number(p + 22 + extra, 2));
 	result["child_binding"] = bool(r.number(p + 24 + extra, 1));
 	PackedStringArray names;
 	for (uint32_t i = 0; i < count; ++i) names.push_back(r.string(p + groups + i * 28, 28));
 	result["groups"] = names;
+	return r.valid;
+}
+
+// pat1 embeds a complete usd1 section; offsets in its entries are entry-relative.
+bool BinaryLayoutAnimation::parse_user_data(BflytUtils::Reader &r, uint64_t p, Dictionary &result)
+{
+	ERR_FAIL_COND_V_MSG(!r.has(p, 12) || r.string(p, 4) != "usd1", false, "Missing pat1 usd1 section");
+	const uint64_t size = r.number(p + 4, 4), parent_end = r.end;
+	ERR_FAIL_COND_V_MSG(size < 12 || !r.has(p, size), false, "Invalid pat1 usd1 size");
+	r.end = p + size;
+	const uint32_t count = r.number(p + 8, 2);
+	const uint64_t table_end = p + 12 + uint64_t(count) * 12;
+	ERR_FAIL_COND_V_MSG(!r.has(p + 12, uint64_t(count) * 12), false, "Truncated pat1 usd1 entries");
+	for (uint32_t i = 0; i < count; ++i)
+	{
+		const uint64_t entry = p + 12 + uint64_t(i) * 12;
+		const uint64_t name = entry + r.number(entry, 4), data = entry + r.number(entry + 4, 4);
+		const uint32_t length = r.number(entry + 8, 2), type = r.number(entry + 10, 1);
+		ERR_FAIL_COND_V_MSG(name < table_end || data < table_end || !r.has(name, 1), false, "Invalid pat1 usd1 offsets");
+		const String key = r.cstring(name);
+		const uint64_t bytes = uint64_t(length) * (type == 1 || type == 2 ? 4 : 1);
+		ERR_FAIL_COND_V_MSG(!r.has(data, bytes), false, "Invalid pat1 usd1 value range");
+		if (type == 0) result[key] = r.string(data, length);
+		else if (type == 1)
+		{
+			PackedInt32Array values;
+			for (uint32_t j = 0; j < length; ++j) values.push_back(int32_t(r.number(data + j * 4, 4)));
+			result[key] = values;
+		}
+		else if (type == 2)
+		{
+			PackedFloat32Array values;
+			for (uint32_t j = 0; j < length; ++j) values.push_back(r.real(data + j * 4));
+			result[key] = values;
+		}
+	}
+	r.end = parent_end;
 	return r.valid;
 }
 

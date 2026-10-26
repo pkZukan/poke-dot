@@ -1,4 +1,5 @@
 #include "ui_pane.h"
+#include "ui/ui_pane_transform.h"
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/templates/vector.hpp>
 
@@ -6,6 +7,7 @@ using namespace godot;
 
 void TrinityPane::_bind_methods()
 {
+    ClassDB::bind_method(D_METHOD("get_projected_transform"), &TrinityPane::get_projected_transform);
     ClassDB::bind_method(D_METHOD("get_pane", "name_or_path"), &TrinityPane::get_pane);
     ClassDB::bind_method(D_METHOD("get_scope", "name_or_path"), &TrinityPane::get_scope);
     ClassDB::bind_method(D_METHOD("_set_text", "name_or_path", "text"), &TrinityPane::_set_text);
@@ -52,8 +54,12 @@ TrinityPane *TrinityPane::get_scope(const String &name_or_path) const {
 Error TrinityPane::_set_text(const String &name_or_path, const String &text) {
     Control *pane = get_pane(name_or_path);
     if (!pane) return ERR_DOES_NOT_EXIST;
-    Label *label = Object::cast_to<Label>(pane);
+    Label *label = Object::cast_to<Label>(pane->get_node_or_null("Content/Text"));
     ERR_FAIL_NULL_V_MSG(label, ERR_INVALID_PARAMETER, "UI pane is not a text label: " + name_or_path);
     label->set_text(text);
     return OK;
+}
+
+Transform2D TrinityPane::get_projected_transform() const {
+    return UIPaneTransform::projected_transform(const_cast<TrinityPane *>(this));
 }

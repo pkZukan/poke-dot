@@ -14,6 +14,7 @@ protected:
     virtual Control *scope_root() const;
 
 public:
+    Transform2D get_projected_transform() const;
     Control *get_pane(const String &name_or_path) const;
     TrinityPane *get_scope(const String &name_or_path) const;
     Error _set_text(const String &name_or_path, const String &text);

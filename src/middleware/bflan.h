@@ -16,6 +16,7 @@ private:
 	Dictionary animation;
 	bool parse(BflytUtils::Reader &r, Dictionary &result);
 	bool parse_pat1(BflytUtils::Reader &r, uint64_t p, uint32_t version, Dictionary &result);
+	bool parse_user_data(BflytUtils::Reader &r, uint64_t p, Dictionary &result);
 	bool parse_pai1(BflytUtils::Reader &r, uint64_t p, Dictionary &result);
 	bool parse_entry(BflytUtils::Reader &r, uint64_t p, Dictionary &entry);
 	bool parse_tag(BflytUtils::Reader &r, uint64_t p, uint32_t target, Dictionary &tag);

@@ -7,6 +7,7 @@
 #include "ui/bflan_animator.h"
 #include "ui_builder.h"
 #include "ui_pane.h"
+#include "middleware/wwise.h"
 
 namespace godot
 {
@@ -31,8 +32,17 @@ public:
     double get_state_frame(const String &component) const;
     BflanAnimator *get_state_animator(const String &component) const;
     PackedStringArray get_warnings() const;
+    Error play_ui_sound(const String &event_name);
+    void set_sound_bank(const Ref<WwiseSoundBank> &bank) { sound_bank = bank; missing_sound_events.clear(); }
+    Ref<WwiseSoundBank> get_sound_bank() const { return sound_bank; }
+    void set_sound_enabled(bool enabled) { sound_enabled = enabled; }
+    bool is_sound_enabled() const { return sound_enabled; }
 
 private:
+    void play_animation_sound(const String &component, const String &state, const String &event);
+    Ref<WwiseSoundBank> sound_bank;
+    bool sound_enabled = true;
+    PackedStringArray missing_sound_events;
     Control *layout_node() const;
     void clear_loaded_ui();
     void fit_layout();

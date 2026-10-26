@@ -1,4 +1,5 @@
 #include "ui_builder.h"
+#include "ui/ui_pane_transform.h"
 #include "gflib.h"
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/hashing_context.hpp>
@@ -167,6 +168,7 @@ Error UIBuilder::build(const Ref<SeadArchive> &archive, const String &arc_path, 
         nodes.clear();
         return ERR_INVALID_DATA;
     }
+    UIPaneTransform::resolve(root);
     r_root = root;
     return OK;
 }
@@ -323,7 +325,15 @@ bool UIBuilder::build_layout(const String &layout_name, Control *container, Pack
                 node->set_clip_contents(true);
                 break;
             case PaneInfo::TXT:
-                build_text(static_cast<Label *>(node), info, pane, data, layout_name);
+                {
+                    Label *label = memnew(Label);
+                    label->set_name("Text");
+                    label->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
+                    UIPaneTransform::content(node)->add_child(label);
+                    label->set_size(info.size);
+                    label->set_self_modulate(Color(1, 1, 1, alpha));
+                    build_text(label, info, pane, data, layout_name);
+                }
                 break;
             case PaneInfo::WND:
                 build_window(node, info, pane, materials, texture_names, alpha);
@@ -343,12 +353,13 @@ bool UIBuilder::build_layout(const String &layout_name, Control *container, Pack
 }
 
 Control *UIBuilder::create_pane_node(const PaneInfo &info, const String &layout_name, Control *parent) {
-    Control *node = info.type == PaneInfo::TXT
-            ? static_cast<Control *>(memnew(Label))
-            : static_cast<Control *>(memnew(TrinityPane));
+    Control *node = memnew(TrinityPane);
     node->set_name(info.parent < 0 ? layout_name : info.name);
     node->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
     parent->add_child(node);
+    Node2D *content = memnew(Node2D);
+    content->set_name("Content");
+    node->add_child(content);
     nodes.push_back(node);
     return node;
 }
@@ -357,11 +368,9 @@ void UIBuilder::apply_transform(Control *node, const PaneInfo &info, const Vecto
     const Vector2 pivot = info.size * pane_origin(info.origin);
     node->set_size(info.size);
     node->set_pivot_offset(pivot);
-    // Negate BFLYT's vertical translation and Z rotation when mapping pane transforms to Godot's 2D space.
+    // Logical panes carry translation only; content receives the composed 3D projection.
     node->set_position(anchor + Vector2(info.translation.x, -info.translation.y) - pivot);
-    node->set_scale(info.scale);
-    node->set_rotation(-Math::deg_to_rad(info.rotation.z));
-    if (info.rotation.x != 0 || info.rotation.y != 0) ui_warn_once(warnings, "3D pane rotations are not rendered");
+    UIPaneTransform::initialize(node, anchor);
 }
 
 double UIBuilder::apply_alpha_and_visibility(Control *node, const PaneInfo &info) {
@@ -386,10 +395,12 @@ bool UIBuilder::build_part(Control *node, const Dictionary &pane, const PackedSt
     }
     if (!build_layout(part_name, node, ancestry)) return false;
 
-    Control *part_root = node->get_child_count() > 0 ? Object::cast_to<Control>(node->get_child(0)) : nullptr;
-    if (part_root) {
-        const Vector2 parts_scale = pane["parts_scale"];
-        part_root->set_scale(part_root->get_scale() * parts_scale);
+    for (int i = 0; i < node->get_child_count(); ++i) {
+        Control *part_root = Object::cast_to<Control>(node->get_child(i));
+        if (!part_root || !part_root->has_meta("pane_transform")) continue;
+        Dictionary state = part_root->get_meta("pane_transform");
+        state["parts_scale"] = pane["parts_scale"];
+        part_root->set_meta("pane_transform", state);
     }
     if (int(pane["parts_override_count"]) > 0) ui_warn_once(warnings, "Parts overrides are not yet applied: " + part_name);
     return true;
@@ -398,7 +409,6 @@ bool UIBuilder::build_part(Control *node, const Dictionary &pane, const PackedSt
 void UIBuilder::build_text(Label *label, const PaneInfo &info, const Dictionary &pane,
         const Dictionary &layout_data, const String &layout_name) {
     const Vector2 size = info.size;
-    const Vector2 pivot = size * pane_origin(info.origin);
 
     label->set_clip_text(true);
     label->set_text(pane["text"]);
@@ -429,11 +439,10 @@ void UIBuilder::build_text(Label *label, const PaneInfo &info, const Dictionary 
         const Vector2 nominal = font->get_meta("nominal_font_size", Vector2(1, 1));
         const real_t native_aspect = nominal.x > 0 && nominal.y > 0 ? nominal.y / nominal.x : 1;
         const real_t text_scale = font_size.x / font_size.y * native_aspect;
-        const Vector2 text_pivot(pivot.x / text_scale, pivot.y);
         label->set_meta("text_scale_x", text_scale);
         label->set_size(Vector2(size.x / text_scale, size.y));
-        label->set_pivot_offset(text_pivot);
-        label->set_position(label->get_position() + pivot - text_pivot);
+        // Glyph aspect changes only content geometry, never child pane transforms.
+        label->set_pivot_offset(Vector2());
         label->set_scale(label->get_scale() * Vector2(text_scale, 1));
     }
 }
@@ -744,7 +753,7 @@ Polygon2D *UIBuilder::add_quad(Control *parent, const String &name, const Rect2 
 
     if (material.has("name")) quad->set_meta("material_name", material["name"]);
     quad->set_self_modulate(Color(1, 1, 1, alpha));
-    parent->add_child(quad);
+    UIPaneTransform::content(parent)->add_child(quad);
     return quad;
 }
 

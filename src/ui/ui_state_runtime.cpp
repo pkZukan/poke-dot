@@ -1,4 +1,5 @@
 #include "ui_state_runtime.h"
+#include "ui_pane_transform.h"
 #include "middleware/bflan.h"
 #include "middleware/sarc.h"
 #include <godot_cpp/classes/label.hpp>
@@ -23,9 +24,10 @@ void UIStateRuntime::index(Node *owner, Control *node, Instance *instance)
         instance->panes[String(pane["name"])].push_back(path);
 
         // Pictures own one material quad; windows own one per content and frame.
-        for (int i = 0; i < node->get_child_count(); ++i)
+        Node2D *content = UIPaneTransform::content(node);
+        for (int i = 0; content && i < content->get_child_count(); ++i)
         {
-            Polygon2D *quad = Object::cast_to<Polygon2D>(node->get_child(i));
+            Polygon2D *quad = Object::cast_to<Polygon2D>(content->get_child(i));
 
             if (quad && quad->has_meta("material_name"))
                 instance->materials[String(quad->get_meta("material_name"))].push_back(owner->get_path_to(quad));
@@ -144,7 +146,10 @@ Error UIStateRuntime::resolve(Node *owner, Control *layout, const String &compon
 
         Dictionary animation = parsed->get_animation();
         ERR_FAIL_COND_V(!animation.has("pai1"), ERR_FILE_CORRUPT);
-        animations[name] = animation["pai1"];
+        Dictionary content = animation["pai1"];
+        Dictionary metadata = animation.get("pat1", Dictionary());
+        content["wwise_event"] = metadata.get("wwise_event", String());
+        animations[name] = content;
     }
 
     data = animations[name];
@@ -183,13 +188,13 @@ Error UIStateRuntime::apply(Node *owner, Control *layout, const String &componen
         {
             Node *target = owner->get_node_or_null(path);
             Polygon2D *picture = Object::cast_to<Polygon2D>(target);
-            Control *pane = Object::cast_to<Control>(picture ? picture->get_parent() : target);
+            Control *pane = Object::cast_to<Control>(picture ? picture->get_parent()->get_parent() : target);
 
             if (!pane)
                 continue;
 
             if (!picture)
-                picture = Object::cast_to<Polygon2D>(pane->get_node_or_null("Picture"));
+                picture = Object::cast_to<Polygon2D>(pane->get_node_or_null("Content/Picture"));
             Array tags = entry["tags"];
 
             for (int j = 0; j < tags.size(); ++j)
@@ -210,6 +215,7 @@ Error UIStateRuntime::apply(Node *owner, Control *layout, const String &componen
         }
     }
 
+    UIPaneTransform::resolve(layout);
     return OK;
 }
 
@@ -218,6 +224,7 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
 {
     int target = track["target"];
     Dictionary metadata = pane->get_meta("bflyt_pane", Dictionary());
+    Label *label = Object::cast_to<Label>(pane->get_node_or_null("Content/Text"));
     Ref<ShaderMaterial> material = picture ? Ref<ShaderMaterial>(picture->get_material()) : Ref<ShaderMaterial>();
 
     if (kind == "FLVI")
@@ -234,15 +241,16 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
             }
             else
             {
-                // Uninfluenced alpha only covers the pane's own content: its Label text or the
-                // picture/window quads the builder adds as direct Polygon2D children.
+                // Uninfluenced alpha covers only this pane's content, never child panes.
                 Color color = pane->get_self_modulate();
                 color.a = value / 255.0;
                 pane->set_self_modulate(color);
 
-                for (int i = 0; i < pane->get_child_count(); ++i)
+                if (label) label->set_self_modulate(color);
+                Node2D *content = UIPaneTransform::content(pane);
+                for (int i = 0; content && i < content->get_child_count(); ++i)
                 {
-                    Polygon2D *quad = Object::cast_to<Polygon2D>(pane->get_child(i));
+                    Polygon2D *quad = Object::cast_to<Polygon2D>(content->get_child(i));
 
                     if (!quad)
                         continue;
@@ -253,9 +261,8 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
                 }
             }
         }
-        else if (Object::cast_to<Label>(pane) && target < 4)
+        else if (label && target < 4)
         {
-            Label *label = Object::cast_to<Label>(pane);
             Color color = label->get_theme_color("font_color");
             color[target] = value / 255.0;
             label->add_theme_color_override("font_color", color);
@@ -272,27 +279,8 @@ void UIStateRuntime::apply_track(Node *owner, Control *pane, Polygon2D *picture,
     }
     else if (kind == "FLPA")
     {
-        if (target < 2)
-        {
-            if (!pane->has_meta("animation_position_base"))
-            {
-                Vector3 translation = metadata["translation"];
-                pane->set_meta("animation_position_base", pane->get_position() - Vector2(translation.x, -translation.y));
-            }
-
-            Vector2 base = pane->get_meta("animation_position_base");
-            Vector2 position = pane->get_position();
-            position[target] = base[target] + (target == 0 ? value : -value);
-            pane->set_position(position);
-        }
-        else if (target == 5)
-            pane->set_rotation(-Math::deg_to_rad(value));
-        else if (target == 6 || target == 7)
-        {
-            Vector2 scale = pane->get_scale();
-            scale[target - 6] = value * (target == 6 ? double(pane->get_meta("text_scale_x", 1.0)) : 1.0);
-            pane->set_scale(scale);
-        }
+        if (target >= 0 && target < 8)
+            UIPaneTransform::set_channel(pane, target, value);
     }
     else if (kind == "FLMC" && material.is_valid() && target < 8)
     {
