@@ -1,0 +1,92 @@
+include "common.fbs";
+
+namespace Titan.Animation;
+
+file_extension "trtml";
+
+table IntegerValue
+{
+    value: int;
+}
+
+table RealValue
+{
+    value: float;
+}
+
+table BooleanValue
+{
+    value: bool;
+}
+
+table TextValue
+{
+    value: string;
+}
+
+table Float3Value
+{
+    value: Titan.Math.Vec3;
+}
+
+union ParameterValue
+{
+    IntegerValue,
+    RealValue,
+    BooleanValue,
+    TextValue,
+    Float3Value
+}
+
+table Parameter
+{
+    name: string;
+    value: ParameterValue;
+    reserved_3: uint (deprecated);
+    flag_4: bool;
+    flag_5: bool;
+}
+
+table Event
+{
+    track_name: string;
+    command: string;
+    begin_frame: int;
+    end_frame: int;
+    flag_4: bool;
+    kind: uint;
+    reserved_6: uint (deprecated);
+    reserved_7: uint (deprecated);
+    reserved_8: uint (deprecated);
+    parameters: [Parameter];
+}
+
+table EventGroup
+{
+    reserved_0: uint (deprecated);
+    reserved_1: uint (deprecated);
+    events: [Event];
+}
+
+table TimelineTrack
+{
+    name: string;
+    reserved_1: uint (deprecated);
+    groups: [EventGroup];
+    // Observed empty; the element type is not yet known.
+    empty_vector: [ubyte];
+}
+
+table TRTML
+{
+    tracks: [TimelineTrack];
+    frame_count: uint;
+    reserved_2: uint (deprecated);
+    count_3: uint;
+    count_4: uint;
+    reserved_5: uint (deprecated);
+    reserved_6: uint (deprecated);
+    resource_paths: [string];
+}
+
+root_type TRTML;

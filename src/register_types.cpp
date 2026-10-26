@@ -14,6 +14,7 @@
 #include "fbs/animation/tracr.h"
 #include "fbs/animation/tracm.h"
 #include "fbs/animation/traef.h"
+#include "fbs/animation/trtml.h"
 
 #include "fbs/gfx2/trlgt.h"
 #include "lights/trinity_environment.h"
@@ -101,6 +102,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACP)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRTML)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
@@ -212,6 +214,17 @@ void initialize_gen_module(ModuleInitializationLevel p_level)
         GDREGISTER_CLASS(TREffect)
         GDREGISTER_CLASS(TRAnimationEffect)
         GDREGISTER_CLASS(TRAnimationEffects)
+
+        GDREGISTER_CLASS(TRTimelineValueInt)
+        GDREGISTER_CLASS(TRTimelineValueFloat)
+        GDREGISTER_CLASS(TRTimelineValueBool)
+        GDREGISTER_CLASS(TRTimelineValueString)
+        GDREGISTER_CLASS(TRTimelineValueVector3)
+        GDREGISTER_CLASS(TRTimelineParameter)
+        GDREGISTER_CLASS(TRTimelineEvent)
+        GDREGISTER_CLASS(TRTimelineEventGroup)
+        GDREGISTER_CLASS(TRTimelineTrack)
+        GDREGISTER_CLASS(TRTimeline)
 
         GDREGISTER_CLASS(TRAnimationChannelResource)
         GDREGISTER_CLASS(TRAnimationTrackListTable)
@@ -388,6 +401,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderTRTML)
 
         INIT_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
@@ -459,6 +473,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACR)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderTRACM)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderTRAEF)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderTRTML)
 
         FINI_RESOURCE_LOADER(ResourceFormatLoaderTRLGT)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderCCDATA)
