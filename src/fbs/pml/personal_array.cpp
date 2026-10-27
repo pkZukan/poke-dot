@@ -375,8 +375,13 @@ Variant ResourceFormatLoaderTRPERSONAL::_load(const String& p_path, const String
 
 bool ResourceFormatLoaderTRPERSONAL::_recognize_path(const String& p_path, const StringName& p_type) const
 {
-    String filename = p_path.get_file();
-    return filename == "personal_array.bin";
+    return (p_type == StringName() || _handles_type(p_type)) && !_get_resource_type(p_path).is_empty();
+}
+
+String ResourceFormatLoaderTRPERSONAL::_get_resource_type(const String& p_path) const
+{
+    return p_path.get_extension().to_lower() == "bin" && p_path.get_file().get_basename() == "personal_array"
+               ? String("TRPersonalArray") : String();
 }
 
 PackedStringArray ResourceFormatLoaderTRPERSONAL::_get_recognized_extensions() const

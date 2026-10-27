@@ -64,13 +64,15 @@ public:
         {
             return Variant();
         }
-        return table(schema->root_table(), table_pos, 0);
+        Variant result = table(schema->root_table(), table_pos, 0);
+        return valid ? result : Variant();
     }
 
 private:
     const reflection::Schema* schema;
     const uint8_t* data;
     size_t size;
+    mutable bool valid = true;
 
     bool in_range(size_t pos, size_t len) const
     {
@@ -81,6 +83,7 @@ private:
     {
         if (!in_range(pos, sizeof(T)))
         {
+            valid = false;
             return false;
         }
 
@@ -95,8 +98,13 @@ private:
         {
             return false;
         }
+        if (offset == 0 || offset > size - pos || !in_range(pos + offset, 1))
+        {
+            valid = false;
+            return false;
+        }
         out = pos + offset;
-        return out < size;
+        return true;
     }
 
     bool field_pos(size_t table_pos, uint16_t voffset, size_t& out) const
@@ -108,7 +116,21 @@ private:
         }
         const int64_t vtable = int64_t(table_pos) - soffset;
         uint16_t vtable_size, field_offset;
-        if (vtable < 0 || !read(size_t(vtable), vtable_size) || voffset + sizeof(uint16_t) > vtable_size)
+        if (vtable < 0)
+        {
+            valid = false;
+            return false;
+        }
+        if (!read(size_t(vtable), vtable_size))
+        {
+            return false;
+        }
+        if (vtable_size < 4 || !in_range(size_t(vtable), vtable_size))
+        {
+            valid = false;
+            return false;
+        }
+        if (voffset + sizeof(uint16_t) > vtable_size)
         {
             return false;
         }
@@ -190,6 +212,7 @@ private:
         uint32_t len;
         if (!read(pos, len) || !in_range(pos + sizeof(uint32_t), len))
         {
+            valid = false;
             return Variant();
         }
         return String::utf8(reinterpret_cast<const char*>(data + pos + sizeof(uint32_t)), len);
@@ -198,6 +221,14 @@ private:
     Variant table(const reflection::Object* object, size_t pos, int depth) const
     {
         if (!object || depth > MAX_DEPTH)
+        {
+            valid = false;
+            return Variant();
+        }
+        // Validate even empty tables, whose fields would otherwise never be read.
+        size_t unused;
+        field_pos(pos, 0, unused);
+        if (!valid)
         {
             return Variant();
         }
@@ -223,6 +254,10 @@ private:
                 if (present)
                 {
                     out[name] = scalar(base, fpos);
+                }
+                else if (field->optional())
+                {
+                    out[name] = Variant();
                 }
                 else if (base == reflection::Bool)
                 {
@@ -306,6 +341,7 @@ private:
     {
         if (!object || depth > MAX_DEPTH || !in_range(pos, object->bytesize()))
         {
+            valid = false;
             return Variant();
         }
         Dictionary out;
@@ -344,6 +380,7 @@ private:
         uint32_t len;
         if (depth > MAX_DEPTH || !read(pos, len))
         {
+            valid = false;
             return Variant();
         }
         const size_t elements = pos + sizeof(uint32_t);
@@ -354,6 +391,7 @@ private:
             PackedByteArray bytes;
             if (!in_range(elements, len))
             {
+                valid = false;
                 return Variant();
             }
             bytes.resize(len);
@@ -368,6 +406,7 @@ private:
                                                                : sizeof(uint32_t);
         if (element_size == 0 || len > (size - elements) / element_size)
         {
+            valid = false;
             return Variant();
         }
 
