@@ -45,12 +45,17 @@ public:
     Array GetEvolutions() const;
     int FindLevelUpEvolution(int level) const;
     bool Evolve(int index);
+    PackedInt32Array GetMegaForms() const;
+    bool MegaEvolve(int index);
+    bool RevertMegaEvolution();
+    bool IsMegaEvolved() const { return _mega_base.is_valid(); }
 
 private:
     bool _isShiny = false;
     String _species_path, _species_str;
     Ref<CatalogEntry> _catalog;
     Ref<TRPersonalData> _personal;
+    Ref<CatalogEntry> _mega_base;
 };
 
 }

@@ -29,6 +29,7 @@ public:
     void unload_catalog();
     Ref<CatalogEntry> GetCatalogEntry(int species, uint8_t form, uint8_t gender);
     bool HasCatalogEntry(int species, uint8_t form, uint8_t gender) const;
+    PackedInt32Array GetMegaEvolutionForms(int species, int form) const;
     Ref<TRPersonalData> GetPersonalData(int species, int form);
 
 protected:
@@ -39,7 +40,9 @@ private:
     HashMap<uint64_t, int> _catalog_map;
     Ref<TRPersonalArray> _personal;
     HashMap<uint32_t, int> _personal_map;
+    HashMap<uint32_t, PackedInt32Array> _mega_forms;
 
     void _load_personal();
+    void _load_mega_forms();
 };
 }

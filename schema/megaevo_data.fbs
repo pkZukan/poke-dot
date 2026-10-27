@@ -1,0 +1,13 @@
+namespace MegaEvolution;
+
+table Transition {
+    species:uint;
+    item:uint;
+    source_form:uint;
+    target_form:uint;
+}
+
+table MegaTable {
+    entries:[Transition];
+}
+root_type MegaTable;

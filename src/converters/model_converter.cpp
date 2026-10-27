@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/cubemap.hpp>
 #include <godot_cpp/classes/shader.hpp>
 #include "shader_options.gen.h"
+#include "gflib.h"
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/skin.hpp>
@@ -24,6 +25,8 @@ void TrinityModel::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_controls"), &TrinityModel::get_controls);
     ClassDB::bind_method(D_METHOD("get_control", "name"), &TrinityModel::get_control);
     ClassDB::bind_method(D_METHOD("set_control", "name", "index"), &TrinityModel::set_control);
+    ClassDB::bind_method(D_METHOD("set_mega_aura", "enabled"), &TrinityModel::set_mega_aura);
+    ClassDB::bind_method(D_METHOD("is_mega_aura_enabled"), &TrinityModel::is_mega_aura_enabled);
     ClassDB::bind_static_method(
         "TrinityModel", D_METHOD("parse_mesh_buffer", "accessor_table", "verts", "inds", "poly_type", "start", "count"),
         &TrinityModel::parse_mesh_buffer);
@@ -1048,6 +1051,10 @@ Array TrinityModel::_variation_material_files() const
 
 void TrinityModel::_assign_materials()
 {
+    if (_mega_aura)
+    {
+        set_mega_aura(true);
+    }
     for (int i = 0; i < get_child_count(); i++)
     {
         MeshInstance3D* mi = Object::cast_to<MeshInstance3D>(get_child(i));
@@ -1067,6 +1074,68 @@ void TrinityModel::_assign_materials()
         }
         mi->set_cast_shadows_setting(cast_shadow ? GeometryInstance3D::SHADOW_CASTING_SETTING_ON
                                                  : GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+    }
+}
+
+void TrinityModel::set_mega_aura(bool enabled)
+{
+    _mega_aura = enabled;
+    Ref<MaterialEntry> preset;
+    const String path = GFLib::romfs_path("ik_effect/data/shader/poke/megashader/mega_preset00.trmtr");
+    if (enabled && FileAccess::file_exists(path))
+    {
+        Ref<TRMaterial> resource = ResourceLoader::get_singleton()->load(path);
+        if (resource.is_valid() && !resource->get_Materials().is_empty())
+        {
+            preset = resource->get_Materials()[0];
+        }
+    }
+    for (const Variant& name : _materials.keys())
+    {
+        Ref<ShaderMaterial> material = _materials[name];
+        if (material.is_null() || material->get_shader().is_null())
+        {
+            continue;
+        }
+        bool supports_aura = false;
+        for (const Variant& entry : material->get_shader()->get_shader_uniform_list())
+        {
+            Dictionary uniform = entry;
+            if (String(uniform["name"]) == "EnableAuraEffect")
+            {
+                supports_aura = true;
+                break;
+            }
+        }
+        if (!supports_aura)
+        {
+            continue;
+        }
+        if (enabled)
+        {
+            // Safe defaults also keep the toggle usable with smaller asset dumps.
+            material->set_shader_parameter("AuraColorScale", 0.25);
+            material->set_shader_parameter("AuraColorScrollSpeed", 1.5);
+            material->set_shader_parameter("AuraNoiseScale", 0.33);
+            material->set_shader_parameter("AuraNoiseScrollSpeed", 1.0);
+            material->set_shader_parameter("AuraIntensity", 2.0);
+            material->set_shader_parameter("AuraRimPower", 2.0);
+            if (preset.is_valid())
+            {
+                // Only transfer aura values: preset CastShadow and other generic
+                // parameters must not overwrite the Pokemon's own material.
+                for (const Variant& entry : preset->get_FloatParams())
+                {
+                    Ref<FloatParameter> param = entry;
+                    if (param->get_Name().begins_with("Aura"))
+                    {
+                        material->set_shader_parameter(param->get_Name(), param->get_Value());
+                    }
+                }
+                _apply_textures(path.get_base_dir(), preset, material);
+            }
+        }
+        material->set_shader_parameter("EnableAuraEffect", enabled);
     }
 }
 

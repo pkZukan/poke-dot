@@ -41,6 +41,8 @@ public:
     Dictionary get_controls() const;
     int get_control(const String& name) const;
     void set_control(const String& name, int index);
+    void set_mega_aura(bool enabled);
+    bool is_mega_aura_enabled() const { return _mega_aura; }
 
     static Dictionary parse_mesh_buffer(const Ref<VertexAccessors>& accessor_table, const PackedByteArray& verts,
                                         const PackedByteArray& inds, int poly_type, int start, int count);
@@ -53,6 +55,7 @@ private:
     String _variation;
     Dictionary _materials;
     Dictionary _control_values;
+    bool _mega_aura = false;
 
     Ref<ModelVariation> _find_variation() const;
     Ref<VariationControl> _find_control(const String& name) const;

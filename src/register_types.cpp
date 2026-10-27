@@ -44,6 +44,7 @@
 #include "converters/animation_converter.h"
 #include "converters/model_converter.h"
 #include "converters/ui_converter.h"
+#include "converters/particle_converter.h"
 #include "converters/ui_builder.h"
 #include "converters/ui_pane.h"
 
@@ -56,6 +57,7 @@
 #include "middleware/bffnt.h"
 #include "middleware/bfcpx.h"
 #include "middleware/wwise.h"
+#include "middleware/ptcl.h"
 
 #include "field/trcol.h"
 #include "fbs/field/trins.h"
@@ -120,6 +122,7 @@ DEFINE_RESOURCE_LOADER(ResourceFormatLoaderSARC)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderBNK)
+DEFINE_RESOURCE_LOADER(ResourceFormatLoaderPTCL)
 
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
 DEFINE_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
@@ -364,6 +367,8 @@ void initialize_gen_module(ModuleInitializationLevel p_level)
         GDREGISTER_CLASS(BinaryCompositeFont)
         GDREGISTER_CLASS(WwiseSoundBank)
         GDREGISTER_CLASS(WwisePackage)
+        GDREGISTER_CLASS(ParticleArchive)
+        GDREGISTER_CLASS(TrinityParticles)
         GDREGISTER_CLASS(AudioStreamWwise)
 
         GDREGISTER_CLASS(TRCOL)
@@ -421,6 +426,7 @@ void initialize_gen_module(ModuleInitializationLevel p_level)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderBNK)
+        INIT_RESOURCE_LOADER(ResourceFormatLoaderPTCL)
 
         INIT_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
         INIT_RESOURCE_LOADER(ResourceFormatLoaderTRINS)
@@ -494,6 +500,7 @@ void uninitialize_gen_module(ModuleInitializationLevel p_level)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLYT)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderBFLAN)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderBNK)
+        FINI_RESOURCE_LOADER(ResourceFormatLoaderPTCL)
 
         FINI_RESOURCE_LOADER(ResourceFormatLoaderTRCOL)
         FINI_RESOURCE_LOADER(ResourceFormatLoaderTRINS)

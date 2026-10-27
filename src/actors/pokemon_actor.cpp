@@ -18,6 +18,10 @@ void PokemonActor::_bind_methods()
     ClassDB::bind_method(D_METHOD("GetEvolutions"), &PokemonActor::GetEvolutions);
     ClassDB::bind_method(D_METHOD("FindLevelUpEvolution", "level"), &PokemonActor::FindLevelUpEvolution);
     ClassDB::bind_method(D_METHOD("Evolve", "index"), &PokemonActor::Evolve);
+    ClassDB::bind_method(D_METHOD("GetMegaForms"), &PokemonActor::GetMegaForms);
+    ClassDB::bind_method(D_METHOD("MegaEvolve", "index"), &PokemonActor::MegaEvolve, DEFVAL(0));
+    ClassDB::bind_method(D_METHOD("RevertMegaEvolution"), &PokemonActor::RevertMegaEvolution);
+    ClassDB::bind_method(D_METHOD("IsMegaEvolved"), &PokemonActor::IsMegaEvolved);
     ADD_SIGNAL(MethodInfo("evolved", PropertyInfo(Variant::INT, "previous_species"),
                           PropertyInfo(Variant::INT, "previous_form")));
 }
@@ -62,12 +66,16 @@ void PokemonActor::Initialize()
     // Pokemon animation files add _base to the catalog's .tracn path.
     tracn_file = tracn_file.replace(".tracn", "_base.tracn");
     LoadActor(_species_path.path_join(_species_mdl), tracn_file, _isShiny ? "rare" : "");
+    if (IsMegaEvolved())
+    {
+        GetModel()->set_mega_aura(true);
+    }
 }
 
 Array PokemonActor::GetEvolutions() const
 {
     Array evolutions;
-    if (_personal.is_null())
+    if (_personal.is_null() || IsMegaEvolved())
     {
         return evolutions;
     }
@@ -99,6 +107,10 @@ int PokemonActor::FindLevelUpEvolution(int level) const
 
 bool PokemonActor::Evolve(int index)
 {
+    if (IsMegaEvolved())
+    {
+        return false;
+    }
     const Array evolutions = GetEvolutions();
     ERR_FAIL_INDEX_V_MSG(index, evolutions.size(), false, "PokemonActor: no evolution at that index");
     Ref<TREvoData> evo = evolutions[index];
@@ -122,6 +134,65 @@ bool PokemonActor::Evolve(int index)
     SetInfo(target, _isShiny);
     Initialize();
     emit_signal("evolved", previous_species, previous_form);
+    return true;
+}
+
+PackedInt32Array PokemonActor::GetMegaForms() const
+{
+    PackedInt32Array forms;
+    if (_catalog.is_null() || IsMegaEvolved())
+    {
+        return forms;
+    }
+    const Ref<SpeciesResourceInfo> info = _catalog->get_species_info();
+    PokemonCatalog* catalog = PokemonCatalog::get_singleton();
+    for (int form : catalog->GetMegaEvolutionForms(info->get_species(), info->get_form()))
+    {
+        if (catalog->HasCatalogEntry(info->get_species(), form, info->get_gender()) ||
+            catalog->HasCatalogEntry(info->get_species(), form, 0))
+        {
+            forms.push_back(form);
+        }
+    }
+    return forms;
+}
+
+bool PokemonActor::MegaEvolve(int index)
+{
+    const PackedInt32Array forms = GetMegaForms();
+    if (index < 0 || index >= forms.size())
+    {
+        return false;
+    }
+    const Ref<SpeciesResourceInfo> info = _catalog->get_species_info();
+    const int previous_form = info->get_form();
+    PokemonCatalog* catalog = PokemonCatalog::get_singleton();
+    const int gender = catalog->HasCatalogEntry(info->get_species(), forms[index], info->get_gender())
+                           ? info->get_gender() : 0;
+    const Ref<CatalogEntry> target = catalog->GetCatalogEntry(info->get_species(), forms[index], gender);
+    if (target.is_null())
+    {
+        return false;
+    }
+    _mega_base = _catalog;
+    SetInfo(target, _isShiny);
+    Initialize();
+    emit_signal("evolved", info->get_species(), previous_form);
+    return true;
+}
+
+bool PokemonActor::RevertMegaEvolution()
+{
+    if (_mega_base.is_null())
+    {
+        return false;
+    }
+    const Ref<SpeciesResourceInfo> previous = _catalog->get_species_info();
+    const Ref<CatalogEntry> base = _mega_base;
+    _mega_base.unref();
+    SetInfo(base, _isShiny);
+    Initialize();
+    emit_signal("evolved", previous->get_species(), previous->get_form());
     return true;
 }
 

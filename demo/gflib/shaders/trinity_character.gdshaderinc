@@ -18,7 +18,11 @@ uniform float LightPitch;
 uniform float LightYaw;
 uniform float LightRoll;
 varying vec3 character_world_position;
-void vertex() { character_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+varying vec3 character_model_position;
+void vertex() {
+    character_world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+    character_model_position = VERTEX;
+}
 uniform sampler2D BaseColorMap  : source_color, hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D NormalMap     : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D OcclusionMap   : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -42,9 +46,9 @@ uniform sampler2D IkLayerMaskMap3 : hint_default_black, filter_linear_mipmap_ani
 uniform samplerCube LocalReflectionMap : hint_default_white;
 
 // Shader slots are resolved by texture name in the material loader.
-uniform int sampler_repeat_u[19];
-uniform int sampler_repeat_v[19];
-uniform vec4 sampler_border_color[19];
+uniform int sampler_repeat_u[21];
+uniform int sampler_repeat_v[21];
+uniform vec4 sampler_border_color[21];
 #include "trinity_sampler.gdshaderinc"
 #include "trinity_material.gdshaderinc"
 #include "trinity_ibl.gdshaderinc"
@@ -210,6 +214,27 @@ uniform float AuraNoiseScale = 0.0;
 uniform float AuraNoiseScrollSpeed = 0.0;
 uniform float AuraIntensity = 0.0;
 uniform float AuraRimPower = 0.0;
+// Mega presets use wrapping triplanar textures independently of material UVs.
+uniform sampler2D AuraColorMap : source_color, hint_default_white, filter_linear_mipmap, repeat_enable;
+uniform sampler2D AuraNoiseMap : hint_default_white, filter_linear_mipmap, repeat_enable;
+
+vec4 aura_triplanar(sampler2D map, vec3 position, vec3 normal, float tiling, float scroll) {
+    vec3 weights = normal * normal;
+    vec3 uv = (position - vec3(0.577350 * scroll)) * tiling;
+    return texture(map, -uv.zy) * weights.x + texture(map, -uv.xz) * weights.y + texture(map, uv.xy * vec2(1.0, -1.0)) * weights.z;
+}
+
+vec3 mega_aura(vec3 position, vec3 normal, vec3 view_direction, vec3 surface_normal) {
+    mat3 rotation = mat3(vec3(0.788675, -0.577350, -0.211325),
+                         vec3(0.577350, 0.577350, 0.577350),
+                         vec3(-0.211325, -0.577350, 0.788675));
+    vec3 trip_position = position * rotation;
+    vec3 trip_normal = normal * rotation;
+    vec3 color = aura_triplanar(AuraColorMap, trip_position, trip_normal, AuraColorScale, TIME * AuraColorScrollSpeed).rgb;
+    float noise = aura_triplanar(AuraNoiseMap, trip_position, trip_normal, AuraNoiseScale, TIME * AuraNoiseScrollSpeed).r;
+    float rim = pow(max(0.0001, 1.0 - abs(dot(surface_normal, view_direction))), AuraRimPower);
+    return color * noise * rim * AuraIntensity;
+}
 uniform vec4 EmissionColorLayer1 = vec4(1.0);
 uniform vec4 EmissionColorLayer2 = vec4(1.0);
 uniform vec4 EmissionColorLayer3 = vec4(1.0);
@@ -470,10 +495,9 @@ void fragment() {
     hair_binormal = normalize(BINORMAL);
     hair_strength = EnableHairSpecular ? spec_mask.r * SecondSpecularStrength : 0.0;
     if (EnableAuraEffect) {
-        float wave = 0.5 + 0.5 * sin(UV.y * AuraColorScale * 2.0 * PI + TIME * AuraColorScrollSpeed);
-        float noise = 0.5 + 0.5 * sin(dot(UV, vec2(12.9898, 78.233)) * AuraNoiseScale + TIME * AuraNoiseScrollSpeed);
-        float edge = pow(clamp(1.0 - dot(NORMAL, VIEW), 0.0, 1.0), max(AuraRimPower, 0.001));
-        emission += EmissionColor.rgb * wave * noise * edge * AuraIntensity;
+        vec3 world_normal = (INV_VIEW_MATRIX * vec4(normal_view, 0.0)).xyz;
+        vec3 model_normal = normalize((vec4(world_normal, 0.0) * MODEL_MATRIX).xyz);
+        emission += mega_aura(character_model_position, model_normal, VIEW, normal_view);
     }
     ALBEDO = base.rgb;
     EMISSION = emission;

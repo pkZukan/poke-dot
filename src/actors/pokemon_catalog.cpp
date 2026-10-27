@@ -1,5 +1,6 @@
 #include "pokemon_catalog.h"
 #include "gflib.h"
+#include "generated/megaevo_data_generated.h"
 #include <godot_cpp/classes/file_access.hpp>
 
 using namespace godot;
@@ -10,6 +11,7 @@ void PokemonCatalog::_bind_methods()
 {
     ClassDB::bind_method(D_METHOD("GetCatalogEntry"), &PokemonCatalog::GetCatalogEntry);
     ClassDB::bind_method(D_METHOD("GetPersonalData", "species", "form"), &PokemonCatalog::GetPersonalData);
+    ClassDB::bind_method(D_METHOD("GetMegaEvolutionForms", "species", "form"), &PokemonCatalog::GetMegaEvolutionForms);
 }
 
 PokemonCatalog::PokemonCatalog()
@@ -32,6 +34,7 @@ PokemonCatalog::~PokemonCatalog()
 void PokemonCatalog::load_catalog()
 {
     _load_personal();
+    _load_mega_forms();
 
     const String path = GFLib::romfs_path(CATALOG_PATH);
     if (!ResourceLoader::get_singleton()->exists(path))
@@ -60,6 +63,40 @@ void PokemonCatalog::unload_catalog()
     _catalog.unref();
     _personal_map.clear();
     _personal.unref();
+    _mega_forms.clear();
+}
+
+void PokemonCatalog::_load_mega_forms()
+{
+    _mega_forms.clear();
+    const String path = GFLib::romfs_path("world/exl/pokemon/megaevo_data/megaevo_data.bin");
+    if (!FileAccess::file_exists(path))
+    {
+        return;
+    }
+    PackedByteArray bytes = FileAccess::get_file_as_bytes(path);
+    flatbuffers::Verifier verifier(bytes.ptr(), bytes.size());
+    ERR_FAIL_COND_MSG(!MegaEvolution::VerifyMegaTableBuffer(verifier), "Invalid Mega Evolution table: " + path);
+    const auto* entries = MegaEvolution::GetMegaTable(bytes.ptr())->entries();
+    if (!entries)
+    {
+        return;
+    }
+    for (const auto* entry : *entries)
+    {
+        const uint32_t key = (entry->species() << 16) | entry->source_form();
+        if (!_mega_forms.has(key))
+        {
+            _mega_forms[key] = PackedInt32Array();
+        }
+        _mega_forms[key].push_back(entry->target_form());
+    }
+}
+
+PackedInt32Array PokemonCatalog::GetMegaEvolutionForms(int species, int form) const
+{
+    const uint32_t key = (uint32_t(species) << 16) | uint32_t(form);
+    return _mega_forms.has(key) ? _mega_forms[key] : PackedInt32Array();
 }
 
 Ref<CatalogEntry> PokemonCatalog::GetCatalogEntry(int species, uint8_t form, uint8_t gender)
