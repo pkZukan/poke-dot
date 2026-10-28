@@ -8,7 +8,7 @@ void TrinityStreamingObject::_bind_methods()
     GETTER_SETTER_BIND(TrinityStreamingObject, NestedType, Variant::PACKED_BYTE_ARRAY, PROPERTY_HINT_NONE)
 }
 
-void TrinityStreamingObject::LoadFromTable(const Titan::TrinityScene::TrinityStreamingObject* table)
+void TrinityStreamingObject::LoadFromTable(const Ikkaku::TrinityScene::TrinityStreamingObject* table)
 {
     ERR_FAIL_NULL(table);
     set_Name(Utils::toGodotString(table->name()));
@@ -29,7 +29,7 @@ void TrinityStreamingPointData::_bind_methods()
     GETTER_SETTER_BIND(TrinityStreamingPointData, Position, Variant::VECTOR3, PROPERTY_HINT_NONE)
 }
 
-void TrinityStreamingPointData::LoadFromTable(const Titan::TrinityScene::TrinityStreamingPointData* table)
+void TrinityStreamingPointData::LoadFromTable(const Ikkaku::TrinityScene::TrinityStreamingPointData* table)
 {
     ERR_FAIL_NULL(table);
     set_Name(Utils::toGodotString(table->name()));
@@ -44,7 +44,7 @@ void TrinityStreamingEntry::_bind_methods()
                        "TrinityStreamingObject")
 }
 
-void TrinityStreamingEntry::LoadFromTable(const Titan::TrinityScene::TrinityStreamingEntry* table)
+void TrinityStreamingEntry::LoadFromTable(const Ikkaku::TrinityScene::TrinityStreamingEntry* table)
 {
     ERR_FAIL_NULL(table);
     Ref<TrinityStreamingPointData> point_value;
@@ -76,7 +76,7 @@ void TrinityStreamingPoint::_bind_methods()
 
 void TrinityStreamingPoint::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityStreamingPoint(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityStreamingPoint(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityStreamingPoint");
     Array entries_values;
     if (auto values = component->entries())

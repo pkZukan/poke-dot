@@ -51,12 +51,12 @@ public:
     Utils() = default;
     ~Utils() = default;
 
-    static godot::Vector3 toGodotVec3(const Titan::Math::Vec3* vec);
-    static godot::Vector4 toGodotVec4(const Titan::Math::Vec4* vec);
-    static godot::Vector2i toGodotVec2i(const Titan::Math::Vec2i* vec);
-    static godot::Vector3i toGodotVec3i(const Titan::Math::Vec3i* vec);
-    static godot::Transform3D toGodotTransform(const Titan::Math::Transform* tran);
-    static godot::Transform3D toGodotTransform(const Titan::Math::SRT* srt);
+    static godot::Vector3 toGodotVec3(const Ikkaku::Math::Vec3* vec);
+    static godot::Vector4 toGodotVec4(const Ikkaku::Math::Vec4* vec);
+    static godot::Vector2i toGodotVec2i(const Ikkaku::Math::Vec2i* vec);
+    static godot::Vector3i toGodotVec3i(const Ikkaku::Math::Vec3i* vec);
+    static godot::Transform3D toGodotTransform(const Ikkaku::Math::Transform* tran);
+    static godot::Transform3D toGodotTransform(const Ikkaku::Math::SRT* srt);
     static godot::String toGodotString(const flatbuffers::String* str);
 
     static float half_to_float(uint16_t half);

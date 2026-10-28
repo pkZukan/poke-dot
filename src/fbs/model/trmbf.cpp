@@ -18,7 +18,7 @@ void TRModelBuffer::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRMBF file: %s", file));
 
-    auto model = Titan::Model::GetTRMBF(buf.ptr());
+    auto model = Ikkaku::Model::GetTRMBF(buf.ptr());
     ERR_FAIL_COND_MSG(model == NULL, vformat("Couldn't load TRMBF flatbuffer"));
 
     // Each LOD has its own vertex and index buffers.

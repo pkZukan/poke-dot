@@ -132,7 +132,7 @@ public:
     GETTER_SETTER_DEFINE(Array, effects)
 
 private:
-    Ref<Resource> _LoadEffectValue(Titan::Animation::EffectValue type, const void* data);
+    Ref<Resource> _LoadEffectValue(Ikkaku::Animation::EffectValue type, const void* data);
 
     Array effects;
 };

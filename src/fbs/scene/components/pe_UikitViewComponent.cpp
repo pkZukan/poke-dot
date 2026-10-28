@@ -10,7 +10,7 @@ void PeUikitViewComponent::_bind_methods()
 
 void PeUikitViewComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetPeUikitViewComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetPeUikitViewComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse PeUikitViewComponent");
     set_FilePath(Utils::toGodotString(component->file_path()));
     set_BluaPath(Utils::toGodotString(component->blua_path()));

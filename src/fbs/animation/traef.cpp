@@ -97,7 +97,7 @@ Array TRAnimationEffects::get_events(double frame_rate) const
     return events;
 }
 
-Ref<Resource> TRAnimationEffects::_LoadEffectValue(Titan::Animation::EffectValue type, const void* data)
+Ref<Resource> TRAnimationEffects::_LoadEffectValue(Ikkaku::Animation::EffectValue type, const void* data)
 {
     if (!data)
     {
@@ -106,33 +106,33 @@ Ref<Resource> TRAnimationEffects::_LoadEffectValue(Titan::Animation::EffectValue
 
     switch (type)
     {
-        case Titan::Animation::EffectValue::EffectValue_EffectValue_Int:
+        case Ikkaku::Animation::EffectValue::EffectValue_EffectValue_Int:
         {
-            auto src = static_cast<const Titan::Animation::EffectValue_Int*>(data);
+            auto src = static_cast<const Ikkaku::Animation::EffectValue_Int*>(data);
             Ref<TREffectValueInt> value;
             value.instantiate();
             value->set_value(src->value());
             return value;
         }
-        case Titan::Animation::EffectValue::EffectValue_EffectValue_Float:
+        case Ikkaku::Animation::EffectValue::EffectValue_EffectValue_Float:
         {
-            auto src = static_cast<const Titan::Animation::EffectValue_Float*>(data);
+            auto src = static_cast<const Ikkaku::Animation::EffectValue_Float*>(data);
             Ref<TREffectValueFloat> value;
             value.instantiate();
             value->set_value(src->value());
             return value;
         }
-        case Titan::Animation::EffectValue::EffectValue_EffectValue_Byte:
+        case Ikkaku::Animation::EffectValue::EffectValue_EffectValue_Byte:
         {
-            auto src = static_cast<const Titan::Animation::EffectValue_Byte*>(data);
+            auto src = static_cast<const Ikkaku::Animation::EffectValue_Byte*>(data);
             Ref<TREffectValueByte> value;
             value.instantiate();
             value->set_value(src->value());
             return value;
         }
-        case Titan::Animation::EffectValue::EffectValue_EffectValue_String:
+        case Ikkaku::Animation::EffectValue::EffectValue_EffectValue_String:
         {
-            auto src = static_cast<const Titan::Animation::EffectValue_String*>(data);
+            auto src = static_cast<const Ikkaku::Animation::EffectValue_String*>(data);
             Ref<TREffectValueString> value;
             value.instantiate();
             value->set_value(Utils::toGodotString(src->value()));
@@ -148,8 +148,8 @@ void TRAnimationEffects::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRAEF file: %s", file));
     flatbuffers::Verifier verifier(buf.ptr(), buf.size());
-    ERR_FAIL_COND_MSG(!Titan::Animation::VerifyTRAEFBuffer(verifier), "Couldn't load TRAEF");
-    auto traef = Titan::Animation::GetTRAEF(buf.ptr());
+    ERR_FAIL_COND_MSG(!Ikkaku::Animation::VerifyTRAEFBuffer(verifier), "Couldn't load TRAEF");
+    auto traef = Ikkaku::Animation::GetTRAEF(buf.ptr());
 
     auto anims = traef->effects();
     Array animArr;

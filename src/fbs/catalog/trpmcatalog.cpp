@@ -44,7 +44,7 @@ void TRPpokemonCatalog::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRPMCATALOG file: %s", file));
 
-    auto catalog = Titan::Resource::GetTRPmCatalog(buf.ptr());
+    auto catalog = Ikkaku::Resource::GetTRPmCatalog(buf.ptr());
     ERR_FAIL_COND_MSG(catalog == NULL, vformat("Couldn't load TRPMCATALOG"));
 
     set_version(catalog->version()->version());

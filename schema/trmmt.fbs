@@ -1,6 +1,6 @@
 include "common.fbs";
 
-namespace Titan.Model;
+namespace Ikkaku.Model;
 
 file_extension "trmmt";
 
@@ -51,13 +51,13 @@ table FloatSeries
 table Vec3Series
 {
     name: string;
-    values: [Titan.Math.Vec3];
+    values: [Ikkaku.Math.Vec3];
 }
 
 table Vec4Series
 {
     name: string;
-    values: [Titan.Math.Vec4];
+    values: [Ikkaku.Math.Vec4];
 }
 
 table IntSeries

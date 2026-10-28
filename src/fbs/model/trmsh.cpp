@@ -69,7 +69,7 @@ void TRMesh::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRMSH file: %s", file));
 
-    auto mesh = Titan::Model::GetTRMSH(buf.ptr());
+    auto mesh = Ikkaku::Model::GetTRMSH(buf.ptr());
     ERR_FAIL_COND_MSG(mesh == NULL, vformat("Couldn't load TRMSH flatbuffer"));
 
     set_BufferName(Utils::toGodotString(mesh->buffer_name()));
@@ -109,9 +109,9 @@ void TRMesh::LoadFromFile(String file)
                 Ref<Accessors> accs;
                 accs.instantiate();
                 accs->set_attr_0(atts->Get(k)->attr_0());
-                accs->set_Attribute(Titan::Model::EnumNameVertexAttribute(atts->Get(k)->attribute()));
+                accs->set_Attribute(Ikkaku::Model::EnumNameVertexAttribute(atts->Get(k)->attribute()));
                 accs->set_AttributeLayer(atts->Get(k)->attribute_layer());
-                accs->set_Type(Titan::Model::EnumNameType(atts->Get(k)->type()));
+                accs->set_Type(Ikkaku::Model::EnumNameType(atts->Get(k)->type()));
                 accs->set_Position(atts->Get(k)->position());
                 accessors.push_back(accs);
             }

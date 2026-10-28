@@ -1,6 +1,6 @@
 include "common.fbs";
 
-namespace Titan.Model;
+namespace Ikkaku.Model;
 
 file_extension "trmsh";
 
@@ -41,8 +41,8 @@ enum Type: uint32 {
 
 table BoundingBox 
 {
-    min: Titan.Math.Vec3;
-    max: Titan.Math.Vec3;
+    min: Ikkaku.Math.Vec3;
+    max: Ikkaku.Math.Vec3;
 }
 
 enum PolygonType: uint32 {

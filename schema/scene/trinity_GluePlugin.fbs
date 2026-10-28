@@ -1,4 +1,4 @@
-namespace Titan.TrinityScene;
+namespace Ikkaku.TrinityScene;
 
 table TrinityGluePlugin
 {

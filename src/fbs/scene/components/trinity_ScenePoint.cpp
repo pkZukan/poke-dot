@@ -11,7 +11,7 @@ void TrinityScenePoint::_bind_methods()
 
 void TrinityScenePoint::LoadFromBuffer(const void* buffer)
 {
-    auto scene_point = Titan::TrinityScene::GetScenePoint(buffer);
+    auto scene_point = Ikkaku::TrinityScene::GetScenePoint(buffer);
     set_Name(Utils::toGodotString(scene_point->name()));
     set_Point(Vector3(scene_point->point()->x(), scene_point->point()->y(), scene_point->point()->z()));
     set_AttachParent(scene_point->attach_parent());

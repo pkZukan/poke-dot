@@ -11,7 +11,7 @@ void TRSubScene::_bind_methods()
 
 void TRSubScene::LoadFromBuffer(const void* data)
 {
-    auto subscene = Titan::TrinityScene::GetSubScene(data);
+    auto subscene = Ikkaku::TrinityScene::GetSubScene(data);
     ERR_FAIL_COND_MSG(subscene == nullptr, "Couldn't parse subscene");
 
     set_FileName(Utils::toGodotString(subscene->filename()));

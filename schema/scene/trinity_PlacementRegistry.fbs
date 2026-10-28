@@ -1,6 +1,6 @@
 include "../common.fbs";
 
-namespace Titan.TrinityScene;
+namespace Ikkaku.TrinityScene;
 
 union PlacementItem
 {
@@ -13,8 +13,8 @@ union PlacementItem
 table PlacementPosition
 {
     id: string;
-    pos: Titan.Math.Vec3;
-    rot: Titan.Math.Vec3;
+    pos: Ikkaku.Math.Vec3;
+    rot: Ikkaku.Math.Vec3;
 }
 
 table PlacementPositions

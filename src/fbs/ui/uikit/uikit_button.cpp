@@ -17,7 +17,7 @@ void UIKitButton::_bind_methods()
 
 void UIKitButton::LoadFromBuffer(const void* buffer)
 {
-    auto button = Titan::pe::UIKit::GetUIKitButton(buffer);
+    auto button = Ikkaku::pe::UIKit::GetUIKitButton(buffer);
     ERR_FAIL_COND_MSG(button == nullptr, "Couldn't parse UIkitButton");
 
     set_Name(Utils::toGodotString(button->name()));

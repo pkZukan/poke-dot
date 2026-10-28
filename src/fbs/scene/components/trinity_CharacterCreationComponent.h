@@ -14,7 +14,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::TrinityCCDataMasterEntry* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::TrinityCCDataMasterEntry* table);
     GETTER_SETTER_DEFINE(String, Part)
     GETTER_SETTER_DEFINE(String, File)
     GETTER_SETTER_DEFINE(String, Name)

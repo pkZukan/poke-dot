@@ -125,7 +125,7 @@ void TRAnimationChannelMeshes::_bind_methods(){
                            "TRMeshAnimeTrack")}
 
 Ref<TRTrackMaterialChannel> TRAnimationChannelMeshes::_LoadTrackMaterialChannel(
-    const Titan::Animation::TrackMaterialValueList* matValList)
+    const Ikkaku::Animation::TrackMaterialValueList* matValList)
 {
     Array vs;
     Ref<TRTrackMaterialChannel> trkMatValList;
@@ -152,7 +152,7 @@ Ref<TRTrackMaterialChannel> TRAnimationChannelMeshes::_LoadTrackMaterialChannel(
 }
 
 Ref<TRTrackMaterialTimeline>
-TRAnimationChannelMeshes::_LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline* matAnim)
+TRAnimationChannelMeshes::_LoadMaterialAnims(const Ikkaku::Animation::TrackMaterialTimeline* matAnim)
 {
     Ref<TRTrackMaterialTimeline> anim;
     anim.instantiate();
@@ -247,21 +247,21 @@ TRAnimationChannelMeshes::_LoadMaterialAnims(const Titan::Animation::TrackMateri
     return anim;
 }
 
-Ref<Resource> TRAnimationChannelMeshes::_LoadBlendTracks(Titan::Animation::BlendTrack type, const void* data)
+Ref<Resource> TRAnimationChannelMeshes::_LoadBlendTracks(Ikkaku::Animation::BlendTrack type, const void* data)
 {
     switch (type)
     {
-        case Titan::Animation::BlendTrack::BlendTrack_FixedBlendTrack:
+        case Ikkaku::Animation::BlendTrack::BlendTrack_FixedBlendTrack:
         {
-            auto src = static_cast<const Titan::Animation::FixedBlendTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::FixedBlendTrack*>(data);
             Ref<FixedFloatTrack> t;
             t.instantiate();
             t->set_value(src->value());
             return t;
         }
-        case Titan::Animation::BlendTrack::BlendTrack_DynamicBlendTrack:
+        case Ikkaku::Animation::BlendTrack::BlendTrack_DynamicBlendTrack:
         {
-            auto src = static_cast<const Titan::Animation::DynamicBlendTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::DynamicBlendTrack*>(data);
             Ref<DynamicFloatTrack> t;
             t.instantiate();
             Array vals;
@@ -272,9 +272,9 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadBlendTracks(Titan::Animation::Blend
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::BlendTrack::BlendTrack_Framed16BlendTrack:
+        case Ikkaku::Animation::BlendTrack::BlendTrack_Framed16BlendTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed16BlendTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed16BlendTrack*>(data);
             Ref<Framed16FloatTrack> t;
             t.instantiate();
             Array frames, vals;
@@ -290,9 +290,9 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadBlendTracks(Titan::Animation::Blend
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::BlendTrack::BlendTrack_Framed8BlendTrack:
+        case Ikkaku::Animation::BlendTrack::BlendTrack_Framed8BlendTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed8BlendTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed8BlendTrack*>(data);
             Ref<Framed8FloatTrack> t;
             t.instantiate();
             Array frames, vals;
@@ -313,21 +313,21 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadBlendTracks(Titan::Animation::Blend
     }
 }
 
-Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFlag type, const void* data)
+Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Ikkaku::Animation::TrackFlag type, const void* data)
 {
     switch (type)
     {
-        case Titan::Animation::TrackFlag::TrackFlag_FixedBoolTrack:
+        case Ikkaku::Animation::TrackFlag::TrackFlag_FixedBoolTrack:
         {
-            auto src = static_cast<const Titan::Animation::FixedBoolTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::FixedBoolTrack*>(data);
             Ref<FixedBoolTrack> t;
             t.instantiate();
             t->set_value(src->value());
             return t;
         }
-        case Titan::Animation::TrackFlag::TrackFlag_DynamicBoolTrack:
+        case Ikkaku::Animation::TrackFlag::TrackFlag_DynamicBoolTrack:
         {
-            auto src = static_cast<const Titan::Animation::DynamicBoolTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::DynamicBoolTrack*>(data);
             Ref<DynamicBoolTrack> t;
             t.instantiate();
             Array vals;
@@ -341,9 +341,9 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFl
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::TrackFlag::TrackFlag_Framed16BoolTrack:
+        case Ikkaku::Animation::TrackFlag::TrackFlag_Framed16BoolTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed16BoolTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed16BoolTrack*>(data);
             Ref<Framed16BoolTrack> t;
             t.instantiate();
             Array frames, vals;
@@ -362,9 +362,9 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFl
             t->set_values(vals);
             return t;
         }
-        case Titan::Animation::TrackFlag::TrackFlag_Framed8BoolTrack:
+        case Ikkaku::Animation::TrackFlag::TrackFlag_Framed8BoolTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed8BoolTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed8BoolTrack*>(data);
             Ref<Framed8BoolTrack> t;
             t.instantiate();
             Array frames, vals;
@@ -389,7 +389,7 @@ Ref<Resource> TRAnimationChannelMeshes::_LoadTrackFlag(Titan::Animation::TrackFl
 }
 
 Ref<TRVisibilityShapeTimeline>
-TRAnimationChannelMeshes::_LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline* visAnim)
+TRAnimationChannelMeshes::_LoadVisibilityAnims(const Ikkaku::Animation::VisibilityShapeTimeline* visAnim)
 {
     Ref<TRVisibilityShapeTimeline> anim;
     anim.instantiate();
@@ -416,7 +416,7 @@ TRAnimationChannelMeshes::_LoadVisibilityAnims(const Titan::Animation::Visibilit
 }
 
 Ref<TRBlendShapeTimeline>
-TRAnimationChannelMeshes::_LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline* blendAnim)
+TRAnimationChannelMeshes::_LoadBlendshapeAnims(const Ikkaku::Animation::BlendShapeTimeline* blendAnim)
 {
     Ref<TRBlendShapeTimeline> anim;
     anim.instantiate();
@@ -505,7 +505,7 @@ void TRAnimationChannelMeshes::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRACN file: %s", file));
-    auto tracm = Titan::Animation::GetTRACM(buf.ptr());
+    auto tracm = Ikkaku::Animation::GetTRACM(buf.ptr());
     ERR_FAIL_COND_MSG(tracm == nullptr, "Couldn't load TRACM");
 
     auto _inf = tracm->info();

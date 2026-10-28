@@ -12,7 +12,7 @@ void UIKitGauge::_bind_methods()
 
 void UIKitGauge::LoadFromBuffer(const void* buffer)
 {
-    auto gauge = Titan::pe::UIKit::GetUIKitGauge(buffer);
+    auto gauge = Ikkaku::pe::UIKit::GetUIKitGauge(buffer);
     ERR_FAIL_COND_MSG(gauge == nullptr, "Couldn't parse UIkitGauge");
 
     set_Name(Utils::toGodotString(gauge->name()));

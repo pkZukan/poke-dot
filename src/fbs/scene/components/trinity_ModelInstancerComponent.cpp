@@ -9,6 +9,6 @@ void TrinityModelInstancerComponent::_bind_methods()
 
 void TrinityModelInstancerComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityModelInstancerComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityModelInstancerComponent(buffer);
     set_FilePath(Utils::toGodotString(component->file_path()));
 }

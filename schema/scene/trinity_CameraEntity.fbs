@@ -1,13 +1,13 @@
 include "../common.fbs";
 
-namespace Titan.TrinityScene;
+namespace Ikkaku.TrinityScene;
 
 table TrinityCameraEntity
 {
     name: string;
     activate: bool;
-    position: Titan.Math.Vec3;
-    rotation: Titan.Math.Vec3;
+    position: Ikkaku.Math.Vec3;
+    rotation: Ikkaku.Math.Vec3;
     distance: float;
     fov_y: float;
     near_plane: float;

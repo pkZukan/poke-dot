@@ -15,7 +15,7 @@ void TRINS::LoadFromFile(String file)
     PackedByteArray bytes = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(bytes.is_empty(), vformat("Couldn't load TRINS file: %s", file));
 
-    auto instances = Titan::TrinityScene::GetTRINS(bytes.ptr());
+    auto instances = Ikkaku::TrinityScene::GetTRINS(bytes.ptr());
     ERR_FAIL_COND_MSG(instances->type_name()->str() != "SrtInstanceBuffer" || instances->version() != 1,
                       vformat("Unsupported TRINS instance buffer: %s", file));
 

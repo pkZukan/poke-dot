@@ -59,7 +59,7 @@ void TrinityPropertySheet::_bind_methods()
 
 namespace
 {
-Variant parse_property_value(Titan::TrinityScene::PropVal type, const void* data)
+Variant parse_property_value(Ikkaku::TrinityScene::PropVal type, const void* data)
 {
     if (!data)
     {
@@ -67,68 +67,68 @@ Variant parse_property_value(Titan::TrinityScene::PropVal type, const void* data
     }
     switch (type)
     {
-        case Titan::TrinityScene::PropVal_PropInt:
+        case Ikkaku::TrinityScene::PropVal_PropInt:
         {
             Ref<PropInt> value;
             value.instantiate();
-            value->LoadFromTable(static_cast<const Titan::TrinityScene::PropInt*>(data));
+            value->LoadFromTable(static_cast<const Ikkaku::TrinityScene::PropInt*>(data));
             return value;
         }
-        case Titan::TrinityScene::PropVal_PropDec:
+        case Ikkaku::TrinityScene::PropVal_PropDec:
         {
             Ref<PropDec> value;
             value.instantiate();
-            value->LoadFromTable(static_cast<const Titan::TrinityScene::PropDec*>(data));
+            value->LoadFromTable(static_cast<const Ikkaku::TrinityScene::PropDec*>(data));
             return value;
         }
-        case Titan::TrinityScene::PropVal_PropStr:
+        case Ikkaku::TrinityScene::PropVal_PropStr:
         {
             Ref<PropStr> value;
             value.instantiate();
-            value->LoadFromTable(static_cast<const Titan::TrinityScene::PropStr*>(data));
+            value->LoadFromTable(static_cast<const Ikkaku::TrinityScene::PropStr*>(data));
             return value;
         }
-        case Titan::TrinityScene::PropVal_PropEnum:
+        case Ikkaku::TrinityScene::PropVal_PropEnum:
         {
             Ref<PropEnum> value;
             value.instantiate();
-            value->LoadFromTable(static_cast<const Titan::TrinityScene::PropEnum*>(data));
+            value->LoadFromTable(static_cast<const Ikkaku::TrinityScene::PropEnum*>(data));
             return value;
         }
-        case Titan::TrinityScene::PropVal_PropUnion:
+        case Ikkaku::TrinityScene::PropVal_PropUnion:
         {
             Ref<PropUnion> value;
             value.instantiate();
-            value->LoadFromTable(static_cast<const Titan::TrinityScene::PropUnion*>(data));
+            value->LoadFromTable(static_cast<const Ikkaku::TrinityScene::PropUnion*>(data));
             return value;
         }
-        case Titan::TrinityScene::PropVal_PropTable:
+        case Ikkaku::TrinityScene::PropVal_PropTable:
         {
             Ref<PropTable> value;
             value.instantiate();
-            value->LoadFromTable(static_cast<const Titan::TrinityScene::PropTable*>(data));
+            value->LoadFromTable(static_cast<const Ikkaku::TrinityScene::PropTable*>(data));
             return value;
         }
-        case Titan::TrinityScene::PropVal_PropList:
+        case Ikkaku::TrinityScene::PropVal_PropList:
         {
             Ref<PropList> value;
             value.instantiate();
-            value->LoadFromTable(static_cast<const Titan::TrinityScene::PropList*>(data));
+            value->LoadFromTable(static_cast<const Ikkaku::TrinityScene::PropList*>(data));
             return value;
         }
-        case Titan::TrinityScene::PropVal_Titan_Math_Vec2:
+        case Ikkaku::TrinityScene::PropVal_Ikkaku_Math_Vec2:
         {
-            auto v = static_cast<const Titan::Math::Vec2*>(data);
+            auto v = static_cast<const Ikkaku::Math::Vec2*>(data);
             return Vector2(v->u(), v->v());
         }
-        case Titan::TrinityScene::PropVal_Titan_Math_Vec3:
+        case Ikkaku::TrinityScene::PropVal_Ikkaku_Math_Vec3:
         {
-            auto v = static_cast<const Titan::Math::Vec3*>(data);
+            auto v = static_cast<const Ikkaku::Math::Vec3*>(data);
             return Vector3(v->x(), v->y(), v->z());
         }
-        case Titan::TrinityScene::PropVal_Titan_Math_Vec4:
+        case Ikkaku::TrinityScene::PropVal_Ikkaku_Math_Vec4:
         {
-            auto v = static_cast<const Titan::Math::Vec4*>(data);
+            auto v = static_cast<const Ikkaku::Math::Vec4*>(data);
             return Vector4(v->x(), v->y(), v->z(), v->w());
         }
         default:
@@ -137,34 +137,34 @@ Variant parse_property_value(Titan::TrinityScene::PropVal type, const void* data
 }
 }
 
-void PropInt::LoadFromTable(const Titan::TrinityScene::PropInt* table)
+void PropInt::LoadFromTable(const Ikkaku::TrinityScene::PropInt* table)
 {
     ERR_FAIL_NULL(table);
     set_data(table->data());
     set_size(table->size());
 }
 
-void PropDec::LoadFromTable(const Titan::TrinityScene::PropDec* table)
+void PropDec::LoadFromTable(const Ikkaku::TrinityScene::PropDec* table)
 {
     ERR_FAIL_NULL(table);
     set_data(table->data());
     set_size(table->size());
 }
 
-void PropStr::LoadFromTable(const Titan::TrinityScene::PropStr* table)
+void PropStr::LoadFromTable(const Ikkaku::TrinityScene::PropStr* table)
 {
     ERR_FAIL_NULL(table);
     set_data(Utils::toGodotString(table->data()));
 }
 
-void PropEnum::LoadFromTable(const Titan::TrinityScene::PropEnum* table)
+void PropEnum::LoadFromTable(const Ikkaku::TrinityScene::PropEnum* table)
 {
     ERR_FAIL_NULL(table);
     set_name(Utils::toGodotString(table->name()));
     set_val(table->val());
 }
 
-void PropUnion::LoadFromTable(const Titan::TrinityScene::PropUnion* table)
+void PropUnion::LoadFromTable(const Ikkaku::TrinityScene::PropUnion* table)
 {
     ERR_FAIL_NULL(table);
     Ref<PropEnum> value_type;
@@ -183,7 +183,7 @@ void PropUnion::LoadFromTable(const Titan::TrinityScene::PropUnion* table)
     set_val(value_val);
 }
 
-void PropField::LoadFromTable(const Titan::TrinityScene::PropField* table)
+void PropField::LoadFromTable(const Ikkaku::TrinityScene::PropField* table)
 {
     ERR_FAIL_NULL(table);
     set_name(Utils::toGodotString(table->name()));
@@ -191,7 +191,7 @@ void PropField::LoadFromTable(const Titan::TrinityScene::PropField* table)
     set_value(parse_property_value(table->value_type(), table->value()));
 }
 
-void PropTable::LoadFromTable(const Titan::TrinityScene::PropTable* table)
+void PropTable::LoadFromTable(const Ikkaku::TrinityScene::PropTable* table)
 {
     ERR_FAIL_NULL(table);
     Array values;
@@ -208,7 +208,7 @@ void PropTable::LoadFromTable(const Titan::TrinityScene::PropTable* table)
     set_fields(values);
 }
 
-void PropList::LoadFromTable(const Titan::TrinityScene::PropList* table)
+void PropList::LoadFromTable(const Ikkaku::TrinityScene::PropList* table)
 {
     ERR_FAIL_NULL(table);
     Array values;
@@ -222,7 +222,7 @@ void PropList::LoadFromTable(const Titan::TrinityScene::PropList* table)
         {
             types.push_back(tags->Get(i));
             values.push_back(
-                parse_property_value(static_cast<Titan::TrinityScene::PropVal>(tags->Get(i)), entries->Get(i)));
+                parse_property_value(static_cast<Ikkaku::TrinityScene::PropVal>(tags->Get(i)), entries->Get(i)));
         }
     }
     set_vals(values);
@@ -232,7 +232,7 @@ void PropList::LoadFromTable(const Titan::TrinityScene::PropList* table)
 void TrinityPropertySheet::LoadFromBuffer(const void* buffer)
 {
     ERR_FAIL_NULL(buffer);
-    auto table = Titan::TrinityScene::GetTrinityPropertySheet(buffer);
+    auto table = Ikkaku::TrinityScene::GetTrinityPropertySheet(buffer);
     set_property_name(Utils::toGodotString(table->property_name()));
     set_property_template(Utils::toGodotString(table->property_template()));
     Array values;

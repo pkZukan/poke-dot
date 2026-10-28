@@ -18,7 +18,7 @@ void TrinityLightApplierComponent::_bind_methods()
 
 void TrinityLightApplierComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityLightApplierComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityLightApplierComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityLightApplierComponent");
     set_FilePath(Utils::toGodotString(component->file_path()));
     set_TimeSpan(component->time_span());

@@ -13,7 +13,7 @@ void TrinityTerrainStreamingSetting::_bind_methods()
 
 void TrinityTerrainStreamingSetting::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityTerrainStreamingSetting(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityTerrainStreamingSetting(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityTerrainStreamingSetting");
     set_LowLoadRadius(component->low_load_radius());
     set_MediumLoadRadius(component->medium_load_radius());

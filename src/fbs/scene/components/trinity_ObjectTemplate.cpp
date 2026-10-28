@@ -14,7 +14,7 @@ void TrinityObjectTemplate::_bind_methods()
 
 void TrinityObjectTemplate::LoadFromBuffer(const void* buffer)
 {
-    auto object_template = Titan::TrinityScene::GetObjectTemplate(buffer);
+    auto object_template = Ikkaku::TrinityScene::GetObjectTemplate(buffer);
     set_Name(Utils::toGodotString(object_template->name()));
     set_Scope(Utils::toGodotString(object_template->scope()));
     set_FilePath(Utils::toGodotString(object_template->file_path()));

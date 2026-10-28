@@ -14,7 +14,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PeFlatbuffersDataEntry* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PeFlatbuffersDataEntry* table);
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(float, FilePath)
 private:

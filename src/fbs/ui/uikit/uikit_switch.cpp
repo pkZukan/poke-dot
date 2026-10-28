@@ -10,7 +10,7 @@ void UIKitSwitch::_bind_methods()
 
 void UIKitSwitch::LoadFromBuffer(const void* buffer)
 {
-    auto gauge = Titan::pe::UIKit::GetUIKitSwitch(buffer);
+    auto gauge = Ikkaku::pe::UIKit::GetUIKitSwitch(buffer);
     ERR_FAIL_COND_MSG(gauge == nullptr, "Couldn't parse UIkitSwitch");
 
     set_Name(Utils::toGodotString(gauge->name()));

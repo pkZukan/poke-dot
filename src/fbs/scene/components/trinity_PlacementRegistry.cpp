@@ -27,35 +27,35 @@ void TrinityPlacementSpawners::_bind_methods()
 void TrinityPlacementRegistry::_bind_methods(){
     GETTER_SETTER_BIND(TrinityPlacementRegistry, item, Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, PLACEMENT_REG)}
 
-Ref<Resource> TrinityPlacementRegistry::_LoadPlacementItem(Titan::TrinityScene::PlacementItem item, const void* data)
+Ref<Resource> TrinityPlacementRegistry::_LoadPlacementItem(Ikkaku::TrinityScene::PlacementItem item, const void* data)
 {
     switch (item)
     {
-        case Titan::TrinityScene::PlacementItem::PlacementItem_PlacementPositions:
+        case Ikkaku::TrinityScene::PlacementItem::PlacementItem_PlacementPositions:
         {
-            auto src = static_cast<const Titan::TrinityScene::PlacementPosition*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::PlacementPosition*>(data);
             Ref<TrinityPlacementPosition> t;
             t.instantiate();
             t->set_ID(Utils::toGodotString(src->id()));
             return t;
         }
-        case Titan::TrinityScene::PlacementItem::PlacementItem_PlacementObjects:
+        case Ikkaku::TrinityScene::PlacementItem::PlacementItem_PlacementObjects:
         {
-            auto src = static_cast<const Titan::TrinityScene::PlacementObjects*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::PlacementObjects*>(data);
             Ref<TrinityPlacementObjects> t;
             t.instantiate();
             return t;
         }
-        case Titan::TrinityScene::PlacementItem::PlacementItem_PlacementObjectTemplates:
+        case Ikkaku::TrinityScene::PlacementItem::PlacementItem_PlacementObjectTemplates:
         {
-            auto src = static_cast<const Titan::TrinityScene::PlacementObjectTemplates*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::PlacementObjectTemplates*>(data);
             Ref<TrinityPlacementObjectTemplates> t;
             t.instantiate();
             return t;
         }
-        case Titan::TrinityScene::PlacementItem::PlacementItem_PlacementSpawners:
+        case Ikkaku::TrinityScene::PlacementItem::PlacementItem_PlacementSpawners:
         {
-            auto src = static_cast<const Titan::TrinityScene::PlacementSpawners*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::PlacementSpawners*>(data);
             Ref<TrinityPlacementSpawners> t;
             t.instantiate();
             return t;
@@ -67,7 +67,7 @@ Ref<Resource> TrinityPlacementRegistry::_LoadPlacementItem(Titan::TrinityScene::
 
 void TrinityPlacementRegistry::LoadFromBuffer(const void* buffer)
 {
-    auto reg = Titan::TrinityScene::GetTrinityPlacementRegistry(buffer);
+    auto reg = Ikkaku::TrinityScene::GetTrinityPlacementRegistry(buffer);
 
     Ref<Resource> res = _LoadPlacementItem(reg->item_type(), reg->item());
 

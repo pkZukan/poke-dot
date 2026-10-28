@@ -18,7 +18,7 @@ void TRSCN::_bind_methods(){
                         GETTER_SETTER_BIND(TRSCN, subScenes, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "String")
                             GETTER_SETTER_BIND(TRSCN, unk_6, Variant::INT, PROPERTY_HINT_NONE)}
 
-Ref<TRScene> TRSCN::ParseSceneEntry(const Titan::TrinityScene::SceneEntry* chunk)
+Ref<TRScene> TRSCN::ParseSceneEntry(const Ikkaku::TrinityScene::SceneEntry* chunk)
 {
     Ref<TRScene> trscene;
     trscene.instantiate();
@@ -47,7 +47,7 @@ void TRSCN::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load SCN file: %s", file));
-    auto trscn = Titan::TrinityScene::GetTRSCN(buf.ptr());
+    auto trscn = Ikkaku::TrinityScene::GetTRSCN(buf.ptr());
     ERR_FAIL_COND_MSG(trscn == nullptr, "Couldn't parse SCN");
 
     set_Name(Utils::toGodotString(trscn->scene_name()));

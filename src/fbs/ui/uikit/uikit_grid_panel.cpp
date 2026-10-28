@@ -18,7 +18,7 @@ void UIKitGridPanel::_bind_methods()
     GETTER_SETTER_BIND(UIKitGridPanel, ButtonInfo, Variant::ARRAY, PROPERTY_HINT_ARRAY_TYPE, "UIKitButtonInfo")
 }
 
-void UIKitButtonInfo::LoadFromBuffer(const Titan::pe::UIKit::ButtonInfoTable* button_info)
+void UIKitButtonInfo::LoadFromBuffer(const Ikkaku::pe::UIKit::ButtonInfoTable* button_info)
 {
     ERR_FAIL_COND_MSG(button_info == nullptr, "Couldn't parse UIKitButtonInfo");
 
@@ -29,7 +29,7 @@ void UIKitButtonInfo::LoadFromBuffer(const Titan::pe::UIKit::ButtonInfoTable* bu
 
 void UIKitGridPanel::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::pe::UIKit::GetUIKitGridPanel(buffer);
+    auto component = Ikkaku::pe::UIKit::GetUIKitGridPanel(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse UIKitGridPanel");
 
     set_Name(Utils::toGodotString(component->name()));

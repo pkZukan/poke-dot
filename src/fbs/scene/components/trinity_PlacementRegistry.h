@@ -80,7 +80,7 @@ public:
     ~TrinityPlacementRegistry() = default;
 
     void LoadFromBuffer(const void* buffer);
-    Ref<Resource> _LoadPlacementItem(Titan::TrinityScene::PlacementItem item, const void* data);
+    Ref<Resource> _LoadPlacementItem(Ikkaku::TrinityScene::PlacementItem item, const void* data);
 
     GETTER_SETTER_DEFINE(Ref<Resource>, item)
 

@@ -1,6 +1,6 @@
 include "../common.fbs";
 
-namespace Titan.TrinityScene;
+namespace Ikkaku.TrinityScene;
 
 table TrinityStreamingObject
 {
@@ -11,7 +11,7 @@ table TrinityStreamingObject
 table TrinityStreamingPointData
 {
     name: string;
-    position: Titan.Math.Vec3;
+    position: Ikkaku.Math.Vec3;
 }
 
 table TrinityStreamingEntry

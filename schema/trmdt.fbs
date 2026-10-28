@@ -1,4 +1,4 @@
-namespace Titan.Animation;
+namespace Ikkaku.Animation;
 
 table TRMDT 
 {

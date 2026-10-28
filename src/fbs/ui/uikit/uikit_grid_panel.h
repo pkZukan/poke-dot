@@ -18,7 +18,7 @@ public:
     UIKitButtonInfo() = default;
     ~UIKitButtonInfo() = default;
 
-    void LoadFromBuffer(const Titan::pe::UIKit::ButtonInfoTable* button_info);
+    void LoadFromBuffer(const Ikkaku::pe::UIKit::ButtonInfoTable* button_info);
 
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(Vector2i, Pos)

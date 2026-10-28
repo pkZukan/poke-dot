@@ -51,7 +51,7 @@ static void read_series(const flatbuffers::Vector<flatbuffers::Offset<T>>* list,
     }
 }
 
-static Dictionary read_rule(const Titan::Model::ControlRule* rule)
+static Dictionary read_rule(const Ikkaku::Model::ControlRule* rule)
 {
     Dictionary out;
     if (rule == nullptr)
@@ -95,7 +95,7 @@ static Dictionary read_rule(const Titan::Model::ControlRule* rule)
     return out;
 }
 
-static Ref<VariationControl> read_control(const Titan::Model::VariationControl* src)
+static Ref<VariationControl> read_control(const Ikkaku::Model::VariationControl* src)
 {
     Ref<VariationControl> ctrl;
     ctrl.instantiate();
@@ -134,12 +134,12 @@ static Ref<VariationControl> read_control(const Titan::Model::VariationControl* 
                             return Variant(v);
                         });
             read_series(mat->vec3s(), params,
-                        [](const Titan::Math::Vec3* v)
+                        [](const Ikkaku::Math::Vec3* v)
                         {
                             return Variant(Utils::toGodotVec3(v));
                         });
             read_series(mat->vec4s(), params,
-                        [](const Titan::Math::Vec4* v)
+                        [](const Ikkaku::Math::Vec4* v)
                         {
                             return Variant(Utils::toGodotVec4(v));
                         });
@@ -168,7 +168,7 @@ void TRModelMeta::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRMMT file: %s", file));
 
-    auto meta = Titan::Model::GetTRMMT(buf.ptr());
+    auto meta = Ikkaku::Model::GetTRMMT(buf.ptr());
     ERR_FAIL_COND_MSG(meta == NULL, vformat("Couldn't load TRMMT flatbuffer"));
     if (meta->variations() == nullptr)
     {

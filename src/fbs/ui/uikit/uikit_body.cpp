@@ -15,7 +15,7 @@ void UIKitBody::_bind_methods()
 
 void UIKitBody::LoadFromBuffer(const void* buffer)
 {
-    auto body = Titan::pe::UIKit::GetUIKitBody(buffer);
+    auto body = Ikkaku::pe::UIKit::GetUIKitBody(buffer);
     ERR_FAIL_COND_MSG(body == nullptr, "Couldn't parse UIkitBody");
 
     set_Name(Utils::toGodotString(body->name()));

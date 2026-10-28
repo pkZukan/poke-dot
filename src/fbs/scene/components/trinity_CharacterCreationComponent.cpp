@@ -9,7 +9,7 @@ void TrinityCCDataMasterEntry::_bind_methods()
     GETTER_SETTER_BIND(TrinityCCDataMasterEntry, Name, Variant::STRING, PROPERTY_HINT_NONE)
 }
 
-void TrinityCCDataMasterEntry::LoadFromTable(const Titan::TrinityScene::TrinityCCDataMasterEntry* table)
+void TrinityCCDataMasterEntry::LoadFromTable(const Ikkaku::TrinityScene::TrinityCCDataMasterEntry* table)
 {
     ERR_FAIL_NULL(table);
     set_Part(Utils::toGodotString(table->part()));
@@ -41,7 +41,7 @@ void TrinityCharacterCreationComponent::_bind_methods()
 
 void TrinityCharacterCreationComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityCharacterCreationComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityCharacterCreationComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityCharacterCreationComponent");
     set_Name(Utils::toGodotString(component->name()));
     set_unk0(component->unk0());

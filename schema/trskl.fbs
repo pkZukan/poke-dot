@@ -1,6 +1,6 @@
 include "common.fbs";
 
-namespace Titan.Model;
+namespace Ikkaku.Model;
 
 file_extension "trskl";
 
@@ -12,9 +12,9 @@ enum NodeType: uint32 {
 
 table TransformNode {
     name: string;
-    transform: Titan.Math.SRT;
-    scalePivot: Titan.Math.Vec3;
-    rotatePivot: Titan.Math.Vec3;
+    transform: Ikkaku.Math.SRT;
+    scalePivot: Ikkaku.Math.Vec3;
+    rotatePivot: Ikkaku.Math.Vec3;
     parent_idx: int32 = -1;
     rig_idx: int32 = -1;
     parent_name: string;
@@ -29,15 +29,15 @@ table IKControl{
     ik_chain_end: string;
     ik_type: string;
     res_4: uint32; //Always 0
-    ik_pos: Titan.Math.Vec3;
-    ik_rot: Titan.Math.Vec4;
+    ik_pos: Ikkaku.Math.Vec3;
+    ik_rot: Ikkaku.Math.Vec4;
 }
 
 table BoneMatrix{
-    x: Titan.Math.Vec3;
-    y: Titan.Math.Vec3;
-    z: Titan.Math.Vec3;
-    w: Titan.Math.Vec3;
+    x: Ikkaku.Math.Vec3;
+    y: Ikkaku.Math.Vec3;
+    z: Ikkaku.Math.Vec3;
+    w: Ikkaku.Math.Vec3;
 }
 
 table Bone {

@@ -10,7 +10,7 @@ void TrinityAnimationComponent::_bind_methods()
 
 void TrinityAnimationComponent::LoadFromBuffer(const void* buffer)
 {
-    auto animation_component = Titan::TrinityScene::GetTrinityAnimationComponent(buffer);
+    auto animation_component = Ikkaku::TrinityScene::GetTrinityAnimationComponent(buffer);
     ERR_FAIL_COND_MSG(animation_component == nullptr, "Couldn't parse animation component");
 
     set_FilePath(Utils::toGodotString(animation_component->file_path()));

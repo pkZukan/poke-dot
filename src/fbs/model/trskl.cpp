@@ -42,7 +42,7 @@ void TRSkeleton::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRSKL file: %s", file));
 
-    auto skel = Titan::Model::GetTRSKL(buf.ptr());
+    auto skel = Ikkaku::Model::GetTRSKL(buf.ptr());
     ERR_FAIL_COND_MSG(skel == NULL, vformat("Couldn't load TRSKL flatbuffer"));
 
     auto bones = skel->bones();

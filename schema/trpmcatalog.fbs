@@ -1,4 +1,4 @@
-namespace Titan.Resource;
+namespace Ikkaku.Resource;
 
 file_extension "trpmcatalog";
 

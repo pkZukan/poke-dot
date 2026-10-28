@@ -14,7 +14,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::TrinityStreamingObject* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::TrinityStreamingObject* table);
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(PackedByteArray, NestedType)
 private:
@@ -29,7 +29,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::TrinityStreamingPointData* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::TrinityStreamingPointData* table);
     GETTER_SETTER_DEFINE(String, Name)
     GETTER_SETTER_DEFINE(Vector3, Position)
 private:
@@ -44,7 +44,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::TrinityStreamingEntry* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::TrinityStreamingEntry* table);
     GETTER_SETTER_DEFINE(Ref<TrinityStreamingPointData>, Point)
     GETTER_SETTER_DEFINE(Array, Objects)
 private:

@@ -9,7 +9,7 @@ void TrinityGroundPlaceComponent::_bind_methods()
 
 void TrinityGroundPlaceComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityGroundPlaceComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityGroundPlaceComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityGroundPlaceComponent");
     set_index(component->index());
 }

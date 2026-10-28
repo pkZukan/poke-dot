@@ -53,22 +53,22 @@ void TrinityCharacterCollision::_bind_methods()
 void TrinityCollisionComponent::_bind_methods(){
     GETTER_SETTER_BIND(TrinityCollisionComponent, collision, Variant::OBJECT, PROPERTY_HINT_NONE)}
 
-Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::ColShapeType col_shape, const void* data)
+Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Ikkaku::TrinityScene::ColShapeType col_shape, const void* data)
 {
     switch (col_shape)
     {
-        case Titan::TrinityScene::ColShapeType::ColShapeType_SphereShape:
+        case Ikkaku::TrinityScene::ColShapeType::ColShapeType_SphereShape:
         {
-            auto src = static_cast<const Titan::TrinityScene::SphereShape*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::SphereShape*>(data);
             Ref<SphereShape> sphere_shape;
             sphere_shape.instantiate();
             sphere_shape->set_pos(Utils::toGodotVec3(src->pos()));
             sphere_shape->set_radius(src->radius());
             return sphere_shape;
         }
-        case Titan::TrinityScene::ColShapeType::ColShapeType_BoxShape:
+        case Ikkaku::TrinityScene::ColShapeType::ColShapeType_BoxShape:
         {
-            auto src = static_cast<const Titan::TrinityScene::BoxShape*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::BoxShape*>(data);
             Ref<BoxShape> box_shape;
             box_shape.instantiate();
             box_shape->set_pos(Utils::toGodotVec3(src->pos()));
@@ -76,9 +76,9 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
             box_shape->set_rot(Utils::toGodotVec3(src->rot()));
             return box_shape;
         }
-        case Titan::TrinityScene::ColShapeType::ColShapeType_CapsuleShape:
+        case Ikkaku::TrinityScene::ColShapeType::ColShapeType_CapsuleShape:
         {
-            auto src = static_cast<const Titan::TrinityScene::CapsuleShape*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::CapsuleShape*>(data);
             Ref<CapsuleShape> capsule_shape;
             capsule_shape.instantiate();
             capsule_shape->set_pos(Utils::toGodotVec3(src->pos()));
@@ -86,9 +86,9 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
             capsule_shape->set_height(src->height());
             return capsule_shape;
         }
-        case Titan::TrinityScene::ColShapeType::ColShapeType_ModelShape:
+        case Ikkaku::TrinityScene::ColShapeType::ColShapeType_ModelShape:
         {
-            auto src = static_cast<const Titan::TrinityScene::ModelShape*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::ModelShape*>(data);
             Ref<ModelShape> model_shape;
             model_shape.instantiate();
             model_shape->set_path(Utils::toGodotString(src->file_path()));
@@ -106,9 +106,9 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
             }
             return model_shape;
         }
-        case Titan::TrinityScene::ColShapeType::ColShapeType_PencilShape:
+        case Ikkaku::TrinityScene::ColShapeType::ColShapeType_PencilShape:
         {
-            auto src = static_cast<const Titan::TrinityScene::PencilShape*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::PencilShape*>(data);
             Ref<PencilShape> pencil_shape;
             pencil_shape.instantiate();
             pencil_shape->set_pos(Utils::toGodotVec3(src->pos()));
@@ -124,13 +124,13 @@ Ref<Resource> TrinityCollisionComponent::_ParseShapeType(Titan::TrinityScene::Co
     }
 }
 
-Ref<Resource> TrinityCollisionComponent::_ParseCollisionType(Titan::TrinityScene::Collision collision, const void* data)
+Ref<Resource> TrinityCollisionComponent::_ParseCollisionType(Ikkaku::TrinityScene::Collision collision, const void* data)
 {
     switch (collision)
     {
-        case Titan::TrinityScene::Collision::Collision_BodyCollision:
+        case Ikkaku::TrinityScene::Collision::Collision_BodyCollision:
         {
-            auto src = static_cast<const Titan::TrinityScene::BodyCollision*>(data);
+            auto src = static_cast<const Ikkaku::TrinityScene::BodyCollision*>(data);
             Ref<TrinityBodyCollision> body_collision;
             body_collision.instantiate();
 
@@ -138,7 +138,7 @@ Ref<Resource> TrinityCollisionComponent::_ParseCollisionType(Titan::TrinityScene
             body_collision->set_shape(shape);
             return body_collision;
         }
-        case Titan::TrinityScene::Collision::Collision_CharCollision:
+        case Ikkaku::TrinityScene::Collision::Collision_CharCollision:
         {
             return Ref<Resource>();
         }
@@ -149,7 +149,7 @@ Ref<Resource> TrinityCollisionComponent::_ParseCollisionType(Titan::TrinityScene
 
 void TrinityCollisionComponent::LoadFromBuffer(const void* buffer)
 {
-    auto collision_component = Titan::TrinityScene::GetTrinityCollisionComponent(buffer);
+    auto collision_component = Ikkaku::TrinityScene::GetTrinityCollisionComponent(buffer);
     ERR_FAIL_COND_MSG(collision_component == nullptr, "Couldn't parse collision component");
 
     auto collision = _ParseCollisionType(collision_component->collision_type(), collision_component->collision());

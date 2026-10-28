@@ -10,7 +10,7 @@ void TrinityLayoutComponent::_bind_methods()
 
 void TrinityLayoutComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityLayoutComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityLayoutComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityLayoutComponent");
     set_FilePath(Utils::toGodotString(component->file_path()));
     set_LayoutName(Utils::toGodotString(component->layout_name()));

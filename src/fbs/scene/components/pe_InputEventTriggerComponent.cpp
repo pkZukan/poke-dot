@@ -10,7 +10,7 @@ void PeInputEventTriggerComponent::_bind_methods()
 
 void PeInputEventTriggerComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetPeInputEventTriggerComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetPeInputEventTriggerComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse PeInputEventTriggerComponent");
     set_InputName(Utils::toGodotString(component->input_name()));
     set_ResourceName(Utils::toGodotString(component->resource_name()));

@@ -1,4 +1,4 @@
-namespace Titan.Math;
+namespace Ikkaku.Math;
 
 struct sVec2 
 {

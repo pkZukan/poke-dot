@@ -195,7 +195,7 @@ public:
     GETTER_SETTER_DEFINE(PackedStringArray, resource_paths)
 
 private:
-    Ref<Resource> _LoadParameterValue(Titan::Animation::ParameterValue type, const void* data);
+    Ref<Resource> _LoadParameterValue(Ikkaku::Animation::ParameterValue type, const void* data);
 
     Array tracks;
     uint32_t frame_count = 0;

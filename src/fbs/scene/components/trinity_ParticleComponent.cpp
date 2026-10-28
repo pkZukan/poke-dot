@@ -13,7 +13,7 @@ void TrinityParticleComponent::_bind_methods()
 
 void TrinityParticleComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityParticleComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityParticleComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityParticleComponent");
     set_particle_file(Utils::toGodotString(component->particle_file()));
     PackedInt64Array unk_1_values;

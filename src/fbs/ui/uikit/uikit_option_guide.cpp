@@ -9,7 +9,7 @@ void UIKitOptionGuide::_bind_methods()
 
 void UIKitOptionGuide::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::pe::UIKit::GetUIKitOptionGuide(buffer);
+    auto component = Ikkaku::pe::UIKit::GetUIKitOptionGuide(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse UIKitOptionGuide");
 
     set_Name(Utils::toGodotString(component->name()));

@@ -14,7 +14,7 @@ void TrinityScriptComponent::_bind_methods()
 
 void TrinityScriptComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityScriptComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityScriptComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityScriptComponent");
     set_FilePath(Utils::toGodotString(component->file_path()));
     set_PackageName(Utils::toGodotString(component->package_name()));

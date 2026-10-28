@@ -8,7 +8,7 @@ void PeFlatbuffersDataEntry::_bind_methods()
     GETTER_SETTER_BIND(PeFlatbuffersDataEntry, FilePath, Variant::FLOAT, PROPERTY_HINT_NONE)
 }
 
-void PeFlatbuffersDataEntry::LoadFromTable(const Titan::TrinityScene::PeFlatbuffersDataEntry* table)
+void PeFlatbuffersDataEntry::LoadFromTable(const Ikkaku::TrinityScene::PeFlatbuffersDataEntry* table)
 {
     ERR_FAIL_NULL(table);
     set_Name(Utils::toGodotString(table->name()));
@@ -24,7 +24,7 @@ void PeFlatbuffersDataComponent::_bind_methods()
 
 void PeFlatbuffersDataComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetPeFlatbuffersDataComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetPeFlatbuffersDataComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse PeFlatbuffersDataComponent");
     set_BfbsFilePath(Utils::toGodotString(component->bfbs_file_path()));
     Array data_values;

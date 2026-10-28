@@ -1,6 +1,6 @@
 include "../common.fbs";
 
-namespace Titan.TrinityScene;
+namespace Ikkaku.TrinityScene;
 
 union ColShapeType
 {
@@ -19,41 +19,41 @@ union Collision
 
 table SphereShape 
 {
-    pos: Titan.Math.Vec3;
+    pos: Ikkaku.Math.Vec3;
     radius: float;
 }
 
 table BoxShape 
 {
-    pos: Titan.Math.Vec3;
-    size: Titan.Math.Vec3;
-    rot: Titan.Math.Vec3;
+    pos: Ikkaku.Math.Vec3;
+    size: Ikkaku.Math.Vec3;
+    rot: Ikkaku.Math.Vec3;
 }
 
 table CapsuleShape 
 {
-    pos: Titan.Math.Vec3;
+    pos: Ikkaku.Math.Vec3;
     radius: float;
     height: float;
-    rot: Titan.Math.Vec3;
+    rot: Ikkaku.Math.Vec3;
 }
 
 table ModelShape 
 {
     file_path: string;
-    pos: Titan.Math.Vec3;
-    rot: Titan.Math.Vec3;
-    scale: Titan.Math.Vec3;
+    pos: Ikkaku.Math.Vec3;
+    rot: Ikkaku.Math.Vec3;
+    scale: Ikkaku.Math.Vec3;
 }
 
 table PencilShape 
 {
-    pos: Titan.Math.Vec3;
+    pos: Ikkaku.Math.Vec3;
     radius: float;
     cyl_height: float;
     tip_height:float;
     slice_count:int;
-    rot: Titan.Math.Vec3;
+    rot: Ikkaku.Math.Vec3;
 }
 
 table BodyCollision

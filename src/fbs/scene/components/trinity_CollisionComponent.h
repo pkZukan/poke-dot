@@ -158,8 +158,8 @@ public:
     TrinityCollisionComponent() = default;
     ~TrinityCollisionComponent() = default;
 
-    Ref<Resource> _ParseShapeType(Titan::TrinityScene::ColShapeType col_shape, const void* data);
-    Ref<Resource> _ParseCollisionType(Titan::TrinityScene::Collision collision, const void* data);
+    Ref<Resource> _ParseShapeType(Ikkaku::TrinityScene::ColShapeType col_shape, const void* data);
+    Ref<Resource> _ParseCollisionType(Ikkaku::TrinityScene::Collision collision, const void* data);
 
     void LoadFromBuffer(const void* buffer);
 

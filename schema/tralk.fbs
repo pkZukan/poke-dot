@@ -1,12 +1,12 @@
 include "common.fbs";
 
-namespace Titan.Animation;
+namespace Ikkaku.Animation;
 
 table LookAt
 {
     channel_name: string;
-    min_rot: Titan.Math.Vec3;
-    max_rot: Titan.Math.Vec3;
+    min_rot: Ikkaku.Math.Vec3;
+    max_rot: Ikkaku.Math.Vec3;
     unk_3: uint32;
     unk_4: float;
     unk_5: float;
@@ -19,7 +19,7 @@ table LookAt
     res_12: uint32 = 0x0;
     unk_13: [uint32];
     unk_14: [uint32];
-    unk_15: Titan.Math.Vec3;
+    unk_15: Ikkaku.Math.Vec3;
     unk_16: uint8 = 0x1;
     unk_17: [float];
     unk_18: uint8 = 0x1;

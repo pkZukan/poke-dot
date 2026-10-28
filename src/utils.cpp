@@ -8,27 +8,27 @@ void Utils::_bind_methods()
     ClassDB::bind_static_method("Utils", D_METHOD("half_to_float", "half"), &Utils::half_to_float);
 }
 
-godot::Vector3 Utils::toGodotVec3(const Titan::Math::Vec3* vec)
+godot::Vector3 Utils::toGodotVec3(const Ikkaku::Math::Vec3* vec)
 {
     return Vector3(vec->x(), vec->y(), vec->z());
 }
 
-godot::Vector4 Utils::toGodotVec4(const Titan::Math::Vec4* vec)
+godot::Vector4 Utils::toGodotVec4(const Ikkaku::Math::Vec4* vec)
 {
     return Vector4(vec->x(), vec->y(), vec->z(), vec->w());
 }
 
-godot::Vector2i Utils::toGodotVec2i(const Titan::Math::Vec2i* vec)
+godot::Vector2i Utils::toGodotVec2i(const Ikkaku::Math::Vec2i* vec)
 {
     return Vector2i(vec->x(), vec->y());
 }
 
-godot::Vector3i Utils::toGodotVec3i(const Titan::Math::Vec3i* vec)
+godot::Vector3i Utils::toGodotVec3i(const Ikkaku::Math::Vec3i* vec)
 {
     return Vector3i(vec->x(), vec->y(), vec->z());
 }
 
-godot::Transform3D Utils::toGodotTransform(const Titan::Math::Transform* tran)
+godot::Transform3D Utils::toGodotTransform(const Ikkaku::Math::Transform* tran)
 {
     Vector3 scale = toGodotVec3(&tran->scale());
     Vector3 translate = toGodotVec3(&tran->translate());
@@ -41,7 +41,7 @@ godot::Transform3D Utils::toGodotTransform(const Titan::Math::Transform* tran)
     return Transform3D(basis, translate);
 }
 
-godot::Transform3D Utils::toGodotTransform(const Titan::Math::SRT* srt)
+godot::Transform3D Utils::toGodotTransform(const Ikkaku::Math::SRT* srt)
 {
     Vector3 scale = toGodotVec3(srt->VecScale());
     Vector3 translate = toGodotVec3(srt->VecTranslate());

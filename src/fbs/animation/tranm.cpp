@@ -77,21 +77,21 @@ Quaternion QuaternionHelper::Unpack(const Vector3i& vec)
     return q.normalized();
 }
 
-Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data)
+Ref<Resource> TRAnimation::ParseVectorTrack(Ikkaku::Animation::VectorTrack type, const void* data)
 {
     switch (type)
     {
-        case Titan::Animation::VectorTrack_FixedVectorTrack:
+        case Ikkaku::Animation::VectorTrack_FixedVectorTrack:
         {
-            auto src = static_cast<const Titan::Animation::FixedVectorTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::FixedVectorTrack*>(data);
             Ref<FixedVectorTrack> t;
             t.instantiate();
             t->set_value(Utils::toGodotVec3(src->co()));
             return t;
         }
-        case Titan::Animation::VectorTrack_DynamicVectorTrack:
+        case Ikkaku::Animation::VectorTrack_DynamicVectorTrack:
         {
-            auto src = static_cast<const Titan::Animation::DynamicVectorTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::DynamicVectorTrack*>(data);
             Ref<DynamicVectorTrack> t;
             t.instantiate();
             Array co;
@@ -102,9 +102,9 @@ Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, 
             t->set_values(co);
             return t;
         }
-        case Titan::Animation::VectorTrack_Framed16VectorTrack:
+        case Ikkaku::Animation::VectorTrack_Framed16VectorTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed16VectorTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed16VectorTrack*>(data);
             Ref<Framed16VectorTrack> t;
             t.instantiate();
             Array frames, co;
@@ -120,9 +120,9 @@ Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, 
             t->set_values(co);
             return t;
         }
-        case Titan::Animation::VectorTrack_Framed8VectorTrack:
+        case Ikkaku::Animation::VectorTrack_Framed8VectorTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed8VectorTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed8VectorTrack*>(data);
             Ref<Framed8VectorTrack> t;
             t.instantiate();
             Array frames, co;
@@ -143,22 +143,22 @@ Ref<Resource> TRAnimation::ParseVectorTrack(Titan::Animation::VectorTrack type, 
     }
 }
 
-Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack type, const void* data)
+Ref<Resource> TRAnimation::ParseRotationTrack(Ikkaku::Animation::RotationTrack type, const void* data)
 {
     switch (type)
     {
-        case Titan::Animation::RotationTrack_FixedRotationTrack:
+        case Ikkaku::Animation::RotationTrack_FixedRotationTrack:
         {
-            auto src = static_cast<const Titan::Animation::FixedRotationTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::FixedRotationTrack*>(data);
             Ref<FixedRotationTrack> t;
             t.instantiate();
             Quaternion quat = QuaternionHelper::Unpack(Vector3i(src->co()->x(), src->co()->y(), src->co()->z()));
             t->set_value(quat);
             return t;
         }
-        case Titan::Animation::RotationTrack_DynamicRotationTrack:
+        case Ikkaku::Animation::RotationTrack_DynamicRotationTrack:
         {
-            auto src = static_cast<const Titan::Animation::DynamicRotationTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::DynamicRotationTrack*>(data);
             Ref<DynamicRotationTrack> t;
             t.instantiate();
             Array co;
@@ -171,9 +171,9 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
             t->set_values(co);
             return t;
         }
-        case Titan::Animation::RotationTrack_Framed16RotationTrack:
+        case Ikkaku::Animation::RotationTrack_Framed16RotationTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed16RotationTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed16RotationTrack*>(data);
             Ref<Framed16RotationTrack> t;
             t.instantiate();
             Array frames, co;
@@ -191,9 +191,9 @@ Ref<Resource> TRAnimation::ParseRotationTrack(Titan::Animation::RotationTrack ty
             t->set_values(co);
             return t;
         }
-        case Titan::Animation::RotationTrack_Framed8RotationTrack:
+        case Ikkaku::Animation::RotationTrack_Framed8RotationTrack:
         {
-            auto src = static_cast<const Titan::Animation::Framed8RotationTrack*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Framed8RotationTrack*>(data);
             Ref<Framed8RotationTrack> t;
             t.instantiate();
             Array frames, co;
@@ -220,7 +220,7 @@ void TRAnimation::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRANM file: %s", file));
-    auto anim = Titan::Animation::GetTRANM(buf.ptr());
+    auto anim = Ikkaku::Animation::GetTRANM(buf.ptr());
     ERR_FAIL_COND_MSG(anim == nullptr, "Couldn't load TRANM flatbuffer");
 
     auto info = anim->info();

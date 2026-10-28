@@ -99,8 +99,8 @@ public:
     GETTER_SETTER_DEFINE(Ref<BoneAnimation>, Track)
 
 private:
-    Ref<Resource> ParseRotationTrack(Titan::Animation::RotationTrack type, const void* data);
-    Ref<Resource> ParseVectorTrack(Titan::Animation::VectorTrack type, const void* data);
+    Ref<Resource> ParseRotationTrack(Ikkaku::Animation::RotationTrack type, const void* data);
+    Ref<Resource> ParseVectorTrack(Ikkaku::Animation::VectorTrack type, const void* data);
 
     Ref<TRAnimationInfo> Info;
     Ref<BoneAnimation> Track;

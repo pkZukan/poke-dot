@@ -12,7 +12,7 @@ void TrinityOverrideSensorData::_bind_methods()
 
 void TrinityOverrideSensorData::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityOverrideSensorData(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityOverrideSensorData(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityOverrideSensorData");
     set_RealizingDistance(component->realizing_distance());
     set_UnrealizingDistance(component->unrealizing_distance());

@@ -1,6 +1,6 @@
 include "common.fbs";
 
-namespace Titan.gfx2;
+namespace Ikkaku.gfx2;
 
 enum LightCurveInterpolation:uint { Constant, Linear, TangentAuto, TangentBreak, TangentUser }
 
@@ -17,15 +17,15 @@ table LightTransformCurve { scale:LightCurve4; rotation:LightCurve4; translation
 
 table BoundMatrix 
 {
-    x: Titan.Math.Vec3; // scale
-    y: Titan.Math.Vec3; // Euler rotation, radians
-    z: Titan.Math.Vec3; // translation
+    x: Ikkaku.Math.Vec3; // scale
+    y: Ikkaku.Math.Vec3; // Euler rotation, radians
+    z: Ikkaku.Math.Vec3; // translation
 }
 
 table Vec4Parameter 
 {
     param_name: string;
-    value: Titan.Math.Vec4;
+    value: Ikkaku.Math.Vec4;
     curve: LightCurve4;
 }
 

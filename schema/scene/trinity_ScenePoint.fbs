@@ -1,11 +1,11 @@
 include "../common.fbs";
 
-namespace Titan.TrinityScene;
+namespace Ikkaku.TrinityScene;
 
 table ScenePoint
 {
     name: string;
-    point: Titan.Math.Vec3;
+    point: Ikkaku.Math.Vec3;
     attach_parent: bool;
 }
 

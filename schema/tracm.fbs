@@ -1,6 +1,6 @@
 include "anim_common.fbs";
 
-namespace Titan.Animation;
+namespace Ikkaku.Animation;
 
 file_extension "tracm";
 

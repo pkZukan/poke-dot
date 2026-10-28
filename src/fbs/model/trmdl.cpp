@@ -26,7 +26,7 @@ void TRModel::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRMDL file: %s", file));
 
-    auto trmdl = Titan::Model::GetTRMDL(buf.ptr());
+    auto trmdl = Ikkaku::Model::GetTRMDL(buf.ptr());
     ERR_FAIL_COND_MSG(trmdl == NULL, vformat("Couldn't load TRMDL flatbuffer"));
 
     BBox = AABB();

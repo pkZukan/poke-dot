@@ -1,6 +1,6 @@
 include "common.fbs";
 
-namespace Titan.Model;
+namespace Ikkaku.Model;
 
 file_extension "trmtr";
 
@@ -28,12 +28,12 @@ table SamplerState {
     repeat_u: UVWrapMode = CLAMP;
     repeat_v: UVWrapMode = CLAMP;
     repeat_w: UVWrapMode = CLAMP; //Never used
-    border_color: Titan.Math.RGBA;
+    border_color: Ikkaku.Math.RGBA;
 }
 
 table Float4Parameter {
     color_name: string;
-    color_value: Titan.Math.RGBA; 
+    color_value: Ikkaku.Math.RGBA; 
 }
 
 table FloatParameter {

@@ -9,7 +9,7 @@ void TiAIPerceptualComponent::_bind_methods()
 
 void TiAIPerceptualComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTiAIPerceptualComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTiAIPerceptualComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TiAIPerceptualComponent");
     set_value(component->value());
 }

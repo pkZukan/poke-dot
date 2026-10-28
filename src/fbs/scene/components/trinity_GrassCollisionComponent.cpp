@@ -11,7 +11,7 @@ void TrinityGrassCollisionComponent::_bind_methods()
 
 void TrinityGrassCollisionComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityGrassCollisionComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityGrassCollisionComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityGrassCollisionComponent");
     set_name(Utils::toGodotString(component->name()));
     set_min(component->min());

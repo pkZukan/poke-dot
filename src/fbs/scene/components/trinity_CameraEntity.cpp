@@ -22,7 +22,7 @@ void TrinityCameraEntity::_bind_methods()
 
 void TrinityCameraEntity::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetTrinityCameraEntity(buffer);
+    auto component = Ikkaku::TrinityScene::GetTrinityCameraEntity(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse TrinityCameraEntity");
     set_Name(Utils::toGodotString(component->name()));
     set_Activate(component->activate());

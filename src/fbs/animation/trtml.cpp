@@ -69,7 +69,7 @@ void TRTimeline::_bind_methods()
     GETTER_SETTER_BIND(TRTimeline, resource_paths, Variant::PACKED_STRING_ARRAY, PROPERTY_HINT_NONE)
 }
 
-Ref<Resource> TRTimeline::_LoadParameterValue(Titan::Animation::ParameterValue type, const void* data)
+Ref<Resource> TRTimeline::_LoadParameterValue(Ikkaku::Animation::ParameterValue type, const void* data)
 {
     if (!data)
     {
@@ -78,41 +78,41 @@ Ref<Resource> TRTimeline::_LoadParameterValue(Titan::Animation::ParameterValue t
 
     switch (type)
     {
-        case Titan::Animation::ParameterValue_IntegerValue:
+        case Ikkaku::Animation::ParameterValue_IntegerValue:
         {
-            auto src = static_cast<const Titan::Animation::IntegerValue*>(data);
+            auto src = static_cast<const Ikkaku::Animation::IntegerValue*>(data);
             Ref<TRTimelineValueInt> value;
             value.instantiate();
             value->set_value(src->value());
             return value;
         }
-        case Titan::Animation::ParameterValue_RealValue:
+        case Ikkaku::Animation::ParameterValue_RealValue:
         {
-            auto src = static_cast<const Titan::Animation::RealValue*>(data);
+            auto src = static_cast<const Ikkaku::Animation::RealValue*>(data);
             Ref<TRTimelineValueFloat> value;
             value.instantiate();
             value->set_value(src->value());
             return value;
         }
-        case Titan::Animation::ParameterValue_BooleanValue:
+        case Ikkaku::Animation::ParameterValue_BooleanValue:
         {
-            auto src = static_cast<const Titan::Animation::BooleanValue*>(data);
+            auto src = static_cast<const Ikkaku::Animation::BooleanValue*>(data);
             Ref<TRTimelineValueBool> value;
             value.instantiate();
             value->set_value(src->value());
             return value;
         }
-        case Titan::Animation::ParameterValue_TextValue:
+        case Ikkaku::Animation::ParameterValue_TextValue:
         {
-            auto src = static_cast<const Titan::Animation::TextValue*>(data);
+            auto src = static_cast<const Ikkaku::Animation::TextValue*>(data);
             Ref<TRTimelineValueString> value;
             value.instantiate();
             value->set_value(Utils::toGodotString(src->value()));
             return value;
         }
-        case Titan::Animation::ParameterValue_Float3Value:
+        case Ikkaku::Animation::ParameterValue_Float3Value:
         {
-            auto src = static_cast<const Titan::Animation::Float3Value*>(data);
+            auto src = static_cast<const Ikkaku::Animation::Float3Value*>(data);
             Ref<TRTimelineValueVector3> value;
             value.instantiate();
             value->set_value(src->value() ? Utils::toGodotVec3(src->value()) : Vector3());
@@ -128,9 +128,9 @@ Error TRTimeline::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_V_MSG(buf.is_empty(), ERR_CANT_OPEN, vformat("Couldn't load TRTML file: %s", file));
     flatbuffers::Verifier verifier(buf.ptr(), buf.size());
-    ERR_FAIL_COND_V_MSG(!Titan::Animation::VerifyTRTMLBuffer(verifier), ERR_FILE_CORRUPT,
+    ERR_FAIL_COND_V_MSG(!Ikkaku::Animation::VerifyTRTMLBuffer(verifier), ERR_FILE_CORRUPT,
                         "Couldn't load TRTML flatbuffer");
-    auto timeline = Titan::Animation::GetTRTML(buf.ptr());
+    auto timeline = Ikkaku::Animation::GetTRTML(buf.ptr());
 
     Array track_array;
     if (auto tracks = timeline->tracks())

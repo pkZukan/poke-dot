@@ -12,7 +12,7 @@ void UIKitSwitchItem::_bind_methods()
 
 void UIKitSwitchItem::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::pe::UIKit::GetUIKitSwitchItem(buffer);
+    auto component = Ikkaku::pe::UIKit::GetUIKitSwitchItem(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse UIKitSwitchItem");
 
     set_Name(Utils::toGodotString(component->name()));

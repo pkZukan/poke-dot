@@ -41,7 +41,7 @@ void TRAnimationChannelResource::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRACR file: %s", file));
-    auto tracr = Titan::Animation::GetTRACR(buf.ptr());
+    auto tracr = Ikkaku::Animation::GetTRACR(buf.ptr());
     ERR_FAIL_COND_MSG(tracr == nullptr, "Couldn't load TRACR");
 
     auto track_table = tracr->track_list();

@@ -14,7 +14,7 @@ void UIKitShortcut::_bind_methods()
 
 void UIKitShortcut::LoadFromBuffer(const void* buffer)
 {
-    auto shortcut = Titan::pe::UIKit::GetUIKitShortcut(buffer);
+    auto shortcut = Ikkaku::pe::UIKit::GetUIKitShortcut(buffer);
     ERR_FAIL_COND_MSG(shortcut == nullptr, "Couldn't parse UIkitShortcut");
 
     set_Name(Utils::toGodotString(shortcut->name()));

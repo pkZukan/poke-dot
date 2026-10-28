@@ -1,55 +1,55 @@
 include "common.fbs";
 include "anim_common.fbs";
 
-namespace Titan.Animation;
+namespace Ikkaku.Animation;
 
 union VectorTrack { FixedVectorTrack, DynamicVectorTrack,  Framed16VectorTrack, Framed8VectorTrack }
 
 table FixedVectorTrack 
 {
-    co: Titan.Math.Vec3;
+    co: Ikkaku.Math.Vec3;
 }
 
 table DynamicVectorTrack 
 {
-    co: [Titan.Math.Vec3];
+    co: [Ikkaku.Math.Vec3];
 }
 
 table Framed16VectorTrack 
 {
     frames:[uint16];
-    co: [Titan.Math.Vec3];
+    co: [Ikkaku.Math.Vec3];
 }
 
 table Framed8VectorTrack 
 {
     frames:[uint8];
-    co:[Titan.Math.Vec3];
+    co:[Ikkaku.Math.Vec3];
 }
 
 union RotationTrack { FixedRotationTrack, DynamicRotationTrack, Framed16RotationTrack, Framed8RotationTrack }
 
 table FixedRotationTrack 
 {
-    co: Titan.Math.sVec3;
+    co: Ikkaku.Math.sVec3;
 }
 
 table DynamicRotationTrack 
 {
-    co:[Titan.Math.sVec3];
+    co:[Ikkaku.Math.sVec3];
 }
 
 table Framed16RotationTrack 
 {
     frames:[uint16];
-    co:[Titan.Math.sVec3];
+    co:[Ikkaku.Math.sVec3];
 }
 
 table Framed8RotationTrack 
 {
 
     frames: [uint8];
-    co: [Titan.Math.sVec3];
+    co: [Ikkaku.Math.sVec3];
 }
 
 table BoneTrack 
@@ -63,7 +63,7 @@ table BoneTrack
 table BoneInit 
 {
     isInit: uint32;
-    transform: Titan.Math.Transform; 
+    transform: Ikkaku.Math.Transform; 
 }
 
 table BoneAnimation 

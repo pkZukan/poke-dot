@@ -313,12 +313,12 @@ public:
     GETTER_SETTER_DEFINE(Array, tracks)
 
 private:
-    Ref<TRTrackMaterialChannel> _LoadTrackMaterialChannel(const Titan::Animation::TrackMaterialValueList* matValList);
-    Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Titan::Animation::TrackMaterialTimeline* matAnim);
-    Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Titan::Animation::VisibilityShapeTimeline* visAnim);
-    Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Titan::Animation::BlendShapeTimeline* blendAnim);
-    Ref<Resource> _LoadTrackFlag(Titan::Animation::TrackFlag type, const void* data);
-    Ref<Resource> _LoadBlendTracks(Titan::Animation::BlendTrack type, const void* data);
+    Ref<TRTrackMaterialChannel> _LoadTrackMaterialChannel(const Ikkaku::Animation::TrackMaterialValueList* matValList);
+    Ref<TRTrackMaterialTimeline> _LoadMaterialAnims(const Ikkaku::Animation::TrackMaterialTimeline* matAnim);
+    Ref<TRVisibilityShapeTimeline> _LoadVisibilityAnims(const Ikkaku::Animation::VisibilityShapeTimeline* visAnim);
+    Ref<TRBlendShapeTimeline> _LoadBlendshapeAnims(const Ikkaku::Animation::BlendShapeTimeline* blendAnim);
+    Ref<Resource> _LoadTrackFlag(Ikkaku::Animation::TrackFlag type, const void* data);
+    Ref<Resource> _LoadBlendTracks(Ikkaku::Animation::BlendTrack type, const void* data);
 
     Ref<TRAnimationInfo> info;
     Array tracks;

@@ -51,7 +51,7 @@ void TRAnimationChannelParams::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRACP file: %s", file));
-    auto tracp = Titan::Animation::GetTRACP(buf.ptr());
+    auto tracp = Ikkaku::Animation::GetTRACP(buf.ptr());
     ERR_FAIL_COND_MSG(tracp == nullptr, "Couldn't load TRACP");
 
     table.instantiate();

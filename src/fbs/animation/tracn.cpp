@@ -18,7 +18,7 @@ void TRAnimationChannelNames::LoadFromFile(String file)
 {
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRACN file: %s", file));
-    auto tracn = Titan::Animation::GetTRACN(buf.ptr());
+    auto tracn = Ikkaku::Animation::GetTRACN(buf.ptr());
     ERR_FAIL_COND_MSG(tracn == nullptr, "Couldn't load TRACN");
 
     auto list = tracn->list();

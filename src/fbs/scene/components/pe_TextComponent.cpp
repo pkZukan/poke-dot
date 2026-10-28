@@ -9,7 +9,7 @@ void PeTextComponent::_bind_methods()
 
 void PeTextComponent::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetPeTextComponent(buffer);
+    auto component = Ikkaku::TrinityScene::GetPeTextComponent(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse PeTextComponent");
     set_FilePath(Utils::toGodotString(component->file_path()));
 }

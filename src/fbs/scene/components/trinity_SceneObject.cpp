@@ -24,7 +24,7 @@ void TrinitySceneObject::_bind_methods()
 
 void TrinitySceneObject::LoadFromBuffer(const void* buffer)
 {
-    auto sceneObject = Titan::TrinityScene::GetTrinitySceneObject(buffer);
+    auto sceneObject = Ikkaku::TrinityScene::GetTrinitySceneObject(buffer);
     ERR_FAIL_COND_MSG(sceneObject == nullptr, "Couldn't parse TrinitySceneObject");
 
     set_Name(Utils::toGodotString(sceneObject->name()));

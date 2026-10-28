@@ -1,6 +1,6 @@
 include "../common.fbs";
 
-namespace Titan.TrinityScene;
+namespace Ikkaku.TrinityScene;
 
 // Explicit on-disk tags; declaration order must not renumber asset payloads.
 union PropVal
@@ -8,9 +8,9 @@ union PropVal
     PropInt = 1,
     PropDec = 2,
     PropStr = 3,
-    Titan.Math.Vec2 = 4,
-    Titan.Math.Vec3 = 5,
-    Titan.Math.Vec4 = 6,
+    Ikkaku.Math.Vec2 = 4,
+    Ikkaku.Math.Vec3 = 5,
+    Ikkaku.Math.Vec4 = 6,
     PropEnum = 7,
     PropList = 8,
     PropTable = 9,

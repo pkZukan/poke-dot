@@ -106,13 +106,13 @@ void TRUIV::LoadFromFile(String file)
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRUIV file: %s", file));
 
     flatbuffers::Verifier verifier(buf.ptr(), buf.size());
-    ERR_FAIL_COND_MSG(!Titan::TrinityUI::VerifyTRUIVBuffer(verifier), "Invalid TRUIV flatbuffer");
+    ERR_FAIL_COND_MSG(!Ikkaku::TrinityUI::VerifyTRUIVBuffer(verifier), "Invalid TRUIV flatbuffer");
 
-    auto truiv = Titan::TrinityUI::GetTRUIV(buf.ptr());
+    auto truiv = Ikkaku::TrinityUI::GetTRUIV(buf.ptr());
     bool valid = true;
 
-    std::function<Ref<TRUIViewChunk>(const Titan::TrinityUI::ViewChunk*)> parse_chunk;
-    parse_chunk = [&](const Titan::TrinityUI::ViewChunk* chunk) -> Ref<TRUIViewChunk>
+    std::function<Ref<TRUIViewChunk>(const Ikkaku::TrinityUI::ViewChunk*)> parse_chunk;
+    parse_chunk = [&](const Ikkaku::TrinityUI::ViewChunk* chunk) -> Ref<TRUIViewChunk>
     {
         Ref<TRUIViewChunk> result;
         result.instantiate();
@@ -123,47 +123,47 @@ void TRUIV::LoadFromFile(String file)
             flatbuffers::Verifier payload(data->data(), data->size());
             if (type == "UikitGauge")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitGaugeBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitGaugeBuffer(payload);
             }
             if (type == "UikitBody")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitBodyBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitBodyBuffer(payload);
             }
             if (type == "UikitSwitch")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitSwitchBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitSwitchBuffer(payload);
             }
             if (type == "UikitShortcut")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitShortcutBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitShortcutBuffer(payload);
             }
             if (type == "UikitButton")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitButtonBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitButtonBuffer(payload);
             }
             if (type == "UikitCursor")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitCursorBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitCursorBuffer(payload);
             }
             if (type == "UikitGridPanel")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitGridPanelBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitGridPanelBuffer(payload);
             }
             if (type == "UikitOptionGuide")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitOptionGuideBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitOptionGuideBuffer(payload);
             }
             if (type == "UikitScrollPanel")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitScrollPanelBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitScrollPanelBuffer(payload);
             }
             if (type == "UikitSwitchItem")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitSwitchItemBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitSwitchItemBuffer(payload);
             }
             if (type == "UikitSwitchPanel")
             {
-                valid = valid && Titan::pe::UIKit::VerifyUIKitSwitchPanelBuffer(payload);
+                valid = valid && Ikkaku::pe::UIKit::VerifyUIKitSwitchPanelBuffer(payload);
             }
             if (!valid)
             {

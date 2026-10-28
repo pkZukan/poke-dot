@@ -16,7 +16,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropInt* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropInt* table);
     GETTER_SETTER_DEFINE(uint64_t, data)
     GETTER_SETTER_DEFINE(int, size)
 private:
@@ -31,7 +31,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropDec* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropDec* table);
     GETTER_SETTER_DEFINE(double, data)
     GETTER_SETTER_DEFINE(int, size)
 private:
@@ -46,7 +46,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropStr* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropStr* table);
     GETTER_SETTER_DEFINE(String, data)
 private:
     String data;
@@ -59,7 +59,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropEnum* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropEnum* table);
     GETTER_SETTER_DEFINE(String, name)
 
     int get_val()
@@ -84,7 +84,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropUnion* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropUnion* table);
     GETTER_SETTER_DEFINE(Ref<PropEnum>, type)
 
     Ref<PropTable> get_val()
@@ -109,7 +109,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropField* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropField* table);
     GETTER_SETTER_DEFINE(String, name)
     GETTER_SETTER_DEFINE(int, value_type)
     GETTER_SETTER_DEFINE(Variant, value)
@@ -126,7 +126,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropTable* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropTable* table);
     GETTER_SETTER_DEFINE(Array, fields)
 private:
     Array fields;
@@ -139,7 +139,7 @@ protected:
     static void _bind_methods();
 
 public:
-    void LoadFromTable(const Titan::TrinityScene::PropList* table);
+    void LoadFromTable(const Ikkaku::TrinityScene::PropList* table);
     GETTER_SETTER_DEFINE(Array, vals)
     GETTER_SETTER_DEFINE(PackedInt32Array, vals_type)
 private:

@@ -1,6 +1,6 @@
 include "common.fbs";
 
-namespace Titan.Model;
+namespace Ikkaku.Model;
 
 file_extension "trmbf";
 

@@ -9,7 +9,7 @@ void PeSimpleNode::_bind_methods()
 
 void PeSimpleNode::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::TrinityScene::GetPeSimpleNode(buffer);
+    auto component = Ikkaku::TrinityScene::GetPeSimpleNode(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse PeSimpleNode");
     set_Name(Utils::toGodotString(component->name()));
 }

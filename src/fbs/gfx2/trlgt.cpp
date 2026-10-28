@@ -69,7 +69,7 @@ void TRLGT::_bind_methods()
 
 namespace
 {
-Ref<TRLightCurve> read_curve(const Titan::gfx2::LightCurve* source)
+Ref<TRLightCurve> read_curve(const Ikkaku::gfx2::LightCurve* source)
 {
     Ref<TRLightCurve> result;
     if (!source)
@@ -99,7 +99,7 @@ Ref<TRLightCurve> read_curve(const Titan::gfx2::LightCurve* source)
     return result;
 }
 
-Ref<TRLightCurve4> read_curve4(const Titan::gfx2::LightCurve4* source)
+Ref<TRLightCurve4> read_curve4(const Ikkaku::gfx2::LightCurve4* source)
 {
     Ref<TRLightCurve4> result;
     if (!source)
@@ -114,7 +114,7 @@ Ref<TRLightCurve4> read_curve4(const Titan::gfx2::LightCurve4* source)
     return result;
 }
 
-Ref<BoundMatrix> read_matrix(const Titan::gfx2::BoundMatrix* mat)
+Ref<BoundMatrix> read_matrix(const Ikkaku::gfx2::BoundMatrix* mat)
 {
     Ref<BoundMatrix> matrix;
     if (!mat)
@@ -137,7 +137,7 @@ Ref<BoundMatrix> read_matrix(const Titan::gfx2::BoundMatrix* mat)
     return matrix;
 }
 
-Array read_float_params(const flatbuffers::Vector<flatbuffers::Offset<Titan::gfx2::FloatParameter>>* fps)
+Array read_float_params(const flatbuffers::Vector<flatbuffers::Offset<Ikkaku::gfx2::FloatParameter>>* fps)
 {
     Array fpArr;
     if (!fps)
@@ -160,7 +160,7 @@ Array read_float_params(const flatbuffers::Vector<flatbuffers::Offset<Titan::gfx
     return fpArr;
 }
 
-Array read_vec4_params(const flatbuffers::Vector<flatbuffers::Offset<Titan::gfx2::Vec4Parameter>>* vps)
+Array read_vec4_params(const flatbuffers::Vector<flatbuffers::Offset<Ikkaku::gfx2::Vec4Parameter>>* vps)
 {
     Array vpArr;
     if (!vps)
@@ -271,8 +271,8 @@ Error TRLGT::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_V_MSG(buf.is_empty(), ERR_CANT_OPEN, vformat("Couldn't load LGT file: %s", file));
     flatbuffers::Verifier verifier(buf.ptr(), buf.size());
-    ERR_FAIL_COND_V_MSG(!Titan::gfx2::VerifyTRLGTBuffer(verifier), ERR_FILE_CORRUPT, "Invalid TRLGT buffer");
-    auto lgt = Titan::gfx2::GetTRLGT(buf.ptr());
+    ERR_FAIL_COND_V_MSG(!Ikkaku::gfx2::VerifyTRLGTBuffer(verifier), ERR_FILE_CORRUPT, "Invalid TRLGT buffer");
+    auto lgt = Ikkaku::gfx2::GetTRLGT(buf.ptr());
 
     set_version(lgt->version());
 

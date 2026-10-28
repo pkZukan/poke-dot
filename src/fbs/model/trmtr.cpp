@@ -97,7 +97,7 @@ void TRMaterial::LoadFromFile(String file)
     PackedByteArray buf = FileAccess::get_file_as_bytes(file);
     ERR_FAIL_COND_MSG(buf.is_empty(), vformat("Couldn't load TRMTR file: %s", file));
 
-    auto mat = Titan::Model::GetTRMTR(buf.ptr());
+    auto mat = Ikkaku::Model::GetTRMTR(buf.ptr());
     ERR_FAIL_COND_MSG(mat == NULL, vformat("Couldn't load TRMTR flatbuffer"));
 
     auto mats = mat->materials();

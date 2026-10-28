@@ -11,7 +11,7 @@ void UIKitCursor::_bind_methods()
 
 void UIKitCursor::LoadFromBuffer(const void* buffer)
 {
-    auto component = Titan::pe::UIKit::GetUIKitCursor(buffer);
+    auto component = Ikkaku::pe::UIKit::GetUIKitCursor(buffer);
     ERR_FAIL_COND_MSG(component == nullptr, "Couldn't parse UIKitCursor");
 
     set_Name(Utils::toGodotString(component->name()));

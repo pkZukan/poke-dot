@@ -10,7 +10,7 @@ void TrinityModelComponent::_bind_methods()
 
 void TrinityModelComponent::LoadFromBuffer(const void* buffer)
 {
-    auto modelComponent = Titan::TrinityScene::GetTrinityModelComponent(buffer);
+    auto modelComponent = Ikkaku::TrinityScene::GetTrinityModelComponent(buffer);
     set_FilePath(Utils::toGodotString(modelComponent->file_path()));
     set_Name(Utils::toGodotString(modelComponent->name()));
 }
