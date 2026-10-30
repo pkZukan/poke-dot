@@ -38,7 +38,7 @@ Ref<Image> BinaryTexture::get_layer_image(int layer) const
     return layer_images[layer];
 }
 
-std::pair<int, int> bpps[] = {{0x0b, 0x04}, {0x07, 0x02}, {0x02, 0x01}, {0x09, 0x02}, {0x14, 0x04}, {0x15, 0x08}, {0x1a, 0x08},
+std::pair<int, int> bpps[] = {{0x0b, 0x04}, {0x07, 0x02}, {0x02, 0x01}, {0x09, 0x02}, {0x14, 0x04}, {0x15, 0x08}, {0x19, 0x10}, {0x1a, 0x08},
                               {0x1b, 0x10}, {0x1c, 0x10}, {0x1d, 0x08}, {0x1e, 0x10}, {0x1f, 0x10}, {0x20, 0x10},
                               {0x2d, 0x10}, {0x2e, 0x10}, {0x2f, 0x10}, {0x30, 0x10}, {0x31, 0x10}, {0x32, 0x10},
                               {0x33, 0x10}, {0x34, 0x10}, {0x35, 0x10}, {0x36, 0x10}, {0x37, 0x10}, {0x38, 0x10},
@@ -54,7 +54,7 @@ std::pair<int, std::pair<int, int>> blk_dims[] = {
 #define ROUND_UP(x, y) (((x - 1) | (y - 1)) + 1)
 
 PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo info, PackedByteArray data,
-                                       bool toSwizzle)
+                                       bool toSwizzle, BNTXPlatform platform)
 {
     uint32_t bpp = 4;
     for (int i = 0; i < (int)(sizeof(bpps) / sizeof(bpps[0])); i++)
@@ -123,7 +123,7 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
             }
             else
             {
-                swizzled = getAddrBlockLinear(x, y, width, bpp, 0, block_height);
+                swizzled = getAddrBlockLinear(x, y, width, bpp, 0, block_height, platform);
             }
 
             if (swizzled + bpp > surfSize)
@@ -155,7 +155,7 @@ PackedByteArray BinaryTexture::Swizzle(uint32_t width, uint32_t height, BRTInfo 
 }
 
 uint32_t BinaryTexture::getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t image_width, uint32_t bytes_per_pixel,
-                                           uint32_t base_address, uint32_t block_height)
+                                           uint32_t base_address, uint32_t block_height, BNTXPlatform platform)
 {
     uint32_t image_width_in_gobs = DIV_ROUND_UP(image_width * bytes_per_pixel, 64);
 
@@ -164,8 +164,17 @@ uint32_t BinaryTexture::getAddrBlockLinear(uint32_t x, uint32_t y, uint32_t imag
 
     x *= bytes_per_pixel;
 
-    uint32_t Address =
-        (GOB_address + ((x % 64) / 32) * 256 + ((y % 8) / 2) * 64 + ((x % 32) / 16) * 32 + (y % 2) * 16 + (x % 16));
+    uint32_t Address;
+    if (platform == BNTXPlatform::Ounce)
+    {
+        Address = (GOB_address + ((x % 64) / 32) * 256 + ((y % 8) / 4) * 128 + ((x % 32) / 16) * 64 +
+                   ((y % 4) / 2) * 32 + (y % 2) * 16 + (x % 16));
+    }
+    else
+    {
+        Address = (GOB_address + ((x % 64) / 32) * 256 + ((y % 8) / 2) * 64 + ((x % 32) / 16) * 32 + (y % 2) * 16 +
+                   (x % 16));
+    }
     return Address;
 }
 
@@ -194,6 +203,9 @@ Image::Format BinaryTexture::GetGodotImageFormat(int bntx_format)
             break;
         case 0x1505:
             fmt = Image::FORMAT_RGBAH;
+            break;
+        case 0x1905:
+            fmt = Image::FORMAT_RGBAF;
             break;
         case 0x1a01:
             fmt = Image::FORMAT_DXT1;
@@ -294,7 +306,8 @@ static bool bc1_has_punch_through(const PackedByteArray& data, int width, int he
     return false;
 }
 
-Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, bool upload_array)
+Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offset, BNTXPlatform platform,
+                                   bool upload_array)
 {
     ERR_FAIL_COND_V(!has_bytes(sp, info_offset, 160), ERR_FILE_CORRUPT);
     sp->seek(info_offset);
@@ -361,7 +374,7 @@ Error BinaryTexture::LoadFromEntry(Ref<StreamPeerBuffer> sp, uint64_t info_offse
             ERR_FAIL_COND_V(bytes.size() < 2 || int(bytes[0]) != OK, ERR_FILE_CORRUPT);
             const int width = MAX(1, info.Width >> mip);
             const int height = MAX(1, info.Height >> mip);
-            PackedByteArray level = Swizzle(width, height, info, bytes[1], false);
+            PackedByteArray level = Swizzle(width, height, info, bytes[1], false, platform);
             ERR_FAIL_COND_V(level.is_empty(), ERR_FILE_CORRUPT);
             if (format == Image::FORMAT_DXT1 && !punch_through)
             {
@@ -431,8 +444,10 @@ Error BinaryTextureArchive::load_buffer(const PackedByteArray& buffer, bool uplo
                     ERR_FILE_CORRUPT);
     NXHeader nx;
     NXHeader::Read(sp, nx);
-    ERR_FAIL_COND_V(nx.Magic != "NX  " || !has_bytes(sp, nx.InfoPtrAddr, uint64_t(nx.Count) * 8) ||
-                        !has_bytes(sp, nx.DataBlkAddr, 16),
+    ERR_FAIL_COND_V_MSG(nx.Magic != "NX  " && nx.Magic != "Ounc", ERR_FILE_UNRECOGNIZED,
+                        vformat("Unsupported BNTX platform '%s'.", nx.Magic));
+    const BNTXPlatform platform = nx.Magic == "Ounc" ? BNTXPlatform::Ounce : BNTXPlatform::NX;
+    ERR_FAIL_COND_V(!has_bytes(sp, nx.InfoPtrAddr, uint64_t(nx.Count) * 8) || !has_bytes(sp, nx.DataBlkAddr, 16),
                     ERR_FILE_CORRUPT);
     sp->seek(nx.DataBlkAddr);
     BRTData data;
@@ -445,7 +460,7 @@ Error BinaryTextureArchive::load_buffer(const PackedByteArray& buffer, bool uplo
         uint64_t offset = sp->get_64();
         Ref<BinaryTexture> texture;
         texture.instantiate();
-        Error error = texture->LoadFromEntry(sp, offset, upload_arrays);
+        Error error = texture->LoadFromEntry(sp, offset, platform, upload_arrays);
         if (error != OK)
         {
             return error;
