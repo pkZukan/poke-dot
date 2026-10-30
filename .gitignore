@@ -5,4 +5,4 @@ src/**/*.os
 .sconsign.dblite
 demo/gflib/*.so
 demo/Assets/*
-src/generated/*_generated.h
+src/generated/**/*_generated.h

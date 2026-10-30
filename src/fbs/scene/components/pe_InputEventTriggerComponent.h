@@ -1,7 +1,7 @@
 #pragma once
 
 #include <godot_cpp/classes/resource.hpp>
-#include "generated/pe_InputEventTriggerComponent_generated.h"
+#include "generated/Ikkaku/TrinityScene/pe_InputEventTriggerComponent_generated.h"
 #include "utils.h"
 
 namespace godot

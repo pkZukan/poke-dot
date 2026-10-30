@@ -1,7 +1,7 @@
 #pragma once
 
 #include <godot_cpp/classes/resource.hpp>
-#include "generated/ti_AIPerceptualComponent_generated.h"
+#include "generated/Ikkaku/TrinityScene/ti_AIPerceptualComponent_generated.h"
 #include "utils.h"
 
 namespace godot

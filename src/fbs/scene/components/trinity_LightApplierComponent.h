@@ -1,7 +1,7 @@
 #pragma once
 
 #include <godot_cpp/classes/resource.hpp>
-#include "generated/trinity_LightApplierComponent_generated.h"
+#include "generated/Ikkaku/TrinityScene/trinity_LightApplierComponent_generated.h"
 #include "utils.h"
 
 namespace godot

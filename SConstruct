@@ -18,13 +18,13 @@ fbs_files = pyglob.glob("schema/**/*.fbs", recursive=True)
 # Generate flatc commands for each schema
 generated_headers = []
 for fbs in fbs_files:
-    base = os.path.splitext(os.path.basename(str(fbs)))[0]
+    base = os.path.splitext(os.path.relpath(str(fbs), "schema"))[0]
     header = f"src/generated/{base}_generated.h"
 
     target = env.Command(
         header,
         fbs,
-        "flatc --cpp -o src/generated $SOURCE"
+        f"flatc --cpp --keep-prefix --include-prefix generated -I schema -o {os.path.dirname(header)} $SOURCE"
     )
     generated_headers.append(target)
 

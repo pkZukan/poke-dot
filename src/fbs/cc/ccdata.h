@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
-#include "generated/ccdata_generated.h"
+#include "generated/Ikkaku/ccdata_generated.h"
 #include <utils.h>
 
 namespace godot

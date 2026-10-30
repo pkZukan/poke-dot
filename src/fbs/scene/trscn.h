@@ -4,7 +4,7 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
-#include "generated/trscn_generated.h"
+#include "generated/Ikkaku/TrinityScene/trscn_generated.h"
 #include "trinity_scene_parser.h"
 #include <utils.h>
 

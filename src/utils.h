@@ -4,7 +4,7 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/stream_peer_buffer.hpp>
 #include <godot_cpp/classes/tree_item.hpp>
-#include "generated/common_generated.h"
+#include "generated/Ikkaku/Math/common_generated.h"
 
 #define GETTER_SETTER_BIND(c, x, y, ...)                                                                               \
     ClassDB::bind_method(D_METHOD("get_" #x), &c::get_##x);                                                            \

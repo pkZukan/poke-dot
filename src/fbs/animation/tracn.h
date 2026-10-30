@@ -5,7 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
-#include "generated/tracn_generated.h"
+#include "generated/Ikkaku/Animation/tracn_generated.h"
 #include <utils.h>
 
 namespace godot

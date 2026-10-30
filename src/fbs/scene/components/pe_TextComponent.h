@@ -1,7 +1,7 @@
 #pragma once
 
 #include <godot_cpp/classes/resource.hpp>
-#include "generated/pe_TextComponent_generated.h"
+#include "generated/Ikkaku/TrinityScene/pe_TextComponent_generated.h"
 #include "utils.h"
 
 namespace godot

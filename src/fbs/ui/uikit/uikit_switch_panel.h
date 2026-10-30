@@ -2,7 +2,7 @@
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/resource.hpp>
-#include "generated/uikit_switch_panel_generated.h"
+#include "generated/Ikkaku/pe/UIKit/uikit_switch_panel_generated.h"
 #include <utils.h>
 
 namespace godot

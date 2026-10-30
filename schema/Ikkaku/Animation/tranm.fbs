@@ -1,5 +1,5 @@
-include "common.fbs";
-include "anim_common.fbs";
+include "Ikkaku/Math/common.fbs";
+include "Ikkaku/Animation/anim_common.fbs";
 
 namespace Ikkaku.Animation;
 

@@ -4,7 +4,7 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
-#include "generated/trtml_generated.h"
+#include "generated/Ikkaku/Animation/trtml_generated.h"
 #include <utils.h>
 
 namespace godot

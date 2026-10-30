@@ -1,6 +1,6 @@
 #include "pokemon_catalog.h"
 #include "gflib.h"
-#include "generated/megaevo_data_generated.h"
+#include "generated/Ikkaku/MegaEvolution/megaevo_data_generated.h"
 #include <godot_cpp/classes/file_access.hpp>
 
 using namespace godot;

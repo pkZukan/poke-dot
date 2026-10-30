@@ -1,4 +1,4 @@
-include "common.fbs";
+include "Ikkaku/Math/common.fbs";
 
 namespace Ikkaku.Model;
 

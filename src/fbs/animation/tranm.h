@@ -6,7 +6,7 @@
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
 #include "fbs/animation/anim_common.h"
-#include "generated/tranm_generated.h"
+#include "generated/Ikkaku/Animation/tranm_generated.h"
 #include <utils.h>
 
 namespace godot

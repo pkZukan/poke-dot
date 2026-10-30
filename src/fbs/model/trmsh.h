@@ -6,7 +6,7 @@
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/array_mesh.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
-#include "generated/trmsh_generated.h"
+#include "generated/Ikkaku/Model/trmsh_generated.h"
 #include <utils.h>
 
 namespace godot

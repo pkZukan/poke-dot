@@ -4,7 +4,7 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/resource_format_loader.hpp>
-#include "generated/truiv_generated.h"
+#include "generated/Ikkaku/TrinityUI/truiv_generated.h"
 #include "uikit/uikit_gauge.h"
 #include "uikit/uikit_body.h"
 #include "uikit/uikit_shortcut.h"
